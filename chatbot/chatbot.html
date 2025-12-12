@@ -104,9 +104,6 @@
   </div>
 </div>
 
-<audio id="sendSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
-<audio id="receiveSound" src="https://www.soundjay.com/buttons/sounds/button-09.mp3"></audio>
-
 <script>
 let memory = JSON.parse(localStorage.getItem('politebotMemory') || '[]');
 
@@ -239,7 +236,7 @@ function chatLogic(userInput){
   return {response, emotion};
 }
 
-// UI + sounds
+// UI without sounds
 const chatBox = document.getElementById("chatBox");
 const typingIndicator = document.getElementById("typingIndicator");
 const inputBox = document.getElementById("inputBox");
@@ -248,8 +245,6 @@ const darkToggle = document.getElementById("darkToggle");
 const clearButton = document.getElementById("clearButton");
 const forgetButton = document.getElementById("forgetButton");
 const upgradeButton = document.getElementById("upgradeButton");
-const sendSound = document.getElementById("sendSound");
-const receiveSound = document.getElementById("receiveSound");
 
 function appendMessage(who,msg,emotion="😄"){
   let div = document.createElement("div");
@@ -261,7 +256,9 @@ function appendMessage(who,msg,emotion="😄"){
   div.appendChild(bubble);
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
-  who==="you"? sendSound.play(): receiveSound.play();
+  // Removed sound play calls
+  // if(who==="you") sendSound.play();
+  // else receiveSound.play();
   if(who==="bot") speak(msg);
 }
 
