@@ -112,6 +112,12 @@ let quizActive = false;
 let quizCurrent = null;
 let quizScore = parseInt(localStorage.getItem('politebotScore')||'0');
 
+// Number words mapping
+const numberWords = {
+  "zero":0,"one":1,"two":2,"three":3,"four":4,"five":5,
+  "six":6,"seven":7,"eight":8,"nine":9,"ten":10
+};
+
 const funFacts = [
   "Octopuses have three hearts.",
   "A group of flamingos is called a 'flamboyance'.",
@@ -142,17 +148,40 @@ const knowledge = {
   "hello": "Hi there! 😄"
 };
 
-function maybeFact() { 
-  return Math.random() < 0.25 ? funFacts[Math.floor(Math.random()*funFacts.length)] : null; 
+// Convert words like "one" to 1 and "x" to "*"
+function wordsToNumbers(expr){
+  let words = expr.toLowerCase().split(/\s+/);
+  for(let i=0;i<words.length;i++){
+      if(numberWords[words[i]]!==undefined) words[i] = numberWords[words[i]];
+      if(words[i]==="x") words[i] = "*";
+  }
+  return words.join(" ");
 }
 
+// Normalize math expressions
+function normalizeMathExpression(expr){
+  expr = expr.toLowerCase();
+  expr = expr.replace(/x|×/g,"*")
+             .replace(/plus/g,"+")
+             .replace(/minus/g,"-")
+             .replace(/divided by/g,"/");
+  return wordsToNumbers(expr);
+}
+
+// Safe math evaluation
 function safeMathEvaluate(expr){
+  expr = normalizeMathExpression(expr);
   if(!/^[0-9+\-*/^().\s]+$/.test(expr)) return null;
   let safeExpr = expr.replace(/\^/g,'**');
   try { 
     let result = Function('"use strict"; return ('+safeExpr+')')(); 
     return (typeof result==="number" && isFinite(result)) ? result : null; 
   } catch { return null; }
+}
+
+// Possibly show a fun fact
+function maybeFact() { 
+  return Math.random() < 0.25 ? funFacts[Math.floor(Math.random()*funFacts.length)] : null; 
 }
 
 function chatLogic(userInput){
@@ -164,7 +193,6 @@ function chatLogic(userInput){
       let answer = trimmed.toLowerCase();
       let correctKeywords = quizCurrent.keywords;
       let correct = correctKeywords.some(k=>answer.includes(k.toLowerCase()));
-
       if(correct){
           quizScore += 1;
           localStorage.setItem('politebotScore', quizScore);
@@ -198,7 +226,7 @@ function chatLogic(userInput){
   const memeWords = ["skibidi","rizz","sigma","ohio","fanum","npc","goofy","gyatt","cap","no cap","bro","goofy ahh"];
   for(let w of memeWords){ if(trimmed.toLowerCase().includes(w)){ return {response:memeReactions[Math.floor(Math.random()*memeReactions.length)], emotion:"🔥"}; } }
 
-  // Math
+  // Math evaluation
   const mathResult = safeMathEvaluate(trimmed);
   if(mathResult!==null) return {response:`The answer is **${mathResult}** 🧠`, emotion:"😎"};
 
@@ -213,7 +241,7 @@ function chatLogic(userInput){
     return {response:"Bet, I’ll remember that 😎", emotion:"😄"};
   }
 
-  // Detect names
+  // Name detection
   let namePattern = /\b(?:my name is|i['’]?m|im|call me)\s+([a-zA-Z]+)/i;
   let nameMatch = trimmed.match(namePattern);
   if(nameMatch){
@@ -223,7 +251,7 @@ function chatLogic(userInput){
     return {response:`Yo ${name}! W name 😄🔥`, emotion:"😄"};
   }
 
-  // Detect feelings
+  // Feeling detection
   let feelPattern = /\b(i feel|feeling|feels|i['’]?m feeling|im feeling|i am)\s+(.+)/i;
   let feelMatch = trimmed.match(feelPattern);
   if(feelMatch){
@@ -271,7 +299,7 @@ function chatLogic(userInput){
   // Questions
   if(trimmed.endsWith("?")) return {response:"Good question ngl 🤔 what do *you* think?", emotion:"🤔"};
 
-  // Generic
+  // Generic response
   let generic = [
     "Real talk? That’s kinda fire 🔥",
     "Valid take tbh 😄",
