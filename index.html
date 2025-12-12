@@ -1,72 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Welcome to JacobCreation!</title>
-<style>
-  body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: #f0f8ff;
-    color: #333;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    text-align: center;
-  }
-  h1 {
-    font-size: 3em;
-    margin-bottom: 0.5em;
-    color: #1e90ff;
-  }
-  p {
-    font-size: 1.2em;
-    margin-bottom: 2em;
-  }
-  .links a {
-    display: inline-block;
-    margin: 10px;
-    padding: 15px 25px;
-    font-size: 1.2em;
-    text-decoration: none;
-    color: white;
-    background: #1e90ff;
-    border-radius: 8px;
-    transition: background 0.3s, transform 0.2s;
-  }
-  .links a:hover {
-    background: #104e8b;
-    transform: scale(1.05);
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Explore fun projects created by JacobCreation, including games like Chess, Snake, Flappy Bird, and more!" />
+
+  <title>Welcome to JacobCreation!</title>
+
+  <style>
+    :root {
+      --blue: #1e90ff;
+      --blue-dark: #104e8b;
+      --bg: #f0f8ff;
+      --text: #333;
+    }
+
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 3em;
+      margin-bottom: 0.3em;
+      color: var(--blue);
+    }
+
+    p {
+      font-size: 1.2em;
+      margin-bottom: 2em;
+      max-width: 600px;
+    }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      max-width: 800px;
+    }
+
+    .links a {
+      display: inline-block;
+      padding: 15px 25px;
+      font-size: 1.1em;
+      text-decoration: none;
+      color: white;
+      background: var(--blue);
+      border-radius: 8px;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    .links a:hover,
+    .links a:focus {
+      background: var(--blue-dark);
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 2.3em;
+      }
+      .links a {
+        width: 100%;
+        text-align: center;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<h1>Welcome to JacobCreation!</h1>
-<p>Check out my projects by clicking the links below:</p>
+  <h1>Welcome to JacobCreation!</h1>
+  <p>Check out my projects by clicking the links below:</p>
 
-<div class="links">
-  <a href="https://jacobcreation.github.io/chess/chess.html" target="_blank">Chess</a>
-  <a href="https://jacobcreation.github.io/chatbot/chatbot.html" target="_blank">Chatbot</a>
-  <a href="https://jacobcreation.github.io/flappybird/flappybird.html" target="_blank">Flappy Bird</a>
-  <a href="https://jacobcreation.github.io/shootthemonster/shootmonster.html" target="_blank">Shoot The Monster</a>
-  <a href="https://jacobcreation.github.io/snake/snake.html" target="_blank">Snake</a>
-  <a href="https://jacobcreation.github.io/MiniLife/mini-life.html" target="_blank">MiniLife</a>
-  <a href="https://jacobcreation.github.io/Sandbox/sandbox.html" target="_blank">SandBox</a>
-</div>
+  <nav class="links" aria-label="Project Links">
+    <a href="https://jacobcreation.github.io/chess/chess.html" target="_blank" rel="noopener">Chess</a>
+    <a href="https://jacobcreation.github.io/chatbot/chatbot.html" target="_blank" rel="noopener">Chatbot</a>
+    <a href="https://jacobcreation.github.io/flappybird/flappybird.html" target="_blank" rel="noopener">Flappy Bird</a>
+    <a href="https://jacobcreation.github.io/shootthemonster/shootmonster.html" target="_blank" rel="noopener">Shoot The Monster</a>
+    <a href="https://jacobcreation.github.io/snake/snake.html" target="_blank" rel="noopener">Snake</a>
+    <a href="https://jacobcreation.github.io/MiniLife/mini-life.html" target="_blank" rel="noopener">MiniLife</a>
+    <a href="https://jacobcreation.github.io/Sandbox/sandbox.html" target="_blank" rel="noopener">SandBox</a>
+  </nav>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
