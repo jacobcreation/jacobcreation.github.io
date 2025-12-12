@@ -1,221 +1,762 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>PGN Chess Viewer (Improved Parsing + Drag & Drop)</title>
+  <meta charset="utf-8" />
+  <title>Advanced PGN Chess Viewer — Stockfish Lite</title>
 
+  <!-- chessboard.js CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/css/chessboard.min.css"/>
 
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; }
-
-    #board { width: 400px; margin: 20px auto; }
-
-    textarea { width: 400px; height: 100px; margin: 10px auto; display: block; }
-
-    #controls { margin-top: 10px; }
-    button { margin: 5px; }
-
-    #comments {
-      width: 400px;
-      margin: 10px auto;
-      min-height: 50px;
-      border: 1px solid #ccc;
-      padding: 5px;
-      text-align: left;
-      background: #fafafa;
+    :root{
+      --accent: #1572A1;
+      --muted: #666;
+      --bg: #f7fbff;
+      --panel-bg: #ffffff;
+    }
+    body{
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin:0;
+      padding:16px;
+      background: linear-gradient(180deg, #f3f9ff, #ffffff);
+      color:#0b1720;
     }
 
-    /* DRAG & DROP BOX */
-    #dropZone {
-      width: 420px;
-      height: 120px;
-      border: 2px dashed #00aaff;
-      border-radius: 10px;
-      margin: 20px auto;
+    .app {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 18px;
+      max-width: 1150px;
+      margin: 0 auto;
+      align-items: start;
+    }
+
+    /* Responsive: stack columns on small screens */
+    @media (max-width: 900px){
+      .app { grid-template-columns: 1fr; padding-bottom: 40px; }
+      .sidebar { order: 2; }
+    }
+
+    .left {
       display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #0077cc;
-      font-size: 16px;
-      background: #f0faff;
-      transition: 0.3s;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .controls {
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+    }
+
+    button, select {
+      background: var(--panel-bg);
+      border: 1px solid #d6e6f2;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    .row {
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    #dropZone {
+      border: 2px dashed var(--accent);
+      border-radius: 10px;
+      padding: 16px;
+      text-align:center;
+      background: #f2fbff;
+      color: var(--accent);
+      font-weight: 600;
     }
     #dropZone.dragover {
-      border-color: #008800;
-      background: #e7ffe7;
-      color: #006600;
+      border-color: #0a9a44;
+      background: #effff1;
+      color: #0a8a35;
     }
 
-    input[type="range"] { width: 400px; }
+    #mainPanel {
+      display:flex;
+      gap:16px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+
+    #boardContainer {
+      background: var(--panel-bg);
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 6px 20px rgba(8,30,45,0.06);
+    }
+
+    #board { width: 420px; max-width: 90vw; }
+
+    #infoBar {
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-top:8px;
+    }
+
+    #comments {
+      width: 420px;
+      max-width: 90vw;
+      min-height:48px;
+      background:#fcfeff;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid #e6f0f6;
+      text-align:left;
+      color: #0b1720;
+    }
+
+    .sidebar {
+      background: var(--panel-bg);
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 6px 20px rgba(8,30,45,0.06);
+      height: fit-content;
+    }
+
+    .move-list {
+      max-height: 540px;
+      overflow: auto;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #eef6fb;
+      background: #fcfdff;
+    }
+
+    .move-row {
+      padding:6px 8px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      justify-content: space-between;
+      border-radius:6px;
+      cursor:pointer;
+    }
+    .move-row:hover { background: #f1fbff; }
+    .move-row.active { background: linear-gradient(90deg,#eaf6ff,#f8fbff); border-left:4px solid var(--accent); }
+
+    .evalBarWrap { width: 40px; height: 160px; border-radius: 6px; overflow: hidden; border:1px solid #e6eef2; background:#fff; display:flex; align-items:flex-end; }
+    .evalBar { width:100%; transition: height .25s; }
+
+    .meter {
+      display:flex;
+      gap:8px;
+      align-items:center;
+      justify-content:center;
+      margin-top:8px;
+    }
+
+    .small { font-size: 13px; color:var(--muted); }
+    textarea#pgnInput { width:100%; min-height:120px; border-radius:8px; padding:8px; border:1px solid #e3eef6; resize:vertical; }
+
+    .controls .muted { color:var(--muted); font-size:13px; }
+
+    .topbar {
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:6px;
+    }
+
+    .status {
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .autoplay-controls { display:flex; gap:6px; align-items:center; }
+
+    .engine-info { font-size:13px; color:var(--muted); margin-left:6px; }
+
+    .button-danger { background: linear-gradient(180deg,#ffecec,#ffd6d6); border-color:#ffbdbd; }
+
+    /* small helpers */
+    .flex { display:flex; gap:8px; align-items:center; }
+    .grow { flex:1; }
+    .center { display:flex; justify-content:center; align-items:center; }
   </style>
 </head>
 <body>
+  <div class="app">
+    <div class="left">
+      <div class="topbar">
+        <div>
+          <h2 style="margin:0;font-weight:700">PGN Chess Viewer</h2>
+          <div class="small">Drag a PGN, paste it, or load from your disk. Comments appear below the board.</div>
+        </div>
 
-  <h2>PGN Chess Viewer</h2>
+        <div class="status" id="engineStatus">Engine: <strong>loading...</strong></div>
+      </div>
 
-  <!-- ⭐ DRAG & DROP ZONE -->
-  <div id="dropZone">Drag & Drop PGN file here</div>
+      <div id="dropZone">Drag &amp; drop a <strong>.pgn</strong> file here</div>
 
-  <textarea id="pgnInput" placeholder="Paste PGN here"></textarea>
+      <textarea id="pgnInput" placeholder="Paste PGN here (or drop a file above)"></textarea>
 
-  <div id="controls">
-    <button id="loadPgn">Load PGN</button><br>
-    <button id="prevMove">◀ Previous</button>
-    <button id="nextMove">Next ▶</button><br>
-    <input type="range" id="moveSlider" min="0" max="0" value="0">
-    <div id="moveCounter">0 / 0</div>
+      <div class="controls">
+        <button id="loadPgn">Load PGN</button>
+        <button id="flipBtn">Flip Board</button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label class="small muted" for="autoplayToggle">Autoplay</label>
+          <input type="checkbox" id="autoplayToggle">
+        </div>
+        <div class="autoplay-controls small">
+          <label class="small muted">Speed</label>
+          <input id="autoSpeed" type="range" min="200" max="2000" step="100" value="800">
+        </div>
+        <div style="margin-left:auto" class="small muted">Stockfish Lite integrated</div>
+      </div>
+
+      <div id="mainPanel">
+        <div id="boardContainer">
+          <div id="board"></div>
+
+          <div id="infoBar" style="margin-top:8px">
+            <div class="flex">
+              <button id="prevMove">◀ Prev</button>
+              <button id="nextMove">Next ▶</button>
+              <div class="small muted" id="moveCounter">0 / 0</div>
+              <input type="range" id="moveSlider" min="0" max="0" value="0" style="width:220px">
+            </div>
+
+            <div style="margin-left:12px;display:flex;gap:8px;align-items:center">
+              <div style="display:flex;flex-direction:column;align-items:center">
+                <div class="small muted">Best</div>
+                <div id="bestMove" style="font-weight:700">—</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center">
+                <div class="small muted">Score</div>
+                <div id="score" style="font-weight:700">—</div>
+              </div>
+
+              <div style="margin-left:8px;display:flex;align-items:center;gap:8px">
+                <div class="small muted">Eval</div>
+                <div class="evalBarWrap" title="Positive = White advantage, Negative = Black advantage">
+                  <div id="evalBar" class="evalBar" style="background:linear-gradient(to top,#00b894,#a6e1c3); height:50%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="comments" aria-live="polite">No comments yet. Load PGN to see move comments.</div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <aside class="sidebar">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <h3 style="margin:0;font-size:16px">Moves</h3>
+        <div class="small muted">Click to jump</div>
+      </div>
+
+      <div class="move-list" id="moveList">
+        <!-- moves will be appended here -->
+      </div>
+
+      <hr style="margin:12px 0;border-color:#eef6fb">
+
+      <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
+        <div>
+          <div class="small muted">Engine options</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+            <label class="small">Threads</label>
+            <select id="threadsSelect">
+              <option value="1">1</option>
+              <option value="2">2</option>
+            </select>
+
+            <label class="small">Skill</label>
+            <select id="skillSelect">
+              <option value="20">20</option>
+              <option value="15">15</option>
+              <option value="10">10</option>
+              <option value="0">0</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="text-align:right">
+          <div class="small muted">Engine state</div>
+          <div id="engineState" style="font-weight:700">ready</div>
+        </div>
+      </div>
+
+    </aside>
   </div>
 
-  <div id="board"></div>
-  <div id="comments"></div>
-
+  <!-- libs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.0/chess.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/js/chessboard.min.js"></script>
 
   <script>
-    const board = Chessboard('board', 'start');
-    const game = new Chess();
+  /*************************************************************************
+   * Advanced PGN Viewer with Stockfish Lite integration
+   * - Uses chess.js and chessboard.js
+   * - Loads Stockfish via Web Worker (Lite) with graceful fallback
+   *
+   * NOTE: If your environment blocks CDN workers, download a local copy of
+   * stockfish.js (or stockfish.wasm.js) and set ENGINE_URL to your local path.
+   *************************************************************************/
 
-    let moves = [];
-    let currentMove = 0;
+  // ----------------- Config -----------------
+  // Recommendation: put a local copy in your repo and update ENGINE_URL for best reliability
+  const ENGINE_URLS = [
+    // try these in order; adjust if necessary. This points to a 'lite' build where available.
+    'https://cdn.jsdelivr.net/gh/niklasf/stockfish.js/stockfish.js',        // common build
+    'https://cdn.jsdelivr.net/npm/stockfish@11/stockfish.js',              // fallback older
+    'https://cdn.jsdelivr.net/npm/stockfish@15.1/stockfish.js'             // fallback
+  ];
 
-    const moveCounter = document.getElementById('moveCounter');
-    const moveSlider = document.getElementById('moveSlider');
-    const commentsDiv = document.getElementById('comments');
-    const dropZone = document.getElementById('dropZone');
+  // Which engine index to try first (we gave you "Lite" choice — engine URLs above are conservative)
+  let engineWorker = null;
+  let engineReady = false;
+  let engineUsable = false;
 
+  // ----------------- UI refs -----------------
+  const boardEl = document.getElementById('board');
+  const pgnInput = document.getElementById('pgnInput');
+  const dropZone = document.getElementById('dropZone');
+  const loadPgnBtn = document.getElementById('loadPgn');
+  const moveListEl = document.getElementById('moveList');
+  const commentsDiv = document.getElementById('comments');
+  const moveCounter = document.getElementById('moveCounter');
+  const moveSlider = document.getElementById('moveSlider');
+  const prevMoveBtn = document.getElementById('prevMove');
+  const nextMoveBtn = document.getElementById('nextMove');
+  const flipBtn = document.getElementById('flipBtn');
+  const autoplayToggle = document.getElementById('autoplayToggle');
+  const autoSpeed = document.getElementById('autoSpeed');
+  const bestMoveEl = document.getElementById('bestMove');
+  const scoreEl = document.getElementById('score');
+  const evalBarEl = document.getElementById('evalBar');
+  const engineStatus = document.getElementById('engineStatus');
+  const engineStateEl = document.getElementById('engineState');
+  const threadsSelect = document.getElementById('threadsSelect');
+  const skillSelect = document.getElementById('skillSelect');
 
-    /* ===========================================================
-       ⭐ DRAG AND DROP FILE HANDLING
-    ============================================================ */
+  // ----------------- Chessboard & Game -----------------
+  const board = Chessboard(boardEl, {
+    draggable: false,
+    position: 'start',
+    pieceTheme: 'https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/img/chesspieces/wikipedia/{piece}.png'
+  });
+  const game = new Chess();
 
-    dropZone.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      dropZone.classList.add("dragover");
+  let moves = [];           // { san, comment, fen }
+  let currentMove = 0;
+  let autoplayTimer = null;
+  let flipped = false;
+
+  // ----------------- Drag & Drop -----------------
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('dragover'); });
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.pgn')) {
+      alert('Please drop a .pgn file');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => pgnInput.value = reader.result;
+    reader.readAsText(file);
+  });
+
+  // ----------------- PGN Parsing & Loading -----------------
+  function parseAndLoadPGN(pgnText){
+    // Reset engine/board state
+    game.reset();
+    moves = [];
+    currentMove = 0;
+    bestMoveEl.textContent = '—';
+    scoreEl.textContent = '—';
+    evalBarEl.style.height = '50%';
+
+    // Try to load via chess.js
+    const loaded = game.load_pgn(pgnText, { sloppy: true });
+    if (!loaded) {
+      alert('Invalid PGN. Please check your file.');
+      return;
+    }
+
+    // Build move history verbose and FENs after each move
+    const history = game.history({ verbose: true });
+
+    // Extract all comments in PGN in order (simple approach)
+    // This will get every { ... } block in the PGN. We then map them sequentially to moves.
+    const commentMatches = [...pgnText.matchAll(/\{([^}]*)\}/g)].map(m => m[1].trim());
+
+    // Reconstruct game move by move to compute FENs and attach comments carefully
+    const tmpGame = new Chess();
+    let cIndex = 0;
+    history.forEach((moveObj, idx) => {
+      const san = moveObj.san;
+      // If there's an inline comment immediately preceding this SAN in PGN, it's tricky to match.
+      // We'll use sequential assignment of commentMatches to moves as a practical and robust solution.
+      const comment = (cIndex < commentMatches.length) ? commentMatches[cIndex++] : '';
+      tmpGame.move(san);
+      moves.push({ san, comment, fen: tmpGame.fen() });
     });
 
-    dropZone.addEventListener("dragleave", () => {
-      dropZone.classList.remove("dragover");
-    });
+    // initial position as move 0 (no move)
+    updateMoveList();
+    updateBoard();
+  }
 
-    dropZone.addEventListener("drop", (e) => {
-      e.preventDefault();
-      dropZone.classList.remove("dragover");
+  // ----------------- UI Update Helpers -----------------
+  function updateBoard(){
+    // position to currentMove's fen (if currentMove is 0 -> start)
+    if (currentMove === 0) {
+      board.position('start', false);
+      commentsDiv.textContent = 'Starting position';
+    } else {
+      const fen = moves[currentMove - 1].fen;
+      board.position(fen, true);
+      commentsDiv.textContent = moves[currentMove - 1].comment || 'No comment for this move.';
+    }
+    highlightActiveMove();
+    updateCounter();
+    requestEngineEval();
+  }
 
-      const file = e.dataTransfer.files[0];
-      if (!file || !file.name.toLowerCase().endsWith(".pgn")) {
-        alert("Please drop a valid .pgn file.");
-        return;
-      }
+  function updateCounter(){
+    moveCounter.textContent = `${currentMove} / ${moves.length}`;
+    moveSlider.max = moves.length;
+    moveSlider.value = currentMove;
+  }
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        document.getElementById("pgnInput").value = reader.result;
-        alert("PGN loaded! Click 'Load PGN' to view the game.");
-      };
-      reader.readAsText(file);
-    });
+  function updateMoveList(){
+    moveListEl.innerHTML = '';
+    // create rows: pair moves into "1. e4 e5" style
+    const rows = [];
+    for (let i = 0; i < moves.length; i += 2) {
+      const moveNumber = Math.floor(i/2) + 1;
+      const white = moves[i] ? moves[i].san : '';
+      const black = moves[i+1] ? moves[i+1].san : '';
+      const row = { moveNumber, white, black, idx: i };
+      rows.push(row);
+    }
 
+    rows.forEach(row => {
+      const container = document.createElement('div');
+      container.className = 'move-row';
+      container.dataset.idx = row.idx;
+      // build inner content
+      container.innerHTML = `<div style="display:flex;gap:8px;align-items:center">
+        <div style="width:36px;font-weight:700">${row.moveNumber}.</div>
+        <div style="min-width:80px">${row.white || ''}</div>
+        <div style="min-width:80px;color:var(--muted)">${row.black || ''}</div>
+      </div>
+      <div class="small muted" style="max-width:120px;text-align:right">${(moves[row.idx] && moves[row.idx].comment) ? (moves[row.idx].comment.length > 40 ? moves[row.idx].comment.slice(0,40) + '...' : moves[row.idx].comment) : ''}</div>`;
 
-    /* ===========================================================
-       ⭐ RELIABLE PGN PARSING + COMMENT EXTRACTION
-    ============================================================ */
-
-    document.getElementById('loadPgn').addEventListener('click', () => {
-      const pgnText = document.getElementById('pgnInput').value.trim();
-
-      const loaded = game.load_pgn(pgnText, { sloppy: true });
-      if (!loaded) {
-        alert("Invalid PGN!");
-        return;
-      }
-
-      const history = game.history({ verbose: true });
-
-      // Extract ALL comments in PGN in order
-      const commentMatches = [...pgnText.matchAll(/\{([^}]*)\}/g)].map(m => m[1].trim());
-
-      let commentIndex = 0;
-      moves = [];
-
-      history.forEach(move => {
-        let comment = "";
-
-        // Assign next found comment (best simple method)
-        if (commentIndex < commentMatches.length) {
-          comment = commentMatches[commentIndex];
-          commentIndex++;
+      container.addEventListener('click', () => {
+        // If user clicks white move, jump to idx+1, else idx+2 if clicking black area.
+        // Simpler: open a prompt to choose white or black? We'll detect which part clicked by event x.
+        // For simplicity, jump to the first move of the pair (white) when container clicked,
+        // and allow user to use move slider for exact selection. Better UX: detect click coordinates.
+        const idx = parseInt(container.dataset.idx, 10);
+        // We'll toggle: first click goes to white (idx+1); second click (if black exists) goes to black (idx+2)
+        if (currentMove === idx) {
+          // jump to white
+          currentMove = idx + 1;
+        } else if (currentMove === idx + 1 && moves[idx+1]) {
+          currentMove = idx + 2;
+        } else {
+          currentMove = idx + 1;
         }
-
-        moves.push({
-          san: move.san,
-          comment: comment
-        });
+        updateBoard();
       });
 
-      currentMove = 0;
-      game.reset();
-      board.position(game.fen());
-
-      updateCounter();
-      updateComment();
+      moveListEl.appendChild(container);
     });
 
+    highlightActiveMove();
+  }
 
-    /* ===========================================================
-       ⭐ MOVE NAVIGATION CONTROLS
-    ============================================================ */
-
-    function updateCounter() {
-      moveCounter.textContent = `${currentMove} / ${moves.length}`;
-      moveSlider.max = moves.length;
-      moveSlider.value = currentMove;
+  function highlightActiveMove() {
+    // mark active move-row(s)
+    const rows = Array.from(moveListEl.querySelectorAll('.move-row'));
+    rows.forEach(r => r.classList.remove('active'));
+    // determine which row corresponds to currentMove
+    if (currentMove > 0) {
+      const idx = currentMove - 1; // move index in moves array
+      // find row where dataset.idx === Math.floor(idx/2)*2
+      const base = Math.floor(idx / 2) * 2;
+      const el = moveListEl.querySelector(`.move-row[data-idx="${base}"]`);
+      if (el) el.classList.add('active');
     }
+  }
 
-    function updateComment() {
-      if (currentMove === 0) {
-        commentsDiv.textContent = "";
-      } else {
-        commentsDiv.textContent = moves[currentMove - 1].comment || "";
+  // ----------------- Controls -----------------
+  nextMoveBtn.addEventListener('click', () => {
+    if (currentMove >= moves.length) return;
+    currentMove++;
+    updateBoard();
+  });
+
+  prevMoveBtn.addEventListener('click', () => {
+    if (currentMove <= 0) return;
+    currentMove--;
+    updateBoard();
+  });
+
+  moveSlider.addEventListener('input', () => {
+    currentMove = parseInt(moveSlider.value, 10);
+    updateBoard();
+  });
+
+  flipBtn.addEventListener('click', () => {
+    flipped = !flipped;
+    board.flip();
+  });
+
+  loadPgnBtn.addEventListener('click', () => {
+    const txt = pgnInput.value.trim();
+    if (!txt) { alert('Please paste or drop a PGN first.'); return; }
+    parseAndLoadPGN(txt);
+  });
+
+  // Autoplay
+  autoplayToggle.addEventListener('change', () => {
+    if (autoplayToggle.checked) startAutoPlay();
+    else stopAutoPlay();
+  });
+
+  autoSpeed.addEventListener('input', () => {
+    if (autoplayToggle.checked) {
+      stopAutoPlay();
+      startAutoPlay();
+    }
+  });
+
+  function startAutoPlay(){
+    if (autoplayTimer) clearInterval(autoplayTimer);
+    const speed = parseInt(autoSpeed.value, 10) || 800;
+    autoplayTimer = setInterval(() => {
+      if (currentMove >= moves.length) {
+        clearInterval(autoplayTimer);
+        autoplayToggle.checked = false;
+        return;
       }
-    }
-
-    function updateBoard() {
-      game.reset();
-
-      for (let i = 0; i < currentMove; i++) {
-        game.move(moves[i].san);
-      }
-
-      board.position(game.fen());
-      updateCounter();
-      updateComment();
-    }
-
-    document.getElementById('nextMove').addEventListener('click', () => {
-      if (currentMove >= moves.length) return;
-      game.move(moves[currentMove].san);
       currentMove++;
-      board.position(game.fen(), true);
-      updateCounter();
-      updateComment();
-    });
-
-    document.getElementById('prevMove').addEventListener('click', () => {
-      if (currentMove <= 0) return;
-      currentMove--;
-      game.undo();
-      board.position(game.fen(), true);
-      updateCounter();
-      updateComment();
-    });
-
-    moveSlider.addEventListener('input', () => {
-      currentMove = parseInt(moveSlider.value);
       updateBoard();
-    });
-  </script>
+    }, speed);
+  }
 
+  function stopAutoPlay(){
+    if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = null; }
+  }
+
+  // ----------------- Engine integration (Web Worker Stockfish) -----------------
+  async function tryStartEngine(){
+    engineStatus.textContent = 'Engine: trying...';
+    engineStateEl.textContent = 'starting';
+
+    for (const url of ENGINE_URLS) {
+      try {
+        const w = new Worker(url);
+        engineWorker = w;
+        engineReady = false;
+        engineUsable = true;
+        setupEngineHandlers(w);
+        engineStateEl.textContent = 'initializing';
+        engineStatus.textContent = 'Engine: worker loaded';
+        // send some init commands
+        w.postMessage('uci');
+        // set threads & skill later when ready
+        return;
+      } catch (e) {
+        console.warn('Failed to start worker from', url, e);
+        // try next url
+      }
+    }
+
+    // If we reach here, engine not available
+    engineStatus.textContent = 'Engine: unavailable (worker load failed)';
+    engineStateEl.textContent = 'unavailable';
+    engineUsable = false;
+  }
+
+  function setupEngineHandlers(worker){
+    worker.onmessage = (ev) => {
+      const text = typeof ev.data === 'string' ? ev.data : (ev.data && ev.data.message) || '';
+      // Many stockfish builds post text lines. We'll parse important ones.
+      // e.g., "uciok", "readyok", "info depth 12 score cp 13 ..."
+      // handle ready/uci
+      if (text.includes('uciok')) {
+        engineReady = true;
+        engineStateEl.textContent = 'uciok';
+        engineStatus.textContent = 'Engine: ready';
+        // set options
+        setEngineOptions();
+        worker.postMessage('isready');
+        return;
+      }
+      if (text.includes('readyok')) {
+        engineStateEl.textContent = 'readyok';
+        return;
+      }
+
+      // parse info lines for evals
+      if (text.startsWith('info')) {
+        // look for "score cp X" or "score mate X" and "pv <move ...>"
+        const scoreMatch = text.match(/score\s+(cp|mate)\s+(-?\d+)/);
+        const pvMatch = text.match(/pv\s+([a-h1-8NBRQK]+(\s+[a-h1-8NBRQK]+)*)/);
+        if (scoreMatch) {
+          const type = scoreMatch[1], val = parseInt(scoreMatch[2], 10);
+          if (type === 'cp') {
+            updateEvalBar(val);
+            scoreEl.textContent = (val/100).toFixed(2);
+          } else { // mate
+            updateEvalBar(val > 0 ? 9999 : -9999);
+            scoreEl.textContent = `Mate ${val}`;
+          }
+        }
+        if (pvMatch) {
+          const pv = pvMatch[1].split(' ')[0];
+          bestMoveEl.textContent = pv;
+        }
+      }
+
+      // some builds pass strings differently
+      if (text.includes('bestmove')) {
+        const bm = text.split(' ')[1];
+        if (bm) bestMoveEl.textContent = bm;
+      }
+    };
+
+    worker.onerror = (e) => {
+      console.error('Engine error', e);
+      engineStatus.textContent = 'Engine: error';
+      engineUsable = false;
+      engineStateEl.textContent = 'error';
+    };
+  }
+
+  function setEngineOptions(){
+    if (!engineWorker || !engineReady) return;
+    // set threads and skill
+    const threads = parseInt(threadsSelect.value, 10) || 1;
+    engineWorker.postMessage(`setoption name Threads value ${threads}`);
+    // skill in many builds uses "Skill Level"
+    const skill = skillSelect.value;
+    engineWorker.postMessage(`setoption name Skill Level value ${skill}`);
+    engineWorker.postMessage(`setoption name UCI_Chess960 value false`); // safe default
+  }
+
+  // Send position to engine and request evaluation
+  function requestEngineEval() {
+    if (!engineWorker || !engineUsable) {
+      engineStatus.textContent = 'Engine: unavailable';
+      return;
+    }
+    engineStatus.textContent = 'Engine: evaluating...';
+    engineStateEl.textContent = 'busy';
+
+    // build position string up to currentMove
+    const tmp = new Chess();
+    for (let i = 0; i < currentMove; i++) tmp.move(moves[i].san);
+    const fen = tmp.fen();
+    // send to engine
+    engineWorker.postMessage(`position fen ${fen}`);
+    // request 500ms search or depth-limited search
+    // use "go movetime <ms>" which is supported by Stockfish builds
+    const movetime = 250; // lite fast search; adjust for performance
+    engineWorker.postMessage(`go movetime ${movetime}`);
+
+    setTimeout(() => {
+      engineStateEl.textContent = 'idle';
+    }, movetime + 200);
+  }
+
+  function updateEvalBar(cpScore) {
+    // cpScore is centipawns positive means White advantage
+    // We'll map range -2000..+2000 to 0-100% height (clamp)
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const v = clamp(cpScore, -2000, 2000);
+    // transform so that 50% = equal. White advantage increases height upwards.
+    const percent = 50 + (v / 4000) * 100; // 2000 -> +50 => 100%
+    const height = clamp(percent, 2, 98);
+    evalBarEl.style.height = `${height}%`;
+    // color gradient: red (black advantage) -> neutral -> green (white advantage)
+    if (v > 150) evalBarEl.style.background = 'linear-gradient(to top,#60b664,#bff0b0)';
+    else if (v < -150) evalBarEl.style.background = 'linear-gradient(to top,#ff9b9b,#ffd6d6)';
+    else evalBarEl.style.background = 'linear-gradient(to top,#ffdca6,#e6f3ff)';
+  }
+
+  // ----------------- Request engine startup -----------------
+  tryStartEngine();
+
+  // Provide a way for engine options to be updated
+  threadsSelect.addEventListener('change', () => setEngineOptions());
+  skillSelect.addEventListener('change', () => setEngineOptions());
+
+  // Periodic small heartbeat to re-evaluate position when user stops navigating
+  let lastNavTimer = null;
+  function scheduledEvalDebounce(){
+    if (lastNavTimer) clearTimeout(lastNavTimer);
+    lastNavTimer = setTimeout(() => {
+      requestEngineEval();
+    }, 220);
+  }
+
+  // Update eval after navigation
+  ['nextMove', 'prevMove', 'moveSlider'].forEach(id => {
+    // handled in listeners; call requestEngineEval when navigation completes
+  });
+
+  // Expose some helpful keyboard shortcuts
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') { nextMoveBtn.click(); scheduledEvalDebounce(); }
+    if (e.key === 'ArrowLeft') { prevMoveBtn.click(); scheduledEvalDebounce(); }
+    if (e.key === ' ') { autoplayToggle.checked = !autoplayToggle.checked; autoplayToggle.dispatchEvent(new Event('change')); }
+  });
+
+  // When user navigates, call scheduled eval
+  // wrap navigation functions to also request eval
+  const originalNext = nextMoveBtn.onclick;
+  nextMoveBtn.addEventListener('click', scheduledEvalDebounce);
+  prevMoveBtn.addEventListener('click', scheduledEvalDebounce);
+  moveSlider.addEventListener('change', scheduledEvalDebounce);
+
+  // Good default: load sample PGN if none provided (small example)
+  const samplePGN = `[Event "Friendly"]
+[Site "?"]
+[Date "2025.01.01"]
+[Round "?"]
+[White "Alice"]
+[Black "Bob"]
+[Result "1-0"]
+
+1. e4 {A normal pawn push.} e5 {Black replies symmetrically.}
+2. Nf3 {Develops the knight.} Nc6 3. Bb5 {The Ruy Lopez.} a6 {Forcing bishop decision.}
+4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 d6 8. c3 O-O
+9. h3 {A prophylactic move.} Nb8 10. d4 Nbd7 11. c4 c6 12. Nc3 Qc7
+13. a3 Bb7 14. Ba2 Rfe8 15. Bg5 Bf8 16. Qd2 h6 17. Bh4 exd4
+18. Nxd4 c5 19. Nf5 c4 20. Rad1 Nxe4 21. Nxe4 Rxe4 22. Rxe4 Bxe4
+23. Nxd6 Qc6 24. Nxe4 Qxe4 25. Qxd7 Qxh4 26. Re1 Qf4 27. Bb1 g6 28. Qd4 Qf5
+29. Nf6+ 1-0
+`;
+  // If user hasn't typed anything, prefill with sample
+  if (!pgnInput.value.trim()) pgnInput.value = samplePGN;
+
+  // Load sample automatically
+  parseAndLoadPGN(pgnInput.value);
+
+  </script>
 </body>
 </html>
