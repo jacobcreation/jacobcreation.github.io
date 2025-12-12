@@ -27,11 +27,16 @@
     border-radius: 5px;
     cursor: pointer;
   }
+  #score {
+    font-size: 1.2em;
+    margin-top: 10px;
+  }
 </style>
 </head>
 <body>
 
 <h1>Mini Wood Block Puzzle 10x10</h1>
+<div id="score">Score: 0</div>
 <canvas id="board" width="500" height="500"></canvas>
 <div class="pieces" id="pieces"></div>
 
@@ -44,6 +49,7 @@ const cols = 10;
 const cellSize = 50;
 
 let board = Array(rows).fill().map(() => Array(cols).fill(0));
+let score = 0;
 
 const shapes = [
   [[1]],          // single block
@@ -53,7 +59,7 @@ const shapes = [
   [[1,1],[1,1]]   // 2x2 square
 ];
 
-let availablePieces = []; // 3 pieces at a time
+let availablePieces = [];
 let currentPiece = null;
 
 // Draw the board
@@ -109,11 +115,33 @@ function placePiece(){
       }
     }
   }
-  // Remove the used piece
   availablePieces = availablePieces.filter(p => p !== currentPiece);
   currentPiece = null;
+  checkClears();
+  if(availablePieces.length === 0) generatePieces();
   updatePiecesUI();
   drawBoard();
+  updateScoreUI();
+}
+
+// Check for full rows/columns
+function checkClears(){
+  let linesCleared = 0;
+  // Check rows
+  for(let r=0;r<rows;r++){
+    if(board[r].every(c => c===1)){
+      for(let c=0;c<cols;c++) board[r][c] = 0;
+      linesCleared++;
+    }
+  }
+  // Check columns
+  for(let c=0;c<cols;c++){
+    if(board.every(r => r[c]===1)){
+      for(let r=0;r<rows;r++) board[r][c] = 0;
+      linesCleared++;
+    }
+  }
+  score += linesCleared * 10;
 }
 
 // Generate 3 random pieces
@@ -141,6 +169,11 @@ function updatePiecesUI(){
   });
 }
 
+// Update score display
+function updateScoreUI(){
+  document.getElementById('score').innerText = 'Score: ' + score;
+}
+
 // Mouse click to place piece
 canvas.addEventListener('click', e=>{
   if(!currentPiece) return;
@@ -157,6 +190,7 @@ canvas.addEventListener('click', e=>{
 // Initialize
 generatePieces();
 drawBoard();
+updateScoreUI();
 </script>
 
 </body>
