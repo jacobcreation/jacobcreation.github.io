@@ -45,6 +45,7 @@
     border-radius: 10px;
     margin: 20px auto;
     max-width: 500px;
+    white-space: pre-line;
   }
 </style>
 </head>
@@ -57,7 +58,7 @@
 </div>
 
 <div class="story" id="story">
-  Welcome to MiniLife! Choose how your life begins.
+  Welcome to MiniLife! Your life journey begins...
 </div>
 
 <div id="choices">
@@ -79,43 +80,50 @@ function updateStats() {
     `Age: ${player.age} | Money: $${player.money} | Happiness: ${player.happiness} | Health: ${player.health}`;
 }
 
-function choose(action) {
-  // Increase age every choice
-  player.age += 1;
+function randomEvent() {
+  let eventChance = Math.random();
+  let eventText = "";
+  if(eventChance < 0.15) {
+    let gain = Math.floor(Math.random() * 50) + 10;
+    player.money += gain;
+    eventText = ` Lucky day! You found $${gain}!`;
+  } else if(eventChance > 0.85) {
+    let damage = Math.floor(Math.random() * 20) + 5;
+    player.health -= damage;
+    eventText = ` Oh no! You got sick. Health -${damage}.`;
+  }
+  return eventText;
+}
 
+function choose(action) {
+  player.age += 1;
   let storyText = "";
 
   if(action === 'study') {
     player.money += 10;
     player.happiness -= 5;
-    storyText = "You studied hard. Money increases, but happiness drops a bit.";
+    storyText = "You studied hard. Money +10, Happiness -5.";
   } else if(action === 'play') {
     player.happiness += 10;
     player.health -= 5;
-    storyText = "You played games all day. Happiness rises, health drops.";
+    storyText = "You played games. Happiness +10, Health -5.";
   } else if(action === 'exercise') {
     player.health += 10;
     player.happiness += 5;
-    storyText = "You exercised. Health and happiness improve!";
+    storyText = "You exercised. Health +10, Happiness +5.";
   }
 
-  // Random events
-  let eventChance = Math.random();
-  if(eventChance < 0.2) {
-    player.money += 20;
-    storyText += " Lucky day! You found $20!";
-  } else if(eventChance > 0.8) {
-    player.health -= 15;
-    storyText += " Oh no! You caught a cold. Health drops!";
-  }
+  storyText += randomEvent();
 
-  // Update story and stats
+  // Cap stats between 0 and 100 for health/happiness
+  player.health = Math.min(Math.max(player.health, 0), 100);
+  player.happiness = Math.min(Math.max(player.happiness, 0), 100);
+
   document.getElementById('story').innerText = storyText;
   updateStats();
 
-  // End game after age 18
-  if(player.age >= 18) {
-    document.getElementById('story').innerText += "\n\nYou are now 18! Life stage complete!";
+  if(player.health <= 0) {
+    document.getElementById('story').innerText = `💀 You died at age ${player.age}.\nGame Over!`;
     document.getElementById('choices').style.display = 'none';
   }
 }
