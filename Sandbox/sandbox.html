@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced Mini Sandbox</title>
+<style>
+  body {
+    text-align: center;
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: #fff;
+  }
+  #canvas {
+    border: 2px solid #fff;
+    cursor: crosshair;
+    margin-top: 10px;
+  }
+  .toolbar button {
+    margin: 3px;
+    padding: 8px 12px;
+    font-size: 0.9em;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<h1>Advanced Mini Sandbox</h1>
+<div class="toolbar">
+  <button onclick="setElement('sand')">Sand</button>
+  <button onclick="setElement('water')">Water</button>
+  <button onclick="setElement('fire')">Fire</button>
+  <button onclick="setElement('lava')">Lava</button>
+  <button onclick="setElement('stone')">Stone</button>
+  <button onclick="setElement('plant')">Plant</button>
+  <button onclick="setElement('oil')">Oil</button>
+  <button onclick="setElement('erase')">Eraser</button>
+</div>
+
+<canvas id="canvas" width="600" height="400"></canvas>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const cellSize = 5;
+const cols = canvas.width / cellSize;
+const rows = canvas.height / cellSize;
+
+let grid = Array(rows).fill().map(() => Array(cols).fill('empty'));
+let currentElement = 'sand';
+
+const colors = {
+  empty: '#111',
+  sand: '#f4e542',
+  water: '#42b9f4',
+  fire: '#f44141',
+  lava: '#ff6a00',
+  stone: '#888',
+  plant: '#3f9c35',
+  oil: '#222'
+};
+
+function drawGrid() {
+  for(let y = 0; y < rows; y++){
+    for(let x = 0; x < cols; x++){
+      ctx.fillStyle = colors[grid[y][x]];
+      ctx.fillRect(x*cellSize, y*cellSize, cellSize, cellSize);
+    }
+  }
+}
+
+canvas.addEventListener('mousedown', e => {
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left) / cellSize);
+  const y = Math.floor((e.clientY - rect.top) / cellSize);
+  if(currentElement === 'erase') grid[y][x] = 'empty';
+  else grid[y][x] = currentElement;
+  drawGrid();
+});
+
+function updateGrid() {
+  for(let y = rows-2; y >= 0; y--){
+    for(let x = 0; x < cols; x++){
+      let cell = grid[y][x];
+      
+      // Sand falls
+      if(cell === 'sand' && grid[y+1][x] === 'empty'){
+        grid[y+1][x] = 'sand';
+        grid[y][x] = 'empty';
+      }
+
+      // Water flows
+      if(cell === 'water'){
+        if(grid[y+1][x] === 'empty'){
+          grid[y+1][x] = 'water';
+          grid[y][x] = 'empty';
+        } else {
+          const dir = Math.random() < 0.5 ? -1 : 1;
+          if(grid[y][x+dir] === 'empty'){
+            grid[y][x+dir] = 'water';
+            grid[y][x] = 'empty';
+          }
+        }
+      }
+
+      // Lava flows
+      if(cell === 'lava'){
+        if(grid[y+1][x] === 'empty'){
+          grid[y+1][x] = 'lava';
+          grid[y][x] = 'empty';
+        } else {
+          const dir = Math.random() < 0.5 ? -1 : 1;
+          if(grid[y][x+dir] === 'empty'){
+            grid[y][x+dir] = 'lava';
+            grid[y][x] = 'empty';
+          }
+        }
+        // Lava melts plants and stone
+        if(grid[y+1][x] === 'plant' || grid[y+1][x] === 'stone') grid[y+1][x] = 'lava';
+      }
+
+      // Fire burns plants & oil, dies randomly
+      if(cell === 'fire'){
+        if(Math.random() < 0.01) grid[y][x] = 'empty';
+        if(grid[y+1][x] === 'water') grid[y+1][x] = 'empty';
+        if(grid[y+1][x] === 'plant' || grid[y+1][x] === 'oil') grid[y+1][x] = 'fire';
+      }
+
+      // Oil spreads and catches fire
+      if(cell === 'oil'){
+        if(Math.random() < 0.02){
+          const dir = Math.random() < 0.5 ? -1 : 1;
+          if(grid[y][x+dir] === 'empty') grid[y][x+dir] = 'oil';
+        }
+        if(grid[y+1][x] === 'fire') grid[y][x] = 'fire';
+      }
+    }
+  }
+}
+
+function setElement(el){
+  currentElement = el;
+}
+
+function loop() {
+  updateGrid();
+  drawGrid();
+  requestAnimationFrame(loop);
+}
+
+drawGrid();
+loop();
+</script>
+
+</body>
+</html>
