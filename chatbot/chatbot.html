@@ -164,16 +164,24 @@ function chatLogic(userInput){
       let answer = trimmed.toLowerCase();
       let correctKeywords = quizCurrent.keywords;
       let correct = correctKeywords.some(k=>answer.includes(k.toLowerCase()));
+
       if(correct){
           quizScore += 1;
           localStorage.setItem('politebotScore', quizScore);
-          response = `Correct! 🎉 Your score: ${quizScore} points.`;
+          quizActive = false;
+          quizCurrent = null;
+          return {response:`Correct! 🎉 Your score: ${quizScore} points.`, emotion:"😎"};
       } else {
-          response = `Hmm, not quite 😅 The correct answer had keywords: ${correctKeywords.join(", ")}. Score: ${quizScore}`;
+          if(!quizCurrent.retry){
+              quizCurrent.retry = true;
+              return {response:`Hmm, not quite 😅 Hint: try something about "${correctKeywords[0]}"`, emotion:"🤔"};
+          } else {
+              quizActive = false;
+              let answerKeywords = correctKeywords.join(", ");
+              quizCurrent = null;
+              return {response:`Still not correct 😭 The correct answer included: ${answerKeywords}. Score: ${quizScore}`, emotion:"😢"};
+          }
       }
-      quizCurrent = null;
-      quizActive = false;
-      return {response, emotion:"😎"};
   }
 
   // Pending fact from "did u know"
@@ -256,7 +264,7 @@ function chatLogic(userInput){
       let question = factParts[0].split(":")[1] || factParts[0];
       let answerKeywords = factParts[1] ? factParts[1].trim().split(" ") : question.split(" ").slice(0,3);
       quizActive = true;
-      quizCurrent = {question, keywords: answerKeywords};
+      quizCurrent = {question, keywords: answerKeywords, retry:false};
       return {response:`Quick quiz! Tell me about this:\n"${question}"`, emotion:"🤔"};
   }
 
