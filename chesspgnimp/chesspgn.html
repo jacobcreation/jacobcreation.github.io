@@ -1,419 +1,795 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>PGN Viewer — Arrows & Annotations</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>PGN Viewer — Arrows, Engine, Variations, Dark Mode</title>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/css/chessboard.min.css" />
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- chessboard.js CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/css/chessboard.min.css"/>
 
 <style>
-body {
-  margin: 0;
-  padding: 10px;
-  background: #f4f8fb;
-  font-family: Arial, sans-serif;
+:root{
+  --bg: #f4f8fb;
+  --panel: #ffffff;
+  --muted: #6b7280;
+  --accent: #1572A1;
+  --text: #0b1720;
 }
-
-.app {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  max-width: 1200px;
-  margin: auto;
+[data-theme="dark"]{
+  --bg:#0b1220; --panel:#0e1724; --muted:#9aa6b2; --text:#e6eef6; --accent:#2da6ff;
 }
-
-#left {
-  flex: 1;
-  min-width: 320px;
-}
-
-#right {
-  width: 340px;
-}
-
-#dropZone {
-  border: 2px dashed #1572A1;
-  padding: 15px;
-  border-radius: 10px;
-  text-align: center;
-  background: #e9f7ff;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-#boardContainer {
-  position: relative;
-  background: #fff;
-  padding: 10px;
-  border-radius: 10px;
-}
-
-#board {
-  width: 420px;
-  max-width: 100%;
-}
-
-#overlayCanvas {
-  position: absolute;
-  left: 10px;
-  top: 10px;
-  pointer-events: none;
-}
-
-textarea { width: 100%; padding: 8px; border-radius: 6px; }
-
-.move-row {
-  padding: 6px;
-  cursor: pointer;
-  border-radius: 5px;
-}
-.move-row:hover { background: #eef9ff; }
-.move-row.active { background: #d8efff; border-left: 4px solid #1572A1; }
-
-button {
-  padding: 8px 12px;
-  margin: 3px;
-  border-radius: 6px;
-  border: 1px solid #1572A1;
-  background: #fff;
-  cursor: pointer;
-}
-button:hover { background: #e1f3ff; }
+*{box-sizing:border-box}
+body{font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:16px}
+.app{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 360px;gap:18px}
+@media (max-width:980px){.app{grid-template-columns:1fr}.sidebar{order:2}}
+.card{background:var(--panel);border-radius:12px;padding:12px;box-shadow:0 6px 20px rgba(8,30,45,0.06)}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#dropZone{border:2px dashed var(--accent);padding:14px;border-radius:10px;text-align:center;background:linear-gradient(180deg, #f2fbff, var(--panel));cursor:pointer;font-weight:600;color:var(--accent)}
+#boardContainer{position:relative}
+#board{width:420px;max-width:90vw}
+#overlayCanvas{position:absolute;left:12px;top:12px;pointer-events:none}
+.move-list{max-height:480px;overflow:auto;padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.04);background:linear-gradient(180deg,#fff,#f9fdff)}
+.move-row{padding:6px 8px;border-radius:6px;display:flex;justify-content:space-between;gap:8px;align-items:center;cursor:pointer}
+.move-row:hover{background:linear-gradient(90deg, rgba(12,60,90,0.04), rgba(12,60,90,0.02))}
+.move-row.active{background:linear-gradient(90deg,#eaf6ff,#f8fbff);border-left:4px solid var(--accent)}
+.small{font-size:13px;color:var(--muted)}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+textarea,input[type="text"]{width:100%;padding:8px;border-radius:8px;border:1px solid #e6eef2;background:transparent;color:var(--text)}
+select,button,input[type="color"]{padding:8px;border-radius:8px;border:1px solid #d6e6f2;background:var(--panel);cursor:pointer}
+.header-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.top-meta{display:flex;gap:8px;align-items:center}
+.eval-bubble{padding:6px 10px;border-radius:10px;background:#0f1724;color:#fff;font-weight:700}
+.variations{max-height:180px;overflow:auto;border:1px solid #eef6fb;padding:8px;border-radius:8px;background:#fff}
+.comment-item{padding:6px;border-radius:6px;border-bottom:1px solid #f1f6fa}
+.footer-small{font-size:12px;color:var(--muted);margin-top:8px}
+.dark-toggle{margin-left:auto}
+kbd{background:#f3f4f6;border-radius:4px;padding:2px 6px;font-weight:600}
 </style>
 </head>
-<body>
-
+<body data-theme="light">
 <div class="app">
 
-<div id="left">
+  <main class="card left">
+    <div class="header-row">
+      <div>
+        <h2 style="margin:0">PGN Viewer — All features</h2>
+        <div class="small">Arrows, Stockfish analysis, variations, comments, dark mode</div>
+      </div>
+      <div class="top-meta">
+        <div id="engineStatus" class="small">Engine: unloaded</div>
+        <button id="themeToggle" class="dark-toggle small">Dark</button>
+      </div>
+    </div>
 
-  <h2>PGN Viewer — Arrows & Annotations</h2>
+    <div style="margin-top:10px" id="dropZone">Click to upload a <strong>.pgn</strong> file</div>
+    <input type="file" id="fileInput" accept=".pgn" style="display:none;margin-top:6px">
 
-  <div id="dropZone">Click to upload a PGN file</div>
-  <input type="file" id="fileInput" accept=".pgn" style="display:none">
+    <textarea id="pgnInput" placeholder="Paste PGN here (or upload)"></textarea>
 
-  <textarea id="pgnInput" placeholder="Paste PGN here"></textarea>
+    <div class="controls" style="margin-top:8px">
+      <button id="loadPgn">Load PGN</button>
+      <button id="autoLoadToggle">Auto-load on select: OFF</button>
+      <button id="analyzeBtn">Analyze ▶</button>
+      <button id="stopEngineBtn">Stop</button>
+      <button id="exportPgnBtn">Export PGN (comments + arrows)</button>
+    </div>
 
-  <button id="loadPgn">Load PGN</button>
-  <button id="flipBtn">Flip Board</button>
-  <button id="exportPgnBtn">Export PGN</button>
+    <div id="boardContainer" style="margin-top:12px" class="card">
+      <div id="board"></div>
+      <canvas id="overlayCanvas"></canvas>
 
-  <div id="boardContainer">
-    <div id="board"></div>
-    <canvas id="overlayCanvas"></canvas>
-  </div>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button id="prevMove">◀ Prev</button>
+        <button id="nextMove">Next ▶</button>
+        <input type="range" id="moveSlider" min="0" max="0" value="0" style="width:230px">
+        <div id="moveCounter" class="small">0 / 0</div>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <div id="bestMoveBox" class="small">Best: —</div>
+          <div id="evalBox" class="eval-bubble">—</div>
+        </div>
+      </div>
 
-  <div>
-    <button id="prevMove">◀ Prev</button>
-    <button id="nextMove">Next ▶</button>
-    <input type="range" id="moveSlider" min="0" value="0" style="width:200px;">
-    <span id="moveCounter">0/0</span>
-  </div>
+      <div style="margin-top:12px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
+        <div style="width:320px">
+          <div class="small">Comment for current move</div>
+          <textarea id="commentBox" placeholder="Edit comment..."></textarea>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button id="saveComment">Save Comment</button>
+            <button id="clearComment">Clear</button>
+          </div>
 
-  <h4>Comment</h4>
-  <textarea id="commentBox"></textarea>
-  <button id="saveComment">Save</button>
-  <button id="clearComment">Clear</button>
+          <div style="margin-top:10px">
+            <div class="small">Comments panel</div>
+            <div id="commentsPanel" class="variations"></div>
+          </div>
+        </div>
 
-  <h4>Arrows</h4>
-  <button id="arrowModeBtn">Arrow Mode</button>
-  <input type="color" id="arrowColor" value="#ff0000">
-  <button id="clearArrowsBtn">Clear Arrows</button>
+        <div style="width:200px">
+          <div class="small">Arrow tools</div>
+          <div class="tools" style="margin-top:6px">
+            <button id="arrowModeBtn">Arrow Mode</button>
+            <select id="arrowStyle">
+              <option value="arrow">Arrow</option>
+              <option value="circle">Circle</option>
+            </select>
+            <input id="arrowColor" type="color" value="#ff0000">
+            <button id="clearArrowsBtn">Clear Arrows</button>
+          </div>
+
+          <div style="margin-top:8px">
+            <div class="small">Arrows on this move</div>
+            <div id="annotationArrows" class="variations"></div>
+          </div>
+
+          <div style="margin-top:10px">
+            <div class="small">Engine settings</div>
+            <div style="display:flex;gap:6px;margin-top:6px">
+              <label class="small">Depth</label>
+              <input id="engineDepth" type="number" value="12" min="5" max="30" style="width:70px">
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <aside class="card sidebar">
+    <h3 style="margin-top:0">Moves</h3>
+    <div id="moveList" class="move-list"></div>
+
+    <hr style="margin:12px 0;border-color:#eef6fb">
+    <div class="small">Variation tree</div>
+    <div id="varTree" class="variations"></div>
+
+    <div style="margin-top:10px">
+      <div class="small">Session</div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button id="saveSession">Save</button>
+        <button id="loadSession">Load</button>
+        <button id="clearSession">Clear</button>
+      </div>
+    </div>
+
+    <div class="footer-small">Shortcuts: ← → for moves, A toggles arrow mode</div>
+  </aside>
 
 </div>
 
-<div id="right">
-  <h3>Moves</h3>
-  <div id="moveList" style="max-height:500px;overflow:auto;border:1px solid #ccc;padding:5px;"></div>
-
-  <h3>Session</h3>
-  <button id="saveSession">Save Session</button>
-  <button id="loadSession">Load Session</button>
-  <button id="clearSession">Clear Session</button>
-</div>
-
-</div>
-
+<!-- Stockfish (WASM) loaded from jsDelivr/unpkg package (runs inside worker) -->
+<!-- using stockfish.wasm package (worker file) so engine runs client-side in GH Pages -->
+<script src="https://cdn.jsdelivr.net/npm/stockfish.wasm@0.10.0/stockfish.worker.js" type="javascript/worker"></script>
+<!-- chess libs -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/js/chessboard.min.js"></script>
 
 <script>
-/* ===================== GLOBAL STATE ===================== */
-let game = new Chess();
-let board = Chessboard("board", { draggable:false });
-let moves = [];
+/* ================= LOADING NOTE
+   We rely on stockfish.wasm package from jsDelivr/unpkg to provide the worker script.
+   This script is used to instantiate a WebWorker below. Source package: stockfish.wasm on jsDelivr/npm.
+   (CDN references verified.) */
+</script>
+
+<script>
+/* =================== App State =================== */
+const themeToggle = document.getElementById('themeToggle');
+const body = document.body;
+const engineStatus = document.getElementById('engineStatus');
+
+let engineWorker = null;
+let engineReady = false;
+let engineId = 0; // for messages
+let enginePending = false;
+
+const game = new Chess();
+const board = Chessboard('board', { draggable: false, position: 'start',
+  pieceTheme: 'https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/img/chesspieces/wikipedia/{piece}.png'
+});
+
+let moves = []; // { san, fen, comment, arrows:[], variations: [] }
 let currentMove = 0;
+let flipped = false;
+
+/* UI refs */
+const pgnInput = document.getElementById('pgnInput');
+const fileInput = document.getElementById('fileInput');
+const dropZone = document.getElementById('dropZone');
+const loadPgnBtn = document.getElementById('loadPgn');
+const moveListEl = document.getElementById('moveList');
+const varTreeEl = document.getElementById('varTree');
+const commentsPanel = document.getElementById('commentsPanel');
+const moveSlider = document.getElementById('moveSlider');
+const moveCounter = document.getElementById('moveCounter');
+const prevMoveBtn = document.getElementById('prevMove');
+const nextMoveBtn = document.getElementById('nextMove');
+const commentBox = document.getElementById('commentBox');
+const saveCommentBtn = document.getElementById('saveComment');
+const clearCommentBtn = document.getElementById('clearComment');
+const arrowModeBtn = document.getElementById('arrowModeBtn');
+const arrowColorInput = document.getElementById('arrowColor');
+const arrowStyleSelect = document.getElementById('arrowStyle');
+const clearArrowsBtn = document.getElementById('clearArrowsBtn');
+const annotationArrowsDiv = document.getElementById('annotationArrows');
+const exportPgnBtn = document.getElementById('exportPgnBtn');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const stopEngineBtn = document.getElementById('stopEngineBtn');
+const engineDepthInput = document.getElementById('engineDepth');
+const bestMoveBox = document.getElementById('bestMoveBox');
+const evalBox = document.getElementById('evalBox');
+const autoLoadToggle = document.getElementById('autoLoadToggle');
+
+const canvas = document.getElementById('overlayCanvas');
+const ctx = canvas.getContext('2d');
+let boardRect = null;
+
+/* Arrow / interaction */
 let arrowMode = false;
 let arrowStage = null;
 
-/* canvas */
-const canvas = document.getElementById("overlayCanvas");
-const ctx = canvas.getContext("2d");
-
-/* ===================== UPLOAD ===================== */
-document.getElementById("dropZone").onclick = () => {
-  document.getElementById("fileInput").click();
-};
-
-document.getElementById("fileInput").onchange = () => {
-  let file = document.getElementById("fileInput").files[0];
-  if (!file) return;
-
-  let reader = new FileReader();
-  reader.onload = () => { document.getElementById("pgnInput").value = reader.result; };
-  reader.readAsText(file);
-};
-
-/* ===================== LOAD PGN ===================== */
-function normalizePGN(pgn){
-  return pgn.replace(/\r/g,"").replace(/\n\n+/g,"\n\n");
+/* Dark mode */
+function loadTheme(){
+  const t = localStorage.getItem('theme') || 'light';
+  body.setAttribute('data-theme', t);
+  themeToggle.textContent = t === 'dark' ? 'Light' : 'Dark';
 }
-
-function loadPGN(pgnText){
-  pgnText = normalizePGN(pgnText);
-
-  game.reset();
-  moves = [];
-  currentMove = 0;
-
-  if (!game.load_pgn(pgnText,{sloppy:true})) {
-    alert("Invalid PGN");
-    return;
-  }
-
-  const history = game.history({verbose:true});
-  const comments = [...pgnText.matchAll(/\{([^}]*)}/g)].map(a=>a[1]);
-
-  let tmp = new Chess();
-  let ci = 0;
-
-  history.forEach(m=>{
-    tmp.move(m.san);
-    moves.push({
-      san:m.san,
-      fen:tmp.fen(),
-      comment:comments[ci]||"",
-      arrows:[]
-    });
-    ci++;
-  });
-
-  updateMoveList();
-  updateBoard();
-}
-
-document.getElementById("loadPgn").onclick = () => {
-  loadPGN(document.getElementById("pgnInput").value);
-};
-
-/* ===================== MOVE LIST ===================== */
-function updateMoveList(){
-  let list = document.getElementById("moveList");
-  list.innerHTML = "";
-
-  moves.forEach((m,i)=>{
-    let row = document.createElement("div");
-    row.className = "move-row";
-    row.textContent = `${i+1}. ${m.san}`;
-    row.dataset.i = i;
-
-    row.onclick = () => {
-      currentMove = i+1;
-      updateBoard();
-    };
-
-    list.appendChild(row);
-  });
-}
-
-/* ===================== BOARD UPDATE ===================== */
-function updateBoard(){
-  if (currentMove === 0) board.position("start");
-  else board.position(moves[currentMove-1].fen);
-
-  document.getElementById("moveCounter").textContent =
-    `${currentMove}/${moves.length}`;
-
-  document.getElementById("moveSlider").max = moves.length;
-  document.getElementById("moveSlider").value = currentMove;
-
-  document.getElementById("commentBox").value =
-    currentMove ? moves[currentMove-1].comment : "";
-
-  renderArrows();
-}
-
-/* ===================== NAVIGATION ===================== */
-document.getElementById("nextMove").onclick = ()=>{
-  if (currentMove < moves.length) currentMove++;
-  updateBoard();
-};
-
-document.getElementById("prevMove").onclick = ()=>{
-  if (currentMove > 0) currentMove--;
-  updateBoard();
-};
-
-document.getElementById("moveSlider").oninput = (e)=>{
-  currentMove = Number(e.target.value);
-  updateBoard();
-};
-
-/* ===================== COMMENTS ===================== */
-document.getElementById("saveComment").onclick = ()=>{
-  if (!currentMove) return;
-  moves[currentMove-1].comment = document.getElementById("commentBox").value;
-  updateMoveList();
-};
-
-document.getElementById("clearComment").onclick = ()=>{
-  if (!currentMove) return;
-  moves[currentMove-1].comment = "";
-  document.getElementById("commentBox").value = "";
-  updateMoveList();
-};
-
-/* ===================== ARROWS ===================== */
-document.getElementById("arrowModeBtn").onclick = ()=>{
-  arrowMode = !arrowMode;
-  arrowStage = null;
-  alert("Arrow mode: " + (arrowMode?"ON":"OFF"));
-};
-
-function squareFromElement(el){
-  for (let c of el.classList)
-    if (c.startsWith("square-"))
-      return c.replace("square-","");
-  return null;
-}
-
-document.getElementById("board").addEventListener("click",(e)=>{
-  if (!arrowMode || !currentMove) return;
-
-  let sq = squareFromElement(e.target);
-  if (!sq) return;
-
-  if (!arrowStage) {
-    arrowStage = sq;
-    return;
-  }
-
-  moves[currentMove-1].arrows.push({
-    from: arrowStage,
-    to: sq,
-    color: document.getElementById("arrowColor").value
-  });
-
-  arrowStage = null;
-  renderArrows();
+loadTheme();
+themeToggle.addEventListener('click', ()=>{
+  const t = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  body.setAttribute('data-theme', t);
+  localStorage.setItem('theme', t);
+  themeToggle.textContent = t === 'dark' ? 'Light' : 'Dark';
 });
 
-document.getElementById("clearArrowsBtn").onclick = ()=>{
+/* =================== Utilities =================== */
+function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function setEngineStatus(text){ engineStatus.textContent = 'Engine: ' + text; }
+
+/* =================== Click-to-upload (fixed: input OUTSIDE clickable div) =================== */
+dropZone.addEventListener('click', ()=> fileInput.click());
+let autoLoadOnSelect = false;
+autoLoadToggle.addEventListener('click', ()=>{
+  autoLoadOnSelect = !autoLoadOnSelect;
+  autoLoadToggle.textContent = `Auto-load on select: ${autoLoadOnSelect? 'ON':'OFF'}`;
+});
+
+fileInput.addEventListener('change', ()=>{
+  const f = fileInput.files && fileInput.files[0];
+  if (!f) return;
+  if (!f.name.toLowerCase().endsWith('.pgn')) { alert('Please upload a .pgn file'); return; }
+  const r = new FileReader();
+  r.onload = ()=> {
+    pgnInput.value = r.result;
+    if (autoLoadOnSelect) loadFromTextarea();
+  };
+  r.readAsText(f);
+});
+
+/* =================== PGN parse/load (with variations and comments) =================== */
+function normalizePGN(s){ return s.replace(/\r/g,'').replace(/\n\n+/g,'\n\n'); }
+
+// Simple PGN parser for mainline + simple variations: returns array of tokens and nested arrays for variations
+function parsePGNTokens(pgn){
+  // remove headers
+  pgn = pgn.replace(/\[.*?\]\s*\n/g,'').trim();
+  // normalize spaces
+  pgn = pgn.replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+  const tokens = [];
+  let i=0;
+  while(i<pgn.length){
+    const ch = pgn[i];
+    if (ch==='('){
+      // find matching ) and recursively parse
+      let bal=1,j=i+1;
+      while(j<pgn.length && bal>0){
+        if (pgn[j]==='(') bal++;
+        else if (pgn[j]===')') bal--;
+        j++;
+      }
+      const inner = pgn.slice(i+1,j-1);
+      tokens.push({type:'var', value: parsePGNTokens(inner)} );
+      i=j;
+    } else if (ch==='{'){
+      let j=i+1;
+      while(j<pgn.length && pgn[j]!=='}') j++;
+      tokens.push({type:'comment', value: pgn.slice(i+1,j).trim()});
+      i=j+1;
+    } else {
+      // read next word
+      let j=i;
+      while(j<pgn.length && pgn[j] !== ' ' && pgn[j] !== '(' && pgn[j] !== '{' && pgn[j] !== ')') j++;
+      const word = pgn.slice(i,j).trim();
+      if (word) tokens.push({type:'word', value:word});
+      i = j;
+      if (pgn[i] === ' ') i++;
+    }
+  }
+  return tokens;
+}
+
+// Build moves array (linearized mainline) and attach comments and simple variations
+function buildMovesFromTokens(tokens){
+  const tmp = new Chess();
+  const result = [];
+  let commentQueue = [];
+  let moveNumber = 1;
+  let expectingSAN = false;
+
+  function pushSAN(san){
+    tmp.move(san);
+    result.push({ san, fen: tmp.fen(), comment: (commentQueue.shift()||''), arrows: [], variations: [] });
+    expectingSAN = false;
+  }
+
+  // tokens is a flat sequence with var/comment tokens
+  for (let i=0;i<tokens.length;i++){
+    const t = tokens[i];
+    if (t.type==='word'){
+      // ignore move numbers like "1." or "12..."
+      if (/^\d+\.$/.test(t.value)) continue;
+      // ignore results
+      if (t.value === '1-0' || t.value==='0-1' || t.value==='1/2-1/2' || t.value==='*') continue;
+      // SAN
+      pushSAN(t.value);
+    } else if (t.type==='comment'){
+      commentQueue.push(t.value);
+    } else if (t.type==='var'){
+      // attach to last move as a variation; recursively parse its moves (only shallow: we store the var tokens)
+      const varTokens = t.value;
+      // convert varTokens to SAN sequence using a temporary chess instance from the position before attaching
+      const beforeFen = result.length ? result[result.length-1].fen : (new Chess()).fen();
+      const varSeq = parseVariantFromTokens(varTokens, beforeFen);
+      if (result.length) result[result.length-1].variations.push(varSeq);
+    }
+  }
+  return result;
+}
+
+function parseVariantFromTokens(tokens, fen){
+  // try to play tokens from the given fen; stop at illegal move or end; return SAN list + nested variations (not deeply parsed)
+  const tmp = new Chess(fen);
+  const seq = [];
+  tokens.forEach(t => {
+    if (t.type==='word'){
+      if (/^\d+\.$/.test(t.value)) return;
+      if (t.value==='1-0' || t.value==='0-1' || t.value==='1/2-1/2' || t.value==='*') return;
+      if (tmp.move(t.value)) {
+        seq.push({ san: t.value, fen: tmp.fen() });
+      }
+    }
+  });
+  return seq;
+}
+
+function loadFromTextarea(){
+  const txt = pgnInput.value.trim();
+  if (!txt){ alert('Paste or upload a PGN first'); return; }
+  const norm = normalizePGN(txt);
+  const tokens = parsePGNTokens(norm);
+  moves = buildMovesFromTokens(tokens);
+
+  // restore custom arrow header if present
+  const arrowHeaderMatch = txt.match(/\[Arrows "([^"]+)"\]/);
+  if (arrowHeaderMatch){
+    try {
+      const arrData = JSON.parse(decodeURIComponent(arrowHeaderMatch[1]));
+      // arrData is { moveIndex: [ {from,to,color,style}, ... ], ... }
+      Object.keys(arrData).forEach(k=>{
+        const idx = Number(k);
+        if (moves[idx]) moves[idx].arrows = arrData[k];
+      });
+    } catch(e){ console.warn('Failed to parse arrows header', e); }
+  }
+
+  currentMove = 0;
+  updateMoveList();
+  updateBoard();
+  buildVarTree();
+}
+
+/* =================== UI: Move list, board update, variations =================== */
+function updateMoveList(){
+  moveListEl.innerHTML = '';
+  for (let i=0;i<moves.length;i++){
+    const m = moves[i];
+    const row = document.createElement('div');
+    row.className = 'move-row';
+    row.dataset.idx = i;
+    row.innerHTML = `<div style="display:flex;gap:8px;align-items:center"><div style="font-weight:700">${i+1}.</div><div style="min-width:160px">${escapeHtml(m.san)}</div></div>
+      <div class="small">${m.comment? (m.comment.length>40? escapeHtml(m.comment.slice(0,40))+'...':escapeHtml(m.comment)) : ''}</div>`;
+    row.addEventListener('click', ()=> {
+      currentMove = Number(row.dataset.idx) + 1;
+      updateBoard();
+    });
+    moveListEl.appendChild(row);
+  }
+  highlightActiveMove();
+}
+
+function highlightActiveMove(){
+  Array.from(moveListEl.children).forEach(c=> c.classList.remove('active'));
+  if (currentMove>0){
+    const idx = currentMove-1;
+    const el = moveListEl.querySelector(`.move-row[data-idx="${idx}"]`);
+    if (el) el.classList.add('active');
+  }
+}
+
+function updateBoard(){
+  if (currentMove === 0){
+    board.position('start', false);
+    commentBox.value = '';
+    commentsPanel.innerHTML = '<div class="small">No comments yet. Load a PGN.</div>';
+  } else {
+    const fen = moves[currentMove-1].fen;
+    board.position(fen, true);
+    commentBox.value = moves[currentMove-1].comment || '';
+    renderCommentsPanel();
+  }
+  moveCounter.textContent = `${currentMove} / ${moves.length}`;
+  moveSlider.max = moves.length;
+  moveSlider.value = currentMove;
+  highlightActiveMove();
+  renderArrowsForCurrentMove();
+}
+
+/* variation tree */
+function buildVarTree(){
+  varTreeEl.innerHTML = '';
+  // show mainline
+  const ul = document.createElement('div');
+  moves.forEach((m,i)=>{
+    const d = document.createElement('div');
+    d.style.marginBottom = '6px';
+    d.innerHTML = `<strong>${i+1}.</strong> ${escapeHtml(m.san)} ${m.variations && m.variations.length? '<span class="small">('+ m.variations.length +' vars)</span>':''}`;
+    if (m.variations && m.variations.length){
+      const inner = document.createElement('div');
+      inner.style.marginLeft='10px';
+      m.variations.forEach((v,vi)=>{
+        const vs = v.map(x=>x.san).join(' ');
+        const btn = document.createElement('div');
+        btn.textContent = `(${vs})`;
+        btn.className = 'small';
+        btn.style.cursor='pointer';
+        btn.onclick = ()=> {
+          // play that variation by navigating to its first move
+          currentMove = i+1;
+          updateBoard();
+        };
+        inner.appendChild(btn);
+      });
+      d.appendChild(inner);
+    }
+    ul.appendChild(d);
+  });
+  varTreeEl.appendChild(ul);
+}
+
+/* =================== Comments panel (Lichess-like simple) =================== */
+function renderCommentsPanel(){
+  commentsPanel.innerHTML = '';
+  for (let i=0;i<moves.length;i++){
+    const m = moves[i];
+    const el = document.createElement('div');
+    el.className = 'comment-item';
+    el.innerHTML = `<div style="display:flex;justify-content:space-between"><div><strong>${i+1}.</strong> ${escapeHtml(m.san)}</div><div class="small">${m.comment? 'Has comment':''}</div></div>
+      <div class="small" style="margin-top:6px">${m.comment? escapeHtml(m.comment): '<em>No comment</em>'}</div>`;
+    el.onclick = ()=> { currentMove = i+1; updateBoard(); };
+    commentsPanel.appendChild(el);
+  }
+}
+
+/* =================== Move navigation UI =================== */
+document.getElementById('nextMove').addEventListener('click', ()=>{ if (currentMove < moves.length) currentMove++; updateBoard(); });
+document.getElementById('prevMove').addEventListener('click', ()=>{ if (currentMove > 0) currentMove--; updateBoard(); });
+moveSlider.addEventListener('input', ()=>{ currentMove = Number(moveSlider.value); updateBoard(); });
+
+/* =================== Save/Clear Comments =================== */
+saveCommentBtn.addEventListener('click', ()=>{
+  if (!currentMove) { alert('Select a move'); return; }
+  moves[currentMove-1].comment = commentBox.value.trim();
+  renderCommentsPanel();
+  updateMoveList();
+});
+clearCommentBtn.addEventListener('click', ()=>{
   if (!currentMove) return;
-  moves[currentMove-1].arrows = [];
-  renderArrows();
-};
+  moves[currentMove-1].comment = '';
+  commentBox.value = '';
+  renderCommentsPanel();
+  updateMoveList();
+});
 
-/* ===================== DRAW ARROWS ===================== */
-function resizeCanvas(){
-  const rect = document.getElementById("board").getBoundingClientRect();
+/* =================== Arrow drawing + styles =================== */
+arrowModeBtn.addEventListener('click', ()=>{
+  arrowMode = !arrowMode;
+  arrowStage = null;
+  arrowModeBtn.style.background = arrowMode ? 'linear-gradient(90deg,#e6fff4,#effffb)' : '';
+  arrowModeBtn.textContent = arrowMode ? 'Arrow Mode: ON (A to toggle)' : 'Arrow Mode';
+});
 
-  canvas.width = rect.width * devicePixelRatio;
-  canvas.height = rect.height * devicePixelRatio;
-  canvas.style.width = rect.width + "px";
-  canvas.style.height = rect.height + "px";
+document.getElementById('board').addEventListener('click', (e)=>{
+  if (!arrowMode) return;
+  // find square class like 'square-a1'
+  const cl = Array.from(e.target.classList).find(c=>c.startsWith('square-'));
+  if (!cl){ /* maybe clicked piece — find parent */ return; }
+  const sq = cl.replace('square-','');
+  if (!arrowStage){ arrowStage = sq; /* temporary highlight could be added */ return; }
+  // commit arrow
+  if (!currentMove){ alert('Select a move first'); arrowStage=null; return; }
+  const color = arrowColorInput.value;
+  const style = arrowStyleSelect.value;
+  moves[currentMove-1].arrows.push({ from: arrowStage, to: sq, color, style });
+  arrowStage = null;
+  renderArrowsForCurrentMove();
+  refreshAnnotationsList();
+});
 
+clearArrowsBtn.addEventListener('click', ()=>{ if (!currentMove) return; moves[currentMove-1].arrows=[]; renderArrowsForCurrentMove(); refreshAnnotationsList(); });
+
+function refreshAnnotationsList(){
+  annotationArrowsDiv.innerHTML = '';
+  if (!currentMove) return;
+  const arrs = moves[currentMove-1].arrows || [];
+  if (!arrs.length) { annotationArrowsDiv.innerHTML = '<div class="small">No arrows on this move.</div>'; return; }
+  arrs.forEach((a,idx)=>{
+    const row = document.createElement('div');
+    row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center'; row.style.padding='6px'; row.style.borderBottom='1px solid #f1f6fa';
+    row.innerHTML = `<div style="display:flex;gap:8px;align-items:center"><div style="width:16px;height:10px;background:${a.color};border-radius:3px"></div><div class="small">${a.from} → ${a.to} (${a.style})</div></div>
+      <div><button data-idx="${idx}" class="editArrow">Edit</button><button data-idx="${idx}" class="delArrow">Del</button></div>`;
+    annotationArrowsDiv.appendChild(row);
+  });
+  Array.from(annotationArrowsDiv.querySelectorAll('.delArrow')).forEach(btn=>{
+    btn.addEventListener('click', ()=>{ const idx=Number(btn.dataset.idx); moves[currentMove-1].arrows.splice(idx,1); renderArrowsForCurrentMove(); refreshAnnotationsList(); });
+  });
+  Array.from(annotationArrowsDiv.querySelectorAll('.editArrow')).forEach(btn=>{
+    btn.addEventListener('click', ()=>{ const idx=Number(btn.dataset.idx); const col = prompt('Color hex', moves[currentMove-1].arrows[idx].color); if (col) { moves[currentMove-1].arrows[idx].color=col; renderArrowsForCurrentMove(); refreshAnnotationsList(); } });
+  });
+}
+
+/* =================== Canvas sizing & arrow rendering =================== */
+function updateBoardRect(){
+  const rect = document.getElementById('board').getBoundingClientRect();
+  boardRect = rect;
+  const padLeft = 12, padTop = 12;
+  canvas.style.left = padLeft + 'px';
+  canvas.style.top = padTop + 'px';
+  const width = rect.width, height = rect.height;
+  canvas.width = Math.round(width * devicePixelRatio);
+  canvas.height = Math.round(height * devicePixelRatio);
+  canvas.style.width = width + 'px';
+  canvas.style.height = height + 'px';
   ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
 }
 
-function squareCenter(sq){
-  const rect = document.getElementById("board").getBoundingClientRect();
-  const size = rect.width / 8;
-
-  const file = sq.charCodeAt(0) - 97;
-  const rank = 8 - parseInt(sq[1]);
-
-  return {
-    x: file * size + size/2,
-    y: rank * size + size/2
-  };
+function squareCenterCoords(square){
+  if (!boardRect) updateBoardRect();
+  const file = square.charCodeAt(0) - 97; // a->0
+  const rank = 8 - Number(square[1]); // rank 1 -> row 7
+  const sqW = boardRect.width / 8;
+  const x = sqW * file + sqW/2;
+  const y = sqW * rank + sqW/2;
+  return { x, y };
 }
 
-function drawArrow(a){
-  const p1 = squareCenter(a.from);
-  const p2 = squareCenter(a.to);
-
+function drawArrowOnCanvas(a){
+  if (a.style === 'circle'){
+    const c = squareCenterCoords(a.to);
+    ctx.beginPath();
+    ctx.strokeStyle = a.color;
+    ctx.lineWidth = 6;
+    ctx.arc(c.x, c.y, Math.max(12, Math.min(24, boardRect.width/24)), 0, Math.PI*2);
+    ctx.stroke();
+    return;
+  }
+  const p1 = squareCenterCoords(a.from);
+  const p2 = squareCenterCoords(a.to);
   ctx.strokeStyle = a.color;
-  ctx.fillStyle = a.color;
   ctx.lineWidth = 6;
-
+  ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(p1.x,p1.y);
-  ctx.lineTo(p2.x,p2.y);
+  ctx.moveTo(p1.x, p1.y);
+  ctx.lineTo(p2.x, p2.y);
   ctx.stroke();
-
   const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-  const head = 15;
-
+  const head = Math.max(10, boardRect.width/32);
   ctx.beginPath();
-  ctx.moveTo(p2.x,p2.y);
-  ctx.lineTo(p2.x - head*Math.cos(angle-0.5),
-             p2.y - head*Math.sin(angle-0.5));
-  ctx.lineTo(p2.x - head*Math.cos(angle+0.5),
-             p2.y - head*Math.sin(angle+0.5));
+  ctx.moveTo(p2.x, p2.y);
+  ctx.lineTo(p2.x - head*Math.cos(angle - Math.PI/6), p2.y - head*Math.sin(angle - Math.PI/6));
+  ctx.lineTo(p2.x - head*Math.cos(angle + Math.PI/6), p2.y - head*Math.sin(angle + Math.PI/6));
   ctx.closePath();
+  ctx.fillStyle = a.color;
   ctx.fill();
 }
 
-function renderArrows(){
-  resizeCanvas();
+function renderArrowsForCurrentMove(){
+  if (!boardRect) updateBoardRect();
   ctx.clearRect(0,0,canvas.width,canvas.height);
-
   if (!currentMove) return;
-
-  moves[currentMove-1].arrows.forEach(a => drawArrow(a));
+  const arrs = moves[currentMove-1].arrows || [];
+  arrs.forEach(a=> drawArrowOnCanvas(a));
 }
 
-/* ===================== EXPORT ===================== */
-document.getElementById("exportPgnBtn").onclick = ()=>{
-  let out = "";
-  let num = 1;
+/* window resize */
+window.addEventListener('resize', ()=> { setTimeout(()=>{ updateBoardRect(); renderArrowsForCurrentMove(); }, 120); });
 
-  for (let i=0;i<moves.length;i++){
-    if (i%2===0) out += num++ + ". ";
-    out += moves[i].san;
-
-    if (moves[i].comment)
-      out += " {" + moves[i].comment + "}";
-
-    out += " ";
+/* =================== Export PGN (with comments + custom arrow header) =================== */
+exportPgnBtn.addEventListener('click', ()=>{
+  // header include arrows as encoded JSON
+  const arrowMap = {};
+  moves.forEach((m,i)=>{
+    if (m.arrows && m.arrows.length) arrowMap[i] = m.arrows;
+  });
+  const arrowHeader = Object.keys(arrowMap).length ? `[Arrows "${encodeURIComponent(JSON.stringify(arrowMap))}"]\n` : '';
+  // attempts to reuse existing header if present
+  const headerMatch = pgnInput.value.match(/(\[[^\]]+\]\s*)+/);
+  const header = headerMatch ? headerMatch[0] + '\n' : '';
+  let body = '';
+  for (let i=0;i<moves.length;i+=2){
+    const num = Math.floor(i/2)+1;
+    const w = moves[i] ? moves[i].san + (moves[i].comment? ' {'+moves[i].comment+'}':'') : '';
+    const b = moves[i+1] ? moves[i+1].san + (moves[i+1].comment? ' {'+moves[i+1].comment+'}':'') : '';
+    body += `${num}. ${w}${ b ? ' ' + b : '' } `;
   }
+  const out = (header || '') + arrowHeader + '\n' + body + '\n';
+  const w = window.open('', '_blank');
+  w.document.write('<pre style="white-space:pre-wrap;">' + escapeHtml(out) + '</pre>');
+});
 
-  const w = window.open("", "_blank");
-  w.document.write("<pre>"+out+"</pre>");
-};
+/* =================== Engine: spawn Stockfish in worker =================== */
+function startEngine(){
+  if (engineWorker) { return; }
+  setEngineStatus('loading');
+  // instantiate worker from CDN worker URL
+  // we use the stockfish.wasm package worker (jsdelivr)
+  try {
+    // create worker
+    engineWorker = new Worker('https://cdn.jsdelivr.net/npm/stockfish.wasm@0.10.0/stockfish.worker.js');
+  } catch(e){
+    alert('Failed to instantiate engine worker: ' + e);
+    setEngineStatus('failed');
+    return;
+  }
+  engineReady = false;
+  engineId++;
+  engineWorker.onmessage = (ev)=>{
+    const data = ev.data;
+    // console.log('engine->', data);
+    if (typeof data === 'string'){
+      if (data.startsWith('uciok')) {
+        engineReady = true;
+        setEngineStatus('ready');
+      } else if (data.startsWith('info')){
+        // parse score and depth
+        // example: info depth 12 seldepth 18 score cp 13 ...
+        const m = data.match(/score (cp|mate) (-?\d+)/);
+        if (m){
+          if (m[1] === 'cp') { evalBox.textContent = (Number(m[2])/100).toFixed(2); }
+          else { evalBox.textContent = '#'+m[2]; }
+        }
+        const bm = data.match(/pv\s+([a-h][1-8][a-h][1-8][nbrqk]?)/);
+        if (bm) bestMoveBox.textContent = 'Best: ' + bm[1];
+      } else if (data.startsWith('bestmove')){
+        const parts = data.split(' ');
+        const best = parts[1];
+        bestMoveBox.textContent = 'Best: ' + best;
+        setEngineStatus('idle');
+        enginePending = false;
+      }
+    }
+  };
+  engineWorker.onerror = (e)=> { console.error('engine error',e); setEngineStatus('error'); };
+  // handshake
+  engineWorker.postMessage('uci');
+  setEngineStatus('initializing');
+}
 
-/* ===================== SESSION ===================== */
-document.getElementById("saveSession").onclick=()=>{
-  localStorage.setItem("pgn_session",JSON.stringify({moves,currentMove}));
-  alert("Saved!");
-};
+function stopEngine(){
+  if (!engineWorker) return;
+  try { engineWorker.postMessage('stop'); engineWorker.terminate(); } catch(e){}
+  engineWorker = null; engineReady=false;
+  setEngineStatus('stopped');
+}
 
-document.getElementById("loadSession").onclick=()=>{
-  let d = JSON.parse(localStorage.getItem("pgn_session")||"{}");
-  if (!d.moves) return alert("No session stored");
+analyzeBtn.addEventListener('click', ()=>{
+  if (!engineWorker) startEngine();
+  if (!engineWorker) return;
+  if (!engineReady) { setEngineStatus('warming up'); setTimeout(()=>analyzeBtn.click(),300); return; }
+  // build position from current move
+  const fen = currentMove===0 ? (new Chess()).fen() : moves[currentMove-1].fen;
+  engineWorker.postMessage('position fen ' + fen);
+  const depth = Math.max(5, Math.min(30, Number(engineDepthInput.value) || 12));
+  engineWorker.postMessage('go depth ' + depth);
+  setEngineStatus('thinking');
+  enginePending = true;
+});
 
-  moves = d.moves;
-  currentMove = d.currentMove;
+stopEngineBtn.addEventListener('click', ()=> stopEngine());
+
+setEngineStatus('idle');
+
+/* =================== Load initial sample PGN =================== */
+const sample = `[Event "Sample"]
+[Site "?"]
+[Date "2025.01.01"]
+[White "Demo"]
+[Black "Player"]
+[Result "1-0"]
+
+1. e4 {White plays e4} e5 {Black replies}
+2. Nf3 {Knight develops} Nc6 3. Bb5 {Ruy Lopez} a6 (3...Nd4 ? {sample variation}) 4. Ba4 Nf6
+5. O-O Be7 6. Re1 b5 7. Bb3 d6
+`;
+if (!pgnInput.value.trim()) pgnInput.value = sample;
+
+/* =================== parse + initial load =================== */
+loadFromTextarea = ()=>{ loadFromTextareaImpl(); };
+function loadFromTextareaImpl(){
+  try { loadFromTextareaCore(); } catch(e){ console.error(e); alert('Failed to load PGN: '+e); }
+}
+function loadFromTextareaCore(){ loadFromTextareaInner(); }
+function loadFromTextareaInner(){
+  loadFromTextareaActual();
+}
+function loadFromTextareaActual(){
+  // run parser and update UI
+  const txt = pgnInput.value;
+  if (!txt.trim()) { alert('Paste or upload a PGN first'); return; }
+  loadFromTextareaParsing(txt);
+}
+function loadFromTextareaParsing(txt){
+  // main loader
+  const norm = normalizePGN(txt);
+  const tokens = parsePGNTokens(norm);
+  moves = buildMovesFromTokens(tokens);
+  // restore arrows header if any
+  const arrowHeaderMatch = txt.match(/\[Arrows "([^"]+)"\]/);
+  if (arrowHeaderMatch){
+    try {
+      const arr = JSON.parse(decodeURIComponent(arrowHeaderMatch[1]));
+      Object.keys(arr).forEach(k=>{ const idx = Number(k); if (moves[idx]) moves[idx].arrows = arr[k]; });
+    } catch(e){ console.warn('arrow header parse failed'); }
+  }
+  currentMove = 0;
   updateMoveList();
   updateBoard();
-};
+  buildVarTree();
+}
 
-document.getElementById("clearSession").onclick=()=>{
-  localStorage.removeItem("pgn_session");
-  alert("Cleared!");
-};
+/* wire load button */
+loadPgnBtn.addEventListener('click', ()=> loadFromTextareaActual());
+
+/* keyboard shortcuts */
+window.addEventListener('keydown', (e)=>{
+  if (e.key === 'ArrowRight'){ if (currentMove < moves.length) currentMove++; updateBoard(); }
+  if (e.key === 'ArrowLeft'){ if (currentMove > 0) currentMove--; updateBoard(); }
+  if (e.key.toLowerCase() === 'a'){ arrowMode = !arrowMode; arrowModeBtn.click(); }
+});
+
+/* load last session if present */
+try{
+  const s = JSON.parse(localStorage.getItem('pgn_viewer_session') || 'null');
+  if (s && s.moves) { moves = s.moves; currentMove = s.currentMove || 0; updateMoveList(); updateBoard(); buildVarTree(); }
+} catch(e){}
+
+/* session save/load buttons */
+document.getElementById('saveSession').addEventListener('click', ()=>{
+  localStorage.setItem('pgn_viewer_session', JSON.stringify({ moves, currentMove, theme: body.getAttribute('data-theme') }));
+  alert('Saved session to localStorage');
+});
+document.getElementById('loadSession').addEventListener('click', ()=>{
+  const s = JSON.parse(localStorage.getItem('pgn_viewer_session') || 'null');
+  if (!s) return alert('No session found');
+  moves = s.moves || []; currentMove = s.currentMove || 0;
+  if (s.theme) { body.setAttribute('data-theme', s.theme); }
+  updateMoveList(); updateBoard(); buildVarTree();
+});
+document.getElementById('clearSession').addEventListener('click', ()=>{
+  localStorage.removeItem('pgn_viewer_session'); alert('Cleared session');
+});
+
+/* initial render sizing */
+setTimeout(()=>{ updateBoardRect(); renderArrowsForCurrentMove(); }, 350);
 
 </script>
 </body>
