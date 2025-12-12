@@ -83,7 +83,7 @@
   }
   body.dark #bottom { background: #2c2c2c; }
   #inputBox { flex: 1; padding: 6px; font-size: 15px; }
-  #sendButton, #darkToggle, #clearButton, #forgetButton, #upgradeButton {
+  #sendButton, #commandsButton, #darkToggle, #clearButton, #forgetButton, #upgradeButton {
     width: 110px;
     font-size: 15px;
     cursor: pointer;
@@ -97,6 +97,7 @@
   <div id="bottom">
     <input id="inputBox" type="text" placeholder="Type a message...">
     <button id="sendButton">Send</button>
+    <button id="commandsButton">Commands</button>
     <button id="darkToggle">🌙</button>
     <button id="clearButton">Clear</button>
     <button id="forgetButton">Forget</button>
@@ -106,7 +107,7 @@
 
 <script>
 let memory = JSON.parse(localStorage.getItem('politebotMemory') || '[]');
-memory.pendingFact = null; // For "did u know" learning
+memory.pendingFact = null;
 
 const funFacts = [
   "Octopuses have three hearts.",
@@ -155,7 +156,7 @@ function chatLogic(userInput){
   let trimmed = userInput.trim();
   let response="", emotion="😄";
 
-  // ✅ If bot is waiting to learn a fact
+  // Pending fact from "did u know"
   if(memory.pendingFact){
       let factDescription = trimmed;
       memory.push(new Date().toISOString().slice(0,10)+": "+memory.pendingFact+" – "+factDescription);
@@ -165,18 +166,18 @@ function chatLogic(userInput){
       return {response:`Bet! I learned something new about ${learnedFact} 😎🧠`, emotion:"😄"};
   }
 
-  // ✅ Meme keywords
+  // Meme keywords
   const memeWords = ["skibidi","rizz","sigma","ohio","fanum","npc","goofy","gyatt","cap","no cap","bro","goofy ahh"];
   for(let w of memeWords){ if(trimmed.toLowerCase().includes(w)){ return {response: memeReactions[Math.floor(Math.random()*memeReactions.length)], emotion:"🔥"}; } }
 
-  // ✅ Math
+  // Math
   const mathResult = safeMathEvaluate(trimmed);
   if(mathResult!==null) return {response:`The answer is **${mathResult}** 🧠`, emotion:"😎"};
 
-  // ✅ Exit
+  // Exit
   if(/^(exit|quit|bye)$/i.test(trimmed)) return {response:"Aight bye bestie 👋😄", emotion:"😊"};
 
-  // ✅ Remember that
+  // Remember that
   if(trimmed.toLowerCase().startsWith("remember that")){
     let fact = trimmed.substring(13).trim();
     memory.push(new Date().toISOString().slice(0,10)+": "+fact);
@@ -184,7 +185,7 @@ function chatLogic(userInput){
     return {response:"Bet, I’ll remember that 😎", emotion:"😄"};
   }
 
-  // ✅ Detect names
+  // Detect names
   let namePattern = /\b(?:my name is|i['’]?m|im|call me)\s+([a-zA-Z]+)/i;
   let nameMatch = trimmed.match(namePattern);
   if(nameMatch){
@@ -194,7 +195,7 @@ function chatLogic(userInput){
     return {response:`Yo ${name}! W name 😄🔥`, emotion:"😄"};
   }
 
-  // ✅ Detect feelings
+  // Detect feelings
   let feelPattern = /\b(i feel|feeling|feels|i['’]?m feeling|im feeling|i am)\s+(.+)/i;
   let feelMatch = trimmed.match(feelPattern);
   if(feelMatch){
@@ -204,35 +205,18 @@ function chatLogic(userInput){
     return {response:`Gotchu, you feelin’ ${feeling}? Valid tbh 😄`, emotion:"😊"};
   }
 
-  // ✅ Small messages
+  // Small messages
   if(trimmed.length<3) return {response:"Bro typed the smallest message ever 😭 what’s up?", emotion:"😄"};
 
-  // ✅ Commands
-  if(trimmed==="/help") return {response:"Commands:\n/help\n/fact\n/joke\n/meme\n/dice\n/coin\n/memory\n/time", emotion:"😄"};
-  if(trimmed==="/fact") return {response:funFacts[Math.floor(Math.random()*funFacts.length)], emotion:"🤓"};
-  if(trimmed==="/joke"){
-    let jokes=[
-      "Why don’t skeletons fight? They don’t have the guts! 😂",
-      "What has ears but can’t hear? A cornfield! 🌽",
-      "Why was the math book sad? Too many problems 😄"
-    ];
-    return {response:jokes[Math.floor(Math.random()*jokes.length)], emotion:"😂"};
-  }
-  if(trimmed==="/meme") return {response:memeReactions[Math.floor(Math.random()*memeReactions.length)], emotion:"🔥"};
-  if(trimmed==="/dice"){ let roll = Math.floor(Math.random()*6)+1; return {response:`You rolled a ${roll} 🎲`, emotion:"😎"}; }
-  if(trimmed==="/coin"){ let flip = Math.random()<0.5?"Heads":"Tails"; return {response:`Coin flipped: ${flip} 🪙`, emotion:"😎"}; }
-  if(trimmed==="/memory"){ return {response: memory.length? memory.join("\n"):"Nothing remembered yet 😅", emotion:"🧠"}; }
-  if(trimmed==="/time"){ return {response: `Current time: ${new Date().toLocaleTimeString()}`, emotion:"⏰"}; }
-
-  // ✅ Knowledge
+  // Knowledge
   for(let q in knowledge){ if(trimmed.toLowerCase().includes(q)){ return {response: knowledge[q], emotion:"😎"}; } }
 
-  // ✅ Hi/Hello
+  // Hi/Hello
   if(/^(hi|hello|hey|yo|sup)/i.test(trimmed)){
     return {response:["Yo! 😎","Hey bestie 👋","Wassup 😄","Hiiiii 😁"][Math.floor(Math.random()*4)], emotion:"😊"};
   }
 
-  // ✅ Did u know learning
+  // Did u know learning
   if(trimmed.toLowerCase().startsWith("did u know")){
       let fact = trimmed.substring(10).trim();
       if(memory.some(m=>m.includes(fact))){
@@ -243,10 +227,18 @@ function chatLogic(userInput){
       }
   }
 
-  // ✅ Questions
+  // Quiz command
+  if(trimmed.toLowerCase()==="/quiz"){
+      let learnedFacts = memory.filter(m => !m.includes("User's name") && !m.includes("User felt"));
+      if(learnedFacts.length===0) return {response:"I haven’t learned anything to quiz you on yet 😭", emotion:"😢"};
+      let fact = learnedFacts[Math.floor(Math.random()*learnedFacts.length)];
+      return {response:`Quick quiz! Can you tell me more about this fact?\n"${fact.split("–")[0]}"`, emotion:"🤔"};
+  }
+
+  // Questions
   if(trimmed.endsWith("?")) return {response:"Good question ngl 🤔 what do *you* think?", emotion:"🤔"};
 
-  // ✅ Generic
+  // Generic
   let generic = [
     "Real talk? That’s kinda fire 🔥",
     "Valid take tbh 😄",
@@ -265,6 +257,7 @@ const chatBox = document.getElementById("chatBox");
 const typingIndicator = document.getElementById("typingIndicator");
 const inputBox = document.getElementById("inputBox");
 const sendButton = document.getElementById("sendButton");
+const commandsButton = document.getElementById("commandsButton");
 const darkToggle = document.getElementById("darkToggle");
 const clearButton = document.getElementById("clearButton");
 const forgetButton = document.getElementById("forgetButton");
@@ -301,13 +294,26 @@ sendButton.onclick = ()=>{
 };
 
 inputBox.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); sendButton.click(); } });
+
+// Commands button shows temporary command list
+commandsButton.onclick = ()=>{
+  const commands = [
+    "/fact", "/joke", "/meme", "/dice", "/coin", "/memory", "/time", "/quiz"
+  ].join("\n");
+  appendMessage("bot", "Commands:\n"+commands, "😄");
+  setTimeout(()=>{ 
+      let last = chatBox.lastChild; 
+      if(last) chatBox.removeChild(last);
+  },5000);
+};
+
 darkToggle.onclick = ()=> document.body.classList.toggle("dark");
 clearButton.onclick = ()=>{ chatBox.innerHTML=""; botRespondSlowly("Chat cleared 👍 memories safe.","😄"); };
 forgetButton.onclick = ()=>{ chatBox.innerHTML=""; memory=[]; localStorage.removeItem('politebotMemory'); botRespondSlowly("Aight I forgot everything 😄 start fresh!", "😄"); };
 upgradeButton.onclick = ()=>{ botRespondSlowly("Please send messages to jacobcreation on GitHub! 😄", "📢"); };
 
 // Initial greeting
-appendMessage("bot","Yo! I’m PoliteBot 😎 Drop a meme, math problem, or try /help!", "😄");
+appendMessage("bot","Yo! I’m PoliteBot 😎 Drop a meme, math problem, or press Commands!", "😄");
 </script>
 </body>
 </html>
