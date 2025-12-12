@@ -15,10 +15,7 @@
     background: #f0f0f5;
     color: #000;
   }
-  body.dark {
-    background: #121212;
-    color: #f0f0f0;
-  }
+  body.dark { background: #121212; color: #f0f0f0; }
   #container {
     width: 500px;
     height: 600px;
@@ -30,9 +27,7 @@
     overflow: hidden;
     transition: background 0.3s, color 0.3s;
   }
-  body.dark #container {
-    background: #1e1e1e;
-  }
+  body.dark #container { background: #1e1e1e; }
   #chatBox {
     flex: 1;
     padding: 10px;
@@ -77,16 +72,19 @@
     color: white;
     border-bottom-left-radius: 0;
   }
+  .bounce { animation: bounce 0.5s; }
+  @keyframes bounce { 0% { transform: translateY(0);} 50% { transform: translateY(-10px);} 100% { transform: translateY(0);} }
   #bottom {
     padding: 10px;
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
     background: #f4f4f6;
   }
   body.dark #bottom { background: #2c2c2c; }
   #inputBox { flex: 1; padding: 6px; font-size: 15px; }
-  #sendButton, #darkToggle, #clearButton, #forgetButton {
-    width: 90px;
+  #sendButton, #darkToggle, #clearButton, #forgetButton, #upgradeButton {
+    width: 110px;
     font-size: 15px;
     cursor: pointer;
   }
@@ -102,6 +100,7 @@
     <button id="darkToggle">🌙</button>
     <button id="clearButton">Clear</button>
     <button id="forgetButton">Forget</button>
+    <button id="upgradeButton">Needs Upgrades</button>
   </div>
 </div>
 
@@ -134,44 +133,38 @@ const memeReactions = [
   "Real Gigachad energy 💪😤"
 ];
 
-function maybeFact() {
-  return Math.random() < 0.25 ? funFacts[Math.floor(Math.random()*funFacts.length)] : null;
+const knowledge = {
+    "capital of france": "Paris 🇫🇷",
+    "largest planet": "Jupiter 🪐",
+    "fastest land animal": "Cheetah 🐆",
+    "hello": "Hi there! 😄"
+};
+
+function maybeFact() { return Math.random() < 0.25 ? funFacts[Math.floor(Math.random()*funFacts.length)] : null; }
+
+function safeMathEvaluate(expr){
+  if(!/^[0-9+\-*/^().\s]+$/.test(expr)) return null;
+  let safeExpr = expr.replace(/\^/g,'**');
+  try { let result = Function('"use strict"; return ('+safeExpr+')')(); return (typeof result==="number" && isFinite(result))? result: null; }
+  catch{ return null; }
 }
 
-/* SAFE MATH */
-function safeMathEvaluate(expr) {
-  if (!/^[0-9+\-*/^().\s]+$/.test(expr)) return null;
-  let safeExpr = expr.replace(/\^/g, '**');
-  try {
-    let result = Function('"use strict"; return (' + safeExpr + ')')();
-    return (typeof result === "number" && isFinite(result)) ? result : null;
-  } catch { return null; }
-}
+function speak(text){ let msg = new SpeechSynthesisUtterance(text); window.speechSynthesis.speak(msg); }
 
 function chatLogic(userInput){
   let trimmed = userInput.trim();
-  let response = "", emotion = "😄";
+  let response="", emotion="😄";
 
   // meme detection
   const memeWords = ["skibidi","rizz","sigma","ohio","fanum","npc","goofy","gyatt","cap","no cap","bro","goofy ahh"];
-  for (let w of memeWords) {
-    if (trimmed.toLowerCase().includes(w)) {
-      return {
-        response: memeReactions[Math.floor(Math.random()*memeReactions.length)],
-        emotion: "🔥"
-      };
-    }
-  }
+  for(let w of memeWords){ if(trimmed.toLowerCase().includes(w)){ return {response: memeReactions[Math.floor(Math.random()*memeReactions.length)], emotion:"🔥"}; } }
 
   // math
   const mathResult = safeMathEvaluate(trimmed);
-  if (mathResult !== null) {
-    return {response:`The answer is **${mathResult}** 🧠`, emotion:"😎"};
-  }
+  if(mathResult!==null) return {response:`The answer is **${mathResult}** 🧠`, emotion:"😎"};
 
   // exit
-  if(/^(exit|quit|bye)$/i.test(trimmed))
-    return {response:"Aight bye bestie 👋😄", emotion:"😊"};
+  if(/^(exit|quit|bye)$/i.test(trimmed)) return {response:"Aight bye bestie 👋😄", emotion:"😊"};
 
   // remember
   if(trimmed.toLowerCase().startsWith("remember that")){
@@ -181,7 +174,7 @@ function chatLogic(userInput){
     return {response:"Bet, I’ll remember that 😎", emotion:"😄"};
   }
 
-  // name
+  // user name
   let namePattern = /\b(?:my name is|i['’]?m|im|call me)\s+([A-Z][a-z]+)\b/i;
   let nameMatch = trimmed.match(namePattern);
   if(nameMatch){
@@ -202,18 +195,12 @@ function chatLogic(userInput){
   }
 
   // tiny
-  if(trimmed.length < 3){
-    return {response:"Bro typed the smallest message ever 😭 what’s up?", emotion:"😄"};
-  }
+  if(trimmed.length<3) return {response:"Bro typed the smallest message ever 😭 what’s up?", emotion:"😄"};
 
   // commands
-  if(trimmed === "/help")
-    return {response:"Commands:\n/help\n/fact\n/joke\n/meme", emotion:"😄"};
-
-  if(trimmed === "/fact")
-    return {response:funFacts[Math.floor(Math.random()*funFacts.length)], emotion:"🤓"};
-
-  if(trimmed === "/joke"){
+  if(trimmed==="/help") return {response:"Commands:\n/help\n/fact\n/joke\n/meme\n/dice\n/coin\n/memory\n/time", emotion:"😄"};
+  if(trimmed==="/fact") return {response:funFacts[Math.floor(Math.random()*funFacts.length)], emotion:"🤓"};
+  if(trimmed==="/joke"){
     let jokes=[
       "Why don’t skeletons fight? They don’t have the guts! 😂",
       "What has ears but can’t hear? A cornfield! 🌽",
@@ -221,9 +208,14 @@ function chatLogic(userInput){
     ];
     return {response:jokes[Math.floor(Math.random()*jokes.length)], emotion:"😂"};
   }
+  if(trimmed==="/meme") return {response:memeReactions[Math.floor(Math.random()*memeReactions.length)], emotion:"🔥"};
+  if(trimmed==="/dice"){ let roll = Math.floor(Math.random()*6)+1; return {response:`You rolled a ${roll} 🎲`, emotion:"😎"}; }
+  if(trimmed==="/coin"){ let flip = Math.random()<0.5?"Heads":"Tails"; return {response:`Coin flipped: ${flip} 🪙`, emotion:"😎"}; }
+  if(trimmed==="/memory"){ return {response: memory.length? memory.join("\n"):"Nothing remembered yet 😅", emotion:"🧠"}; }
+  if(trimmed==="/time"){ return {response: `Current time: ${new Date().toLocaleTimeString()}`, emotion:"⏰"}; }
 
-  if(trimmed === "/meme")
-    return {response:memeReactions[Math.floor(Math.random()*memeReactions.length)], emotion:"🔥"};
+  // knowledge-based answers
+  for(let q in knowledge){ if(trimmed.toLowerCase().includes(q)){ return {response: knowledge[q], emotion:"😎"}; } }
 
   // greetings
   if(/^(hi|hello|hey|yo|sup)/i.test(trimmed)){
@@ -231,9 +223,7 @@ function chatLogic(userInput){
   }
 
   // question
-  if(trimmed.endsWith("?")){
-    return {response:"Good question ngl 🤔 what do *you* think?", emotion:"🤔"};
-  }
+  if(trimmed.endsWith("?")) return {response:"Good question ngl 🤔 what do *you* think?", emotion:"🤔"};
 
   // generic friend vibes
   let generic = [
@@ -245,10 +235,7 @@ function chatLogic(userInput){
     "Not gonna lie that’s a W 👍"
   ];
   response = generic[Math.floor(Math.random()*generic.length)];
-
-  let fact = maybeFact();
-  if(fact) response += " Also fun fact: " + fact;
-
+  let fact = maybeFact(); if(fact) response += " Also fun fact: " + fact;
   return {response, emotion};
 }
 
@@ -260,6 +247,7 @@ const sendButton = document.getElementById("sendButton");
 const darkToggle = document.getElementById("darkToggle");
 const clearButton = document.getElementById("clearButton");
 const forgetButton = document.getElementById("forgetButton");
+const upgradeButton = document.getElementById("upgradeButton");
 const sendSound = document.getElementById("sendSound");
 const receiveSound = document.getElementById("receiveSound");
 
@@ -269,57 +257,41 @@ function appendMessage(who,msg,emotion="😄"){
   let bubble = document.createElement("div");
   bubble.classList.add("bubble");
   bubble.innerHTML = who==="bot"? msg + " " + emotion : msg;
+  if(who==="bot") bubble.classList.add("bounce");
   div.appendChild(bubble);
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
-  who==="you" ? sendSound.play() : receiveSound.play();
+  who==="you"? sendSound.play(): receiveSound.play();
+  if(who==="bot") speak(msg);
 }
 
-function showTyping() {
-  typingIndicator.style.display = "block";
-}
+function showTyping(){ typingIndicator.style.display="block"; }
+function hideTyping(){ typingIndicator.style.display="none"; }
 
-function hideTyping() {
-  typingIndicator.style.display = "none";
-}
-
-// typing delay
 function botRespondSlowly(text, emotion){
   showTyping();
-  setTimeout(()=>{
-    hideTyping();
-    appendMessage("bot",text,emotion);
-  },400+Math.random()*600);
+  setTimeout(()=>{ hideTyping(); appendMessage("bot",text,emotion); },400+Math.random()*600);
 }
 
-sendButton.onclick = function(){
-  let text = inputBox.value.trim();
-  if(text==="") return;
-  appendMessage("you",text);
-  let {response, emotion} = chatLogic(text);
-  botRespondSlowly(response, emotion);
-  inputBox.value="";
+// Events
+sendButton.onclick = ()=>{ 
+  let text = inputBox.value.trim(); 
+  if(text==="") return; 
+  appendMessage("you",text); 
+  let {response, emotion} = chatLogic(text); 
+  botRespondSlowly(response, emotion); 
+  inputBox.value=""; 
 };
 
-inputBox.addEventListener("keydown",e=>{
-  if(e.key==="Enter"){ e.preventDefault(); sendButton.click(); }
-});
-
+inputBox.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); sendButton.click(); } });
 darkToggle.onclick = ()=> document.body.classList.toggle("dark");
+clearButton.onclick = ()=>{ chatBox.innerHTML=""; botRespondSlowly("Chat cleared 👍 memories safe.","😄"); };
+forgetButton.onclick = ()=>{ chatBox.innerHTML=""; memory=[]; localStorage.removeItem('politebotMemory'); botRespondSlowly("Aight I forgot everything 😄 start fresh!", "😄"); };
 
-clearButton.onclick = ()=>{
-  chatBox.innerHTML="";
-  botRespondSlowly("Chat cleared 👍 memories safe.","😄");
-};
+// Upgrade button
+upgradeButton.onclick = ()=>{ botRespondSlowly("Please send messages to jacobcreation on GitHub! 😄", "📢"); };
 
-forgetButton.onclick = ()=>{
-  chatBox.innerHTML="";
-  memory=[];
-  localStorage.removeItem('politebotMemory');
-  botRespondSlowly("Aight I forgot everything 😄 start fresh!", "😄");
-};
-
-appendMessage("bot","Yo! I’m PoliteBot 😎 Drop a meme or a math problem!", "😄");
+appendMessage("bot","Yo! I’m PoliteBot 😎 Drop a meme, math problem, or try /help!", "😄");
 </script>
 </body>
 </html>
