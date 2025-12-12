@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chess PGN Importer</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  #moves { margin-top: 20px; }
+  .move { margin-bottom: 5px; }
+  .comment { color: green; font-style: italic; }
+</style>
+</head>
+<body>
+
+<h1>Chess PGN Importer</h1>
+
+<textarea id="pgnInput" rows="10" cols="80" placeholder="Paste PGN here..."></textarea>
+<br>
+<button id="parseBtn">Parse PGN</button>
+
+<div id="moves"></div>
+
+<script>
+document.getElementById("parseBtn").addEventListener("click", function() {
+    const pgn = document.getElementById("pgnInput").value;
+    parsePGN(pgn);
+});
+
+function parsePGN(pgn) {
+    const movesDiv = document.getElementById("moves");
+    movesDiv.innerHTML = "";
+    
+    // Remove headers
+    const body = pgn.replace(/\[.*?\]\s*/g, '').trim();
+
+    // Split moves by spaces
+    const tokens = body.split(/\s+/);
+
+    tokens.forEach(token => {
+        const div = document.createElement("div");
+        div.className = "move";
+
+        // Check for comment in {}
+        const commentMatch = token.match(/\{([^}]+)\}/);
+        if (commentMatch) {
+            div.innerHTML = `<span class="comment">${commentMatch[1]}</span>`;
+        } else {
+            div.textContent = token;
+        }
+
+        movesDiv.appendChild(div);
+    });
+}
+</script>
+
+</body>
+</html>
