@@ -112,7 +112,6 @@ let quizActive = false;
 let quizCurrent = null;
 let quizScore = parseInt(localStorage.getItem('politebotScore')||'0');
 
-// Number words mapping
 const numberWords = {
   "zero":0,"one":1,"two":2,"three":3,"four":4,"five":5,
   "six":6,"seven":7,"eight":8,"nine":9,"ten":10
@@ -148,38 +147,36 @@ const knowledge = {
   "hello": "Hi there! 😄"
 };
 
-// Convert words like "one" to 1 and "x" to "*"
+// Convert number words to digits
 function wordsToNumbers(expr){
-  let words = expr.toLowerCase().split(/\s+/);
-  for(let i=0;i<words.length;i++){
-      if(numberWords[words[i]]!==undefined) words[i] = numberWords[words[i]];
-      if(words[i]==="x") words[i] = "*";
+  for(let word in numberWords){
+    let regex = new RegExp("\\b"+word+"\\b","gi");
+    expr = expr.replace(regex, numberWords[word]);
   }
-  return words.join(" ");
+  return expr;
 }
 
 // Normalize math expressions
 function normalizeMathExpression(expr){
   expr = expr.toLowerCase();
-  expr = expr.replace(/x|×/g,"*")
-             .replace(/plus/g,"+")
+  expr = expr.replace(/plus/g,"+")
              .replace(/minus/g,"-")
+             .replace(/times|x|×/g,"*")
              .replace(/divided by/g,"/");
-  return wordsToNumbers(expr);
+  expr = wordsToNumbers(expr);
+  return expr;
 }
 
-// Safe math evaluation
+// Safe math evaluation with correct order of operations
 function safeMathEvaluate(expr){
   expr = normalizeMathExpression(expr);
   if(!/^[0-9+\-*/^().\s]+$/.test(expr)) return null;
-  let safeExpr = expr.replace(/\^/g,'**');
-  try { 
-    let result = Function('"use strict"; return ('+safeExpr+')')(); 
-    return (typeof result==="number" && isFinite(result)) ? result : null; 
+  try {
+    let result = Function('"use strict"; return ('+expr+')')();
+    return (typeof result==="number" && isFinite(result)) ? result : null;
   } catch { return null; }
 }
 
-// Possibly show a fun fact
 function maybeFact() { 
   return Math.random() < 0.25 ? funFacts[Math.floor(Math.random()*funFacts.length)] : null; 
 }
