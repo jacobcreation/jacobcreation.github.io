@@ -1,4 +1,4 @@
-\<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -64,14 +64,13 @@
 
     #boardContainer { background: var(--panel-bg); border-radius: 12px; padding: 12px; box-shadow: 0 6px 20px rgba(8,30,45,0.06); position: relative; }
     #board { width: 420px; max-width: 90vw; }
-    #overlayCanvas { position: absolute; left: 12px; top: 12px; pointer-events: none; }
+    #overlayCanvas { position: absolute; left: 12px; top: 12px; pointer-events: none; } /* will match board position */
 
-    #comments { width: 420px; max-width:90vw; min-height:64px; background:#fcfeff; padding:10px; border-radius:8px; border:1px solid #e6f0f6; }
-
-    textarea#commentBox { width:100%; min-height:72px; border-radius:6px; padding:8px; border:1px solid #e6eef2; }
+    #comments { width: 420px; max-width:90vw; min-height:64px; background:#fcfeff; padding:10px; border-radius:8px; border:1px solid #e6f0f6; text-align:left; color:#0b1720; }
+    textarea#commentBox { width:100%; min-height:72px; border-radius:6px; padding:8px; border:1px solid #e6eef2; resize:vertical; }
 
     .sidebar { background: var(--panel-bg); border-radius: 12px; padding: 12px; box-shadow: 0 6px 20px rgba(8,30,45,0.06); height: fit-content; }
-    .move-list { max-height: 540px; overflow: auto; padding:8px; border-radius:8px; border: 1px solid #eef6fb; }
+    .move-list { max-height: 540px; overflow: auto; padding:8px; border-radius:8px; border: 1px solid #eef6fb; background:#fcfdff; }
     .move-row { padding:6px 8px; display:flex; gap:8px; align-items:center; justify-content:space-between; border-radius:6px; cursor:pointer; }
     .move-row:hover { background:#f1fbff; }
     .move-row.active { background: linear-gradient(90deg,#eaf6ff,#f8fbff); border-left:4px solid var(--accent); }
@@ -80,8 +79,9 @@
     .muted { color:var(--muted); }
 
     .tools { display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap; }
-    .annotation-list { max-height:160px; overflow:auto; border-radius:6px; border:1px solid #eef6fb; padding:8px; }
+    .annotation-list { max-height:160px; overflow:auto; border-radius:6px; border:1px solid #eef6fb; padding:8px; background:#fff; }
 
+    .export-btn { margin-top:8px; }
   </style>
 </head>
 <body>
@@ -107,10 +107,12 @@
         <button id="loadPgn">Load PGN</button>
         <button id="flipBtn">Flip Board</button>
         <button id="exportPgnBtn" class="export-btn">Export PGN (with comments)</button>
+        <div style="margin-left:auto" class="small muted">Arrows persist per move in this session</div>
       </div>
 
       <div id="boardContainer">
         <div id="board"></div>
+        <!-- overlay canvas for arrows -->
         <canvas id="overlayCanvas"></canvas>
 
         <div style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -134,8 +136,8 @@
             <div class="small muted">Arrow tools</div>
             <div class="tools">
               <button id="arrowModeBtn">Arrow Mode</button>
-              <input id="arrowColor" type="color" value="#ff0000">
-              <button id="clearArrowsBtn">Clear Arrows</button>
+              <input id="arrowColor" type="color" value="#ff0000" title="Pick arrow color">
+              <button id="clearArrowsBtn">Clear Arrows (this move)</button>
             </div>
 
             <div style="margin-top:8px">
@@ -145,7 +147,7 @@
           </div>
         </div>
 
-        <div id="comments" style="margin-top:12px">No comments yet.</div>
+        <div id="comments" style="margin-top:12px">No comments yet. Load a PGN.</div>
       </div>
 
     </div>
@@ -171,42 +173,457 @@
     </aside>
   </div>
 
-  <!-- Libraries -->
+  <!-- libs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.0/chess.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/js/chessboard.min.js"></script>
 
   <script>
-  /******************************
-   CLICK UPLOAD INSTEAD OF DRAG
-  ******************************/
-  const dropZone = document.getElementById("dropZone");
-  const fileInput = document.getElementById("fileInput");
+  /**************************************************************************
+   * Full PGN Viewer with per-move arrows and annotation tools
+   **************************************************************************/
 
-  dropZone.addEventListener("click", () => fileInput.click());
+  // ----------------- Elements -----------------
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const pgnInput = document.getElementById('pgnInput');
+  const loadPgnBtn = document.getElementById('loadPgn');
+  const moveListEl = document.getElementById('moveList');
+  const commentsDiv = document.getElementById('comments');
+  const moveCounter = document.getElementById('moveCounter');
+  const moveSlider = document.getElementById('moveSlider');
+  const prevMoveBtn = document.getElementById('prevMove');
+  const nextMoveBtn = document.getElementById('nextMove');
+  const flipBtn = document.getElementById('flipBtn');
+  const boardContainer = document.getElementById('boardContainer');
+  const commentBox = document.getElementById('commentBox');
+  const saveCommentBtn = document.getElementById('saveComment');
+  const clearCommentBtn = document.getElementById('clearComment');
+  const arrowModeBtn = document.getElementById('arrowModeBtn');
+  const arrowColorInput = document.getElementById('arrowColor');
+  const clearArrowsBtn = document.getElementById('clearArrowsBtn');
+  const annotationArrowsDiv = document.getElementById('annotationArrows');
+  const exportPgnBtn = document.getElementById('exportPgnBtn');
 
-  fileInput.addEventListener("change", () => {
+  // board + overlay canvas
+  const boardEl = document.getElementById('board');
+  const canvas = document.getElementById('overlayCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // ----------------- Chess objects -----------------
+  const board = Chessboard(boardEl, {
+    draggable: false,
+    position: 'start',
+    pieceTheme: 'https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/img/chesspieces/wikipedia/{piece}.png'
+  });
+  const game = new Chess();
+
+  let moves = []; // each entry: { san, comment, fen, arrows: [ {from:'e2',to:'e4', color:'#ff0000'} ] }
+  let currentMove = 0;
+  let flipped = false;
+  let arrowMode = false;
+  let arrowStage = null; // source square when drawing arrow
+  let boardRect = null;
+
+  // ----------------- Click to Upload -----------------
+  dropZone.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', () => {
     const file = fileInput.files[0];
     if (!file) return;
 
-    if (!file.name.toLowerCase().endsWith(".pgn")) {
-      alert("Please upload a .pgn file");
+    if (!file.name.toLowerCase().endsWith('.pgn')) {
+      alert('Please upload a .pgn file');
       return;
     }
-
     const reader = new FileReader();
-    reader.onload = () => (pgnInput.value = reader.result);
+    reader.onload = () => pgnInput.value = reader.result;
     reader.readAsText(file);
   });
 
-  /******************************
-    REST OF YOUR ORIGINAL SCRIPT
-  ******************************/
-  /* (UNCHANGED full JavaScript logic here — arrows, board, comments, export, etc.) */
+  // ----------------- Parsing & Loading PGN -----------------
+  function parseAndLoadPGN(pgnText) {
+    game.reset();
+    moves = [];
+    currentMove = 0;
 
-  /* ——— To save space, not repeating the entire JS here unless you want the WHOLE THING pasted again.  
-        If you want the FULL SCRIPT including arrows/comment code re-pasted, say "full JS also". ——— */
+    // try load
+    const ok = game.load_pgn(pgnText, { sloppy: true });
+    if (!ok) { alert('Invalid PGN'); return; }
+
+    const history = game.history({ verbose: true });
+    // extract comments sequentially
+    const commentMatches = [...pgnText.matchAll(/\{([^}]*)\}/g)].map(m => m[1].trim());
+
+    // reconstruct and compute FEN per move
+    const tmp = new Chess();
+    let cIndex = 0;
+    history.forEach(moveObj => {
+      const san = moveObj.san;
+      const comment = (cIndex < commentMatches.length) ? commentMatches[cIndex++] : '';
+      tmp.move(san);
+      moves.push({ san, comment, fen: tmp.fen(), arrows: [] });
+    });
+
+    updateMoveList();
+    updateBoard();
+  }
+
+  loadPgnBtn.addEventListener('click', () => {
+    const txt = pgnInput.value.trim();
+    if (!txt) { alert('Paste or upload a PGN first'); return; }
+    parseAndLoadPGN(txt);
+  });
+
+  // ----------------- UI Update Helpers -----------------
+  function updateBoard() {
+    if (currentMove === 0) {
+      board.position('start', false);
+      commentsDiv.textContent = 'Starting position';
+      commentBox.value = '';
+    } else {
+      const fen = moves[currentMove - 1].fen;
+      board.position(fen, true);
+      commentsDiv.textContent = moves[currentMove - 1].comment || 'No comment for this move.';
+      commentBox.value = moves[currentMove - 1].comment || '';
+    }
+    updateCounter();
+    highlightActiveMove();
+    renderArrowsForCurrentMove();
+  }
+
+  function updateCounter() {
+    moveCounter.textContent = `${currentMove} / ${moves.length}`;
+    moveSlider.max = moves.length;
+    moveSlider.value = currentMove;
+  }
+
+  function updateMoveList() {
+    moveListEl.innerHTML = '';
+    for (let i = 0; i < moves.length; i += 2) {
+      const num = Math.floor(i/2) + 1;
+      const white = moves[i] ? moves[i].san : '';
+      const black = moves[i+1] ? moves[i+1].san : '';
+      const row = document.createElement('div');
+      row.className = 'move-row';
+      row.dataset.idx = i;
+      row.innerHTML = `<div style="display:flex;gap:8px;align-items:center">
+        <div style="width:36px;font-weight:700">${num}.</div>
+        <div style="min-width:80px">${white}</div>
+        <div style="min-width:80px;color:var(--muted)">${black}</div>
+      </div>
+      <div class="small muted" style="max-width:120px;text-align:right">${(moves[i] && moves[i].comment) ? (moves[i].comment.length>40 ? moves[i].comment.slice(0,40)+'...' : moves[i].comment) : ''}</div>`;
+      row.addEventListener('click', () => {
+        // default jump to white move; if already there and black exists jump to black
+        const idx = parseInt(row.dataset.idx, 10);
+        if (currentMove === idx) currentMove = idx + 1;
+        else if (currentMove === idx + 1 && moves[idx+1]) currentMove = idx + 2;
+        else currentMove = idx + 1;
+        updateBoard();
+      });
+      moveListEl.appendChild(row);
+    }
+    highlightActiveMove();
+  }
+
+  function highlightActiveMove() {
+    const rows = Array.from(moveListEl.querySelectorAll('.move-row'));
+    rows.forEach(r => r.classList.remove('active'));
+    if (currentMove > 0) {
+      const idx = currentMove - 1;
+      const base = Math.floor(idx/2)*2;
+      const el = moveListEl.querySelector(`.move-row[data-idx="${base}"]`);
+      if (el) el.classList.add('active');
+    }
+  }
+
+  // ----------------- Navigation controls -----------------
+  nextMoveBtn.addEventListener('click', () => { if (currentMove < moves.length) currentMove++; updateBoard(); });
+  prevMoveBtn.addEventListener('click', () => { if (currentMove > 0) currentMove--; updateBoard(); });
+  moveSlider.addEventListener('input', () => { currentMove = parseInt(moveSlider.value, 10); updateBoard(); });
+
+  flipBtn.addEventListener('click', () => { flipped = !flipped; board.flip(); renderArrowsForCurrentMove(); });
+
+  // ----------------- Comment editing -----------------
+  saveCommentBtn.addEventListener('click', () => {
+    if (currentMove === 0) { alert('No move selected to attach comment.'); return; }
+    const text = commentBox.value.trim();
+    moves[currentMove - 1].comment = text;
+    commentsDiv.textContent = text || 'No comment for this move.';
+    updateMoveList();
+  });
+
+  clearCommentBtn.addEventListener('click', () => {
+    if (currentMove === 0) return;
+    moves[currentMove - 1].comment = '';
+    commentBox.value = '';
+    commentsDiv.textContent = 'No comment for this move.';
+    updateMoveList();
+  });
+
+  // ----------------- Arrow drawing -----------------
+  arrowModeBtn.addEventListener('click', () => {
+    arrowMode = !arrowMode;
+    arrowStage = null;
+    arrowModeBtn.style.background = arrowMode ? '#e6f8ef' : '';
+    // when arrow mode active, enable board click detection
+    if (arrowMode) {
+      enableBoardClicksForArrows();
+      arrowModeBtn.textContent = 'Arrow Mode: ON';
+    } else {
+      disableBoardClicksForArrows();
+      arrowModeBtn.textContent = 'Arrow Mode';
+    }
+  });
+
+  function enableBoardClicksForArrows(){
+    // board squares have classes like 'square-a1' — use event delegation
+    document.querySelectorAll('#board .square-55d63').forEach(sq => {
+      sq.style.cursor = 'crosshair';
+      sq.addEventListener('click', onSquareClickForArrow);
+    });
+    updateBoardRect();
+  }
+  function disableBoardClicksForArrows(){
+    document.querySelectorAll('#board .square-55d63').forEach(sq => {
+      sq.style.cursor = '';
+      sq.removeEventListener('click', onSquareClickForArrow);
+    });
+    arrowStage = null;
+  }
+
+  function onSquareClickForArrow(e){
+    const cls = Array.from(e.currentTarget.classList).find(c => c.startsWith('square-'));
+    if (!cls) return;
+    const square = cls.replace('square-', '');
+    if (!arrowStage) {
+      arrowStage = square;
+      // temporary highlight
+      e.currentTarget.style.outline = '3px solid rgba(0,0,0,0.12)';
+      setTimeout(()=>{ e.currentTarget.style.outline = ''; }, 400);
+    } else {
+      const from = arrowStage;
+      const to = square;
+      arrowStage = null;
+      // save arrow to current move
+      if (currentMove === 0) {
+        alert('Please select a move first (use slider or Next to select the move).');
+        return;
+      }
+      const color = arrowColorInput.value || '#ff0000';
+      const arr = { from, to, color };
+      moves[currentMove - 1].arrows.push(arr);
+      renderArrowsForCurrentMove();
+      refreshAnnotationsList();
+    }
+  }
+
+  function updateBoardRect(){
+    // compute board rect and set canvas size to match board
+    const rect = boardEl.getBoundingClientRect();
+    boardRect = rect;
+    // overlay canvas sits absolutely inside boardContainer; adjust size and position
+    const padLeft = 12; // container padding
+    const padTop = 12;
+    canvas.style.left = `${padLeft}px`;
+    canvas.style.top = `${padTop}px`;
+    const width = rect.width;
+    const height = rect.height;
+    canvas.width = width * devicePixelRatio;
+    canvas.height = height * devicePixelRatio;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  }
+
+  // convert square to canvas coordinates (center)
+  function squareToCenterCoords(square){
+    if (!boardRect) updateBoardRect();
+    // squares are 8x8. Get square element to be precise:
+    const sqEl = boardEl.querySelector('.square-' + square);
+    if (sqEl) {
+      const r = sqEl.getBoundingClientRect();
+      const rect = canvas.getBoundingClientRect();
+      return { x: r.left - rect.left + r.width/2, y: r.top - rect.top + r.height/2 };
+    }
+    // fallback: approximate
+    const file = square[0], rank = parseInt(square[1],10);
+    const files = ['a','b','c','d','e','f','g','h'];
+    const fileIndex = files.indexOf(file);
+    const rankIndex = 8 - rank;
+    const sqW = canvas.width / devicePixelRatio / 8;
+    const sqH = canvas.height / devicePixelRatio / 8;
+    const x = sqW * (flipped ? (7 - fileIndex) : fileIndex) + sqW/2;
+    const y = sqH * (flipped ? rankIndex : (7 - rankIndex)) + sqH/2;
+    return { x, y };
+  }
+
+  function drawArrow(from, to, color, lineWidth=5, headSize=10) {
+    const p1 = squareToCenterCoords(from);
+    const p2 = squareToCenterCoords(to);
+    if (!p1 || !p2) return;
+    // draw translucent shaft
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.stroke();
+    // draw arrow head
+    const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+    ctx.beginPath();
+    ctx.moveTo(p2.x, p2.y);
+    ctx.lineTo(p2.x - headSize * Math.cos(angle - Math.PI / 6), p2.y - headSize * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(p2.x - headSize * Math.cos(angle + Math.PI / 6), p2.y - headSize * Math.sin(angle + Math.PI / 6));
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+
+  function renderArrowsForCurrentMove(){
+    // clear canvas
+    if (!boardRect) updateBoardRect();
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    if (currentMove === 0) {
+      refreshAnnotationsList();
+      return;
+    }
+    const arrs = moves[currentMove - 1].arrows || [];
+    arrs.forEach(a => drawArrow(a.from, a.to, a.color));
+    refreshAnnotationsList();
+  }
+
+  function refreshAnnotationsList(){
+    annotationArrowsDiv.innerHTML = '';
+    if (currentMove === 0) return;
+    const arrs = moves[currentMove - 1].arrows || [];
+    if (!arrs.length) {
+      annotationArrowsDiv.innerHTML = '<div class="small muted">No arrows on this move.</div>';
+      return;
+    }
+    arrs.forEach((a, idx) => {
+      const el = document.createElement('div');
+      el.style.display = 'flex';
+      el.style.justifyContent = 'space-between';
+      el.style.alignItems = 'center';
+      el.style.padding = '6px';
+      el.style.borderBottom = '1px solid #f1f6fa';
+      el.innerHTML = `<div style="display:flex;gap:8px;align-items:center">
+        <div style="width:14px;height:12px;background:${a.color};border-radius:3px"></div>
+        <div class="small">${a.from} → ${a.to}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button data-idx="${idx}" class="editArrowBtn">Edit</button>
+        <button data-idx="${idx}" class="delArrowBtn">Delete</button>
+      </div>`;
+      annotationArrowsDiv.appendChild(el);
+    });
+    // add listeners
+    Array.from(annotationArrowsDiv.querySelectorAll('.delArrowBtn')).forEach(btn=>{
+      btn.addEventListener('click', (ev)=>{
+        const idx = parseInt(btn.dataset.idx,10);
+        moves[currentMove - 1].arrows.splice(idx,1);
+        renderArrowsForCurrentMove();
+      });
+    });
+    Array.from(annotationArrowsDiv.querySelectorAll('.editArrowBtn')).forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const idx = parseInt(btn.dataset.idx,10);
+        const color = prompt('Enter hex color for arrow (e.g. #ff0000):', moves[currentMove - 1].arrows[idx].color);
+        if (color) {
+          moves[currentMove - 1].arrows[idx].color = color;
+          renderArrowsForCurrentMove();
+        }
+      });
+    });
+  }
+
+  clearArrowsBtn.addEventListener('click', ()=>{
+    if (currentMove === 0) return;
+    moves[currentMove - 1].arrows = [];
+    renderArrowsForCurrentMove();
+  });
+
+  // handle window resize to update canvas
+  window.addEventListener('resize', ()=>{
+    setTimeout(()=>{ updateBoardRect(); renderArrowsForCurrentMove(); }, 120);
+  });
+
+  // ----------------- Export PGN (with comments) -----------------
+  function exportPGNWithComments(){
+    // Reconstruct PGN from moves array; include comments after SAN moves
+    const headerMatches = pgnInput.value.match(/(\[[^\]]+\]\s*)+/);
+    const header = headerMatches ? headerMatches[0].trim() + '\n\n' : '';
+    let body = '';
+    for (let i = 0; i < moves.length; i += 2) {
+      const moveNumber = Math.floor(i/2) + 1;
+      const white = moves[i] ? moves[i].san + (moves[i].comment ? ' {' + moves[i].comment + '}' : '') : '';
+      const black = moves[i+1] ? moves[i+1].san + (moves[i+1].comment ? ' {' + moves[i+1].comment + '}' : '') : '';
+      body += `${moveNumber}. ${white}${ black ? ' ' + black : '' } `;
+    }
+    body += '\n';
+    const pgn = header + body;
+    return pgn;
+  }
+
+  function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  exportPgnBtn.addEventListener('click', ()=>{
+    const pgn = exportPGNWithComments();
+    const w = window.open('', '_blank');
+    w.document.write('<pre style="white-space:pre-wrap;word-wrap:break-word;font-family:monospace;">' + escapeHtml(pgn) + '</pre>');
+  });
+
+  // ----------------- Session save/load (localStorage) -----------------
+  document.getElementById('saveSession').addEventListener('click', ()=>{
+    const data = { moves, currentMove };
+    localStorage.setItem('pgn_viewer_session', JSON.stringify(data));
+    alert('Session saved to localStorage.');
+  });
+  document.getElementById('loadSession').addEventListener('click', ()=>{
+    const raw = localStorage.getItem('pgn_viewer_session');
+    if (!raw) { alert('No saved session found.'); return; }
+    try {
+      const obj = JSON.parse(raw);
+      moves = obj.moves || [];
+      currentMove = obj.currentMove || 0;
+      updateMoveList();
+      updateBoard();
+      alert('Session loaded.');
+    } catch (e) { alert('Failed to load session.'); }
+  });
+  document.getElementById('clearSession').addEventListener('click', ()=>{
+    localStorage.removeItem('pgn_viewer_session');
+    alert('Saved session cleared.');
+  });
+
+  // ----------------- Initial sample PGN -----------------
+  const sample = `[Event "Sample"]
+[Site "?"]
+[Date "2025.01.01"]
+[White "Demo"]
+[Black "Player"]
+[Result "1-0"]
+
+1. e4 {White plays e4} e5 {Black replies}
+2. Nf3 {Knight develops} Nc6 3. Bb5 {Ruy Lopez} a6 4. Ba4 Nf6
+5. O-O Be7 6. Re1 b5 7. Bb3 d6
+`;
+  if (!pgnInput.value.trim()) pgnInput.value = sample;
+
+  // ----------------- Load initial PGN -----------------
+  parseAndLoadPGN(pgnInput.value);
+
+  // ----------------- Helpers: ensure canvas sizing on start -----------------
+  setTimeout(()=>{ updateBoardRect(); renderArrowsForCurrentMove(); }, 300);
+
+  // ----------------- Useful keyboard shortcuts -----------------
+  window.addEventListener('keydown', (e)=>{
+    if (e.key === 'ArrowRight') { if (currentMove < moves.length) currentMove++; updateBoard(); }
+    if (e.key === 'ArrowLeft') { if (currentMove > 0) currentMove--; updateBoard(); }
+    if (e.key === 'a') { arrowMode = !arrowMode; arrowModeBtn.click(); } // toggle arrow mode
+  });
 
   </script>
-
 </body>
 </html>
