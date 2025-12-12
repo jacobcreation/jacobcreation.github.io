@@ -131,19 +131,23 @@ const memeReactions = [
 ];
 
 const knowledge = {
-    "capital of france": "Paris 🇫🇷",
-    "largest planet": "Jupiter 🪐",
-    "fastest land animal": "Cheetah 🐆",
-    "hello": "Hi there! 😄"
+  "capital of france": "Paris 🇫🇷",
+  "largest planet": "Jupiter 🪐",
+  "fastest land animal": "Cheetah 🐆",
+  "hello": "Hi there! 😄"
 };
 
-function maybeFact() { return Math.random() < 0.25 ? funFacts[Math.floor(Math.random()*funFacts.length)] : null; }
+function maybeFact() { 
+  return Math.random() < 0.25 ? funFacts[Math.floor(Math.random()*funFacts.length)] : null; 
+}
 
 function safeMathEvaluate(expr){
   if(!/^[0-9+\-*/^().\s]+$/.test(expr)) return null;
   let safeExpr = expr.replace(/\^/g,'**');
-  try { let result = Function('"use strict"; return ('+safeExpr+')')(); return (typeof result==="number" && isFinite(result))? result: null; }
-  catch{ return null; }
+  try { 
+    let result = Function('"use strict"; return ('+safeExpr+')')(); 
+    return (typeof result==="number" && isFinite(result)) ? result : null; 
+  } catch { return null; }
 }
 
 function chatLogic(userInput){
@@ -242,7 +246,7 @@ function appendMessage(who,msg,emotion="😄"){
   div.appendChild(bubble);
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
-  // No narration or sounds
+  // ✅ Silent: No speech or narration
 }
 
 function showTyping(){ typingIndicator.style.display="block"; }
