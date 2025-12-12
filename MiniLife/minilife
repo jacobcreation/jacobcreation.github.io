@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MiniLife Simulator</title>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #ffb347, #ffcc33);
+    color: #222;
+    text-align: center;
+    padding: 20px;
+  }
+  h1 {
+    color: #fff;
+    text-shadow: 2px 2px 4px #000;
+  }
+  .stats {
+    margin: 20px 0;
+    font-size: 1.2em;
+    background: rgba(255, 255, 255, 0.3);
+    padding: 10px;
+    border-radius: 10px;
+    display: inline-block;
+  }
+  .choice-btn {
+    background: #4caf50;
+    color: white;
+    border: none;
+    padding: 15px 25px;
+    margin: 10px;
+    font-size: 1em;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .choice-btn:hover {
+    transform: scale(1.1);
+    background: #45a049;
+  }
+  .story {
+    background: rgba(255, 255, 255, 0.5);
+    padding: 15px;
+    border-radius: 10px;
+    margin: 20px auto;
+    max-width: 500px;
+  }
+</style>
+</head>
+<body>
+
+<h1>MiniLife Simulator</h1>
+
+<div class="stats" id="stats">
+  Age: 0 | Money: $0 | Happiness: 50 | Health: 100
+</div>
+
+<div class="story" id="story">
+  Welcome to MiniLife! Choose how your life begins.
+</div>
+
+<div id="choices">
+  <button class="choice-btn" onclick="choose('study')">Study Hard</button>
+  <button class="choice-btn" onclick="choose('play')">Play Video Games</button>
+  <button class="choice-btn" onclick="choose('exercise')">Exercise</button>
+</div>
+
+<script>
+let player = {
+  age: 0,
+  money: 0,
+  happiness: 50,
+  health: 100
+};
+
+function updateStats() {
+  document.getElementById('stats').innerText = 
+    `Age: ${player.age} | Money: $${player.money} | Happiness: ${player.happiness} | Health: ${player.health}`;
+}
+
+function choose(action) {
+  // Increase age every choice
+  player.age += 1;
+
+  let storyText = "";
+
+  if(action === 'study') {
+    player.money += 10;
+    player.happiness -= 5;
+    storyText = "You studied hard. Money increases, but happiness drops a bit.";
+  } else if(action === 'play') {
+    player.happiness += 10;
+    player.health -= 5;
+    storyText = "You played games all day. Happiness rises, health drops.";
+  } else if(action === 'exercise') {
+    player.health += 10;
+    player.happiness += 5;
+    storyText = "You exercised. Health and happiness improve!";
+  }
+
+  // Random events
+  let eventChance = Math.random();
+  if(eventChance < 0.2) {
+    player.money += 20;
+    storyText += " Lucky day! You found $20!";
+  } else if(eventChance > 0.8) {
+    player.health -= 15;
+    storyText += " Oh no! You caught a cold. Health drops!";
+  }
+
+  // Update story and stats
+  document.getElementById('story').innerText = storyText;
+  updateStats();
+
+  // End game after age 18
+  if(player.age >= 18) {
+    document.getElementById('story').innerText += "\n\nYou are now 18! Life stage complete!";
+    document.getElementById('choices').style.display = 'none';
+  }
+}
+
+// Initialize stats display
+updateStats();
+</script>
+
+</body>
+</html>
