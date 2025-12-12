@@ -1,57 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Chess PGN Importer</title>
-<style>
-  body { font-family: Arial, sans-serif; padding: 20px; }
-  #moves { margin-top: 20px; }
-  .move { margin-bottom: 5px; }
-  .comment { color: green; font-style: italic; }
-</style>
+  <meta charset="UTF-8">
+  <title>PGN Chess Viewer with Comments</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/css/chessboard.min.css"/>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; }
+    #board { width: 400px; margin: 20px auto; }
+    #controls { margin-top: 10px; }
+    textarea { width: 400px; height: 100px; margin: 10px auto; display: block; }
+    button { margin: 5px; }
+    #comments { width: 400px; margin: 10px auto; min-height: 50px; border: 1px solid #ccc; padding: 5px; text-align: left; }
+    input[type="range"] { width: 400px; }
+  </style>
 </head>
 <body>
+  <h2>PGN Chess Viewer</h2>
 
-<h1>Chess PGN Importer</h1>
+  <textarea id="pgnInput" placeholder="Paste PGN here"></textarea>
+  <div id="controls">
+    <button id="loadPgn">Load PGN</button><br>
+    <button id="prevMove">◀ Previous</button>
+    <button id="nextMove">Next ▶</button><br>
+    <input type="range" id="moveSlider" min="0" max="0" value="0">
+    <div id="moveCounter">0 / 0</div>
+  </div>
 
-<textarea id="pgnInput" rows="10" cols="80" placeholder="Paste PGN here..."></textarea>
-<br>
-<button id="parseBtn">Parse PGN</button>
+  <div id="board"></div>
+  <div id="comments"></div>
 
-<div id="moves"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.0/chess.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/js/chessboard.min.js"></script>
+  <script>
+    const board = Chessboard('board', 'start');
+    const game = new Chess();
 
-<script>
-document.getElementById("parseBtn").addEventListener("click", function() {
-    const pgn = document.getElementById("pgnInput").value;
-    parsePGN(pgn);
-});
+    let moves = [];
+    let comments = [];
+    let currentMove = 0;
 
-function parsePGN(pgn) {
-    const movesDiv = document.getElementById("moves");
-    movesDiv.innerHTML = "";
-    
-    // Remove headers
-    const body = pgn.replace(/\[.*?\]\s*/g, '').trim();
+    const moveCounter = document.getElementById('moveCounter');
+    const moveSlider = document.getElementById('moveSlider');
+    const commentsDiv = document.getElementById('comments');
 
-    // Split moves by spaces
-    const tokens = body.split(/\s+/);
+    function updateBoard() {
+      game.reset();
+      for (let i = 0; i < currentMove; i++) {
+        game.move(moves[i].san);
+      }
+      board.position(game.fen());
+      updateCounter();
+      updateComment();
+    }
 
-    tokens.forEach(token => {
-        const div = document.createElement("div");
-        div.className = "move";
+    function updateCounter() {
+      moveCounter.textContent = `${currentMove} / ${moves.length}`;
+      moveSlider.max = moves.length;
+      moveSlider.value = currentMove;
+    }
 
-        // Check for comment in {}
-        const commentMatch = token.match(/\{([^}]+)\}/);
-        if (commentMatch) {
-            div.innerHTML = `<span class="comment">${commentMatch[1]}</span>`;
-        } else {
-            div.textContent = token;
-        }
+    function updateComment() {
+      if (currentMove === 0) {
+        commentsDiv.textContent = '';
+      } else {
+        commentsDiv.textContent = moves[currentMove - 1].comment || '';
+      }
+    }
 
-        movesDiv.appendChild(div);
+    document.getElementById('loadPgn').addEventListener('click', () => {
+      const pgnText = document.getElementById('pgnInput').value;
+      const loaded = game.load_pgn(pgnText, { sloppy: true });
+      if (!loaded) {
+        alert('Invalid PGN!');
+        return;
+      }
+
+      const history = game.history({ verbose: true });
+      moves = [];
+      history.forEach(move => {
+        // Extract comments from PGN
+        const commentMatch = pgnText.match(new RegExp(`\\{([^}]*)\\}\\s*${move.san.replace(/\+/g, '\\+')}`));
+        moves.push({
+          san: move.san,
+          comment: commentMatch ? commentMatch[1].trim() : ''
+        });
+      });
+
+      currentMove = 0;
+      game.reset();
+      board.position(game.fen());
+      updateCounter();
+      updateComment();
     });
-}
-</script>
 
+    document.getElementById('nextMove').addEventListener('click', () => {
+      if (currentMove >= moves.length) return;
+      game.move(moves[currentMove].san);
+      currentMove++;
+      board.position(game.fen(), true); // animate move
+      updateCounter();
+      updateComment();
+    });
+
+    document.getElementById('prevMove').addEventListener('click', () => {
+      if (currentMove <= 0) return;
+      currentMove--;
+      game.undo();
+      board.position(game.fen(), true);
+      updateCounter();
+      updateComment();
+    });
+
+    moveSlider.addEventListener('input', () => {
+      currentMove = parseInt(moveSlider.value);
+      updateBoard();
+    });
+  </script>
 </body>
 </html>
