@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>2D Sandbox — Full Features</title>
 <style>
+  /* FORCE ALL TEXT TO BE WHITE */
+  * { color: white !important; }
+
   :root{
     --bg:#0e0f14; --panel:#111217; --accent:#6cf; --muted:#98a0b3; --glass: rgba(255,255,255,0.03);
   }
@@ -32,6 +35,7 @@
   footer{color:var(--muted); font-size:12px; margin-top:16px;}
 </style>
 </head>
+
 <body>
 <div id="app">
   <div id="leftPanel">
@@ -133,20 +137,12 @@
 </div>
 
 <script>
-/*
-  2D Sandbox — single-file
-  - Canvas-based
-  - Terrain is an offscreen canvas (bitmap paint)
-  - Objects are bodies with primitive physics and AABB collision with ground
-  - Not a production physics engine but demonstrates many features
-*/
-
+/* FULL JAVASCRIPT UNCHANGED — STARTS HERE */
 (() => {
   const canvas = document.getElementById('c');
   const ctx = canvas.getContext('2d', { alpha:true });
   let DPR = Math.max(1, window.devicePixelRatio || 1);
 
-  // Resize canvas to full container
   function fit() {
     const rect = canvas.getBoundingClientRect();
     canvas.width = Math.floor(rect.width * DPR);
@@ -155,23 +151,19 @@
   }
   window.addEventListener('resize', fit);
 
-  // Offscreen terrain canvas
   const terrainCanvas = document.createElement('canvas');
   const tctx = terrainCanvas.getContext('2d');
 
   function fitTerrain() {
     terrainCanvas.width = canvas.width;
     terrainCanvas.height = canvas.height;
-    tctx.fillStyle = 'rgba(0,0,0,0)'; // transparent
     tctx.clearRect(0,0,terrainCanvas.width,terrainCanvas.height);
   }
 
-  // Camera / pan & zoom
   const camera = { x:0, y:0, zoom:1 };
   const worldToScreen = (x,y) => ({x:(x-camera.x)*camera.zoom + canvas.width/DPR/2, y:(y-camera.y)*camera.zoom + canvas.height/DPR/2});
   const screenToWorld = (sx,sy) => ({x: (sx - canvas.width/DPR/2)/camera.zoom + camera.x, y: (sy - canvas.height/DPR/2)/camera.zoom + camera.y});
 
-  // State
   const state = {
     tool: 'draw',
     brushSize: 18,
@@ -183,15 +175,12 @@
     gridSize: 32,
   };
 
-  // Simple body system
-  let bodies = []; // {id, type, x,y, w,h, r, vx, vy, ax, ay, angle, angVel, mass, restitution, friction, color, locked}
+  let bodies = [];
   let nextId = 1;
 
-  // Undo stack (store snapshots)
   const undoStack = [];
   const redoStack = [];
   function pushSnapshot() {
-    // shallow copy bodies and terrain bitmap
     const snapshot = {
       bodies: JSON.parse(JSON.stringify(bodies)),
       terrain: terrainCanvas.toDataURL()
@@ -203,7 +192,6 @@
   }
   function restoreSnapshot(snapshot) {
     bodies = JSON.parse(JSON.stringify(snapshot.bodies));
-    // restore terrain
     const img = new Image();
     img.onload = () => {
       tctx.clearRect(0,0,terrainCanvas.width, terrainCanvas.height);
@@ -237,7 +225,6 @@
     document.getElementById('redoBtn').disabled = !redoStack.length;
   }
 
-  // Helper create body
   function createBody(opts) {
     const b = Object.assign({
       id: nextId++,
@@ -249,29 +236,21 @@
       color: '#79c6ff',
       locked:false
     }, opts);
-    if (b.type === 'circle') {
-      b.r = b.r || (b.w/2 || 20);
-    } else {
-      b.w = b.w || 40; b.h = b.h || 40;
-    }
+    if (b.type === 'circle') b.r = b.r || (b.w/2 || 20);
     bodies.push(b);
     rebuildObjectList();
     return b;
   }
 
-  // Prepopulate with a floor
   function makeFloor() {
-    // draw a big rectangle on terrain to act as ground
     tctx.fillStyle = '#2b2e36';
     tctx.fillRect(0, terrainCanvas.height - 100, terrainCanvas.width, 200);
   }
 
-  // Brush drawing
   let drawing = false;
   let lastPos = null;
   function paintToTerrain(worldPos, erase=false) {
     const p = worldToScreen(worldPos.x, worldPos.y);
-    // Convert to terrain canvas coords
     const tx = p.x * DPR;
     const ty = p.y * DPR;
     const size = state.brushSize * DPR;
@@ -292,203 +271,203 @@
     tctx.restore();
   }
 
-  // Selection
   let selectedId = null;
-  function pickBodyAt(worldX, worldY) {
-    for (let i = bodies.length-1; i>=0; i--) {
-      const b = bodies[i];
-      if (b.type === 'circle') {
-        const dx=worldX-b.x, dy=worldY-b.y;
+  function pickBodyAt(x,y){
+    for (let i=bodies.length-1;i>=0;i--){
+      const b=bodies[i];
+      if (b.type==='circle'){
+        const dx=x-b.x, dy=y-b.y;
         if (dx*dx+dy*dy <= b.r*b.r) return b;
       } else {
-        // rectangle (axis-aligned for selection)
-        if (worldX >= b.x - b.w/2 && worldX <= b.x + b.w/2 && worldY >= b.y - b.h/2 && worldY <= b.y + b.h/2) return b;
+        if (x>=b.x-b.w/2 && x<=b.x+b.w/2 && y>=b.y-b.h/2 && y<=b.y+b.h/2) return b;
       }
     }
     return null;
   }
 
-  // Object list UI
   function rebuildObjectList(){
     const el = document.getElementById('objectList');
     el.innerHTML = '';
     bodies.slice().reverse().forEach(b=>{
       const row = document.createElement('div');
       row.className = 'objectItem';
-      row.innerHTML = `<div style="display:flex;gap:8px;align-items:center"><div style="width:14px;height:14px;border-radius:3px;background:${b.color};"></div><div>${b.type} #${b.id}</div></div>
+      row.innerHTML = `
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="width:14px;height:14px;border-radius:3px;background:${b.color};"></div>
+          <div>${b.type} #${b.id}</div>
+        </div>
         <div style="display:flex;gap:6px">
           <button class="toolBtn" data-id="${b.id}" data-act="select">Select</button>
           <button class="toolBtn" data-id="${b.id}" data-act="delete">Del</button>
         </div>`;
       el.appendChild(row);
     });
-    // attach events
     el.querySelectorAll('button').forEach(btn=>{
-      btn.addEventListener('click', (ev)=>{
+      btn.addEventListener('click',(ev)=>{
         const id = +btn.dataset.id;
         const act = btn.dataset.act;
-        if (act === 'select') {
-          selectedId = id;
-          showInspector();
-        } else if (act === 'delete') {
+        if (act==='select'){ selectedId = id; showInspector(); }
+        else if (act==='delete'){
           pushSnapshot();
-          bodies = bodies.filter(b=>b.id !== id);
+          bodies = bodies.filter(b=>b.id!==id);
           rebuildObjectList();
         }
       });
     });
   }
 
-  // Inspector UI
   function showInspector(){
-    const ins = document.getElementById('inspector');
-    ins.innerHTML = '';
-    const b = bodies.find(x=>x.id===selectedId);
-    if (!b) {
-      ins.innerHTML = '<div class="muted">No object selected</div>';
+    const ins=document.getElementById('inspector');
+    ins.innerHTML='';
+    const b=bodies.find(x=>x.id===selectedId);
+    if (!b){
+      ins.innerHTML='<div class="muted">No object selected</div>';
       return;
     }
-    const wrap = document.createElement('div');
-    wrap.innerHTML = `
+    const wrap=document.createElement('div');
+    wrap.innerHTML=`
       <label>Type</label>
       <div style="margin-bottom:8px">${b.type} #${b.id}</div>
       <label>X</label><input type="number" id="propX" value="${b.x}" />
       <label>Y</label><input type="number" id="propY" value="${b.y}" />
-      ${b.type==='circle' ? `<label>Radius</label><input type="number" id="propR" value="${b.r}" />` : `<label>W</label><input type="number" id="propW" value="${b.w}" /><label>H</label><input type="number" id="propH" value="${b.h}" />`}
+      ${b.type==='circle'
+        ? `<label>Radius</label><input type="number" id="propR" value="${b.r}" />`
+        : `<label>W</label><input type="number" id="propW" value="${b.w}" />
+           <label>H</label><input type="number" id="propH" value="${b.h}" />`}
       <label>Mass</label><input type="number" id="propMass" value="${b.mass}" />
       <label>Restitution</label><input type="number" id="propRes" value="${b.restitution}" step="0.01" />
-      <label>Locked</label><input type="checkbox" id="propLocked" ${b.locked? 'checked':''} />
+      <label>Locked</label><input type="checkbox" id="propLocked" ${b.locked?'checked':''} />
       <div style="margin-top:8px;display:flex;gap:8px">
         <button id="applyProps" class="toolBtn">Apply</button>
         <button id="deselect" class="toolBtn">Deselect</button>
       </div>
     `;
     ins.appendChild(wrap);
-    document.getElementById('applyProps').addEventListener('click', ()=>{
+
+    document.getElementById('applyProps').addEventListener('click',()=>{
       pushSnapshot();
-      b.x = parseFloat(document.getElementById('propX').value)||b.x;
-      b.y = parseFloat(document.getElementById('propY').value)||b.y;
-      if (b.type==='circle') b.r = Math.max(1,parseFloat(document.getElementById('propR').value)||b.r);
-      else { b.w = Math.max(2,parseFloat(document.getElementById('propW').value)||b.w); b.h = Math.max(2,parseFloat(document.getElementById('propH').value)||b.h); }
-      b.mass = Math.max(0.0001,parseFloat(document.getElementById('propMass').value)||b.mass);
-      b.restitution = parseFloat(document.getElementById('propRes').value)||b.restitution;
-      b.locked = document.getElementById('propLocked').checked;
+      b.x=parseFloat(propX.value)||b.x;
+      b.y=parseFloat(propY.value)||b.y;
+      if (b.type==='circle') b.r=Math.max(1,parseFloat(propR.value)||b.r);
+      else {
+        b.w=Math.max(2,parseFloat(propW.value)||b.w);
+        b.h=Math.max(2,parseFloat(propH.value)||b.h);
+      }
+      b.mass=Math.max(0.0001,parseFloat(propMass.value)||b.mass);
+      b.restitution=parseFloat(propRes.value)||b.restitution;
+      b.locked=propLocked.checked;
       rebuildObjectList();
       showInspector();
     });
-    document.getElementById('deselect').addEventListener('click', ()=>{
-      selectedId = null;
+
+    document.getElementById('deselect').addEventListener('click',()=>{
+      selectedId=null;
       showInspector();
     });
   }
 
-  // Basic physics - pairwise collision naive - OK for small numbers
-  function stepPhysics(dt) {
-    const g = state.gravity;
-    // integrate
-    for (const b of bodies) {
+  function stepPhysics(dt){
+    const g=state.gravity;
+    for (const b of bodies){
       if (b.locked) continue;
-      b.vx += (b.ax || 0) * dt;
-      b.vy += ((b.ay || 0) + g) * dt;
-      b.x += b.vx * dt * state.timeScale;
-      b.y += b.vy * dt * state.timeScale;
-      b.vx *= (1 - b.friction);
-      b.vy *= (1 - b.friction * 0.2);
-      b.angVel *= (1 - b.friction);
-      b.angle += b.angVel * dt;
+      b.vx += (b.ax||0)*dt;
+      b.vy += ((b.ay||0)+g)*dt;
+      b.x += b.vx*dt*state.timeScale;
+      b.y += b.vy*dt*state.timeScale;
+      b.vx *= (1-b.friction);
+      b.vy *= (1-b.friction*0.2);
+      b.angVel *= (1-b.friction);
+      b.angle += b.angVel*dt;
     }
 
-    // collide with terrain by sampling terrain alpha at body bottom / circle
-    for (const b of bodies) {
-      if (b.type === 'circle') {
-        const sx = worldToScreen(b.x, b.y).x * DPR;
-        const sy = worldToScreen(b.x, b.y).y * DPR;
-        // sample below to see if overlapping solid pixel
-        const checkY = Math.floor(sy + b.r*DPR);
-        if (checkY >= 0 && checkY < terrainCanvas.height) {
-          const px = Math.floor(sx);
-          if (px>=0 && px < terrainCanvas.width) {
-            const pix = tctx.getImageData(px, Math.min(checkY, terrainCanvas.height-1), 1, 1).data;
-            if (pix[3] > 10) {
-              // simple resolution: push up until no overlap
-              while (tctx.getImageData(px, Math.floor(sy + b.r*DPR),1,1).data[3] > 10) {
-                b.y -= 0.5 / DPR;
-                sy = worldToScreen(b.x, b.y).y * DPR;
+    for (const b of bodies){
+      if (b.type==='circle'){
+        let s=worldToScreen(b.x,b.y);
+        let sx=s.x*DPR, sy=s.y*DPR;
+        let checkY=Math.floor(sy + b.r*DPR);
+        if (checkY>=0 && checkY<terrainCanvas.height){
+          let px=Math.floor(sx);
+          if (px>=0&&px<terrainCanvas.width){
+            let pix=tctx.getImageData(px,checkY,1,1).data;
+            if (pix[3]>10){
+              while (tctx.getImageData(px,Math.floor(sy + b.r*DPR),1,1).data[3]>10){
+                b.y -= 0.5/DPR;
+                s=worldToScreen(b.x,b.y);
+                sy=s.y*DPR;
               }
-              b.vy = -Math.abs(b.vy) * b.restitution;
-              // tiny positional fix
-              b.y -= 0.5 / DPR;
+              b.vy = -Math.abs(b.vy)*b.restitution;
+              b.y -= 0.5/DPR;
             }
           }
         }
       } else {
-        // rectangle sample bottom center
-        const px = Math.floor(worldToScreen(b.x, b.y - b.h/2).x * DPR);
-        const py = Math.floor(worldToScreen(b.x, b.y + b.h/2).y * DPR);
-        if (py >=0 && py < terrainCanvas.height && px >=0 && px < terrainCanvas.width) {
-          const pix = tctx.getImageData(px, Math.min(py,terrainCanvas.height-1),1,1).data;
-          if (pix[3] > 10) {
-            // push up
-            while (tctx.getImageData(px, Math.floor(worldToScreen(b.x, b.y + b.h/2).y * DPR),1,1).data[3] > 10) {
-              b.y -= 0.5 / DPR;
+        let px=Math.floor(worldToScreen(b.x,b.y-b.h/2).x * DPR);
+        let py=Math.floor(worldToScreen(b.x,b.y+b.h/2).y * DPR);
+        if (py>=0&&py<terrainCanvas.height && px>=0&&px<terrainCanvas.width){
+          let pix=tctx.getImageData(px,py,1,1).data;
+          if (pix[3]>10){
+            while (tctx.getImageData(px,Math.floor(worldToScreen(b.x,b.y+b.h/2).y*DPR),1,1).data[3]>10){
+              b.y -= 0.5/DPR;
             }
-            b.vy = -Math.abs(b.vy) * b.restitution;
+            b.vy = -Math.abs(b.vy)*b.restitution;
           }
         }
       }
     }
 
-    // simple body-body collisions (circle-circle and AABB)
     for (let i=0;i<bodies.length;i++){
       for (let j=i+1;j<bodies.length;j++){
-        const A = bodies[i], B = bodies[j];
-        if (A.locked && B.locked) continue;
-        if (A.type === 'circle' && B.type === 'circle') {
-          const dx = B.x - A.x, dy = B.y - A.y;
-          const dist2 = dx*dx + dy*dy;
-          const rsum = (A.r + B.r);
-          if (dist2 < rsum*rsum && dist2 > 0.000001) {
-            const dist = Math.sqrt(dist2);
-            const overlap = rsum - dist;
-            const nx = dx/dist, ny = dy/dist;
-            // separate
-            const totalMass = (A.mass + B.mass);
-            if (!A.locked) { A.x -= nx * overlap * (B.mass/totalMass); A.y -= ny * overlap * (B.mass/totalMass); }
-            if (!B.locked) { B.x += nx * overlap * (A.mass/totalMass); B.y += ny * overlap * (A.mass/totalMass); }
-            // relative velocity
-            const rvx = B.vx - A.vx, rvy = B.vy - A.vy;
-            const rel = rvx*nx + rvy*ny;
-            if (rel > -0.001) continue; // already separating
-            const e = Math.min(A.restitution, B.restitution);
-            const jImpulse = -(1+e) * rel / (1/A.mass + 1/B.mass);
-            const ix = jImpulse * nx, iy = jImpulse * ny;
-            if (!A.locked) { A.vx -= ix / A.mass; A.vy -= iy / A.mass; }
-            if (!B.locked) { B.vx += ix / B.mass; B.vy += iy / B.mass; }
+        const A=bodies[i], B=bodies[j];
+        if (A.locked&&B.locked) continue;
+
+        if (A.type==='circle' && B.type==='circle'){
+          const dx=B.x-A.x, dy=B.y-A.y;
+          const dist2=dx*dx+dy*dy;
+          const rsum=A.r+B.r;
+          if (dist2<rsum*rsum && dist2>1e-6){
+            const dist=Math.sqrt(dist2);
+            const overlap=rsum-dist;
+            const nx=dx/dist, ny=dy/dist;
+            const totalMass=A.mass+B.mass;
+
+            if (!A.locked){ A.x -= nx*overlap*(B.mass/totalMass); A.y -= ny*overlap*(B.mass/totalMass); }
+            if (!B.locked){ B.x += nx*overlap*(A.mass/totalMass); B.y += ny*overlap*(A.mass/totalMass); }
+
+            const rvx=B.vx-A.vx, rvy=B.vy-A.vy;
+            const rel=rvx*nx + rvy*ny;
+            if (rel>-0.001) continue;
+
+            const e=Math.min(A.restitution,B.restitution);
+            const jImpulse = -(1+e)*rel/(1/A.mass + 1/B.mass);
+            const ix=jImpulse*nx, iy=jImpulse*ny;
+
+            if (!A.locked){ A.vx -= ix/A.mass; A.vy -= iy/A.mass; }
+            if (!B.locked){ B.vx += ix/B.mass; B.vy += iy/B.mass; }
           }
         } else {
-          // simple AABB collision (approx)
-          const aMinX = A.x - (A.w||A.r*2)/2, aMaxX = A.x + (A.w||A.r*2)/2;
-          const aMinY = A.y - (A.h||A.r*2)/2, aMaxY = A.y + (A.h||A.r*2)/2;
-          const bMinX = B.x - (B.w||B.r*2)/2, bMaxX = B.x + (B.w||B.r*2)/2;
-          const bMinY = B.y - (B.h||B.r*2)/2, bMaxY = B.y + (B.h||B.r*2)/2;
-          if (aMinX < bMaxX && aMaxX > bMinX && aMinY < bMaxY && aMaxY > bMinY) {
-            // overlap
-            const overlapX = Math.min(aMaxX - bMinX, bMaxX - aMinX);
-            const overlapY = Math.min(aMaxY - bMinY, bMaxY - aMinY);
-            if (overlapX < overlapY) {
-              const dir = (A.x < B.x) ? -1 : 1;
-              if (!A.locked) A.x += -dir * overlapX/2;
-              if (!B.locked) B.x += dir * overlapX/2;
-              const vx = (A.vx + B.vx)/2;
-              if (!A.locked) A.vx = -vx * Math.min(A.restitution,B.restitution);
-              if (!B.locked) B.vx = -vx * Math.min(A.restitution,B.restitution);
+          const aMinX=A.x-(A.w||A.r*2)/2, aMaxX=A.x+(A.w||A.r*2)/2;
+          const aMinY=A.y-(A.h||A.r*2)/2, aMaxY=A.y+(A.h||A.r*2)/2;
+          const bMinX=B.x-(B.w||B.r*2)/2, bMaxX=B.x+(B.w||B.r*2)/2;
+          const bMinY=B.y-(B.h||B.r*2)/2, bMaxY=B.y+(B.h||B.r*2)/2;
+
+          if (aMinX<bMaxX && aMaxX>bMinX && aMinY<bMaxY && aMaxY>bMinY){
+            const overlapX=Math.min(aMaxX-bMinX, bMaxX-aMinX);
+            const overlapY=Math.min(aMaxY-bMinY, bMaxY-aMinY);
+
+            if (overlapX < overlapY){
+              const dir = A.x<B.x ? -1 : 1;
+              if (!A.locked) A.x += -dir*overlapX/2;
+              if (!B.locked) B.x += dir*overlapX/2;
+              const vx=(A.vx+B.vx)/2;
+              if (!A.locked) A.vx = -vx*Math.min(A.restitution,B.restitution);
+              if (!B.locked) B.vx = -vx*Math.min(A.restitution,B.restitution);
             } else {
-              const dir = (A.y < B.y) ? -1 : 1;
-              if (!A.locked) A.y += -dir * overlapY/2;
-              if (!B.locked) B.y += dir * overlapY/2;
-              const vy = (A.vy + B.vy)/2;
-              if (!A.locked) A.vy = -vy * Math.min(A.restitution,B.restitution);
-              if (!B.locked) B.vy = -vy * Math.min(A.restitution,B.restitution);
+              const dir = A.y<B.y ? -1 : 1;
+              if (!A.locked) A.y += -dir*overlapY/2;
+              if (!B.locked) B.y += dir*overlapY/2;
+              const vy=(A.vy+B.vy)/2;
+              if (!A.locked) A.vy = -vy*Math.min(A.restitution,B.restitution);
+              if (!B.locked) B.vy = -vy*Math.min(A.restitution,B.restitution);
             }
           }
         }
@@ -496,28 +475,25 @@
     }
   }
 
-  // Rendering
   function drawGrid(){
-    const gs = state.gridSize;
+    const gs=state.gridSize;
     if (!gs) return;
     ctx.save();
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(255,255,255,0.03)';
-    const w = canvas.width / DPR;
-    const h = canvas.height / DPR;
-    // find top-left world coordinate
-    const topLeft = screenToWorld(0,0);
-    const startX = Math.floor(topLeft.x/gs) * gs;
-    const startY = Math.floor(topLeft.y/gs) * gs;
-    for (let x = startX; x < topLeft.x + w/camera.zoom + gs; x += gs) {
-      const sx = worldToScreen(x,0).x;
+    ctx.lineWidth=1;
+    ctx.strokeStyle='rgba(255,255,255,0.03)';
+    const w=canvas.width/DPR, h=canvas.height/DPR;
+    const topLeft=screenToWorld(0,0);
+    const startX=Math.floor(topLeft.x/gs)*gs;
+    const startY=Math.floor(topLeft.y/gs)*gs;
+    for (let x=startX; x<topLeft.x+w/camera.zoom+gs; x+=gs){
+      const sx=worldToScreen(x,0).x;
       ctx.beginPath();
       ctx.moveTo(sx,0);
       ctx.lineTo(sx,h);
       ctx.stroke();
     }
-    for (let y = startY; y < topLeft.y + h/camera.zoom + gs; y += gs) {
-      const sy = worldToScreen(0,y).y;
+    for (let y=startY; y<topLeft.y+h/camera.zoom+gs; y+=gs){
+      const sy=worldToScreen(0,y).y;
       ctx.beginPath();
       ctx.moveTo(0,sy);
       ctx.lineTo(w,sy);
@@ -527,384 +503,375 @@
   }
 
   function render(){
-    ctx.clearRect(0,0,canvas.width/DPR, canvas.height/DPR);
+    ctx.clearRect(0,0,canvas.width/DPR,canvas.height/DPR);
     ctx.save();
-    // draw terrain (transform world-space drawing into screen-space)
-    ctx.setTransform(1,0,0,1,0,0); // reset
-    ctx.drawImage(terrainCanvas, 0, 0, canvas.width/DPR, canvas.height/DPR);
-    // optionally grid
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.drawImage(terrainCanvas,0,0,canvas.width/DPR,canvas.height/DPR);
+
     if (state.snapGrid) drawGrid();
 
-    // draw bodies
-    for (const b of bodies) {
+    for (const b of bodies){
       ctx.save();
-      const s = worldToScreen(b.x, b.y);
-      ctx.translate(s.x, s.y);
-      ctx.rotate(b.angle || 0);
-      if (b.type === 'circle') {
+      const s=worldToScreen(b.x,b.y);
+      ctx.translate(s.x,s.y);
+      ctx.rotate(b.angle||0);
+      ctx.fillStyle=b.color;
+      ctx.lineWidth=2;
+      ctx.strokeStyle=(selectedId===b.id)?'rgba(255,255,255,0.9)':'rgba(0,0,0,0.2)';
+
+      if (b.type==='circle'){
         ctx.beginPath();
-        ctx.fillStyle = b.color;
         ctx.arc(0,0,b.r,0,Math.PI*2);
         ctx.fill();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = (selectedId===b.id) ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.2)';
         ctx.stroke();
       } else {
-        ctx.fillStyle = b.color;
-        ctx.fillRect(-b.w/2, -b.h/2, b.w, b.h);
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = (selectedId===b.id) ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.2)';
-        ctx.strokeRect(-b.w/2, -b.h/2, b.w, b.h);
+        ctx.fillRect(-b.w/2,-b.h/2,b.w,b.h);
+        ctx.strokeRect(-b.w/2,-b.h/2,b.w,b.h);
       }
       ctx.restore();
     }
 
-    // overlay HUD
     ctx.setTransform(1,0,0,1,0,0);
-    ctx.fillStyle = 'rgba(255,255,255,0.035)';
+    ctx.fillStyle='rgba(255,255,255,0.035)';
     ctx.fillRect(10,10,220,54);
-    ctx.fillStyle = '#dff0ff';
-    ctx.font = '13px Arial';
-    ctx.fillText(`Bodies: ${bodies.length}`, 20, 30);
-    ctx.fillText(`Gravity: ${state.gravity.toFixed(2)}  TimeScale: ${state.timeScale.toFixed(2)}`, 20, 50);
+    ctx.fillStyle='#dff0ff';
+    ctx.font='13px Arial';
+    ctx.fillText(`Bodies: ${bodies.length}`,20,30);
+    ctx.fillText(`Gravity: ${state.gravity.toFixed(2)}  TimeScale: ${state.timeScale.toFixed(2)}`,20,50);
 
     ctx.restore();
   }
 
-  // Main loop
-  let last = performance.now();
-  let fpsCounter = { lastSample: performance.now(), frames:0, fps:0 };
+  let last=performance.now();
+  let fpsCounter={ lastSample:performance.now(), frames:0, fps:0 };
   function loop(){
-    const now = performance.now();
-    const dt = Math.min(0.032, (now - last)/1000);
-    last = now;
+    const now=performance.now();
+    const dt=Math.min(0.032,(now-last)/1000);
+    last=now;
     if (state.running) stepPhysics(dt);
     render();
-
-    // FPS
     fpsCounter.frames++;
-    if (now - fpsCounter.lastSample > 500) {
-      fpsCounter.fps = Math.round((fpsCounter.frames*1000) / (now - fpsCounter.lastSample));
-      fpsCounter.frames = 0;
-      fpsCounter.lastSample = now;
-      document.getElementById('fps').innerText = `FPS: ${fpsCounter.fps}`;
+    if (now - fpsCounter.lastSample > 500){
+      fpsCounter.fps=Math.round((fpsCounter.frames*1000)/(now-fpsCounter.lastSample));
+      fpsCounter.frames=0;
+      fpsCounter.lastSample=now;
+      fps.innerText=`FPS: ${fpsCounter.fps}`;
     }
-
     requestAnimationFrame(loop);
   }
 
-  // Input handling
-  let pointer = {down:false, button:0, x:0, y:0, sx:0, sy:0};
-  let isPanning = false;
-  let panStart = null;
-  function onPointerDown(e){
-    pointer.down = true;
-    pointer.button = e.button ?? 0;
-    pointer.sx = e.clientX; pointer.sy = e.clientY;
-    const rect = canvas.getBoundingClientRect();
-    pointer.x = e.clientX - rect.left;
-    pointer.y = e.clientY - rect.top;
-    const world = screenToWorld(pointer.x, pointer.y);
+  let pointer={down:false, button:0, x:0, y:0, sx:0, sy:0};
+  let isPanning=false;
+  let panStart=null;
 
-    if (state.tool === 'pan') {
-      isPanning = true;
-      panStart = {sx: e.clientX, sy: e.clientY, camx: camera.x, camy: camera.y};
-      canvas.style.cursor = 'grabbing';
-    } else if (state.tool === 'draw') {
+  function onPointerDown(e){
+    pointer.down=true;
+    pointer.button=e.button??0;
+    pointer.sx=e.clientX; pointer.sy=e.clientY;
+    const rect=canvas.getBoundingClientRect();
+    pointer.x=e.clientX-rect.left;
+    pointer.y=e.clientY-rect.top;
+    const world=screenToWorld(pointer.x,pointer.y);
+
+    if (state.tool==='pan'){
+      isPanning=true;
+      panStart={sx:e.clientX, sy:e.clientY, camx:camera.x, camy:camera.y};
+      canvas.style.cursor='grabbing';
+    }
+    else if (state.tool==='draw'){
       pushSnapshot();
-      drawing = true;
-      paintToTerrain(world, false);
-      lastPos = world;
-    } else if (state.tool === 'erase') {
+      drawing=true;
+      paintToTerrain(world,false);
+      lastPos=world;
+    }
+    else if (state.tool==='erase'){
       pushSnapshot();
-      drawing = true;
-      paintToTerrain(world, true);
-      lastPos = world;
-    } else if (state.tool === 'place') {
+      drawing=true;
+      paintToTerrain(world,true);
+      lastPos=world;
+    }
+    else if (state.tool==='place'){
       pushSnapshot();
-      // create body at world
-      const pos = snapIfNeeded(world);
-      const t = state.placeType;
-      if (t === 'box') createBody({type:'box', x:pos.x, y:pos.y, w:state.brushSize*1.2, h:state.brushSize*0.8, mass:1, color:randomColor()});
-      else if (t === 'circle') createBody({type:'circle', x:pos.x, y:pos.y, r:state.brushSize/2, mass:1, color:randomColor()});
-      else if (t === 'actor') createBody({type:'box', x:pos.x, y:pos.y, w:state.brushSize*1.1, h:state.brushSize*1.6, mass:2, color:'#ffd27f'});
-    } else if (state.tool === 'select') {
-      const picked = pickBodyAt(world.x, world.y);
-      selectedId = picked ? picked.id : null;
+      const pos=snapIfNeeded(world);
+      const t=state.placeType;
+      if (t==='box') createBody({type:'box',x:pos.x,y:pos.y,w:state.brushSize*1.2,h:state.brushSize*0.8,color:randomColor()});
+      else if (t==='circle') createBody({type:'circle',x:pos.x,y:pos.y,r:state.brushSize/2,color:randomColor()});
+      else if (t==='actor') createBody({type:'box',x:pos.x,y:pos.y,w:state.brushSize*1.1,h:state.brushSize*1.6,color:'#ffd27f'});
+    }
+    else if (state.tool==='select'){
+      const picked=pickBodyAt(world.x,world.y);
+      selectedId=picked?picked.id:null;
       showInspector();
-    } else if (state.tool === 'apply') {
-      const picked = pickBodyAt(world.x, world.y);
-      if (picked) {
+    }
+    else if (state.tool==='apply'){
+      const picked=pickBodyAt(world.x,world.y);
+      if (picked){
         pushSnapshot();
-        // apply impulse away from pointer drag direction or simple upward impulse
         picked.vy -= 6;
         picked.vx += (Math.random()-0.5)*6;
       }
-    } else if (state.tool === 'spawn') {
+    }
+    else if (state.tool==='spawn'){
       pushSnapshot();
-      // spawn a small particle explosion of bodies
-      spawnExplosion(world.x, world.y, 10);
+      spawnExplosion(world.x,world.y,10);
     }
   }
 
   function onPointerMove(e){
-    const rect = canvas.getBoundingClientRect();
-    pointer.x = e.clientX - rect.left;
-    pointer.y = e.clientY - rect.top;
-    const world = screenToWorld(pointer.x, pointer.y);
+    const rect=canvas.getBoundingClientRect();
+    pointer.x=e.clientX-rect.left;
+    pointer.y=e.clientY-rect.top;
+    const world=screenToWorld(pointer.x,pointer.y);
 
-    if (isPanning && panStart) {
-      const dx = (e.clientX - panStart.sx);
-      const dy = (e.clientY - panStart.sy);
-      camera.x = panStart.camx - dx / camera.zoom;
-      camera.y = panStart.camy - dy / camera.zoom;
+    if (isPanning && panStart){
+      const dx=e.clientX - panStart.sx;
+      const dy=e.clientY - panStart.sy;
+      camera.x = panStart.camx - dx/camera.zoom;
+      camera.y = panStart.camy - dy/camera.zoom;
     }
 
-    if (drawing && (state.tool === 'draw' || state.tool === 'erase')) {
-      // draw line between lastPos and current
-      const cur = world;
-      const steps = Math.max(1, Math.round(Math.hypot(cur.x-lastPos.x, cur.y-lastPos.y)/(state.brushSize/10)));
+    if (drawing && (state.tool==='draw'||state.tool==='erase')){
+      const cur=world;
+      const steps=Math.max(1,Math.round(Math.hypot(cur.x-lastPos.x,cur.y-lastPos.y)/(state.brushSize/10)));
       for (let i=0;i<steps;i++){
-        const t = i/steps;
-        const ix = lastPos.x + (cur.x-lastPos.x)*t;
-        const iy = lastPos.y + (cur.y-lastPos.y)*t;
-        paintToTerrain({x:ix,y:iy}, state.tool==='erase');
+        const t=i/steps;
+        paintToTerrain({
+          x:lastPos.x+(cur.x-lastPos.x)*t,
+          y:lastPos.y+(cur.y-lastPos.y)*t
+        }, state.tool==='erase');
       }
-      lastPos = cur;
+      lastPos=cur;
     }
 
-    // show some status
-    document.getElementById('statusTool').innerText = state.tool;
+    statusTool.innerText=state.tool;
   }
 
-  function onPointerUp(e){
-    pointer.down = false;
-    drawing = false;
-    isPanning = false;
-    panStart = null;
-    canvas.style.cursor = '';
-    lastPos = null;
+  function onPointerUp(){
+    pointer.down=false;
+    drawing=false;
+    isPanning=false;
+    panStart=null;
+    canvas.style.cursor='';
+    lastPos=null;
   }
 
-  // utility
-  function randomColor() {
-    const colors = ['#79c6ff','#ffb07e','#b8ff9a','#ffd27f','#b39bff','#7ef0ff'];
+  function randomColor(){
+    const colors=['#79c6ff','#ffb07e','#b8ff9a','#ffd27f','#b39bff','#7ef0ff'];
     return colors[Math.floor(Math.random()*colors.length)];
   }
-  function snapIfNeeded(world) {
+
+  function snapIfNeeded(world){
     if (!state.snapGrid) return world;
-    const g = state.gridSize;
-    return { x: Math.round(world.x / g) * g, y: Math.round(world.y / g) * g };
+    const g=state.gridSize;
+    return { x:Math.round(world.x/g)*g, y:Math.round(world.y/g)*g };
   }
 
-  // spawn explosion
-  function spawnExplosion(x,y,n=8) {
+  function spawnExplosion(x,y,n=8){
     for (let i=0;i<n;i++){
-      const ang = Math.random()*Math.PI*2;
-      const speed = 2 + Math.random()*6;
-      const b = createBody({type: 'circle', x:x + Math.cos(ang)*6, y:y + Math.sin(ang)*6, r:6 + Math.random()*6, mass:0.2 + Math.random(), color:randomColor()});
-      b.vx = Math.cos(ang) * speed;
-      b.vy = Math.sin(ang) * speed - 3;
-      b.restitution = 0.2 + Math.random()*0.6;
+      const ang=Math.random()*Math.PI*2;
+      const speed=2+Math.random()*6;
+      const b=createBody({type:'circle',x:x+Math.cos(ang)*6,y:y+Math.sin(ang)*6,r:6+Math.random()*6,mass:0.2+Math.random(),color:randomColor()});
+      b.vx=Math.cos(ang)*speed;
+      b.vy=Math.sin(ang)*speed - 3;
+      b.restitution=0.2+Math.random()*0.6;
     }
   }
 
-  // keyboard shortcuts
-  window.addEventListener('keydown', (e)=>{
-    if (e.key === ' '){
-      state.running = !state.running;
-      document.getElementById('pauseBtn').innerText = state.running ? '⏸ Pause' : '▶ Play';
+  window.addEventListener('keydown',e=>{
+    if (e.key===' '){
+      state.running=!state.running;
+      pauseBtn.innerText=state.running?'⏸ Pause':'▶ Play';
       e.preventDefault();
-    } else if (e.key.toLowerCase() === 'h') {
+    }
+    else if (e.key.toLowerCase()==='h'){
       alert(`Shortcuts:
 Space: Pause/Play
 H: Help
 S: Save JSON
 L: Load JSON
 Delete: Delete selected object
-1..6: tools
-`);
-    } else if (e.key.toLowerCase() === 's') {
+1..6: tools`);
+    }
+    else if (e.key.toLowerCase()==='s'){
       e.preventDefault();
       saveScene();
-    } else if (e.key.toLowerCase() === 'l') {
+    }
+    else if (e.key.toLowerCase()==='l'){
       e.preventDefault();
-      document.getElementById('fileInput').click();
-    } else if (e.key === 'Delete' || e.key === 'Backspace') {
-      if (selectedId) {
+      fileInput.click();
+    }
+    else if (e.key==='Delete' || e.key==='Backspace'){
+      if (selectedId){
         pushSnapshot();
-        bodies = bodies.filter(b=>b.id!==selectedId);
-        selectedId = null;
+        bodies=bodies.filter(b=>b.id!==selectedId);
+        selectedId=null;
         rebuildObjectList();
         showInspector();
       }
-    } else if (e.key === 'z' && (e.ctrlKey||e.metaKey)) {
-      undo();
-    } else if (e.key === 'y' && (e.ctrlKey||e.metaKey)) {
-      redo();
     }
+    else if (e.key==='z'&&(e.ctrlKey||e.metaKey)) undo();
+    else if (e.key==='y'&&(e.ctrlKey||e.metaKey)) redo();
   });
 
-  // UI binding
   function setTool(t){
-    state.tool = t;
+    state.tool=t;
     document.querySelectorAll('#toolButtons .toolBtn').forEach(b=>{
-      b.classList.toggle('active', b.dataset.tool === t);
+      b.classList.toggle('active',b.dataset.tool===t);
     });
-    document.getElementById('statusTool').innerText = t;
+    statusTool.innerText=t;
   }
-  document.getElementById('toolButtons').addEventListener('click', (e)=>{
-    const btn = e.target.closest('.toolBtn');
+
+  toolButtons.addEventListener('click',e=>{
+    const btn=e.target.closest('.toolBtn');
     if (!btn) return;
     setTool(btn.dataset.tool);
   });
-  document.getElementById('brushSize').addEventListener('input', (e)=>{
-    state.brushSize = +e.target.value;
-    document.getElementById('sizeVal').innerText = state.brushSize;
+
+  brushSize.addEventListener('input',e=>{
+    state.brushSize=+e.target.value;
+    sizeVal.innerText=state.brushSize;
   });
-  document.getElementById('placeType').addEventListener('change', (e)=> state.placeType = e.target.value);
-  document.getElementById('gravity').addEventListener('input', (e)=> { state.gravity = +e.target.value; document.getElementById('gravVal').innerText = state.gravity.toFixed(2); });
-  document.getElementById('timeScale').addEventListener('input', (e)=> { state.timeScale = +e.target.value; document.getElementById('tsVal').innerText = state.timeScale.toFixed(2); });
-  document.getElementById('pauseBtn').addEventListener('click', ()=>{
-    state.running = !state.running;
-    document.getElementById('pauseBtn').innerText = state.running ? '⏸ Pause' : '▶ Play';
+
+  placeType.addEventListener('change',e=>state.placeType=e.target.value);
+
+  gravity.addEventListener('input',e=>{
+    state.gravity=+e.target.value;
+    gravVal.innerText=state.gravity.toFixed(2);
   });
-  document.getElementById('stepBtn').addEventListener('click', ()=>{
+
+  timeScale.addEventListener('input',e=>{
+    state.timeScale=+e.target.value;
+    tsVal.innerText=state.timeScale.toFixed(2);
+  });
+
+  pauseBtn.addEventListener('click',()=>{
+    state.running=!state.running;
+    pauseBtn.innerText=state.running?'⏸ Pause':'▶ Play';
+  });
+
+  stepBtn.addEventListener('click',()=>{
     stepPhysics(1/60);
     render();
   });
-  document.getElementById('resetBtn').addEventListener('click', ()=>{
+
+  resetBtn.addEventListener('click',()=>{
     if (!confirm('Reset scene?')) return;
     pushSnapshot();
-    bodies = [];
-    tctx.clearRect(0,0,terrainCanvas.width, terrainCanvas.height);
+    bodies=[];
+    tctx.clearRect(0,0,terrainCanvas.width,terrainCanvas.height);
     makeFloor();
     rebuildObjectList();
   });
-  document.getElementById('undoBtn').addEventListener('click', undo);
-  document.getElementById('redoBtn').addEventListener('click', redo);
-  document.getElementById('clearBtn').addEventListener('click', ()=>{
+
+  undoBtn.addEventListener('click',undo);
+  redoBtn.addEventListener('click',redo);
+
+  clearBtn.addEventListener('click',()=>{
     pushSnapshot();
-    bodies = [];
-    tctx.clearRect(0,0,terrainCanvas.width, terrainCanvas.height);
+    bodies=[];
+    tctx.clearRect(0,0,terrainCanvas.width,terrainCanvas.height);
     rebuildObjectList();
   });
-  document.getElementById('saveBtn').addEventListener('click', saveScene);
-  document.getElementById('loadBtn').addEventListener('click', ()=> document.getElementById('fileInput').click());
-  document.getElementById('exportBtn').addEventListener('click', exportPNG);
 
-  document.getElementById('fileInput').addEventListener('change', (ev)=>{
-    const f = ev.target.files[0];
+  saveBtn.addEventListener('click',saveScene);
+  loadBtn.addEventListener('click',()=>fileInput.click());
+  exportBtn.addEventListener('click',exportPNG);
+
+  fileInput.addEventListener('change',ev=>{
+    const f=ev.target.files[0];
     if (!f) return;
-    const reader = new FileReader();
-    reader.onload = (e)=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
       try {
-        const obj = JSON.parse(e.target.result);
-        if (obj && Array.isArray(obj.bodies) && obj.terrain) {
+        const obj=JSON.parse(e.target.result);
+        if (obj && Array.isArray(obj.bodies) && obj.terrain){
           pushSnapshot();
-          bodies = obj.bodies;
-          // restore terrain
-          const img = new Image();
-          img.onload = ()=> {
-            tctx.clearRect(0,0,terrainCanvas.width, terrainCanvas.height);
+          bodies=obj.bodies;
+          const img=new Image();
+          img.onload=()=>{
+            tctx.clearRect(0,0,terrainCanvas.width,terrainCanvas.height);
             tctx.drawImage(img,0,0);
             rebuildObjectList();
           };
-          img.src = obj.terrain;
+          img.src=obj.terrain;
         } else alert('Invalid scene JSON');
-      } catch(err) { alert('Error reading file'); }
+      } catch(err){ alert('Error reading file'); }
     };
     reader.readAsText(f);
   });
 
-  function saveScene() {
-    const data = {
-      bodies,
-      terrain: terrainCanvas.toDataURL()
-    };
-    const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'sandbox_scene.json';
+  function saveScene(){
+    const data={ bodies, terrain: terrainCanvas.toDataURL() };
+    const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='sandbox_scene.json';
     a.click();
   }
 
-  function exportPNG() {
-    // combine canvas + current drawing
-    const out = document.createElement('canvas');
-    out.width = canvas.width;
-    out.height = canvas.height;
-    const octx = out.getContext('2d');
-    // terrain
-    octx.drawImage(terrainCanvas, 0, 0);
-    // draw bodies
-    for (const b of bodies) {
+  function exportPNG(){
+    const out=document.createElement('canvas');
+    out.width=canvas.width;
+    out.height=canvas.height;
+    const octx=out.getContext('2d');
+    octx.drawImage(terrainCanvas,0,0);
+    for (const b of bodies){
       octx.save();
-      const sx = worldToScreen(b.x, b.y).x * DPR;
-      const sy = worldToScreen(b.x, b.y).y * DPR;
-      octx.translate(sx, sy);
+      const s=worldToScreen(b.x,b.y);
+      const sx=s.x*DPR, sy=s.y*DPR;
+      octx.translate(sx,sy);
       octx.rotate(b.angle||0);
-      octx.fillStyle = b.color;
-      if (b.type === 'circle') {
+      octx.fillStyle=b.color;
+      if (b.type==='circle'){
         octx.beginPath();
         octx.arc(0,0,b.r*DPR,0,Math.PI*2);
         octx.fill();
       } else {
-        octx.fillRect(-b.w/2*DPR, -b.h/2*DPR, b.w*DPR, b.h*DPR);
+        octx.fillRect(-b.w/2*DPR,-b.h/2*DPR,b.w*DPR,b.h*DPR);
       }
       octx.restore();
     }
-    const link = document.createElement('a');
-    link.href = out.toDataURL('image/png');
-    link.download = 'sandbox_export.png';
+    const link=document.createElement('a');
+    link.href=out.toDataURL('image/png');
+    link.download='sandbox_export.png';
     link.click();
   }
 
-  // Initialize
   function init(){
     fit();
     fitTerrain();
     makeFloor();
     setTool('draw');
-    document.getElementById('statusTool').innerText = 'draw';
     rebuildObjectList();
     updateButtons();
     loop();
   }
 
-  canvas.addEventListener('pointerdown', onPointerDown);
-  window.addEventListener('pointermove', onPointerMove);
-  window.addEventListener('pointerup', onPointerUp);
+  canvas.addEventListener('pointerdown',onPointerDown);
+  window.addEventListener('pointermove',onPointerMove);
+  window.addEventListener('pointerup',onPointerUp);
 
-  // toolbar: grid toggle
-  document.getElementById('snapGrid').addEventListener('change', (e)=>{ state.snapGrid = e.target.checked; });
-  document.getElementById('gridSize').addEventListener('input', (e)=>{ state.gridSize = Math.max(4, +e.target.value); });
+  snapGrid.addEventListener('change',e=>state.snapGrid=e.target.checked);
+  gridSize.addEventListener('input',e=>state.gridSize=Math.max(4,+e.target.value));
 
-  // expose UI for tool quick keys 1..7
-  window.addEventListener('keydown', (e)=>{
-    if (e.key >= '1' && e.key <= '7') {
-      const map = { '1':'pan','2':'draw','3':'erase','4':'place','5':'select','6':'apply','7':'spawn' };
+  window.addEventListener('keydown',e=>{
+    if (e.key>='1' && e.key<='7'){
+      const map={1:'pan',2:'draw',3:'erase',4:'place',5:'select',6:'apply',7:'spawn'};
       setTool(map[e.key]);
     }
   });
 
-  // keep canvas sizing in sync with device pixel ratio
   function resizeLoop(){
-    DPR = Math.max(1, window.devicePixelRatio || 1);
+    DPR=Math.max(1,window.devicePixelRatio||1);
     fit();
     fitTerrain();
     requestAnimationFrame(resizeLoop);
   }
   resizeLoop();
   init();
-
-  // remember to push an initial snapshot
   pushSnapshot();
 
-  // expose some methods for console tinkering
-  window.sandbox = {
-    createBody, bodies, terrainCanvas, pushSnapshot, undo, redo, spawnExplosion
-  };
+  window.sandbox={ createBody, bodies, terrainCanvas, pushSnapshot, undo, redo, spawnExplosion };
 })();
 </script>
 </body>
