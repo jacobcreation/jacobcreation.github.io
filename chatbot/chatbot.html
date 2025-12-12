@@ -106,6 +106,7 @@
 
 <script>
 let memory = JSON.parse(localStorage.getItem('politebotMemory') || '[]');
+memory.pendingFact = null; // For "did u know" learning
 
 const funFacts = [
   "Octopuses have three hearts.",
@@ -154,14 +155,28 @@ function chatLogic(userInput){
   let trimmed = userInput.trim();
   let response="", emotion="😄";
 
+  // ✅ If bot is waiting to learn a fact
+  if(memory.pendingFact){
+      let factDescription = trimmed;
+      memory.push(new Date().toISOString().slice(0,10)+": "+memory.pendingFact+" – "+factDescription);
+      localStorage.setItem('politebotMemory', JSON.stringify(memory));
+      let learnedFact = memory.pendingFact;
+      memory.pendingFact = null;
+      return {response:`Bet! I learned something new about ${learnedFact} 😎🧠`, emotion:"😄"};
+  }
+
+  // ✅ Meme keywords
   const memeWords = ["skibidi","rizz","sigma","ohio","fanum","npc","goofy","gyatt","cap","no cap","bro","goofy ahh"];
   for(let w of memeWords){ if(trimmed.toLowerCase().includes(w)){ return {response: memeReactions[Math.floor(Math.random()*memeReactions.length)], emotion:"🔥"}; } }
 
+  // ✅ Math
   const mathResult = safeMathEvaluate(trimmed);
   if(mathResult!==null) return {response:`The answer is **${mathResult}** 🧠`, emotion:"😎"};
 
+  // ✅ Exit
   if(/^(exit|quit|bye)$/i.test(trimmed)) return {response:"Aight bye bestie 👋😄", emotion:"😊"};
 
+  // ✅ Remember that
   if(trimmed.toLowerCase().startsWith("remember that")){
     let fact = trimmed.substring(13).trim();
     memory.push(new Date().toISOString().slice(0,10)+": "+fact);
@@ -169,7 +184,8 @@ function chatLogic(userInput){
     return {response:"Bet, I’ll remember that 😎", emotion:"😄"};
   }
 
-  let namePattern = /\b(?:my name is|i['’]?m|im|call me)\s+([A-Z][a-z]+)\b/i;
+  // ✅ Detect names
+  let namePattern = /\b(?:my name is|i['’]?m|im|call me)\s+([a-zA-Z]+)/i;
   let nameMatch = trimmed.match(namePattern);
   if(nameMatch){
     let name = nameMatch[1];
@@ -178,6 +194,7 @@ function chatLogic(userInput){
     return {response:`Yo ${name}! W name 😄🔥`, emotion:"😄"};
   }
 
+  // ✅ Detect feelings
   let feelPattern = /\b(i feel|feeling|feels|i['’]?m feeling|im feeling|i am)\s+(.+)/i;
   let feelMatch = trimmed.match(feelPattern);
   if(feelMatch){
@@ -187,8 +204,10 @@ function chatLogic(userInput){
     return {response:`Gotchu, you feelin’ ${feeling}? Valid tbh 😄`, emotion:"😊"};
   }
 
+  // ✅ Small messages
   if(trimmed.length<3) return {response:"Bro typed the smallest message ever 😭 what’s up?", emotion:"😄"};
 
+  // ✅ Commands
   if(trimmed==="/help") return {response:"Commands:\n/help\n/fact\n/joke\n/meme\n/dice\n/coin\n/memory\n/time", emotion:"😄"};
   if(trimmed==="/fact") return {response:funFacts[Math.floor(Math.random()*funFacts.length)], emotion:"🤓"};
   if(trimmed==="/joke"){
@@ -205,14 +224,29 @@ function chatLogic(userInput){
   if(trimmed==="/memory"){ return {response: memory.length? memory.join("\n"):"Nothing remembered yet 😅", emotion:"🧠"}; }
   if(trimmed==="/time"){ return {response: `Current time: ${new Date().toLocaleTimeString()}`, emotion:"⏰"}; }
 
+  // ✅ Knowledge
   for(let q in knowledge){ if(trimmed.toLowerCase().includes(q)){ return {response: knowledge[q], emotion:"😎"}; } }
 
+  // ✅ Hi/Hello
   if(/^(hi|hello|hey|yo|sup)/i.test(trimmed)){
     return {response:["Yo! 😎","Hey bestie 👋","Wassup 😄","Hiiiii 😁"][Math.floor(Math.random()*4)], emotion:"😊"};
   }
 
+  // ✅ Did u know learning
+  if(trimmed.toLowerCase().startsWith("did u know")){
+      let fact = trimmed.substring(10).trim();
+      if(memory.some(m=>m.includes(fact))){
+          return {response:"Haha yep, I already knew that 😎", emotion:"😄"};
+      } else {
+          memory.pendingFact = fact;
+          return {response:"Ooh! I don’t know that! Tell me about it! 🤓", emotion:"🤔"};
+      }
+  }
+
+  // ✅ Questions
   if(trimmed.endsWith("?")) return {response:"Good question ngl 🤔 what do *you* think?", emotion:"🤔"};
 
+  // ✅ Generic
   let generic = [
     "Real talk? That’s kinda fire 🔥",
     "Valid take tbh 😄",
@@ -246,7 +280,6 @@ function appendMessage(who,msg,emotion="😄"){
   div.appendChild(bubble);
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
-  // ✅ Silent: No speech or narration
 }
 
 function showTyping(){ typingIndicator.style.display="block"; }
