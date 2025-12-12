@@ -15,12 +15,25 @@
     border: 3px solid #8b5a2b;
     margin-top: 10px;
   }
+  .pieces {
+    margin-top: 10px;
+  }
+  .piece-btn {
+    background: #8b5a2b;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
 
 <h1>Mini Wood Block Puzzle 10x10</h1>
 <canvas id="board" width="500" height="500"></canvas>
+<div class="pieces" id="pieces"></div>
 
 <script>
 const canvas = document.getElementById('board');
@@ -40,6 +53,7 @@ const shapes = [
   [[1,1],[1,1]]   // 2x2 square
 ];
 
+let availablePieces = []; // 3 pieces at a time
 let currentPiece = null;
 
 // Draw the board
@@ -95,20 +109,41 @@ function placePiece(){
       }
     }
   }
+  // Remove the used piece
+  availablePieces = availablePieces.filter(p => p !== currentPiece);
   currentPiece = null;
-  generatePiece();
+  updatePiecesUI();
   drawBoard();
 }
 
-// Generate new piece
-function generatePiece(){
-  const idx = Math.floor(Math.random()*shapes.length);
-  currentPiece = {shape: shapes[idx], x:0, y:0};
+// Generate 3 random pieces
+function generatePieces(){
+  availablePieces = [];
+  for(let i=0;i<3;i++){
+    const idx = Math.floor(Math.random()*shapes.length);
+    availablePieces.push({shape: shapes[idx]});
+  }
+  updatePiecesUI();
 }
-generatePiece();
+
+// Update the pieces buttons
+function updatePiecesUI(){
+  const container = document.getElementById('pieces');
+  container.innerHTML = '';
+  availablePieces.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'piece-btn';
+    btn.innerText = 'Piece ' + (i+1);
+    btn.onclick = () => {
+      currentPiece = p;
+    }
+    container.appendChild(btn);
+  });
+}
 
 // Mouse click to place piece
 canvas.addEventListener('click', e=>{
+  if(!currentPiece) return;
   const rect = canvas.getBoundingClientRect();
   const x = Math.floor((e.clientX - rect.left)/cellSize);
   const y = Math.floor((e.clientY - rect.top)/cellSize);
@@ -119,6 +154,8 @@ canvas.addEventListener('click', e=>{
   }
 });
 
+// Initialize
+generatePieces();
 drawBoard();
 </script>
 
