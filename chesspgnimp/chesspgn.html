@@ -2,22 +2,63 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PGN Chess Viewer with Comments</title>
+  <title>PGN Chess Viewer (Improved Parsing + Drag & Drop)</title>
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/css/chessboard.min.css"/>
+
   <style>
     body { font-family: Arial, sans-serif; text-align: center; }
+
     #board { width: 400px; margin: 20px auto; }
-    #controls { margin-top: 10px; }
+
     textarea { width: 400px; height: 100px; margin: 10px auto; display: block; }
+
+    #controls { margin-top: 10px; }
     button { margin: 5px; }
-    #comments { width: 400px; margin: 10px auto; min-height: 50px; border: 1px solid #ccc; padding: 5px; text-align: left; }
+
+    #comments {
+      width: 400px;
+      margin: 10px auto;
+      min-height: 50px;
+      border: 1px solid #ccc;
+      padding: 5px;
+      text-align: left;
+      background: #fafafa;
+    }
+
+    /* DRAG & DROP BOX */
+    #dropZone {
+      width: 420px;
+      height: 120px;
+      border: 2px dashed #00aaff;
+      border-radius: 10px;
+      margin: 20px auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #0077cc;
+      font-size: 16px;
+      background: #f0faff;
+      transition: 0.3s;
+    }
+    #dropZone.dragover {
+      border-color: #008800;
+      background: #e7ffe7;
+      color: #006600;
+    }
+
     input[type="range"] { width: 400px; }
   </style>
 </head>
 <body>
+
   <h2>PGN Chess Viewer</h2>
 
+  <!-- ⭐ DRAG & DROP ZONE -->
+  <div id="dropZone">Drag & Drop PGN file here</div>
+
   <textarea id="pgnInput" placeholder="Paste PGN here"></textarea>
+
   <div id="controls">
     <button id="loadPgn">Load PGN</button><br>
     <button id="prevMove">◀ Previous</button>
@@ -31,27 +72,100 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.0/chess.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/js/chessboard.min.js"></script>
+
   <script>
     const board = Chessboard('board', 'start');
     const game = new Chess();
 
     let moves = [];
-    let comments = [];
     let currentMove = 0;
 
     const moveCounter = document.getElementById('moveCounter');
     const moveSlider = document.getElementById('moveSlider');
     const commentsDiv = document.getElementById('comments');
+    const dropZone = document.getElementById('dropZone');
 
-    function updateBoard() {
-      game.reset();
-      for (let i = 0; i < currentMove; i++) {
-        game.move(moves[i].san);
+
+    /* ===========================================================
+       ⭐ DRAG AND DROP FILE HANDLING
+    ============================================================ */
+
+    dropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.classList.add("dragover");
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.classList.remove("dragover");
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+
+      const file = e.dataTransfer.files[0];
+      if (!file || !file.name.toLowerCase().endsWith(".pgn")) {
+        alert("Please drop a valid .pgn file.");
+        return;
       }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        document.getElementById("pgnInput").value = reader.result;
+        alert("PGN loaded! Click 'Load PGN' to view the game.");
+      };
+      reader.readAsText(file);
+    });
+
+
+    /* ===========================================================
+       ⭐ RELIABLE PGN PARSING + COMMENT EXTRACTION
+    ============================================================ */
+
+    document.getElementById('loadPgn').addEventListener('click', () => {
+      const pgnText = document.getElementById('pgnInput').value.trim();
+
+      const loaded = game.load_pgn(pgnText, { sloppy: true });
+      if (!loaded) {
+        alert("Invalid PGN!");
+        return;
+      }
+
+      const history = game.history({ verbose: true });
+
+      // Extract ALL comments in PGN in order
+      const commentMatches = [...pgnText.matchAll(/\{([^}]*)\}/g)].map(m => m[1].trim());
+
+      let commentIndex = 0;
+      moves = [];
+
+      history.forEach(move => {
+        let comment = "";
+
+        // Assign next found comment (best simple method)
+        if (commentIndex < commentMatches.length) {
+          comment = commentMatches[commentIndex];
+          commentIndex++;
+        }
+
+        moves.push({
+          san: move.san,
+          comment: comment
+        });
+      });
+
+      currentMove = 0;
+      game.reset();
       board.position(game.fen());
+
       updateCounter();
       updateComment();
-    }
+    });
+
+
+    /* ===========================================================
+       ⭐ MOVE NAVIGATION CONTROLS
+    ============================================================ */
 
     function updateCounter() {
       moveCounter.textContent = `${currentMove} / ${moves.length}`;
@@ -61,43 +175,29 @@
 
     function updateComment() {
       if (currentMove === 0) {
-        commentsDiv.textContent = '';
+        commentsDiv.textContent = "";
       } else {
-        commentsDiv.textContent = moves[currentMove - 1].comment || '';
+        commentsDiv.textContent = moves[currentMove - 1].comment || "";
       }
     }
 
-    document.getElementById('loadPgn').addEventListener('click', () => {
-      const pgnText = document.getElementById('pgnInput').value;
-      const loaded = game.load_pgn(pgnText, { sloppy: true });
-      if (!loaded) {
-        alert('Invalid PGN!');
-        return;
+    function updateBoard() {
+      game.reset();
+
+      for (let i = 0; i < currentMove; i++) {
+        game.move(moves[i].san);
       }
 
-      const history = game.history({ verbose: true });
-      moves = [];
-      history.forEach(move => {
-        // Extract comments from PGN
-        const commentMatch = pgnText.match(new RegExp(`\\{([^}]*)\\}\\s*${move.san.replace(/\+/g, '\\+')}`));
-        moves.push({
-          san: move.san,
-          comment: commentMatch ? commentMatch[1].trim() : ''
-        });
-      });
-
-      currentMove = 0;
-      game.reset();
       board.position(game.fen());
       updateCounter();
       updateComment();
-    });
+    }
 
     document.getElementById('nextMove').addEventListener('click', () => {
       if (currentMove >= moves.length) return;
       game.move(moves[currentMove].san);
       currentMove++;
-      board.position(game.fen(), true); // animate move
+      board.position(game.fen(), true);
       updateCounter();
       updateComment();
     });
@@ -116,5 +216,6 @@
       updateBoard();
     });
   </script>
+
 </body>
 </html>
