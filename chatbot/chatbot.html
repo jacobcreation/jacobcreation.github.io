@@ -108,6 +108,9 @@
 <script>
 let memory = JSON.parse(localStorage.getItem('politebotMemory') || '[]');
 memory.pendingFact = null;
+let quizActive = false;
+let quizCurrent = null;
+let quizScore = parseInt(localStorage.getItem('politebotScore')||'0');
 
 const funFacts = [
   "Octopuses have three hearts.",
@@ -156,6 +159,23 @@ function chatLogic(userInput){
   let trimmed = userInput.trim();
   let response="", emotion="😄";
 
+  // Quiz answer handling
+  if(quizActive && quizCurrent){
+      let answer = trimmed.toLowerCase();
+      let correctKeywords = quizCurrent.keywords;
+      let correct = correctKeywords.some(k=>answer.includes(k.toLowerCase()));
+      if(correct){
+          quizScore += 1;
+          localStorage.setItem('politebotScore', quizScore);
+          response = `Correct! 🎉 Your score: ${quizScore} points.`;
+      } else {
+          response = `Hmm, not quite 😅 The correct answer had keywords: ${correctKeywords.join(", ")}. Score: ${quizScore}`;
+      }
+      quizCurrent = null;
+      quizActive = false;
+      return {response, emotion:"😎"};
+  }
+
   // Pending fact from "did u know"
   if(memory.pendingFact){
       let factDescription = trimmed;
@@ -168,7 +188,7 @@ function chatLogic(userInput){
 
   // Meme keywords
   const memeWords = ["skibidi","rizz","sigma","ohio","fanum","npc","goofy","gyatt","cap","no cap","bro","goofy ahh"];
-  for(let w of memeWords){ if(trimmed.toLowerCase().includes(w)){ return {response: memeReactions[Math.floor(Math.random()*memeReactions.length)], emotion:"🔥"}; } }
+  for(let w of memeWords){ if(trimmed.toLowerCase().includes(w)){ return {response:memeReactions[Math.floor(Math.random()*memeReactions.length)], emotion:"🔥"}; } }
 
   // Math
   const mathResult = safeMathEvaluate(trimmed);
@@ -231,8 +251,13 @@ function chatLogic(userInput){
   if(trimmed.toLowerCase()==="/quiz"){
       let learnedFacts = memory.filter(m => !m.includes("User's name") && !m.includes("User felt"));
       if(learnedFacts.length===0) return {response:"I haven’t learned anything to quiz you on yet 😭", emotion:"😢"};
-      let fact = learnedFacts[Math.floor(Math.random()*learnedFacts.length)];
-      return {response:`Quick quiz! Can you tell me more about this fact?\n"${fact.split("–")[0]}"`, emotion:"🤔"};
+      let factLine = learnedFacts[Math.floor(Math.random()*learnedFacts.length)];
+      let factParts = factLine.split("–");
+      let question = factParts[0].split(":")[1] || factParts[0];
+      let answerKeywords = factParts[1] ? factParts[1].trim().split(" ") : question.split(" ").slice(0,3);
+      quizActive = true;
+      quizCurrent = {question, keywords: answerKeywords};
+      return {response:`Quick quiz! Tell me about this:\n"${question}"`, emotion:"🤔"};
   }
 
   // Questions
@@ -309,7 +334,7 @@ commandsButton.onclick = ()=>{
 
 darkToggle.onclick = ()=> document.body.classList.toggle("dark");
 clearButton.onclick = ()=>{ chatBox.innerHTML=""; botRespondSlowly("Chat cleared 👍 memories safe.","😄"); };
-forgetButton.onclick = ()=>{ chatBox.innerHTML=""; memory=[]; localStorage.removeItem('politebotMemory'); botRespondSlowly("Aight I forgot everything 😄 start fresh!", "😄"); };
+forgetButton.onclick = ()=>{ chatBox.innerHTML=""; memory=[]; localStorage.removeItem('politebotMemory'); quizScore=0; localStorage.removeItem('politebotScore'); botRespondSlowly("Aight I forgot everything 😄 start fresh!", "😄"); };
 upgradeButton.onclick = ()=>{ botRespondSlowly("Please send messages to jacobcreation on GitHub! 😄", "📢"); };
 
 // Initial greeting
