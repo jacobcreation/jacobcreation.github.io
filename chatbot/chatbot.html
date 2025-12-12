@@ -4,90 +4,26 @@
 <meta charset="UTF-8">
 <title>PoliteBot Chat</title>
 <style>
-  body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding-top: 20px;
-    transition: background 0.3s, color 0.3s;
-    background: #f0f0f5;
-    color: #000;
-  }
-  body.dark { background: #121212; color: #f0f0f0; }
-  #container {
-    width: 500px;
-    height: 600px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.2);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    transition: background 0.3s, color 0.3s;
-  }
-  body.dark #container { background: #1e1e1e; }
-  #chatBox {
-    flex: 1;
-    padding: 10px;
-    overflow-y: auto;
-    font-size: 15px;
-    white-space: pre-wrap;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  #typingIndicator {
-    padding: 8px;
-    font-size: 14px;
-    color: gray;
-    display: none;
-    margin-left: 10px;
-    font-style: italic;
-  }
-  .message {
-    display: flex;
-    align-items: flex-end;
-    opacity: 0;
-    transform: translateY(10px);
-    animation: fadeIn 0.3s forwards;
-  }
-  @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
-  .message.you { justify-content: flex-end; }
-  .bubble {
-    max-width: 70%;
-    padding: 8px 12px;
-    border-radius: 15px;
-    font-size: 15px;
-    line-height: 1.3;
-  }
-  .you .bubble {
-    background: #1a4bbb;
-    color: white;
-    border-bottom-right-radius: 0;
-  }
-  .bot .bubble {
-    background: #0b7a00;
-    color: white;
-    border-bottom-left-radius: 0;
-  }
-  .bounce { animation: bounce 0.5s; }
-  @keyframes bounce { 0% { transform: translateY(0);} 50% { transform: translateY(-10px);} 100% { transform: translateY(0);} }
-  #bottom {
-    padding: 10px;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    background: #f4f4f6;
-  }
-  body.dark #bottom { background: #2c2c2c; }
-  #inputBox { flex: 1; padding: 6px; font-size: 15px; }
-  #sendButton, #commandsButton, #darkToggle, #clearButton, #forgetButton, #upgradeButton {
-    width: 110px;
-    font-size: 15px;
-    cursor: pointer;
-  }
+  body { font-family: 'Segoe UI', Arial, sans-serif; margin:0; display:flex; justify-content:center; align-items:flex-start; padding-top:20px; transition:background 0.3s,color 0.3s; background:#f0f0f5; color:#000; }
+  body.dark { background:#121212; color:#f0f0f0; }
+  #container { width:500px; height:600px; background:white; border-radius:10px; box-shadow:0 0 12px rgba(0,0,0,0.2); display:flex; flex-direction:column; overflow:hidden; transition:background 0.3s,color 0.3s; }
+  body.dark #container { background:#1e1e1e; }
+  #chatBox { flex:1; padding:10px; overflow-y:auto; font-size:15px; white-space:pre-wrap; display:flex; flex-direction:column; gap:8px; }
+  #typingIndicator { padding:8px; font-size:14px; color:gray; display:none; margin-left:10px; font-style:italic; }
+  .message { display:flex; align-items:flex-end; opacity:0; transform:translateY(10px); animation:fadeIn 0.3s forwards; }
+  @keyframes fadeIn { to { opacity:1; transform:translateY(0); } }
+  .message.you { justify-content:flex-end; }
+  .bubble { max-width:70%; padding:8px 12px; border-radius:15px; font-size:15px; line-height:1.3; }
+  .you .bubble { background:#1a4bbb; color:white; border-bottom-right-radius:0; }
+  .bot .bubble { background:#0b7a00; color:white; border-bottom-left-radius:0; }
+  .bounce { animation:bounce 0.5s; }
+  @keyframes bounce { 0%{transform:translateY(0);}50%{transform:translateY(-10px);}100%{transform:translateY(0);} }
+  #bottom { padding:10px; display:flex; gap:10px; flex-wrap:wrap; background:#f4f4f6; }
+  body.dark #bottom { background:#2c2c2c; }
+  #inputBox { flex:1; padding:6px; font-size:15px; }
+  button { width:110px; font-size:15px; cursor:pointer; }
+  #commandsList { position:absolute; top:10px; right:10px; background:#eee; padding:10px; border-radius:8px; display:none; }
+  body.dark #commandsList { background:#333; color:#f0f0f0; }
 </style>
 </head>
 <body>
@@ -97,25 +33,29 @@
   <div id="bottom">
     <input id="inputBox" type="text" placeholder="Type a message...">
     <button id="sendButton">Send</button>
-    <button id="commandsButton">Commands</button>
     <button id="darkToggle">🌙</button>
     <button id="clearButton">Clear</button>
     <button id="forgetButton">Forget</button>
     <button id="upgradeButton">Needs Upgrades</button>
+    <button id="commandsButton">Commands</button>
   </div>
+</div>
+<div id="commandsList">
+  Commands:<br>
+  /fact<br>
+  /joke<br>
+  /meme<br>
+  /dice<br>
+  /coin<br>
+  /memory<br>
+  /time<br>
+  /quiz
 </div>
 
 <script>
 let memory = JSON.parse(localStorage.getItem('politebotMemory') || '[]');
-memory.pendingFact = null;
-let quizActive = false;
-let quizCurrent = null;
-let quizScore = parseInt(localStorage.getItem('politebotScore')||'0');
-
-const numberWords = {
-  "zero":0,"one":1,"two":2,"three":3,"four":4,"five":5,
-  "six":6,"seven":7,"eight":8,"nine":9,"ten":10
-};
+let awaitingAnswer = false;
+let pendingFact = "";
 
 const funFacts = [
   "Octopuses have three hearts.",
@@ -147,112 +87,50 @@ const knowledge = {
   "hello": "Hi there! 😄"
 };
 
-// Convert number words to digits
-function wordsToNumbers(expr){
-  for(let word in numberWords){
-    let regex = new RegExp("\\b"+word+"\\b","gi");
-    expr = expr.replace(regex, numberWords[word]);
-  }
-  return expr;
+function maybeFact() { return Math.random() < 0.25 ? funFacts[Math.floor(Math.random()*funFacts.length)] : null; }
+
+// --- Word problem solver ---
+function solveWordProblem(sentence) {
+  sentence = sentence.toLowerCase();
+  sentence = sentence.replace(/hiw/g,"how");
+  const verbs = {"eat":"-","lose":"-","gave":"-","give":"-","get":"+","buy":"+","receive":"+","got":"+"};
+  let numbers = sentence.match(/\d+/g)?.map(Number) || [];
+  if(numbers.length<2) return null; 
+  let op = null;
+  for(let verb in verbs) if(sentence.includes(verb)){op=verbs[verb]; break;}
+  if(!op) return null;
+  let result = numbers[0];
+  for(let i=1;i<numbers.length;i++){ if(op=="+") result+=numbers[i]; if(op=="-") result-=numbers[i]; }
+  return result;
 }
 
-// Normalize math expressions
-function normalizeMathExpression(expr){
-  expr = expr.toLowerCase();
-  expr = expr.replace(/plus/g,"+")
-             .replace(/minus/g,"-")
-             .replace(/times|x|×/g,"*")
-             .replace(/divided by/g,"/");
-  expr = wordsToNumbers(expr);
-  return expr;
-}
-
-// Safe math evaluation
-function safeMathEvaluate(expr){
-  expr = normalizeMathExpression(expr);
-  if(!/^[0-9+\-*/^().\s]+$/.test(expr)) return null;
-  try { 
-    let result = Function('"use strict"; return ('+expr+')')(); 
-    return (typeof result==="number" && isFinite(result)) ? result : null; 
-  } catch { return null; }
-}
-
-// Solve simple word problems
-function solveWordProblem(sentence){
-    sentence = sentence.toLowerCase();
-    sentence = wordsToNumbers(sentence);
-    sentence = sentence.replace(/plus/g,'+')
-                       .replace(/minus/g,'-')
-                       .replace(/times|multiplied by/g,'*')
-                       .replace(/divided by/g,'/')
-                       .replace(/x/g,'*')
-                       .replace(/double/g,'*2')
-                       .replace(/triple/g,'*3')
-                       .replace(/half/g,'/2');
-
-    sentence = sentence.replace(/(if|i have|then|and|more|less|buy|bought|get|will|have|in total|there are)/g,'');
-    let expr = sentence.replace(/[^0-9+\-*/().]/g,' ');
-    try{
-        let result = Function('"use strict"; return ('+expr+')')();
-        return (typeof result==='number' && isFinite(result)) ? result : null;
-    } catch { return null; }
-}
-
-function maybeFact() { 
-  return Math.random() < 0.25 ? funFacts[Math.floor(Math.random()*funFacts.length)] : null; 
-}
-
+// --- Chat logic ---
 function chatLogic(userInput){
   let trimmed = userInput.trim();
   let response="", emotion="😄";
 
-  // Quiz handling
-  if(quizActive && quizCurrent){
-      let answer = trimmed.toLowerCase();
-      let correctKeywords = quizCurrent.keywords;
-      let correct = correctKeywords.some(k=>answer.includes(k.toLowerCase()));
-      if(correct){
-          quizScore += 1;
-          localStorage.setItem('politebotScore', quizScore);
-          quizActive = false;
-          quizCurrent = null;
-          return {response:`Correct! 🎉 Your score: ${quizScore} points.`, emotion:"😎"};
-      } else {
-          if(!quizCurrent.retry){
-              quizCurrent.retry = true;
-              return {response:`Hmm, not quite 😅 Hint: try something about "${correctKeywords[0]}"`, emotion:"🤔"};
-          } else {
-              quizActive = false;
-              let answerKeywords = correctKeywords.join(", ");
-              quizCurrent = null;
-              return {response:`Still not correct 😭 The correct answer included: ${answerKeywords}. Score: ${quizScore}`, emotion:"😢"};
-          }
-      }
+  if(awaitingAnswer){
+    memory.push(new Date().toISOString().slice(0,10)+": "+pendingFact+" → "+trimmed);
+    localStorage.setItem('politebotMemory', JSON.stringify(memory));
+    awaitingAnswer = false;
+    pendingFact = "";
+    return {response:"Ooh! Got it 😎 I’ll remember that!", emotion:"😄"};
   }
 
-  // Pending "did u know"
-  if(memory.pendingFact){
-      let factDescription = trimmed;
-      memory.push(new Date().toISOString().slice(0,10)+": "+memory.pendingFact+" – "+factDescription);
-      localStorage.setItem('politebotMemory', JSON.stringify(memory));
-      let learnedFact = memory.pendingFact;
-      memory.pendingFact = null;
-      return {response:`Bet! I learned something new about ${learnedFact} 😎🧠`, emotion:"😄"};
+  if(trimmed.toLowerCase().startsWith("did u know")){
+    pendingFact = trimmed.substring(9).trim();
+    awaitingAnswer = true;
+    return {response:"Ooh! I don't know that! Tell me about it!", emotion:"🤔"};
   }
 
-  // Meme keywords
   const memeWords = ["skibidi","rizz","sigma","ohio","fanum","npc","goofy","gyatt","cap","no cap","bro","goofy ahh"];
-  for(let w of memeWords){ if(trimmed.toLowerCase().includes(w)){ return {response:memeReactions[Math.floor(Math.random()*memeReactions.length)], emotion:"🔥"}; } }
+  for(let w of memeWords) if(trimmed.toLowerCase().includes(w)) return {response:memeReactions[Math.floor(Math.random()*memeReactions.length)], emotion:"🔥"};
 
-  // Math evaluation (including word math)
-  let mathResult = safeMathEvaluate(trimmed);
-  if(mathResult===null) mathResult = solveWordProblem(trimmed);
+  const mathResult = solveWordProblem(trimmed);
   if(mathResult!==null) return {response:`The answer is **${mathResult}** 🧠`, emotion:"😎"};
 
-  // Exit
   if(/^(exit|quit|bye)$/i.test(trimmed)) return {response:"Aight bye bestie 👋😄", emotion:"😊"};
 
-  // Remember that
   if(trimmed.toLowerCase().startsWith("remember that")){
     let fact = trimmed.substring(13).trim();
     memory.push(new Date().toISOString().slice(0,10)+": "+fact);
@@ -260,65 +138,48 @@ function chatLogic(userInput){
     return {response:"Bet, I’ll remember that 😎", emotion:"😄"};
   }
 
-  // Name
-  let namePattern = /\b(?:my name is|i['’]?m|im|call me)\s+([a-zA-Z]+)/i;
+  let namePattern = /\b(?:my name is|i['’]?m|im|call me)\s+([A-Z][a-z]+)\b/i;
   let nameMatch = trimmed.match(namePattern);
   if(nameMatch){
     let name = nameMatch[1];
-    memory.push(`${new Date().toISOString().slice(0,10)}: User's name is ${name}`);
+    memory.push(new Date().toISOString().slice(0,10)+": User's name is "+name);
     localStorage.setItem('politebotMemory', JSON.stringify(memory));
     return {response:`Yo ${name}! W name 😄🔥`, emotion:"😄"};
   }
 
-  // Feeling
   let feelPattern = /\b(i feel|feeling|feels|i['’]?m feeling|im feeling|i am)\s+(.+)/i;
   let feelMatch = trimmed.match(feelPattern);
   if(feelMatch){
     let feeling = feelMatch[2];
-    memory.push(`${new Date().toISOString().slice(0,10)}: User felt ${feeling}`);
+    memory.push(new Date().toISOString().slice(0,10)+": User felt "+feeling);
     localStorage.setItem('politebotMemory', JSON.stringify(memory));
     return {response:`Gotchu, you feelin’ ${feeling}? Valid tbh 😄`, emotion:"😊"};
   }
 
-  // Small messages
   if(trimmed.length<3) return {response:"Bro typed the smallest message ever 😭 what’s up?", emotion:"😄"};
 
-  // Knowledge
-  for(let q in knowledge){ if(trimmed.toLowerCase().includes(q)){ return {response: knowledge[q], emotion:"😎"}; } }
-
-  // Hi
-  if(/^(hi|hello|hey|yo|sup)/i.test(trimmed)){
-    return {response:["Yo! 😎","Hey bestie 👋","Wassup 😄","Hiiiii 😁"][Math.floor(Math.random()*4)], emotion:"😊"};
+  if(trimmed==="/fact") return {response:funFacts[Math.floor(Math.random()*funFacts.length)], emotion:"🤓"};
+  if(trimmed==="/joke"){
+    let jokes=[
+      "Why don’t skeletons fight? They don’t have the guts! 😂",
+      "What has ears but can’t hear? A cornfield! 🌽",
+      "Why was the math book sad? Too many problems 😄"
+    ];
+    return {response:jokes[Math.floor(Math.random()*jokes.length)], emotion:"😂"};
   }
+  if(trimmed==="/meme") return {response:memeReactions[Math.floor(Math.random()*memeReactions.length)], emotion:"🔥"};
+  if(trimmed==="/dice"){ let roll = Math.floor(Math.random()*6)+1; return {response:`You rolled a ${roll} 🎲`, emotion:"😎"}; }
+  if(trimmed==="/coin"){ let flip = Math.random()<0.5?"Heads":"Tails"; return {response:`Coin flipped: ${flip} 🪙`, emotion:"😎"}; }
+  if(trimmed==="/memory"){ return {response: memory.length? memory.join("\n"):"Nothing remembered yet 😅", emotion:"🧠"}; }
+  if(trimmed==="/time"){ return {response: `Current time: ${new Date().toLocaleTimeString()}`, emotion:"⏰"}; }
+  if(trimmed==="/quiz"){ return {response:"Quiz coming soon! 😎", emotion:"🧠"}; }
 
-  // Did u know
-  if(trimmed.toLowerCase().startsWith("did u know")){
-      let fact = trimmed.substring(10).trim();
-      if(memory.some(m=>m.includes(fact))){
-          return {response:"Haha yep, I already knew that 😎", emotion:"😄"};
-      } else {
-          memory.pendingFact = fact;
-          return {response:"Ooh! I don’t know that! Tell me about it! 🤓", emotion:"🤔"};
-      }
-  }
+  for(let q in knowledge) if(trimmed.toLowerCase().includes(q)) return {response: knowledge[q], emotion:"😎"};
 
-  // Quiz
-  if(trimmed.toLowerCase()==="/quiz"){
-      let learnedFacts = memory.filter(m => !m.includes("User's name") && !m.includes("User felt"));
-      if(learnedFacts.length===0) return {response:"I haven’t learned anything to quiz you on yet 😭", emotion:"😢"};
-      let factLine = learnedFacts[Math.floor(Math.random()*learnedFacts.length)];
-      let factParts = factLine.split("–");
-      let question = factParts[0].split(":")[1] || factParts[0];
-      let answerKeywords = factParts[1] ? factParts[1].trim().split(" ") : question.split(" ").slice(0,3);
-      quizActive = true;
-      quizCurrent = {question, keywords: answerKeywords, retry:false};
-      return {response:`Quick quiz! Tell me about this:\n"${question}"`, emotion:"🤔"};
-  }
+  if(/^(hi|hello|hey|yo|sup)/i.test(trimmed)) return {response:["Yo! 😎","Hey bestie 👋","Wassup 😄","Hiiiii 😁"][Math.floor(Math.random()*4)], emotion:"😊"};
 
-  // Questions
   if(trimmed.endsWith("?")) return {response:"Good question ngl 🤔 what do *you* think?", emotion:"🤔"};
 
-  // Generic
   let generic = [
     "Real talk? That’s kinda fire 🔥",
     "Valid take tbh 😄",
@@ -328,20 +189,21 @@ function chatLogic(userInput){
     "Not gonna lie that’s a W 👍"
   ];
   response = generic[Math.floor(Math.random()*generic.length)];
-  let fact = maybeFact(); if(fact) response += " Also fun fact: " + fact;
+  let fact = maybeFact(); if(fact) response += " Also fun fact: "+fact;
   return {response, emotion};
 }
 
-// UI
+// --- UI ---
 const chatBox = document.getElementById("chatBox");
 const typingIndicator = document.getElementById("typingIndicator");
 const inputBox = document.getElementById("inputBox");
 const sendButton = document.getElementById("sendButton");
-const commandsButton = document.getElementById("commandsButton");
 const darkToggle = document.getElementById("darkToggle");
 const clearButton = document.getElementById("clearButton");
 const forgetButton = document.getElementById("forgetButton");
 const upgradeButton = document.getElementById("upgradeButton");
+const commandsButton = document.getElementById("commandsButton");
+const commandsList = document.getElementById("commandsList");
 
 function appendMessage(who,msg,emotion="😄"){
   let div = document.createElement("div");
@@ -363,7 +225,7 @@ function botRespondSlowly(text, emotion){
   setTimeout(()=>{ hideTyping(); appendMessage("bot",text,emotion); },400+Math.random()*600);
 }
 
-// Events
+// --- Events ---
 sendButton.onclick = ()=>{ 
   let text = inputBox.value.trim(); 
   if(text==="") return; 
@@ -374,25 +236,17 @@ sendButton.onclick = ()=>{
 };
 
 inputBox.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); sendButton.click(); } });
-
-commandsButton.onclick = ()=>{
-  const commands = [
-    "/fact", "/joke", "/meme", "/dice", "/coin", "/memory", "/time", "/quiz"
-  ].join("\n");
-  appendMessage("bot", "Commands:\n"+commands, "😄");
-  setTimeout(()=>{ 
-      let last = chatBox.lastChild; 
-      if(last) chatBox.removeChild(last);
-  },5000);
-};
-
 darkToggle.onclick = ()=> document.body.classList.toggle("dark");
 clearButton.onclick = ()=>{ chatBox.innerHTML=""; botRespondSlowly("Chat cleared 👍 memories safe.","😄"); };
-forgetButton.onclick = ()=>{ chatBox.innerHTML=""; memory=[]; memory.pendingFact=null; localStorage.removeItem('politebotMemory'); quizScore=0; localStorage.removeItem('politebotScore'); botRespondSlowly("Aight I forgot everything 😄 start fresh!", "😄"); };
+forgetButton.onclick = ()=>{ chatBox.innerHTML=""; memory=[]; localStorage.removeItem('politebotMemory'); botRespondSlowly("Aight I forgot everything 😄 start fresh!", "😄"); };
 upgradeButton.onclick = ()=>{ botRespondSlowly("Please send messages to jacobcreation on GitHub! 😄", "📢"); };
+commandsButton.onclick = ()=>{
+  commandsList.style.display="block";
+  setTimeout(()=>{ commandsList.style.display="none"; },5000);
+};
 
-// Initial greeting
-appendMessage("bot","Yo! I’m PoliteBot 😎 Drop a meme, math problem, a word problem, or press Commands!", "😄");
+// --- Initial greeting ---
+appendMessage("bot","Yo! I’m PoliteBot 😎 Drop a meme, math problem, or try the commands button!", "😄");
 </script>
 </body>
 </html>
