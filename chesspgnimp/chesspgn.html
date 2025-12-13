@@ -2,44 +2,96 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>PGN Chess Viewer with Engine</title>
+<title>PGN Chess Viewer</title>
 
 <!-- Chessboard CSS -->
-<link rel="stylesheet" href="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"/>
+<link rel="stylesheet"
+  href="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"/>
 
 <style>
-  body { font-family: Arial; background: #1e1e1e; color: #ddd; margin: 0; padding: 20px; }
-  #container { display: flex; gap: 20px; flex-wrap: wrap; }
-  #board { width: 400px; position: relative; }
-  textarea { width: 100%; height: 100px; background: #111; color: #0f0; border: 1px solid #444; padding: 8px; }
-  button { background: #444; color: #fff; border: none; padding: 6px 10px; margin: 3px; cursor: pointer; }
-  button:hover { background: #666; }
-  #moves { max-height: 200px; overflow-y: auto; background: #111; padding: 10px; border: 1px solid #333; font-size: 14px; }
-  .move { margin:2px; cursor:pointer; padding:2px; border-radius:3px; }
-  .current { background:#444; font-weight:bold; }
-  #evalBar { position:absolute; top:0; right:-25px; width:20px; height:100%; border:1px solid #555; background:linear-gradient(to top, red 0%, green 100%); }
-  #evalLevel { position:absolute; bottom:0; width:100%; background:rgba(0,0,0,0.3); }
+  body {
+    font-family: Arial, sans-serif;
+    background: #1e1e1e;
+    color: #ddd;
+    margin: 0;
+    padding: 20px;
+  }
+
+  #container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  #board {
+    width: 400px;
+  }
+
+  textarea {
+    width: 100%;
+    height: 120px;
+    background: #111;
+    color: #0f0;
+    border: 1px solid #444;
+    padding: 8px;
+    box-sizing: border-box;
+  }
+
+  button {
+    background: #444;
+    color: #fff;
+    border: none;
+    padding: 6px 10px;
+    margin: 4px 2px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #666;
+  }
+
+  #moves {
+    max-height: 220px;
+    overflow-y: auto;
+    background: #111;
+    padding: 10px;
+    border: 1px solid #333;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .move {
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 3px;
+  }
+
+  .current {
+    background: #444;
+    font-weight: bold;
+  }
 </style>
 </head>
 
 <body>
-<h2>♟ PGN Viewer with Engine</h2>
+
+<h2>♟ PGN Chess Viewer</h2>
+
 <div id="container">
-  <div id="boardContainer">
+  <div>
     <div id="board"></div>
-    <div id="evalBar"><div id="evalLevel"></div></div>
-    <div>
-      <button onclick="prevMove()">◀</button>
-      <button onclick="nextMove()">▶</button>
+    <div style="margin-top:8px;">
+      <button onclick="prevMove()">◀ Prev</button>
+      <button onclick="nextMove()">Next ▶</button>
       <button onclick="flipBoard()">Flip</button>
     </div>
-    <div id="engine">Engine: idle</div>
   </div>
 
   <div style="flex:1; min-width:300px;">
     <h4>Paste PGN</h4>
-    <textarea id="pgnInput"></textarea><br>
+    <textarea id="pgnInput"></textarea>
     <button onclick="loadPGN()">Load PGN</button>
+
     <h4>Moves</h4>
     <div id="moves"></div>
   </div>
@@ -48,62 +100,55 @@
 <!-- Libraries -->
 <script src="https://unpkg.com/chess.js@1.0.0/chess.min.js"></script>
 <script src="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/stockfish@16/stockfish.js"></script>
 
 <script>
-let board = Chessboard('board', 'start');
+let board;
 let game = new Chess();
 let moves = [];
 let moveIndex = 0;
-let engine = STOCKFISH();
 
-engine.postMessage("uci");
-
-engine.onmessage = function(event) {
-  let line = event.data || event;
-  if (line.includes("score cp")) {
-    let match = line.match(/score cp (-?\d+)/);
-    if(match){
-      let cp = parseInt(match[1]);
-      let score = Math.max(-1000, Math.min(1000, cp)); // clamp
-      let pct = ((score/2000)+0.5)*100;
-      document.getElementById("evalLevel").style.height = pct + "%";
-      document.getElementById("engine").innerText = "Engine: " + (cp/100).toFixed(2);
-    }
-  } else if(line.includes("score mate")){
-    document.getElementById("engine").innerText = line;
-  }
-};
+// ✅ ensure board renders correctly
+document.addEventListener("DOMContentLoaded", () => {
+  board = Chessboard('board', {
+    position: 'start'
+  });
+});
 
 function loadPGN() {
   game.reset();
-  let pgn = document.getElementById("pgnInput").value;
-  if (!game.load_pgn(pgn)) { alert("Invalid PGN"); return; }
-  moves = game.history({ verbose:true });
+  const pgn = document.getElementById("pgnInput").value.trim();
+
+  // ✅ correct API for chess.js v1
+  const ok = game.loadPgn(pgn);
+
+  if (!ok) {
+    alert("Invalid PGN");
+    return;
+  }
+
+  moves = game.history({ verbose: true });
   moveIndex = 0;
+
   game.reset();
   board.position(game.fen());
   renderMoves();
-  analyze();
 }
 
 function nextMove() {
-  if(moveIndex < moves.length){
+  if (moveIndex < moves.length) {
     game.move(moves[moveIndex]);
     moveIndex++;
     board.position(game.fen());
     renderMoves();
-    analyze();
   }
 }
 
 function prevMove() {
-  if(moveIndex>0){
+  if (moveIndex > 0) {
     game.undo();
     moveIndex--;
     board.position(game.fen());
     renderMoves();
-    analyze();
   }
 }
 
@@ -113,29 +158,23 @@ function flipBoard() {
 
 function renderMoves() {
   let html = "";
-  for(let i=0;i<moves.length;i++){
-    let cls = (i===moveIndex-1) ? "move current" : "move";
-    let comment = moves[i].comment ? " (" + moves[i].comment + ")" : "";
-    html += `<span class="${cls}" onclick="jumpTo(${i})">${moves[i].san}${comment}</span> `;
+  for (let i = 0; i < moves.length; i++) {
+    let cls = (i === moveIndex - 1) ? "move current" : "move";
+    html += `<span class="${cls}" onclick="jumpTo(${i})">${moves[i].san}</span> `;
   }
   document.getElementById("moves").innerHTML = html;
 }
 
-function jumpTo(idx){
+function jumpTo(idx) {
   game.reset();
-  for(let i=0;i<=idx;i++){
+  for (let i = 0; i <= idx; i++) {
     game.move(moves[i]);
   }
-  moveIndex = idx+1;
+  moveIndex = idx + 1;
   board.position(game.fen());
   renderMoves();
-  analyze();
-}
-
-function analyze(){
-  engine.postMessage("position fen "+game.fen());
-  engine.postMessage("go depth 12");
 }
 </script>
+
 </body>
 </html>
