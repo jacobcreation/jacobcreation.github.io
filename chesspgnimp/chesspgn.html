@@ -2,86 +2,37 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>PGN Chess Importer + Engine</title>
+<title>PGN Chess Viewer with Engine</title>
 
 <!-- Chessboard CSS -->
 <link rel="stylesheet" href="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"/>
 
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #1e1e1e;
-    color: #ddd;
-    margin: 0;
-    padding: 20px;
-  }
-
-  #container {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-
-  #board {
-    width: 400px;
-  }
-
-  textarea {
-    width: 100%;
-    height: 120px;
-    background: #111;
-    color: #0f0;
-    border: 1px solid #444;
-    padding: 8px;
-  }
-
-  button {
-    background: #444;
-    color: #fff;
-    border: none;
-    padding: 8px 12px;
-    margin: 5px 2px;
-    cursor: pointer;
-  }
-
-  button:hover {
-    background: #666;
-  }
-
-  #engine {
-    margin-top: 10px;
-    background: #111;
-    padding: 10px;
-    border: 1px solid #333;
-    min-height: 60px;
-  }
-
-  #moves {
-    max-height: 200px;
-    overflow-y: auto;
-    background: #111;
-    padding: 10px;
-    border: 1px solid #333;
-    font-size: 14px;
-  }
+  body { font-family: Arial; background: #1e1e1e; color: #ddd; margin: 0; padding: 20px; }
+  #container { display: flex; gap: 20px; flex-wrap: wrap; }
+  #board { width: 400px; position: relative; }
+  textarea { width: 100%; height: 100px; background: #111; color: #0f0; border: 1px solid #444; padding: 8px; }
+  button { background: #444; color: #fff; border: none; padding: 6px 10px; margin: 3px; cursor: pointer; }
+  button:hover { background: #666; }
+  #moves { max-height: 200px; overflow-y: auto; background: #111; padding: 10px; border: 1px solid #333; font-size: 14px; }
+  .move { margin:2px; cursor:pointer; padding:2px; border-radius:3px; }
+  .current { background:#444; font-weight:bold; }
+  #evalBar { position:absolute; top:0; right:-25px; width:20px; height:100%; border:1px solid #555; background:linear-gradient(to top, red 0%, green 100%); }
+  #evalLevel { position:absolute; bottom:0; width:100%; background:rgba(0,0,0,0.3); }
 </style>
 </head>
 
 <body>
-
-<h2>♟ PGN Importer with Engine (Lichess-like)</h2>
-
+<h2>♟ PGN Viewer with Engine</h2>
 <div id="container">
-
-  <div>
+  <div id="boardContainer">
     <div id="board"></div>
-
+    <div id="evalBar"><div id="evalLevel"></div></div>
     <div>
       <button onclick="prevMove()">◀</button>
       <button onclick="nextMove()">▶</button>
       <button onclick="flipBoard()">Flip</button>
     </div>
-
     <div id="engine">Engine: idle</div>
   </div>
 
@@ -89,18 +40,14 @@
     <h4>Paste PGN</h4>
     <textarea id="pgnInput"></textarea><br>
     <button onclick="loadPGN()">Load PGN</button>
-
     <h4>Moves</h4>
     <div id="moves"></div>
   </div>
-
 </div>
 
 <!-- Libraries -->
 <script src="https://unpkg.com/chess.js@1.0.0/chess.min.js"></script>
 <script src="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-
-<!-- Stockfish -->
 <script src="https://cdn.jsdelivr.net/npm/stockfish@16/stockfish.js"></script>
 
 <script>
@@ -114,20 +61,25 @@ engine.postMessage("uci");
 
 engine.onmessage = function(event) {
   let line = event.data || event;
-  if (line.includes("score")) {
-    document.getElementById("engine").innerText = "Engine: " + line;
+  if (line.includes("score cp")) {
+    let match = line.match(/score cp (-?\d+)/);
+    if(match){
+      let cp = parseInt(match[1]);
+      let score = Math.max(-1000, Math.min(1000, cp)); // clamp
+      let pct = ((score/2000)+0.5)*100;
+      document.getElementById("evalLevel").style.height = pct + "%";
+      document.getElementById("engine").innerText = "Engine: " + (cp/100).toFixed(2);
+    }
+  } else if(line.includes("score mate")){
+    document.getElementById("engine").innerText = line;
   }
 };
 
 function loadPGN() {
   game.reset();
   let pgn = document.getElementById("pgnInput").value;
-  if (!game.load_pgn(pgn)) {
-    alert("Invalid PGN");
-    return;
-  }
-
-  moves = game.history();
+  if (!game.load_pgn(pgn)) { alert("Invalid PGN"); return; }
+  moves = game.history({ verbose:true });
   moveIndex = 0;
   game.reset();
   board.position(game.fen());
@@ -136,19 +88,21 @@ function loadPGN() {
 }
 
 function nextMove() {
-  if (moveIndex < moves.length) {
+  if(moveIndex < moves.length){
     game.move(moves[moveIndex]);
     moveIndex++;
     board.position(game.fen());
+    renderMoves();
     analyze();
   }
 }
 
 function prevMove() {
-  if (moveIndex > 0) {
+  if(moveIndex>0){
     game.undo();
     moveIndex--;
     board.position(game.fen());
+    renderMoves();
     analyze();
   }
 }
@@ -159,17 +113,29 @@ function flipBoard() {
 
 function renderMoves() {
   let html = "";
-  for (let i = 0; i < moves.length; i++) {
-    html += ((i % 2 === 0 ? (Math.floor(i/2)+1) + ". " : "") + moves[i] + " ");
+  for(let i=0;i<moves.length;i++){
+    let cls = (i===moveIndex-1) ? "move current" : "move";
+    let comment = moves[i].comment ? " (" + moves[i].comment + ")" : "";
+    html += `<span class="${cls}" onclick="jumpTo(${i})">${moves[i].san}${comment}</span> `;
   }
-  document.getElementById("moves").innerText = html;
+  document.getElementById("moves").innerHTML = html;
 }
 
-function analyze() {
-  engine.postMessage("position fen " + game.fen());
+function jumpTo(idx){
+  game.reset();
+  for(let i=0;i<=idx;i++){
+    game.move(moves[i]);
+  }
+  moveIndex = idx+1;
+  board.position(game.fen());
+  renderMoves();
+  analyze();
+}
+
+function analyze(){
+  engine.postMessage("position fen "+game.fen());
   engine.postMessage("go depth 12");
 }
 </script>
-
 </body>
 </html>
