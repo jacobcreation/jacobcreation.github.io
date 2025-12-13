@@ -1,691 +1,175 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>PGN Viewer — Engine Eval Bar & PV Arrows (Stockfish WASM)</title>
+<meta charset="UTF-8">
+<title>PGN Chess Importer + Engine</title>
 
-<!-- chessboard.css -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/css/chessboard.min.css"/>
+<!-- Chessboard CSS -->
+<link rel="stylesheet" href="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"/>
 
 <style>
-:root{
-  --accent: #1572A1;
-  --panel: #ffffff;
-  --bg: #f4f8fb;
-  --muted:#6b7280;
-  --text:#0b1720;
-}
-body{background:var(--bg);font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;margin:0;padding:16px;color:var(--text)}
-.app{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 360px;gap:18px}
-@media (max-width:980px){.app{grid-template-columns:1fr}.sidebar{order:2}}
-.card{background:var(--panel);border-radius:12px;padding:12px;box-shadow:0 6px 20px rgba(8,30,45,0.06)}
-.header{display:flex;justify-content:space-between;align-items:center}
-.small{font-size:13px;color:var(--muted)}
-.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-#dropZone{border:2px dashed var(--accent);padding:14px;border-radius:10px;text-align:center;background:linear-gradient(180deg,#eaf7ff,#fff);cursor:pointer;font-weight:700;color:var(--accent)}
-#boardContainer{position:relative}
-#board{width:420px;max-width:90vw}
-#overlayCanvas{position:absolute;left:12px;top:12px;pointer-events:none}
-#evalBarContainer{position:absolute;right:-26px;top:12px;width:20px;height:calc(100% - 24px);display:flex;align-items:flex-end;border-radius:8px;overflow:hidden;border:1px solid rgba(0,0,0,0.06);background:linear-gradient(#fff,#fff)}
-#evalBarTrack{position:relative;width:100%;height:100%;background:linear-gradient(#111 0%, #fff 50%, #111 100%);opacity:0.08}
-#evalBarFill{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(#fff,#f1faff);transition:height 220ms ease}
-.evalBox{padding:6px 8px;border-radius:8px;background:#0b1720;color:#fff;font-weight:700}
-.move-list{max-height:540px;overflow:auto;border-radius:8px;border:1px solid #eef6fb;padding:8px;background:#fcfdff}
-.move-row{padding:6px 8px;border-radius:6px;display:flex;gap:8px;align-items:center;justify-content:space-between;cursor:pointer}
-.move-row:hover{background:#f1fbff}
-.move-row.active{background:linear-gradient(90deg,#eaf6ff,#f8fbff);border-left:4px solid var(--accent)}
-.annotation-list{max-height:160px;overflow:auto;border-radius:6px;border:1px solid #eef6fb;padding:8px;background:#fff}
-footer.small{font-size:12px;color:var(--muted);margin-top:8px}
+  body {
+    font-family: Arial, sans-serif;
+    background: #1e1e1e;
+    color: #ddd;
+    margin: 0;
+    padding: 20px;
+  }
+
+  #container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  #board {
+    width: 400px;
+  }
+
+  textarea {
+    width: 100%;
+    height: 120px;
+    background: #111;
+    color: #0f0;
+    border: 1px solid #444;
+    padding: 8px;
+  }
+
+  button {
+    background: #444;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    margin: 5px 2px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #666;
+  }
+
+  #engine {
+    margin-top: 10px;
+    background: #111;
+    padding: 10px;
+    border: 1px solid #333;
+    min-height: 60px;
+  }
+
+  #moves {
+    max-height: 200px;
+    overflow-y: auto;
+    background: #111;
+    padding: 10px;
+    border: 1px solid #333;
+    font-size: 14px;
+  }
 </style>
 </head>
+
 <body>
-<div class="app">
 
-  <main class="card">
-    <div class="header">
-      <div>
-        <h2 style="margin:0">PGN Viewer — Eval Bar & PV Arrows</h2>
-        <div class="small">Stockfish WASM (local) | Export PGN | Arrows & Comments</div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <div id="engineStatus" class="small">Engine: stopped</div>
-      </div>
+<h2>♟ PGN Importer with Engine (Lichess-like)</h2>
+
+<div id="container">
+
+  <div>
+    <div id="board"></div>
+
+    <div>
+      <button onclick="prevMove()">◀</button>
+      <button onclick="nextMove()">▶</button>
+      <button onclick="flipBoard()">Flip</button>
     </div>
 
-    <div style="margin-top:10px" id="dropZone">Click to upload a <strong>.pgn</strong> file</div>
-    <input type="file" id="fileInput" accept=".pgn" style="display:none">
+    <div id="engine">Engine: idle</div>
+  </div>
 
-    <textarea id="pgnInput" placeholder="Paste PGN here (or upload)"></textarea>
+  <div style="flex:1; min-width:300px;">
+    <h4>Paste PGN</h4>
+    <textarea id="pgnInput"></textarea><br>
+    <button onclick="loadPGN()">Load PGN</button>
 
-    <div class="controls" style="margin-top:8px">
-      <button id="loadPgn">Load PGN</button>
-      <button id="flipBtn">Flip Board</button>
-      <button id="exportPgnBtn">Export PGN</button>
-      <div style="margin-left:auto" class="small">Arrows persist per move in session</div>
-    </div>
-
-    <div id="boardContainer" style="margin-top:12px">
-      <div id="board"></div>
-
-      <!-- Eval bar (vertical) -->
-      <div id="evalBarContainer" aria-hidden="true">
-        <div id="evalBarTrack"></div>
-        <div id="evalBarFill" style="height:50%"></div>
-      </div>
-
-      <canvas id="overlayCanvas"></canvas>
-
-      <div style="margin-top:10px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-        <button id="prevMove">◀ Prev</button>
-        <button id="nextMove">Next ▶</button>
-        <input type="range" id="moveSlider" min="0" max="0" value="0" style="width:220px">
-        <div id="moveCounter" class="small">0 / 0</div>
-        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-          <div id="bestMoveBox" class="small">Best: —</div>
-          <div id="evalLabel" class="evalBox" style="background:#0b1720;color:#fff;padding:6px 8px;border-radius:8px">—</div>
-        </div>
-      </div>
-
-      <div style="margin-top:12px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
-        <div style="width:260px">
-          <div class="small">Comment for current move</div>
-          <textarea id="commentBox" placeholder="Edit comment here..."></textarea>
-          <div style="display:flex;gap:8px;margin-top:6px">
-            <button id="saveComment">Save Comment</button>
-            <button id="clearComment">Clear Comment</button>
-          </div>
-        </div>
-
-        <div style="width:200px">
-          <div class="small">Arrow tools</div>
-          <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
-            <button id="arrowModeBtn">Arrow Mode</button>
-            <input id="arrowColor" type="color" value="#ff0000">
-            <select id="arrowStyle">
-              <option value="arrow">Arrow</option>
-              <option value="circle">Circle</option>
-            </select>
-            <button id="clearArrowsBtn">Clear Arrows</button>
-          </div>
-
-          <div style="margin-top:8px">
-            <div class="small">Arrows on this move</div>
-            <div id="annotationArrows" class="annotation-list"></div>
-          </div>
-
-          <div style="margin-top:10px">
-            <div class="small">Engine</div>
-            <div style="display:flex;gap:6px;margin-top:6px">
-              <label class="small">Depth</label>
-              <input id="engineDepth" type="number" min="5" max="28" value="12" style="width:70px">
-              <button id="startEngineBtn">Start Engine</button>
-              <button id="stopEngineBtn">Stop</button>
-            </div>
-            <div class="small" style="margin-top:6px">Analyze the current position to show eval & best-line arrows</div>
-            <div style="margin-top:8px">
-              <button id="analyzeBtn">Analyze ▶</button>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <div id="comments" style="margin-top:12px">No comments yet. Load a PGN.</div>
-    </div>
-  </main>
-
-  <aside class="card sidebar">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <h3 style="margin:0">Moves</h3>
-      <div class="small">Click to jump</div>
-    </div>
-
-    <div class="move-list" id="moveList" style="margin-top:8px"></div>
-
-    <hr style="margin:12px 0;border-color:#eef6fb">
-
-    <div style="margin-top:6px">
-      <div class="small">Session</div>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button id="saveSession">Save</button>
-        <button id="loadSession">Load</button>
-        <button id="clearSession">Clear</button>
-      </div>
-    </div>
-
-    <footer class="small">Shortcuts: ← → moves, A toggles arrow mode</footer>
-  </aside>
+    <h4>Moves</h4>
+    <div id="moves"></div>
+  </div>
 
 </div>
 
-<!-- libs -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/js/chessboard.min.js"></script>
+<!-- Libraries -->
+<script src="https://unpkg.com/chess.js@1.0.0/chess.min.js"></script>
+<script src="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+
+<!-- Stockfish -->
+<script src="https://cdn.jsdelivr.net/npm/stockfish@16/stockfish.js"></script>
 
 <script>
-/*************************************************************************
- * PGN Viewer + Stockfish WASM (WebWorker) — Full file for GitHub Pages
- *************************************************************************/
+let board = Chessboard('board', 'start');
+let game = new Chess();
+let moves = [];
+let moveIndex = 0;
+let engine = STOCKFISH();
 
-/* ---------- Elements ---------- */
-const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('fileInput');
-const pgnInput = document.getElementById('pgnInput');
-const loadPgnBtn = document.getElementById('loadPgn');
-const moveListEl = document.getElementById('moveList');
-const commentsDiv = document.getElementById('comments');
-const moveCounter = document.getElementById('moveCounter');
-const moveSlider = document.getElementById('moveSlider');
-const prevMoveBtn = document.getElementById('prevMove');
-const nextMoveBtn = document.getElementById('nextMove');
-const flipBtn = document.getElementById('flipBtn');
-const commentBox = document.getElementById('commentBox');
-const saveCommentBtn = document.getElementById('saveComment');
-const clearCommentBtn = document.getElementById('clearComment');
-const arrowModeBtn = document.getElementById('arrowModeBtn');
-const arrowColorInput = document.getElementById('arrowColor');
-const clearArrowsBtn = document.getElementById('clearArrowsBtn');
-const annotationArrowsDiv = document.getElementById('annotationArrows');
-const exportPgnBtn = document.getElementById('exportPgnBtn');
-const engineDepthInput = document.getElementById('engineDepth');
-const startEngineBtn = document.getElementById('startEngineBtn');
-const stopEngineBtn = document.getElementById('stopEngineBtn');
-const analyzeBtn = document.getElementById('analyzeBtn');
-const engineStatus = document.getElementById('engineStatus');
-const evalLabel = document.getElementById('evalLabel');
-const bestMoveBox = document.getElementById('bestMoveBox');
-const evalBarFill = document.getElementById('evalBarFill');
+engine.postMessage("uci");
 
-/* board + canvas */
-const boardEl = document.getElementById('board');
-const canvas = document.getElementById('overlayCanvas');
-const ctx = canvas.getContext('2d');
+engine.onmessage = function(event) {
+  let line = event.data || event;
+  if (line.includes("score")) {
+    document.getElementById("engine").innerText = "Engine: " + line;
+  }
+};
 
-/* chess objects */
-const board = Chessboard(boardEl, {
-  draggable: false,
-  position: 'start',
-  pieceTheme: 'https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/img/chesspieces/wikipedia/{piece}.png'
-});
-const game = new Chess();
-
-/* app state */
-let moves = []; // array: { san, fen, comment, arrows: [ {from,to,color,style} ], variations: [] }
-let currentMove = 0;
-let flipped = false;
-let arrowMode = false;
-let arrowStage = null;
-let boardRect = null;
-
-/* engine worker state */
-let engineWorker = null;
-let engineReady = false;
-let engineThinking = false;
-
-/* engine arrows separate (do not overwrite user arrows) */
-let engineArrows = []; // array { from, to, color, style, alpha }
-
-/* ---------- Utilities ---------- */
-function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function setEngineStatus(txt){ engineStatus.textContent = 'Engine: ' + txt; }
-
-/* ---------- Click-to-upload (input outside clickable div) ---------- */
-dropZone.addEventListener('click', ()=> fileInput.click());
-fileInput.addEventListener('change', ()=>{
-  const f = fileInput.files && fileInput.files[0];
-  if (!f) return;
-  if (!f.name.toLowerCase().endsWith('.pgn')) { alert('Please upload a .pgn file'); return; }
-  const r = new FileReader();
-  r.onload = ()=> pgnInput.value = r.result;
-  r.readAsText(f);
-});
-
-/* ---------- Parse & Load PGN (simple, tolerant) ---------- */
-function normalizePGN(s){ return s.replace(/\r/g,'').replace(/\n\n+/g,'\n\n'); }
-
-// load and populate moves[]
-function parseAndLoadPGN(pgnText){
-  const txt = normalizePGN(pgnText || '');
+function loadPGN() {
   game.reset();
-  moves = [];
-  currentMove = 0;
-
-  const ok = game.load_pgn(txt, { sloppy: true });
-  if (!ok) { alert('Invalid PGN'); return; }
-
-  const hist = game.history({ verbose: true });
-  const comments = [...txt.matchAll(/\{([^}]*)\}/g)].map(m=>m[1].trim());
-  const tmp = new Chess();
-  let cIdx = 0;
-  hist.forEach(m=>{
-    tmp.move(m.san);
-    moves.push({ san: m.san, fen: tmp.fen(), comment: comments[cIdx] || '', arrows: [], variations: [] });
-    cIdx++;
-  });
-
-  // detect custom arrow header [Arrows "..."] and restore if present
-  const arrowHeaderMatch = txt.match(/\[Arrows "([^"]+)"\]/);
-  if (arrowHeaderMatch){
-    try {
-      const data = JSON.parse(decodeURIComponent(arrowHeaderMatch[1]));
-      Object.keys(data).forEach(k=>{
-        const idx = Number(k);
-        if (moves[idx]) moves[idx].arrows = data[k];
-      });
-    } catch(e){ console.warn('Failed parsing arrows header', e); }
-  }
-
-  updateMoveList();
-  updateBoard();
-}
-
-/* load button */
-loadPgnBtn.addEventListener('click', ()=> {
-  const txt = pgnInput.value.trim();
-  if (!txt) { alert('Paste or upload a PGN first'); return; }
-  parseAndLoadPGN(txt);
-});
-
-/* ---------- UI Helpers ---------- */
-function updateMoveList(){
-  moveListEl.innerHTML = '';
-  for (let i=0;i<moves.length;i++){
-    const num = i + 1;
-    const row = document.createElement('div');
-    row.className = 'move-row';
-    row.dataset.idx = i;
-    row.innerHTML = `<div style="display:flex;gap:8px;align-items:center">
-      <div style="width:34px;font-weight:700">${num}.</div>
-      <div style="min-width:140px">${escapeHtml(moves[i].san)}</div>
-      </div>
-      <div class="small">${moves[i].comment ? (moves[i].comment.length>40 ? escapeHtml(moves[i].comment.slice(0,40))+'...' : escapeHtml(moves[i].comment)) : ''}</div>`;
-    row.addEventListener('click', ()=> {
-      currentMove = Number(row.dataset.idx) + 1;
-      updateBoard();
-    });
-    moveListEl.appendChild(row);
-  }
-  highlightActiveMove();
-}
-
-function highlightActiveMove(){
-  Array.from(moveListEl.querySelectorAll('.move-row')).forEach(r=>r.classList.remove('active'));
-  if (currentMove > 0){
-    const el = moveListEl.querySelector(`.move-row[data-idx="${currentMove-1}"]`);
-    if (el) el.classList.add('active');
-  }
-}
-
-function updateBoard(){
-  if (currentMove === 0){
-    board.position('start', false);
-    commentsDiv.textContent = 'Starting position';
-    commentBox.value = '';
-  } else {
-    board.position(moves[currentMove-1].fen, true);
-    commentsDiv.textContent = moves[currentMove-1].comment || 'No comment for this move.';
-    commentBox.value = moves[currentMove-1].comment || '';
-  }
-  moveCounter.textContent = `${currentMove} / ${moves.length}`;
-  moveSlider.max = moves.length;
-  moveSlider.value = currentMove;
-  highlightActiveMove();
-  renderArrowsForCurrentMove();
-}
-
-/* navigation */
-nextMoveBtn.addEventListener('click', ()=> { if (currentMove < moves.length) currentMove++; updateBoard(); });
-prevMoveBtn.addEventListener('click', ()=> { if (currentMove > 0) currentMove--; updateBoard(); });
-moveSlider.addEventListener('input', ()=> { currentMove = Number(moveSlider.value); updateBoard(); });
-
-flipBtn.addEventListener('click', ()=> { flipped = !flipped; board.flip(); renderArrowsForCurrentMove(); });
-
-/* comments */
-saveCommentBtn.addEventListener('click', ()=>{
-  if (currentMove === 0) { alert('No move selected'); return; }
-  moves[currentMove-1].comment = commentBox.value.trim();
-  updateMoveList();
-});
-clearCommentBtn.addEventListener('click', ()=>{
-  if (currentMove === 0) return;
-  moves[currentMove-1].comment = '';
-  commentBox.value = '';
-  updateMoveList();
-});
-
-/* ---------- Arrow drawing (user) ---------- */
-arrowModeBtn.addEventListener('click', ()=>{
-  arrowMode = !arrowMode;
-  arrowStage = null;
-  arrowModeBtn.style.background = arrowMode ? '#e6f8ef' : '';
-  arrowModeBtn.textContent = arrowMode ? 'Arrow Mode: ON (A toggles)' : 'Arrow Mode';
-});
-
-function enableBoardClicksForArrows(){ /* nothing extra required, we delegate on board click */ }
-function disableBoardClicksForArrows(){ arrowStage = null; }
-
-document.getElementById('board').addEventListener('click', (ev)=>{
-  if (!arrowMode) return;
-  // find square class like 'square-a1'
-  const cls = Array.from(ev.target.classList).find(c=> c.startsWith('square-'));
-  if (!cls) return;
-  const square = cls.replace('square-','');
-  if (!arrowStage){
-    arrowStage = square;
-    // small visual cue could be added
-  } else {
-    const from = arrowStage, to = square;
-    arrowStage = null;
-    if (currentMove === 0) { alert('Select a move first'); return; }
-    const color = arrowColorInput.value || '#ff0000';
-    const style = document.getElementById('arrowStyle').value || 'arrow';
-    moves[currentMove-1].arrows.push({ from, to, color, style });
-    renderArrowsForCurrentMove();
-    refreshAnnotationsList();
-  }
-});
-
-clearArrowsBtn.addEventListener('click', ()=> {
-  if (currentMove === 0) return;
-  moves[currentMove-1].arrows = [];
-  renderArrowsForCurrentMove();
-  refreshAnnotationsList();
-});
-
-/* annotation list */
-function refreshAnnotationsList(){
-  annotationArrowsDiv.innerHTML = '';
-  if (currentMove === 0) return;
-  const arrs = moves[currentMove-1].arrows || [];
-  if (!arrs.length) { annotationArrowsDiv.innerHTML = '<div class="small">No arrows on this move.</div>'; return; }
-  arrs.forEach((a, idx)=>{
-    const el = document.createElement('div');
-    el.style.display='flex'; el.style.justifyContent='space-between'; el.style.alignItems='center'; el.style.padding='6px'; el.style.borderBottom='1px solid #f1f6fa';
-    el.innerHTML = `<div style="display:flex;gap:8px;align-items:center"><div style="width:14px;height:12px;background:${a.color};border-radius:3px"></div><div class="small">${a.from} → ${a.to}</div></div>
-      <div style="display:flex;gap:6px"><button data-idx="${idx}" class="editArrow">Edit</button><button data-idx="${idx}" class="delArrow">Delete</button></div>`;
-    annotationArrowsDiv.appendChild(el);
-  });
-  Array.from(annotationArrowsDiv.querySelectorAll('.delArrow')).forEach(btn=>{
-    btn.addEventListener('click', ()=>{ const idx = Number(btn.dataset.idx); moves[currentMove-1].arrows.splice(idx,1); renderArrowsForCurrentMove(); refreshAnnotationsList(); });
-  });
-  Array.from(annotationArrowsDiv.querySelectorAll('.editArrow')).forEach(btn=>{
-    btn.addEventListener('click', ()=>{ const idx = Number(btn.dataset.idx); const color = prompt('Enter hex color', moves[currentMove-1].arrows[idx].color); if (color){ moves[currentMove-1].arrows[idx].color = color; renderArrowsForCurrentMove(); refreshAnnotationsList(); } });
-  });
-}
-
-/* ---------- Canvas sizing & drawing helpers ---------- */
-function updateBoardRect(){
-  const rect = boardEl.getBoundingClientRect();
-  boardRect = rect;
-  const padLeft = 12, padTop = 12;
-  canvas.style.left = padLeft + 'px';
-  canvas.style.top = padTop + 'px';
-  const width = rect.width, height = rect.height;
-  canvas.width = Math.round(width * devicePixelRatio);
-  canvas.height = Math.round(height * devicePixelRatio);
-  canvas.style.width = width + 'px';
-  canvas.style.height = height + 'px';
-  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-}
-
-function squareCenterCoords(square){
-  if (!boardRect) updateBoardRect();
-  const size = boardRect.width / 8;
-  const file = square.charCodeAt(0) - 97;
-  const rank = 8 - Number(square[1]);
-  const x = file * size + size/2;
-  const y = rank * size + size/2;
-  return { x, y };
-}
-
-function drawArrowOnCanvas(a, alpha=1, lineWidth=5){
-  if (!boardRect) updateBoardRect();
-  if (a.style === 'circle'){
-    const c = squareCenterCoords(a.to);
-    ctx.beginPath();
-    ctx.arc(c.x, c.y, Math.max(10, boardRect.width/32), 0, Math.PI*2);
-    ctx.strokeStyle = a.color;
-    ctx.globalAlpha = alpha;
-    ctx.lineWidth = lineWidth;
-    ctx.stroke();
-    ctx.globalAlpha = 1;
+  let pgn = document.getElementById("pgnInput").value;
+  if (!game.load_pgn(pgn)) {
+    alert("Invalid PGN");
     return;
   }
-  const p1 = squareCenterCoords(a.from);
-  const p2 = squareCenterCoords(a.to);
-  ctx.beginPath();
-  ctx.moveTo(p1.x, p1.y);
-  ctx.lineTo(p2.x, p2.y);
-  ctx.strokeStyle = a.color;
-  ctx.globalAlpha = alpha;
-  ctx.lineWidth = lineWidth;
-  ctx.lineCap = 'round';
-  ctx.stroke();
-  // arrow head
-  const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-  const head = Math.max(10, boardRect.width/32);
-  ctx.beginPath();
-  ctx.moveTo(p2.x, p2.y);
-  ctx.lineTo(p2.x - head * Math.cos(angle - Math.PI/6), p2.y - head * Math.sin(angle - Math.PI/6));
-  ctx.lineTo(p2.x - head * Math.cos(angle + Math.PI/6), p2.y - head * Math.sin(angle + Math.PI/6));
-  ctx.closePath();
-  ctx.fillStyle = a.color;
-  ctx.fill();
-  ctx.globalAlpha = 1;
+
+  moves = game.history();
+  moveIndex = 0;
+  game.reset();
+  board.position(game.fen());
+  renderMoves();
+  analyze();
 }
 
-/* render all arrows: user arrows + engine arrows (engine arrows drawn after user arrows, with different alpha) */
-function renderArrowsForCurrentMove(){
-  if (!boardRect) updateBoardRect();
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  if (currentMove === 0) return;
-  // draw user arrows
-  const userArrs = moves[currentMove-1].arrows || [];
-  userArrs.forEach(a => drawArrowOnCanvas(a, 1, 6));
-  // draw engine arrows (faded)
-  engineArrows.forEach((a, idx) => {
-    // primary PV arrow alpha stronger
-    const alpha = (idx === 0) ? 1.0 : 0.45;
-    drawArrowOnCanvas(a, alpha, (idx===0)?6:4);
-  });
-}
-
-/* ---------- Export PGN (with comments + arrows header) ---------- */
-exportPgnBtn.addEventListener('click', ()=>{
-  const arrowMap = {};
-  moves.forEach((m,i)=>{ if (m.arrows && m.arrows.length) arrowMap[i] = m.arrows; });
-  const arrowHeader = Object.keys(arrowMap).length ? `[Arrows "${encodeURIComponent(JSON.stringify(arrowMap))}"]\n` : '';
-  const headerMatches = pgnInput.value.match(/(\[[^\]]+\]\s*)+/);
-  const header = headerMatches ? headerMatches[0] + '\n' : '';
-  let body = '';
-  for (let i=0;i<moves.length;i+=2){
-    const number = Math.floor(i/2)+1;
-    const w = moves[i] ? moves[i].san + (moves[i].comment ? ' {' + moves[i].comment + '}' : '') : '';
-    const b = moves[i+1] ? moves[i+1].san + (moves[i+1].comment ? ' {' + moves[i+1].comment + '}' : '') : '';
-    body += `${number}. ${w}${ b ? ' ' + b : '' } `;
+function nextMove() {
+  if (moveIndex < moves.length) {
+    game.move(moves[moveIndex]);
+    moveIndex++;
+    board.position(game.fen());
+    analyze();
   }
-  const out = header + arrowHeader + '\n' + body + '\n';
-  const w = window.open('', '_blank');
-  w.document.write('<pre style="white-space:pre-wrap;">' + escapeHtml(out) + '</pre>');
-});
+}
 
-/* ---------- Session save/load ---------- */
-document.getElementById('saveSession').addEventListener('click', ()=>{
-  localStorage.setItem('pgn_viewer_session', JSON.stringify({ moves, currentMove }));
-  alert('Session saved.');
-});
-document.getElementById('loadSession').addEventListener('click', ()=>{
-  const raw = localStorage.getItem('pgn_viewer_session');
-  if (!raw) return alert('No session found.');
-  try {
-    const obj = JSON.parse(raw);
-    moves = obj.moves || [];
-    currentMove = obj.currentMove || 0;
-    updateMoveList();
-    updateBoard();
-    alert('Session loaded.');
-  } catch(e){ alert('Failed to load session.'); }
-});
-document.getElementById('clearSession').addEventListener('click', ()=>{
-  localStorage.removeItem('pgn_viewer_session');
-  alert('Session cleared.');
-});
-
-/* ---------- Engine: Stockfish WASM (Worker) ---------- */
-function startEngine(){
-  if (engineWorker) return;
-  setEngineStatus('loading');
-  try {
-    engineWorker = new Worker('https://cdn.jsdelivr.net/npm/stockfish.wasm@0.10.0/stockfish.worker.js');
-  } catch(e){
-    alert('Failed to start engine worker: ' + e);
-    setEngineStatus('error');
-    engineWorker = null;
-    return;
+function prevMove() {
+  if (moveIndex > 0) {
+    game.undo();
+    moveIndex--;
+    board.position(game.fen());
+    analyze();
   }
-  engineWorker.onmessage = (ev) => {
-    const data = ev.data;
-    if (typeof data !== 'string') return;
-    // console.log('engine:', data);
-    if (data.startsWith('uciok')) { engineReady = true; setEngineStatus('ready'); }
-    if (data.startsWith('info')){
-      // parse score and PV
-      const mScoreCp = data.match(/score cp (-?\d+)/);
-      const mScoreMate = data.match(/score mate (-?\d+)/);
-      if (mScoreCp) {
-        const cp = Number(mScoreCp[1]);
-        evalLabel.textContent = (cp/100).toFixed(2);
-        updateEvalBar(cp, null);
-      } else if (mScoreMate){
-        const mate = Number(mScoreMate[1]);
-        evalLabel.textContent = '#' + mate;
-        updateEvalBar(0, mate);
-      }
-      // PV (string after " pv ")
-      const mPv = data.match(/\s+pv\s+(.+)$/);
-      if (mPv){
-        const pvStr = mPv[1].trim();
-        const pvMoves = pvStr.split(' ').filter(Boolean); // uci moves like e2e4
-        drawEnginePVArrows(pvMoves);
-        // best move attempt: first UCI move
-        const firstUci = pvMoves[0];
-        if (firstUci) {
-          bestMoveBox.textContent = 'Best: ' + firstUci;
-        }
-      }
-    } else if (data.startsWith('bestmove')){
-      // bestmove <uci> ...
-      engineThinking = false;
-      setEngineStatus('idle');
-    }
-  };
-  engineWorker.onerror = (e)=> { console.error('engine error', e); setEngineStatus('error'); };
-  engineWorker.postMessage('uci');
-  setEngineStatus('initializing');
 }
 
-function stopEngine(){
-  if (!engineWorker) return;
-  try { engineWorker.terminate(); } catch(e){}
-  engineWorker = null;
-  engineReady = false;
-  engineThinking = false;
-  setEngineStatus('stopped');
-  engineArrows = [];
-  renderArrowsForCurrentMove();
+function flipBoard() {
+  board.flip();
 }
 
-/* start/stop UI */
-startEngineBtn.addEventListener('click', ()=> startEngine());
-stopEngineBtn.addEventListener('click', ()=> stopEngine());
-
-/* analyze current position */
-analyzeBtn.addEventListener('click', ()=>{
-  if (!engineWorker) startEngine();
-  if (!engineWorker) return;
-  // ensure engine ready
-  engineWorker.postMessage('isready'); // optional ping
-  // send position
-  const fen = (currentMove === 0) ? (new Chess()).fen() : moves[currentMove-1].fen;
-  engineWorker.postMessage('position fen ' + fen);
-  const depth = Math.max(5, Math.min(28, Number(engineDepthInput.value) || 12));
-  engineWorker.postMessage('go depth ' + depth);
-  engineThinking = true;
-  setEngineStatus('thinking');
-});
-
-/* update eval bar UI */
-function updateEvalBar(cp, mate){
-  // cp in centipawns (white positive)
-  if (mate !== null && mate !== undefined){
-    // show full white or full black depending on sign
-    if (mate > 0) {
-      evalBarFill.style.height = '100%';
-      evalLabel.textContent = '#'+mate;
-    } else {
-      evalBarFill.style.height = '0%';
-      evalLabel.textContent = '#'+mate;
-    }
-    return;
+function renderMoves() {
+  let html = "";
+  for (let i = 0; i < moves.length; i++) {
+    html += ((i % 2 === 0 ? (Math.floor(i/2)+1) + ". " : "") + moves[i] + " ");
   }
-  // map cp to 0-100% (white height). We'll use a logistic clamp: at +-400 cp near ends
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const maxCp = 600; // scale
-  const p = (clamp(cp, -maxCp, maxCp) + maxCp) / (2 * maxCp); // 0..1
-  const percent = Math.round(p * 100);
-  evalBarFill.style.height = percent + '%';
+  document.getElementById("moves").innerText = html;
 }
 
-/* draw engine PV arrows from UCI moves list (e2e4, g8f6, ...) */
-function drawEnginePVArrows(pvMoves){
-  engineArrows = [];
-  if (!pvMoves || pvMoves.length === 0) { renderArrowsForCurrentMove(); return; }
-  // we will create arrows for as many PV moves as we can, mapping UCI pairs to from->to squares.
-  // only draw if current position corresponds to moves[currentMove-1].fen (we don't check deep legality)
-  // UCI format: e2e4, g1f3, e7e8q (promotion). We'll parse first two characters as from, next two as to.
-  for (let i=0;i<pvMoves.length;i++){
-    const uci = pvMoves[i];
-    if (!uci || uci.length < 4) continue;
-    const from = uci.slice(0,2);
-    const to = uci.slice(2,4);
-    // color for engine arrows: first bold cyan, others faded blue
-    const color = (i===0) ? '#00bcd4' : '#5ad0ee';
-    const style = 'arrow';
-    const alpha = (i===0) ? 1.0 : 0.45;
-    engineArrows.push({ from, to, color, style, alpha });
-  }
-  renderArrowsForCurrentMove();
+function analyze() {
+  engine.postMessage("position fen " + game.fen());
+  engine.postMessage("go depth 12");
 }
-
-/* ---------- Helpers: resize canvas on start & window resize ---------- */
-window.addEventListener('resize', ()=> { setTimeout(()=>{ updateBoardRect(); renderArrowsForCurrentMove(); }, 120); });
-setTimeout(()=>{ updateBoardRect(); renderArrowsForCurrentMove(); }, 300);
-
-/* ---------- keyboard shortcuts ---------- */
-window.addEventListener('keydown', (e)=>{
-  if (e.key === 'ArrowRight'){ if (currentMove < moves.length) currentMove++; updateBoard(); }
-  if (e.key === 'ArrowLeft'){ if (currentMove > 0) currentMove--; updateBoard(); }
-  if (e.key.toLowerCase() === 'a'){ arrowMode = !arrowMode; arrowModeBtn.click(); }
-});
-
-/* ---------- sample PGN and initial load ---------- */
-const sample = `[Event "Sample"]
-[Site "?"]
-[Date "2025.01.01"]
-[White "Demo"]
-[Black "Player"]
-[Result "1-0"]
-
-1. e4 {White plays e4} e5 {Black replies}
-2. Nf3 {Knight develops} Nc6 3. Bb5 {Ruy Lopez} a6 (3...Nd4 ? {sample var}) 4. Ba4 Nf6
-5. O-O Be7 6. Re1 b5 7. Bb3 d6
-`;
-
-if (!pgnInput.value.trim()) pgnInput.value = sample;
-parseAndLoadPGN(pgnInput.value);
-
-/* ---------- end of script ---------- */
 </script>
+
 </body>
 </html>
