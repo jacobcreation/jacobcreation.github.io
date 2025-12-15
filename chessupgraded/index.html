@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chess Bot Arena</title>
+
+  <!-- Chessboard CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/chessboardjs@1.0.0/www/css/chessboard.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <h1>♟️ Chess Bot Arena</h1>
+
+  <div class="controls">
+    <label for="botSelect">Choose Opponent:</label>
+    <select id="botSelect">
+      <option value="easy">Beginner Bot (Random)</option>
+      <option value="aggressive">Aggressive Bot</option>
+      <option value="defensive">Defensive Bot</option>
+      <option value="strong">Strong Bot</option>
+      <option value="stockfish">👑 Final Boss: Stockfish</option>
+    </select>
+
+    <button id="resetBtn">Reset Game</button>
+  </div>
+
+  <div id="board" class="board"></div>
+
+  <p id="status"></p>
+
+  <!-- Libraries -->
+  <script src="https://unpkg.com/chess.js@1.0.0/chess.min.js"></script>
+  <script src="https://unpkg.com/chessboardjs@1.0.0/www/js/chessboard.js"></script>
+
+  <!-- Stockfish -->
+  <script src="https://cdn.jsdelivr.net/npm/stockfish@16/stockfish.min.js"></script>
+
+  <script src="script.js"></script>
+</body>
+</html>
