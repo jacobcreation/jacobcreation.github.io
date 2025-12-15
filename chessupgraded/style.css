@@ -1,0 +1,30 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #111;
+  color: #eee;
+  text-align: center;
+}
+
+h1 {
+  margin-top: 20px;
+}
+
+.board {
+  width: 400px;
+  margin: 20px auto;
+}
+
+.controls {
+  margin-bottom: 15px;
+}
+
+select, button {
+  padding: 8px;
+  margin: 5px;
+  font-size: 14px;
+}
+
+#status {
+  margin-top: 10px;
+  font-size: 16px;
+}
