@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Chess Bot Arena</title>
 
-  <!-- Modern Chessboard Web Component -->
+  <!-- Modern chessboard web component -->
   <script type="module"
     src="https://unpkg.com/chessboard-element@1.4.3/dist/chessboard-element.bundled.js">
   </script>
@@ -16,7 +16,7 @@
   <h1>♟️ Chess Bot Arena</h1>
 
   <div class="controls">
-    <label>Opponent:</label>
+    <label for="botSelect">Choose Opponent:</label>
     <select id="botSelect">
       <option value="easy">Beginner (Random)</option>
       <option value="aggressive">Aggressive Bot</option>
@@ -25,10 +25,10 @@
       <option value="stockfish">👑 Final Boss: Stockfish</option>
     </select>
 
-    <button id="resetBtn">Reset</button>
+    <button id="resetBtn">Reset Game</button>
   </div>
 
-  <!-- MODERN BOARD -->
+  <!-- Modern board -->
   <chess-board
     id="board"
     position="start"
@@ -37,7 +37,7 @@
 
   <p id="status"></p>
 
-  <!-- Chess logic -->
+  <!-- Chess rules -->
   <script src="https://unpkg.com/chess.js@1.0.0/chess.min.js"></script>
 
   <!-- Stockfish -->
