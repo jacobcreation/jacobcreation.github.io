@@ -44,7 +44,7 @@ board.addEventListener("drop", e => {
   setTimeout(makeBotMove, 300);
 });
 
-/* ---------- BOT LOGIC ---------- */
+/* ---------- BOT MOVE ---------- */
 
 function makeBotMove() {
   if (game.game_over()) return;
@@ -57,15 +57,27 @@ function makeBotMove() {
   const moves = game.moves({ verbose: true });
   let move;
 
-  if (botType === "easy") move = randomMove(moves);
-  if (botType === "aggressive") move = aggressiveMove(moves);
-  if (botType === "defensive") move = defensiveMove(moves);
-  if (botType === "strong") move = minimaxRoot(2);
+  switch (botType) {
+    case "easy":
+      move = randomMove(moves);
+      break;
+    case "aggressive":
+      move = aggressiveMove(moves);
+      break;
+    case "defensive":
+      move = defensiveMove(moves);
+      break;
+    case "strong":
+      move = minimaxRoot(2);
+      break;
+  }
 
   game.move(move);
   board.position = game.fen();
   updateStatus();
 }
+
+/* ---------- BOT STYLES ---------- */
 
 function randomMove(moves) {
   return moves[Math.floor(Math.random() * moves.length)];
@@ -81,7 +93,7 @@ function defensiveMove(moves) {
   return quiet.length ? randomMove(quiet) : randomMove(moves);
 }
 
-/* ---------- MINIMAX (Strong Bot) ---------- */
+/* ---------- STRONG BOT (MINIMAX) ---------- */
 
 function minimaxRoot(depth) {
   let bestMove = null;
@@ -101,7 +113,7 @@ function minimaxRoot(depth) {
 }
 
 function minimax(depth, isMax) {
-  if (depth === 0) return evaluate();
+  if (depth === 0) return evaluateBoard();
 
   let best = isMax ? -9999 : 9999;
 
@@ -115,15 +127,15 @@ function minimax(depth, isMax) {
   return best;
 }
 
-function evaluate() {
+function evaluateBoard() {
   const values = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
-  return game.board().flat().reduce((sum, p) => {
-    if (!p) return sum;
-    return sum + (p.color === "w" ? values[p.type] : -values[p.type]);
+  return game.board().flat().reduce((sum, piece) => {
+    if (!piece) return sum;
+    return sum + (piece.color === "w" ? values[piece.type] : -values[piece.type]);
   }, 0);
 }
 
-/* ---------- STOCKFISH ---------- */
+/* ---------- STOCKFISH FINAL BOSS ---------- */
 
 function stockfishMove() {
   if (!stockfish) stockfish = Stockfish();
@@ -151,9 +163,8 @@ function stockfishMove() {
 function updateStatus() {
   if (game.in_checkmate()) statusEl.textContent = "Checkmate!";
   else if (game.in_draw()) statusEl.textContent = "Draw!";
-  else statusEl.textContent = game.turn() === "w"
-    ? "Your move"
-    : "Bot thinking...";
+  else statusEl.textContent =
+    game.turn() === "w" ? "Your move" : "Bot thinking...";
 }
 
 updateStatus();
