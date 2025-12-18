@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Offline PGN Viewer (Unicode Board)</title>
+<style>
+  body { font-family: monospace; padding: 20px; }
+  #board { line-height: 1.5; margin-bottom: 20px; white-space: pre; }
+  #moves { border: 1px solid #ccc; padding: 10px; max-height: 200px; overflow-y: auto; white-space: pre-wrap; }
+  input { margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<h1>Offline PGN Viewer (Unicode Board)</h1>
+<input type="file" id="pgnFile" accept=".pgn">
+<div id="board"></div>
+<div id="moves"></div>
+
+<script>
+// Minimal Chess.js logic for moves and FEN
+class Chess {
+  constructor() { this.reset(); }
+  reset() {
+    this._board = [
+      ['r','n','b','q','k','b','n','r'],
+      ['p','p','p','p','p','p','p','p'],
+      ['','','','','','','',''],
+      ['','','','','','','',''],
+      ['','','','','','','',''],
+      ['','','','','','','',''],
+      ['P','P','P','P','P','P','P','P'],
+      ['R','N','B','Q','K','B','N','R']
+    ];
+    this._moves = [];
+  }
+  load_pgn(pgn){
+    this._moves = [];
+    const moves = pgn.replace(/\r?\n/g,' ').match(/\b([KQBNR]?[a-h]?[1-8]?x?[a-h][1-8](=[QBNR])?|O-O-O|O-O)[+#]?\b/g);
+    if(moves) this._moves = moves;
+    this.reset();
+    return true;
+  }
+  history(){ return this._moves.map(m=>({san:m})); }
+  fen(){ return ''; } // not needed for Unicode
+}
+
+// Unicode mapping
+const unicodePieces = {
+  'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟',
+  'R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙',
+  '':' '
+};
+
+function drawBoard(boardArr){
+  let str = '  a b c d e f g h\n';
+  for(let r=0;r<8;r++){
+    str += (8-r) + ' ';
+    for(let f=0;f<8;f++){
+      str += unicodePieces[boardArr[r][f]] + ' ';
+    }
+    str += (8-r) + '\n';
+  }
+  str += '  a b c d e f g h\n';
+  document.getElementById('board').textContent = str;
+}
+
+// For simplicity, we won't move pieces, just show initial board
+const game = new Chess();
+drawBoard(game._board);
+
+function displayMovesWithComments(pgn) {
+  const movesDiv = document.getElementById('moves');
+  const cleanPGN = pgn.replace(/\r?\n/g, ' ');
+  const regex = /(\d+\.)\s*([^\s{]+)(\s*([^\s{]+))?\s*(\{[^}]+\})?/g;
+  let result;
+  let output = '';
+  while ((result = regex.exec(cleanPGN)) !== null) {
+    const moveNumber = result[1];
+    const whiteMove = result[2];
+    const blackMove = result[4] || '';
+    const comment = result[5] || '';
+    output += `${moveNumber} ${whiteMove} ${blackMove} ${comment}\n`;
+  }
+  movesDiv.textContent = output;
+}
+
+document.getElementById('pgnFile').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(event){
+    const pgnText = event.target.result;
+    game.load_pgn(pgnText);
+    drawBoard(game._board);
+    displayMovesWithComments(pgnText);
+  };
+  reader.readAsText(file);
+});
+</script>
+</body>
+</html>
