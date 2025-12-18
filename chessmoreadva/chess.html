@@ -4,45 +4,30 @@
 <meta charset="UTF-8">
 <title>Chess vs Stockfish</title>
 
-<!-- Chessboard styles -->
-<link rel="stylesheet" href="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+<link rel="stylesheet"
+ href="https://cdn.jsdelivr.net/npm/chessboardjs@1.0.0/www/css/chessboard.css">
 
 <style>
 body {
-    font-family: Arial, sans-serif;
-    background: #121212;
-    color: #fff;
-    display: flex;
-    justify-content: center;
-    padding-top: 30px;
+  background:#121212;
+  color:white;
+  font-family:Arial;
+  display:flex;
+  justify-content:center;
+  padding-top:30px;
 }
 
 .container {
-    display: flex;
-    gap: 30px;
+  display:flex;
+  gap:30px;
+}
+
+#board {
+  width:400px;
 }
 
 .controls {
-    width: 250px;
-}
-
-label {
-    display: block;
-    margin-top: 15px;
-}
-
-input[type="range"] {
-    width: 100%;
-}
-
-button {
-    margin-top: 20px;
-    width: 100%;
-    padding: 10px;
-    background: #00c853;
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
+  width:250px;
 }
 </style>
 </head>
@@ -50,100 +35,83 @@ button {
 <body>
 
 <div class="container">
-    <div id="board" style="width: 400px"></div>
+  <div id="board"></div>
 
-    <div class="controls">
-        <h2>Stockfish Settings</h2>
+  <div class="controls">
+    <h2>Stockfish</h2>
 
-        <label>
-            Rating: <span id="ratingValue">1200</span>
-            <input type="range" id="rating" min="800" max="2800" step="100" value="1200">
-        </label>
+    <label>
+      Rating: <span id="ratingValue">1200</span>
+      <input type="range" id="rating" min="800" max="2800" step="100" value="1200">
+    </label>
 
-        <label>
-            Thinking Time (ms): <span id="timeValue">1000</span>
-            <input type="range" id="time" min="100" max="3000" step="100" value="1000">
-        </label>
+    <label>
+      Thinking Time (ms): <span id="timeValue">1000</span>
+      <input type="range" id="time" min="100" max="3000" step="100" value="1000">
+    </label>
 
-        <button onclick="resetGame()">Reset Game</button>
-    </div>
+    <button id="reset">Reset</button>
+  </div>
 </div>
 
-<!-- Libraries -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<script src="https://unpkg.com/chess.js@1.0.0/chess.min.js"></script>
-<script src="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-
-<!-- Stockfish -->
-<script src="https://unpkg.com/stockfish/stockfish.js"></script>
+<!-- ✅ WORKING LIBRARIES -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chess.js@0.13.4/chess.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chessboardjs@1.0.0/www/js/chessboard.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stockfish@16.0.0/stockfish.js"></script>
 
 <script>
-let board = null;
 let game = new Chess();
+
+let board = Chessboard("board", {
+  draggable: true,
+  position: "start",
+  onDrop: onDrop
+});
+
 let engine = Stockfish();
-
-const ratingSlider = document.getElementById("rating");
-const timeSlider = document.getElementById("time");
-const ratingValue = document.getElementById("ratingValue");
-const timeValue = document.getElementById("timeValue");
-
-ratingValue.textContent = ratingSlider.value;
-timeValue.textContent = timeSlider.value;
-
-ratingSlider.oninput = () => ratingValue.textContent = ratingSlider.value;
-timeSlider.oninput = () => timeValue.textContent = timeSlider.value;
-
 engine.postMessage("uci");
 
-function setEngineStrength() {
-    const rating = ratingSlider.value;
-    engine.postMessage("setoption name UCI_LimitStrength value true");
-    engine.postMessage("setoption name UCI_Elo value " + rating);
+const rating = document.getElementById("rating");
+const time = document.getElementById("time");
+const rv = document.getElementById("ratingValue");
+const tv = document.getElementById("timeValue");
+
+rv.textContent = rating.value;
+tv.textContent = time.value;
+
+rating.oninput = () => rv.textContent = rating.value;
+time.oninput = () => tv.textContent = time.value;
+
+function onDrop(src, dst) {
+  const move = game.move({ from: src, to: dst, promotion: "q" });
+  if (!move) return "snapback";
+  setTimeout(engineMove, 200);
 }
 
-function onDrop(source, target) {
-    let move = game.move({
-        from: source,
-        to: target,
-        promotion: "q"
+function engineMove() {
+  engine.postMessage("setoption name UCI_LimitStrength value true");
+  engine.postMessage("setoption name UCI_Elo value " + rating.value);
+  engine.postMessage("position fen " + game.fen());
+  engine.postMessage("go movetime " + time.value);
+}
+
+engine.onmessage = e => {
+  if (e.data.startsWith("bestmove")) {
+    const m = e.data.split(" ")[1];
+    game.move({
+      from: m.substring(0,2),
+      to: m.substring(2,4),
+      promotion: "q"
     });
-
-    if (move === null) return "snapback";
-
-    window.setTimeout(makeEngineMove, 250);
-}
-
-function makeEngineMove() {
-    if (game.game_over()) return;
-
-    setEngineStrength();
-    engine.postMessage("position fen " + game.fen());
-    engine.postMessage("go movetime " + timeSlider.value);
-}
-
-engine.onmessage = function(event) {
-    let line = event.data;
-    if (line.startsWith("bestmove")) {
-        let move = line.split(" ")[1];
-        game.move({
-            from: move.substring(0, 2),
-            to: move.substring(2, 4),
-            promotion: "q"
-        });
-        board.position(game.fen());
-    }
+    board.position(game.fen());
+  }
 };
 
-function resetGame() {
-    game.reset();
-    board.start();
-}
-
-board = Chessboard("board", {
-    draggable: true,
-    position: "start",
-    onDrop: onDrop
-});
+document.getElementById("reset").onclick = () => {
+  game.reset();
+  board.start();
+};
 </script>
 
 </body>
