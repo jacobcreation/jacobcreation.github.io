@@ -3,24 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Offline PGN Viewer (Unicode Board)</title>
+<title>Offline PGN Viewer with Stockfish Analysis</title>
 <style>
   body { font-family: monospace; padding: 20px; }
   #board { line-height: 1.5; margin-bottom: 20px; white-space: pre; }
   #moves { border: 1px solid #ccc; padding: 10px; max-height: 200px; overflow-y: auto; white-space: pre-wrap; }
+  #analysis { border: 1px solid #ccc; padding: 10px; margin-top: 10px; min-height: 50px; }
   input, button { margin: 5px; }
 </style>
 </head>
 <body>
-<h1>Offline PGN Viewer (Unicode Board)</h1>
+<h1>Offline PGN Viewer (Unicode Board + Stockfish)</h1>
 <input type="file" id="pgnFile" accept=".pgn"><br>
 <button id="prevMove">◀ Previous</button>
 <button id="nextMove">Next ▶</button>
 <div id="board"></div>
 <div id="moves"></div>
+<h2>Stockfish Analysis</h2>
+<div id="analysis">Engine output will appear here...</div>
 
 <!-- Load chess.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script>
+<!-- Load Stockfish WASM (place stockfish.js + stockfish.wasm in same folder) -->
+<script src="stockfish.js"></script>
+
 <script>
 // Unicode mapping
 const unicodePieces = {
@@ -80,9 +86,29 @@ let game = new Chess();
 let moves = [];
 let currentIndex = 0;
 
+// Stockfish engine
+let engine = Stockfish();
+engine.onmessage = function(event) {
+  if (typeof event.data === "string") {
+    if (event.data.includes("score")) {
+      document.getElementById("analysis").textContent = event.data;
+    }
+  }
+};
+
+// Analyze current position
+function analyzePosition(fen) {
+  engine.postMessage("uci");
+  engine.postMessage("isready");
+  engine.postMessage("ucinewgame");
+  engine.postMessage("position fen " + fen);
+  engine.postMessage("go depth 12"); // adjust depth for speed vs strength
+}
+
 // Show current board
 function showBoard() {
   drawBoard(fenToBoard(game.fen()));
+  analyzePosition(game.fen());
 }
 
 // Step forward
