@@ -8,43 +8,20 @@
   body { font-family: monospace; padding: 20px; }
   #board { line-height: 1.5; margin-bottom: 20px; white-space: pre; }
   #moves { border: 1px solid #ccc; padding: 10px; max-height: 200px; overflow-y: auto; white-space: pre-wrap; }
-  input { margin-bottom: 10px; }
+  input, button { margin: 5px; }
 </style>
 </head>
 <body>
 <h1>Offline PGN Viewer (Unicode Board)</h1>
-<input type="file" id="pgnFile" accept=".pgn">
+<input type="file" id="pgnFile" accept=".pgn"><br>
+<button id="prevMove">◀ Previous</button>
+<button id="nextMove">Next ▶</button>
 <div id="board"></div>
 <div id="moves"></div>
 
+<!-- Load chess.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script>
 <script>
-// Minimal Chess.js logic for moves and FEN
-class Chess {
-  constructor() { this.reset(); }
-  reset() {
-    this._board = [
-      ['r','n','b','q','k','b','n','r'],
-      ['p','p','p','p','p','p','p','p'],
-      ['','','','','','','',''],
-      ['','','','','','','',''],
-      ['','','','','','','',''],
-      ['','','','','','','',''],
-      ['P','P','P','P','P','P','P','P'],
-      ['R','N','B','Q','K','B','N','R']
-    ];
-    this._moves = [];
-  }
-  load_pgn(pgn){
-    this._moves = [];
-    const moves = pgn.replace(/\r?\n/g,' ').match(/\b([KQBNR]?[a-h]?[1-8]?x?[a-h][1-8](=[QBNR])?|O-O-O|O-O)[+#]?\b/g);
-    if(moves) this._moves = moves;
-    this.reset();
-    return true;
-  }
-  history(){ return this._moves.map(m=>({san:m})); }
-  fen(){ return ''; } // not needed for Unicode
-}
-
 // Unicode mapping
 const unicodePieces = {
   'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟',
@@ -52,6 +29,22 @@ const unicodePieces = {
   '':' '
 };
 
+// Convert FEN to 2D board array
+function fenToBoard(fen) {
+  const rows = fen.split(' ')[0].split('/');
+  const boardArr = [];
+  for (let r=0; r<8; r++) {
+    const row = [];
+    for (const ch of rows[r]) {
+      if (isNaN(ch)) row.push(ch);
+      else for (let i=0; i<parseInt(ch); i++) row.push('');
+    }
+    boardArr.push(row);
+  }
+  return boardArr;
+}
+
+// Draw board in Unicode
 function drawBoard(boardArr){
   let str = '  a b c d e f g h\n';
   for(let r=0;r<8;r++){
@@ -65,10 +58,7 @@ function drawBoard(boardArr){
   document.getElementById('board').textContent = str;
 }
 
-// For simplicity, we won't move pieces, just show initial board
-const game = new Chess();
-drawBoard(game._board);
-
+// Display moves with comments
 function displayMovesWithComments(pgn) {
   const movesDiv = document.getElementById('moves');
   const cleanPGN = pgn.replace(/\r?\n/g, ' ');
@@ -85,18 +75,61 @@ function displayMovesWithComments(pgn) {
   movesDiv.textContent = output;
 }
 
+// Game state
+let game = new Chess();
+let moves = [];
+let currentIndex = 0;
+
+// Show current board
+function showBoard() {
+  drawBoard(fenToBoard(game.fen()));
+}
+
+// Step forward
+function nextMove() {
+  if (currentIndex < moves.length) {
+    game.move(moves[currentIndex]);
+    currentIndex++;
+    showBoard();
+  }
+}
+
+// Step backward (rebuild from start)
+function prevMove() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    game = new Chess();
+    for (let i=0; i<currentIndex; i++) {
+      game.move(moves[i]);
+    }
+    showBoard();
+  }
+}
+
+// Load PGN file
 document.getElementById('pgnFile').addEventListener('change', function(e){
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function(event){
     const pgnText = event.target.result;
+    game = new Chess();
     game.load_pgn(pgnText);
-    drawBoard(game._board);
+    moves = game.history(); // SAN moves
+    currentIndex = 0;
+    game = new Chess(); // reset to start
+    showBoard();
     displayMovesWithComments(pgnText);
   };
   reader.readAsText(file);
 });
+
+// Button events
+document.getElementById('nextMove').addEventListener('click', nextMove);
+document.getElementById('prevMove').addEventListener('click', prevMove);
+
+// Show initial position
+showBoard();
 </script>
 </body>
 </html>
