@@ -1,30 +1,3 @@
-/* =========================
-   GLOBAL SOUND DISABLE
-   Option 1: Kill AudioContext
-   ========================= */
-
-(function () {
-  const OriginalAudioContext =
-    window.AudioContext || window.webkitAudioContext;
-
-  if (OriginalAudioContext) {
-    window.AudioContext = function () {
-      const ctx = new OriginalAudioContext();
-
-      ctx.resume = () => Promise.resolve();
-      ctx.suspend = () => Promise.resolve();
-      ctx.close = () => Promise.resolve();
-
-      if (ctx.destination && ctx.destination.gain) {
-        ctx.destination.gain.value = 0;
-      }
-
-      return ctx;
-    };
-
-    window.webkitAudioContext = window.AudioContext;
-  }
-})();
 /*!
 Parts of this script are from the TurboWarp Packager <https://packager.turbowarp.org/>, licensed as follows:
 Copyright (C) 2021-2024 Thomas Weber
