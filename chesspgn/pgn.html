@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PGN Viewer with Multi-Game Support</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+  <style>
+    #container { display: flex; justify-content: center; gap: 20px; }
+    #board { width: 400px; }
+    #sidebar { width: 300px; font-family: sans-serif; }
+    #controls { text-align:center; margin: 10px; }
+    #comments, #analysis { margin-top: 15px; }
+    .move { cursor: pointer; padding: 2px; }
+    .move.active { background: #ddd; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; }
+    td { padding: 4px; }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center;">Chess PGN Viewer + Stockfish</h2>
+  <input type="file" id="pgnUpload" accept=".pgn"><br><br>
+  <select id="gameSelect" style="display:none; margin:10px auto; text-align:center;"></select>
+  <div id="container">
+    <div id="board"></div>
+    <div id="sidebar">
+      <div id="controls">
+        <button id="prev">◀ Previous</button>
+        <button id="next">Next ▶</button>
+      </div>
+      <div id="movelist"><h3>Moves:</h3></div>
+      <div id="comments"><h3>Comments:</h3><p>Upload a PGN to begin.</p></div>
+      <div id="analysis"><h3>Stockfish Analysis:</h3><p>Waiting...</p></div>
+    </div>
+  </div>
+
+  <!-- ✅ Correct UMD build of chess.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stockfish@11.0.0/src/stockfish.js"></script>
+  <script>
+    const board = Chessboard('board', { draggable: false });
+    const chess = new Chess();
+    let games = [];
+    let moves = [];
+    let currentIndex = 0;
+
+    // Load Stockfish
+    const engine = Stockfish();
+    engine.onmessage = function(event) {
+      const line = event.data || event;
+      if (typeof line === "string" && line.includes("score")) {
+        document.getElementById('analysis').innerHTML =
+          "<h3>Stockfish Analysis:</h3><p>" + line + "</p>";
+      }
+    };
+
+    function updateBoard() {
+      chess.reset();
+      for (let i = 0; i < currentIndex; i++) {
+        chess.move(moves[i].move);
+      }
+      board.position(chess.fen());
+
+      // Highlight current move
+      document.querySelectorAll('.move').forEach((el, idx) => {
+        el.classList.toggle('active', idx === currentIndex-1);
+      });
+
+      // Show comment
+      const commentBox = document.getElementById('comments');
+      commentBox.innerHTML = "<h3>Comments:</h3>";
+      if (moves[currentIndex-1] && moves[currentIndex-1].comment) {
+        commentBox.innerHTML += `<p>• ${moves[currentIndex-1].comment}</p>`;
+      } else {
+        commentBox.innerHTML += `<p>No comment for this move.</p>`;
+      }
+
+      // Stockfish analysis
+      engine.postMessage("position fen " + chess.fen());
+      engine.postMessage("go depth 15");
+    }
+
+    function renderMoveList() {
+      const listDiv = document.getElementById('movelist');
+      listDiv.innerHTML = "<h3>Moves:</h3>";
+      const table = document.createElement('table');
+      let row;
+      moves.forEach((m, idx) => {
+        if (idx % 2 === 0) {
+          row = document.createElement('tr');
+          const numCell = document.createElement('td');
+          numCell.textContent = (idx/2 + 1) + ".";
+          row.appendChild(numCell);
+        }
+        const moveCell = document.createElement('td');
+        moveCell.textContent = m.move;
+        moveCell.className = "move";
+        moveCell.onclick = () => { currentIndex = idx+1; updateBoard(); };
+        row.appendChild(moveCell);
+        if (idx % 2 === 1) table.appendChild(row);
+      });
+      if (moves.length % 2 === 1) table.appendChild(row);
+      listDiv.appendChild(table);
+    }
+
+    function loadGame(pgnText) {
+      chess.load_pgn(pgnText);
+      moves = [];
+      const regex = /([0-9]+\.\s*[^\s]+(?:\s[^\s]+)?)(?:\s*\{([^}]+)\})?/g;
+      let match;
+      while ((match = regex.exec(pgnText)) !== null) {
+        const moveText = match[1].trim().split(/\s+/);
+        moveText.forEach(m => {
+          if (!/^[0-9]+\./.test(m)) {
+            moves.push({ move: m, comment: match[2] || null });
+          }
+        });
+      }
+      currentIndex = 0;
+      renderMoveList();
+      updateBoard();
+    }
+
+    document.getElementById('pgnUpload').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const pgnText = e.target.result;
+        // Split PGN into multiple games by headers
+        games = pgnText.split(/\n\n(?=
+
+\[Event)/);
+
+        const select = document.getElementById('gameSelect');
+        select.style.display = "block";
+        select.innerHTML = "";
+        games.forEach((g, idx) => {
+          const option = document.createElement('option');
+          option.value = idx;
+          option.textContent = "Game " + (idx+1);
+          select.appendChild(option);
+        });
+
+        loadGame(games[0]);
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById('gameSelect').addEventListener('change', function() {
+      const idx = parseInt(this.value);
+      loadGame(games[idx]);
+    });
+
+    document.getElementById('next').addEventListener('click', function() {
+      if (currentIndex < moves.length) {
+        currentIndex++;
+        updateBoard();
+      }
+    });
+
+    document.getElementById('prev').addEventListener('click', function() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        updateBoard();
+      }
+    });
+  </script>
+</body>
+</html>
