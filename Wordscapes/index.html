@@ -224,7 +224,7 @@
       scaffolding.setAccentColor("#ff4c4c");
 
       try {
-        scaffolding.addCloudProvider(new Scaffolding.Cloud.WebSocketProvider(["wss://clouddata.turbowarp.org","wss://clouddata.turbowarp.xyz"], "480973629"));
+        scaffolding.addCloudProvider(new Scaffolding.Cloud.LocalStorageProvider("cloudvariables:480973629"));
       } catch (error) {
         console.error(error);
       }
@@ -334,12 +334,12 @@
       }
 
       vm.setTurboMode(false);
-      if (vm.setInterpolation) vm.setInterpolation(false);
+      if (vm.setInterpolation) vm.setInterpolation(true);
       if (vm.setFramerate) vm.setFramerate(30);
       if (vm.renderer.setUseHighQualityRender) vm.renderer.setUseHighQualityRender(false);
       if (vm.setRuntimeOptions) vm.setRuntimeOptions({
         fencing: true,
-        miscLimits: true,
+        miscLimits: false,
         maxClones: 300,
       });
       if (vm.setCompilerOptions) vm.setCompilerOptions({
