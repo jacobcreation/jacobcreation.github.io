@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PGN Viewer with Pretty Move List</title>
+  <title>PGN Viewer with Multi-Game Support</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
   <style>
     #container { display: flex; justify-content: center; gap: 20px; }
@@ -33,7 +33,8 @@
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script>
+  <!-- ✅ Correct UMD build of chess.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/stockfish@11.0.0/src/stockfish.js"></script>
   <script>
@@ -98,7 +99,6 @@
         row.appendChild(moveCell);
         if (idx % 2 === 1) table.appendChild(row);
       });
-      // If odd number of moves, append last row
       if (moves.length % 2 === 1) table.appendChild(row);
       listDiv.appendChild(table);
     }
