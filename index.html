@@ -101,6 +101,21 @@
       font-size: 0.9em;
     }
 
+    /* Birthday Reward styling */
+    #rewardSection {
+      margin-top: 40px;
+      padding: 20px;
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    #rewardMessage {
+      margin-top: 20px;
+      font-weight: bold;
+      color: green;
+    }
+
     @media (max-width: 480px) {
       h1 {
         font-size: 2.2em;
@@ -137,7 +152,46 @@
       <a href="https://jacobcreation.github.io/cc" target="_blank" rel="noopener">🚗 Car Chase</a>
       <a href="https://jacobcreation.github.io/ab" target="_blank" rel="noopener">🐦 Angry Birds</a>
     </nav>
+
+    <!-- 🎂 Birthday Reward Section -->
+    <section id="rewardSection">
+      <h2>Birthday Reward</h2>
+      <p>Enter the secret code to claim your reward!</p>
+      <input type="text" id="birthdayInput" placeholder="Enter code..." />
+      <button onclick="checkBirthday()">Submit</button>
+      <div id="rewardMessage"></div>
+    </section>
   </main>
+
   <footer>© 2025 JacobCreation. All rights reserved.</footer>
+
+  <script>
+    function checkBirthday() {
+      const input = document.getElementById("birthdayInput").value.trim();
+      const rewardDiv = document.getElementById("rewardMessage");
+
+      if (input === "142911") {
+        const coins = 200;
+        const randomCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+
+        // Save random code locally so "next time" they can use it
+        localStorage.setItem("signinCode", randomCode);
+
+        rewardDiv.innerHTML = `🎉 Happy Birthday! You earned ${coins} coins.<br>
+                               Your sign-in code: <strong>${randomCode}</strong>`;
+      } else {
+        rewardDiv.innerHTML = "❌ Incorrect code. Try again!";
+      }
+    }
+
+    // Optional: auto-show saved code if they already signed in before
+    window.onload = function() {
+      const savedCode = localStorage.getItem("signinCode");
+      if (savedCode) {
+        document.getElementById("rewardMessage").innerHTML =
+          `🔑 Welcome back! Your saved sign-in code is: <strong>${savedCode}</strong>`;
+      }
+    };
+  </script>
 </body>
 </html>
