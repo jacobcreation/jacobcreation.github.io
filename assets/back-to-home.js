@@ -1,20 +1,28 @@
-// Insert a Back-to-home button into the page (skip on homepage)
-alert("back to home JS LOADED");
-(function() {
-  try {
-    var path = location.pathname || '';
-    if (path === '/' || path === '/index.html' || path === '') return;
-    // create link
-    var a = document.createElement('a');
-    a.href = '/';
-    a.className = 'back-home-btn';
-    a.setAttribute('aria-label', 'Back to home');
-    a.innerHTML = '🏠 Back to home';
-    // append to body when DOM is ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function() { document.body.appendChild(a); });
-    } else {
-      document.body.appendChild(a);
-    }
-  } catch (e) { /* fail silently */ }
-})();
+// Back to Home button for TurboWarp-packaged games
+window.addEventListener("DOMContentLoaded", () => {
+  const btn = document.createElement("button");
+  btn.textContent = "🏠 Home";
+
+  // Force visibility above TurboWarp canvas
+  btn.style.position = "fixed";
+  btn.style.top = "10px";
+  btn.style.left = "10px";
+  btn.style.zIndex = "999999";
+  btn.style.padding = "10px 14px";
+  btn.style.fontSize = "14px";
+  btn.style.border = "none";
+  btn.style.borderRadius = "6px";
+  btn.style.cursor = "pointer";
+  btn.style.background = "rgba(0,0,0,0.7)";
+  btn.style.color = "white";
+
+  btn.onmouseenter = () => btn.style.background = "rgba(0,0,0,0.9)";
+  btn.onmouseleave = () => btn.style.background = "rgba(0,0,0,0.7)";
+
+  // Change destination if needed
+  btn.onclick = () => {
+    window.location.href = "../index.html";
+  };
+
+  document.body.appendChild(btn);
+});
