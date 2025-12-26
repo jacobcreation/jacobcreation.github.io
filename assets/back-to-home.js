@@ -1,4 +1,5 @@
 // Back to Home button for TurboWarp-packaged games
+alert("Back to Home loaded");
 window.addEventListener("DOMContentLoaded", () => {
   const btn = document.createElement("button");
   btn.textContent = "🏠 Home";
