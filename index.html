@@ -128,15 +128,6 @@
       0% { transform: scale(0.8); opacity: 0; }
       100% { transform: scale(1); opacity: 1; }
     }
-
-    @media (max-width: 480px) {
-      h1 {
-        font-size: 2.2em;
-      }
-      p {
-        font-size: 1em;
-      }
-    }
   </style>
 </head>
 
@@ -157,6 +148,8 @@
       <input type="text" id="birthdayInput" placeholder="Enter code..." />
       <button onclick="checkBirthday()">🎁 Submit</button>
       <div id="rewardMessage"></div>
+      <!-- Hidden audio element -->
+      <audio id="rewardAudio" src="reward.mp3"></audio>
     </section>
   </main>
 
@@ -166,65 +159,20 @@
     function checkBirthday() {
       const input = document.getElementById("birthdayInput").value.trim();
       const rewardDiv = document.getElementById("rewardMessage");
+      const audio = document.getElementById("rewardAudio");
 
       if (input === "142911") {
-        const coins = 200;
-        const randomCode = Math.random().toString(36).substring(2, 10).toUpperCase();
-
-        // Save random code locally so "next time" they can use it
-        localStorage.setItem("signinCode", randomCode);
-
-        // 🎉 Cheerful message with emojis
         rewardDiv.innerHTML = `🎂✨ Happy Birthday Celebration! ✨🎂<br>
-                               You earned <strong>${coins} coins</strong> 🪙<br>
-                               Your special sign-in code: <strong>${randomCode}</strong><br>
-                               🎊 Enjoy your day with confetti and fun 🎊`;
+                               Your special audio reward is playing... 🎶`;
 
-        // Confetti effect
-        launchConfetti();
+        // Play reward.mp3
+        audio.play().catch(err => {
+          rewardDiv.innerHTML += "<br>⚠️ Unable to play audio automatically. Please click play!";
+        });
       } else {
         rewardDiv.innerHTML = "❌ Incorrect code. Try again!";
       }
     }
-
-    // Optional: auto-show saved code if they already signed in before
-    window.onload = function() {
-      const savedCode = localStorage.getItem("signinCode");
-      if (savedCode) {
-        document.getElementById("rewardMessage").innerHTML =
-          `🔑 Welcome back! Your saved sign-in code is: <strong>${savedCode}</strong>`;
-      }
-    };
-
-    // Simple confetti effect
-    function launchConfetti() {
-      const duration = 2000;
-      const end = Date.now() + duration;
-
-      (function frame() {
-        const colors = ["#ff0", "#f0f", "#0ff", "#f00", "#0f0", "#00f"];
-        const confetti = document.createElement("div");
-        confetti.textContent = "🎉";
-        confetti.style.position = "fixed";
-        confetti.style.left = Math.random() * window.innerWidth + "px";
-        confetti.style.top = "-20px";
-        confetti.style.fontSize = "24px";
-        confetti.style.animation = "fall 2s linear";
-        document.body.appendChild(confetti);
-
-        setTimeout(() => confetti.remove(), 2000);
-
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      })();
-    }
   </script>
-
-  <style>
-    @keyframes fall {
-      to { transform: translateY(100vh); opacity: 0; }
-    }
-  </style>
 </body>
 </html>
