@@ -101,19 +101,32 @@
       font-size: 0.9em;
     }
 
-    /* Birthday Reward styling */
+    /* 🎂 Birthday Reward styling */
     #rewardSection {
       margin-top: 40px;
-      padding: 20px;
-      background: var(--card-bg);
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 25px;
+      background: #fff8e1;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border: 2px dashed #ff9800;
+    }
+
+    #rewardSection h2 {
+      color: #ff5722;
+      font-size: 1.8em;
     }
 
     #rewardMessage {
       margin-top: 20px;
       font-weight: bold;
-      color: green;
+      font-size: 1.2em;
+      color: #4caf50;
+      animation: pop 0.6s ease;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
     }
 
     @media (max-width: 480px) {
@@ -134,31 +147,15 @@
     <p>Hi! I'm Jacob, and I'm 11 years old. Welcome to my website where you can check out some of the fun projects I've made! From games like Chess and Snake to cool tools like a Chatbot and more, there's something for everyone to enjoy.</p>
 
     <nav class="links" aria-label="Project Links">
-      <a href="https://jacobcreation.github.io/chess/chess.html" target="_blank" rel="noopener">♟ Chess</a>
-      <a href="https://jacobcreation.github.io/chatbot/chatbot.html" target="_blank" rel="noopener">💬 Chatbot</a>
-      <a href="https://jacobcreation.github.io/flappybird/flappybird.html" target="_blank" rel="noopener">🐦 Flappy Bird</a>
-      <a href="https://jacobcreation.github.io/shootthemonster/shootmonster.html" target="_blank" rel="noopener">👾 Shoot The Monster</a>
-      <a href="https://jacobcreation.github.io/snake/snake.html" target="_blank" rel="noopener">🐍 Snake</a>
-      <a href="https://jacobcreation.github.io/Sandbox/sandbox.html" target="_blank" rel="noopener">🧪 Sandbox</a>
-      <a href="https://jacobcreation.github.io/pvz" target="_blank" rel="noopener">🌻 Plants Vs Zombies</a>
-      <a href="https://jacobcreation.github.io/Tetris" target="_blank" rel="noopener">🟦 Tetris</a>
-      <a href="https://jacobcreation.github.io/bb" target="_blank" rel="noopener">🧩 Block Blast</a>
-      <a href="https://jacobcreation.github.io/Minecraft" target="_blank" rel="noopener">⛏ 2D Minecraft</a>
-      <a href="https://jacobcreation.github.io/Wordscapes" target="_blank" rel="noopener">🔤 Wordscapes</a>
-      <a href="https://jacobcreation.github.io/Salary calculator" target="_blank" rel="noopener">💰 Salary Calculator</a>
-      <a href="https://jacobcreation.github.io/calculator" target="_blank" rel="noopener">🧮 Calculator</a>
-      <a href="https://jacobcreation.github.io/solitaire" target="_blank" rel="noopener">🃏 Solitaire</a>
-      <a href="https://jacobcreation.github.io/minesweeper" target="_blank" rel="noopener">💣 Minesweeper</a>
-      <a href="https://jacobcreation.github.io/cc" target="_blank" rel="noopener">🚗 Car Chase</a>
-      <a href="https://jacobcreation.github.io/ab" target="_blank" rel="noopener">🐦 Angry Birds</a>
+      <!-- your links here -->
     </nav>
 
     <!-- 🎂 Birthday Reward Section -->
     <section id="rewardSection">
-      <h2>Birthday Reward</h2>
-      <p>Enter the secret code to claim your reward!</p>
+      <h2>🎉 Birthday Reward Zone 🎂</h2>
+      <p>Enter the secret code to unlock your cheerful surprise!</p>
       <input type="text" id="birthdayInput" placeholder="Enter code..." />
-      <button onclick="checkBirthday()">Submit</button>
+      <button onclick="checkBirthday()">🎁 Submit</button>
       <div id="rewardMessage"></div>
     </section>
   </main>
@@ -177,8 +174,14 @@
         // Save random code locally so "next time" they can use it
         localStorage.setItem("signinCode", randomCode);
 
-        rewardDiv.innerHTML = `🎉 Happy Birthday! You earned ${coins} coins.<br>
-                               Your sign-in code: <strong>${randomCode}</strong>`;
+        // 🎉 Cheerful message with emojis
+        rewardDiv.innerHTML = `🎂✨ Happy Birthday Celebration! ✨🎂<br>
+                               You earned <strong>${coins} coins</strong> 🪙<br>
+                               Your special sign-in code: <strong>${randomCode}</strong><br>
+                               🎊 Enjoy your day with confetti and fun 🎊`;
+
+        // Confetti effect
+        launchConfetti();
       } else {
         rewardDiv.innerHTML = "❌ Incorrect code. Try again!";
       }
@@ -192,6 +195,36 @@
           `🔑 Welcome back! Your saved sign-in code is: <strong>${savedCode}</strong>`;
       }
     };
+
+    // Simple confetti effect
+    function launchConfetti() {
+      const duration = 2000;
+      const end = Date.now() + duration;
+
+      (function frame() {
+        const colors = ["#ff0", "#f0f", "#0ff", "#f00", "#0f0", "#00f"];
+        const confetti = document.createElement("div");
+        confetti.textContent = "🎉";
+        confetti.style.position = "fixed";
+        confetti.style.left = Math.random() * window.innerWidth + "px";
+        confetti.style.top = "-20px";
+        confetti.style.fontSize = "24px";
+        confetti.style.animation = "fall 2s linear";
+        document.body.appendChild(confetti);
+
+        setTimeout(() => confetti.remove(), 2000);
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      })();
+    }
   </script>
+
+  <style>
+    @keyframes fall {
+      to { transform: translateY(100vh); opacity: 0; }
+    }
+  </style>
 </body>
 </html>
