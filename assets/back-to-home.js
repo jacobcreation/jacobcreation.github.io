@@ -1,4 +1,5 @@
 // Insert a Back-to-home button into the page (skip on homepage)
+alert("back to home JS LOADED");
 (function() {
   try {
     var path = location.pathname || '';
