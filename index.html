@@ -101,7 +101,7 @@
       font-size: 0.9em;
     }
 
-    /* 🎂 Birthday Reward styling */
+    /* 🎁 Mystery Code Reward styling */
     #rewardSection {
       margin-top: 40px;
       padding: 25px;
@@ -157,12 +157,12 @@
       <a href="https://jacobcreation.github.io/ab" target="_blank" rel="noopener">🐦 Angry Birds</a>
     </nav>
 
-    <!-- 🎂 Birthday Reward Section -->
+    <!-- 🎁 Mystery Code Reward Section -->
     <section id="rewardSection">
-      <h2>🎉 Birthday Reward Zone 🎂</h2>
-      <p>Enter the secret code to unlock your cheerful surprise!</p>
+      <h2>🎁 Mystery Code Reward 🎉</h2>
+      <p>Enter the secret mystery code to unlock your surprise!</p>
       <input type="text" id="birthdayInput" placeholder="Enter code..." />
-      <button onclick="checkBirthday()">🎁 Submit</button>
+      <button onclick="checkMysteryCode()">🔑 Submit</button>
       <div id="rewardMessage"></div>
       <!-- Hidden audio element -->
       <audio id="rewardAudio" src="reward.mp3"></audio>
@@ -172,18 +172,20 @@
   <footer>© 2025 JacobCreation. All rights reserved.</footer>
 
   <script>
-    function checkBirthday() {
+    function checkMysteryCode() {
       const input = document.getElementById("birthdayInput").value.trim();
       const rewardDiv = document.getElementById("rewardMessage");
       const audio = document.getElementById("rewardAudio");
 
-      if (input === "142911") {
-        rewardDiv.innerHTML = `🎂✨ Happy Birthday Celebration! ✨🎂<br>
-                               Your special audio reward is playing... 🎶`;
+      // Mystery code (your birthday digits)
+      const secretParts = ["14", "29", "11"];
+      const secret = secretParts.join(""); // "142911"
 
-        // Play reward.mp3
-        audio.play().catch(err => {
-          rewardDiv.innerHTML += "<br>⚠️ Unable to play audio automatically. Please click play!";
+      if (input === secret) {
+        rewardDiv.innerHTML = `🎉 Mystery Code Unlocked! 🎉<br>
+                               Your special audio reward is playing... 🎶`;
+        audio.play().catch(() => {
+          rewardDiv.innerHTML += "<br>⚠️ Please click play if audio didn’t start!";
         });
       } else {
         rewardDiv.innerHTML = "❌ Incorrect code. Try again!";
