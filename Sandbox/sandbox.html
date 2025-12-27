@@ -1,13 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>City Sandbox Simulator</title>
+<meta charset="UTF-8" />
+<title>City Life Sandbox Simulator</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
 <style>
-  body { background:#87ceeb; color:#000; font-family:sans-serif; text-align:center; transition:background 2s,color 2s; }
-  #world { display:grid; grid-template-columns:repeat(20,28px); grid-template-rows:repeat(20,28px); margin:20px auto; }
-  .cell { width:28px; height:28px; border:1px solid #222; border-radius:6px; box-shadow:inset 0 0 4px rgba(0,0,0,0.4); text-align:center; font-size:10px; line-height:28px; }
+  :root{
+    --sky-day:#87ceeb;
+    --sky-night:#0b0c10;
+    --text-day:#000;
+    --text-night:#eee;
+  }
+  body { background:var(--sky-day); color:var(--text-day); font-family:sans-serif; text-align:center; transition:background 1s,color 1s; }
+  #toolbar { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:10px auto; }
+  #world { display:grid; grid-template-columns:repeat(20,28px); grid-template-rows:repeat(20,28px); margin:16px auto; width:fit-content; }
+  .cell { width:28px; height:28px; border:1px solid #222; border-radius:6px; box-shadow:inset 0 0 4px rgba(0,0,0,0.35); text-align:center; font-size:11px; line-height:28px; user-select:none; }
+  /* base tiles */
   .water { background:#4fc3f7; }
   .fire { background:#ff6b6b; }
   .tree { background:#22c55e; }
@@ -20,20 +28,30 @@
   .crystal { background:#9b59b6; }
   .tornado { background:#bdc3c7; }
   .rainbow { background:linear-gradient(45deg,red,orange,yellow,green,blue,indigo,violet); }
-  .person { background:#3498db; color:#fff; font-size:8px; }
+  .road { background:#555; }
+  /* entities */
+  .person { background:#3498db; color:#fff; font-size:10px; }
   .animal { background:#e67e22; }
   .car { background:#f39c12; border-radius:50%; }
-  .road { background:#555; }
-  .house { background:#8e44ad; }
-  .police { background:#2980b9; }
-  .criminal { background:#c0392b; }
-  .umbrella { background:#16a085; }
+  .house { background:#8e44ad; color:#fff; }
+  .police { background:#2980b9; color:#fff; }
+  .criminal { background:#c0392b; color:#fff; }
+  .umbrella { background:#16a085; color:#fff; }
   .traffic { background:#333; color:#fff; font-size:12px; }
+  .office { background:#34495e; color:#fff; }
+  .factory { background:#7f8c8d; color:#fff; }
+  /* UI */
+  #topbar { margin:8px auto; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; align-items:center; }
+  #listenLog { width:90%; max-width:680px; height:80px; margin:8px auto; border:1px solid #444; border-radius:8px; padding:6px; background:#111; color:#eee; overflow:auto; text-align:left; }
+  button { padding:6px 10px; border-radius:6px; border:1px solid #333; background:#222; color:#eee; cursor:pointer; }
+  button:hover { background:#2a2a2a; }
+  input { padding:6px 8px; border-radius:6px; border:1px solid #333; background:#181818; color:#eee; }
 </style>
 </head>
 <body>
-<h1>🌍 City Sandbox Simulator</h1>
-<p>Tap a tool, then tap cells. Enter mystery codes to unlock rare elements!</p>
+<h1>🌍 City Life Sandbox Simulator</h1>
+<p>Tap a tool, then tap cells. Enter mystery codes to unlock rare elements and features.</p>
+
 <div id="toolbar">
   <button onclick="setTool('water')">💧 Water</button>
   <button onclick="setTool('fire')">🔥 Fire</button>
@@ -41,57 +59,185 @@
   <button onclick="setTool('lava')">🌋 Lava</button>
   <button onclick="setTool('sand')">🏖️ Sand</button>
   <button onclick="setTool('grass')">🌱 Grass</button>
+  <button onclick="setTool('road')">🛣️ Road</button>
+  <button onclick="setTool('house')">🏠 House</button>
+  <button onclick="setTool('person')">👥 Person</button>
+  <button onclick="setTool('animal')">🐶 Animal</button>
+  <button onclick="setTool('car')">🚗 Car</button>
 </div>
-<div style="margin:10px;">
+
+<div id="topbar">
   <input id="codeInput" placeholder="Enter mystery code" />
   <button onclick="unlock()">Unlock</button>
   <button id="hoverBtn" onclick="toggleHover()">🛸 Hover Mode</button>
+  <button id="listenBtn" onclick="showConversation()">👂 Listen</button>
+  <span id="clock">Day 1 • 06:00</span>
 </div>
+
 <div id="world"></div>
+
+<div id="listenLog" title="Latest conversations"></div>
 
 <!-- Confetti + sound -->
 <canvas id="confetti" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>
 <audio id="cheerSound" src="https://actions.google.com/sounds/v1/ambiences/crowd_cheer.ogg"></audio>
 
 <script>
+/* Core setup */
 const world = document.getElementById('world');
+const listenLog = document.getElementById('listenLog');
+const clockEl = document.getElementById('clock');
 let tool = 'water';
 const size = 20;
 const cells = [];
 let hoverMode=false;
+
+/* Time & cycles */
+let minute=360; // start 06:00
+let dayNumber=1;
+let day=true; // 06:00-18:00 day, else night
 let raining=false;
 let cloudPos=0;
-let day=true;
-let cycleStep=0;
 
-function setTool(t){ tool = t; }
+/* Systems flags */
+let birthsEnabled=false;
+let jobsEnabled=false;
 
-// build grid
+/* Traffic state tick */
+let trafficTick=0;
+
+/* Conversation buffer */
+const conversations = [];
+
+/* Helpers */
+function idx(x,y){ return y*size+x; }
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+function setTool(t){ tool=t; }
+
+/* Grid build */
 for(let i=0;i<size*size;i++){
   const cell = document.createElement('div');
   cell.className = 'cell';
-  cell.addEventListener('click', () => {
-    cell.className = 'cell ' + tool;
-    cell.textContent="";
-  });
-  cell.addEventListener('mouseover',()=>{
-    if(hoverMode && tool){
-      cell.className='cell '+tool;
-      cell.textContent="";
-    }
-  });
+  cell.addEventListener('click', () => place(cell));
+  cell.addEventListener('mouseover',()=>{ if(hoverMode) place(cell); });
   world.appendChild(cell);
   cells.push(cell);
 }
 
-function idx(x,y){ return y*size+x; }
+/* Placement */
+function place(cell){
+  if(!tool) return;
+  cell.className = 'cell ' + tool;
+  cell.textContent = '';
+  if(tool==='person'){
+    cell.dataset.age = String(Math.floor(Math.random()*60)); // 0-59
+    cell.dataset.birthday = String(1+Math.floor(Math.random()*365));
+    cell.dataset.emotion = 'happy';
+    cell.dataset.hasUmbrella = '0';
+    cell.dataset.job = '';
+    cell.dataset.sleeping = '0';
+  }
+}
 
+/* Hover mode */
 function toggleHover(){
   hoverMode=!hoverMode;
   document.getElementById("hoverBtn").textContent = hoverMode ? "🛸 Hover ON" : "🛸 Hover Mode";
 }
 
-// clouds drift
+/* UI unlock */
+function unlock(){
+  const code = document.getElementById('codeInput').value.trim().toLowerCase();
+  const add = (name,label)=>{ const b=document.createElement('button'); b.textContent=label; b.onclick=()=>setTool(name); document.getElementById('toolbar').appendChild(b); celebrate(label+' unlocked!'); };
+  if(code==='storm'){ add('lightning','⚡ Lightning'); }
+  else if(code==='gem'){ add('crystal','💎 Crystal'); }
+  else if(code==='wind'){ add('tornado','🌪️ Tornado'); }
+  else if(code==='joy'){ add('rainbow','🌈 Rainbow'); }
+  else if(code==='wild'){ add('animal','🐶 Animal'); }
+  else if(code==='drive'){ add('car','🚗 Car'); }
+  else if(code==='home'){ add('house','🏠 House'); }
+  else if(code==='police'){ add('police','🚓 Police'); }
+  else if(code==='crime'){ add('criminal','🕶️ Criminal'); }
+  else if(code==='light'){ add('traffic','🚦 Traffic Light'); }
+  else if(code==='umbrella'){ add('umbrella','☂️ Umbrella'); }
+  else if(code==='job'){ add('office','🏢 Office'); add('factory','🏭 Factory'); jobsEnabled=true; celebrate('Jobs enabled'); }
+  else if(code==='family'){ birthsEnabled=true; celebrate('Families enabled'); }
+  else if(code==='quake'){ triggerEarthquake(); }
+  else if(code==='flood'){ triggerFlood(); }
+  else if(code==='firestorm'){ triggerFirestorm(); }
+}
+
+/* Celebrate */
+function celebrate(msg){
+  try{ document.getElementById('cheerSound').currentTime=0; document.getElementById('cheerSound').play(); }catch(e){}
+  const canvas = document.getElementById("confetti");
+  const ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  const pieces = Array.from({length:120},()=>({
+    x:Math.random()*canvas.width, y:Math.random()*canvas.height*0.5,
+    r:Math.random()*6+4, d:Math.random()*Math.PI*2,
+    color:`hsl(${Math.random()*360},100%,50%)`
+  }));
+  let frame=0;
+  (function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p=>{
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=p.color; ctx.fill();
+      p.y+=2; p.x+=Math.sin(frame/10+p.d);
+      if(p.y>canvas.height) p.y = -10;
+    });
+    frame++;
+    if(frame<160) requestAnimationFrame(draw);
+  })();
+  if(msg){ const line = `[${displayTime()}] ${msg}`; conversations.push(line); capConvo(); }
+}
+function capConvo(){ while(conversations.length>30) conversations.shift(); }
+function showConversation(){
+  listenLog.textContent = conversations.slice(-6).join('\n');
+}
+
+/* Day/Night + Clock */
+function displayTime(){
+  const h = Math.floor(minute/60);
+  const m = minute%60;
+  const hh = String(h).padStart(2,'0');
+  const mm = String(m).padStart(2,'0');
+  return `Day ${dayNumber} • ${hh}:${mm}`;
+}
+function tickClock(){
+  minute += 1;
+  if(minute>=1440){ minute=0; dayNumber++; }
+  day = (minute>=360 && minute<1080); // 06:00–18:00
+
+  // Sky color
+  if(day){
+    document.body.style.background = '#87ceeb';
+    document.body.style.color = '#000';
+  }else{
+    document.body.style.background = '#0b0c10';
+    document.body.style.color = '#eee';
+  }
+  clockEl.textContent = displayTime();
+
+  // Birthday check each morning 08:00
+  if(minute%1440===480){ // 08:00
+    for(let j=0;j<cells.length;j++){
+      const c=cells[j];
+      if(c.classList.contains('person')){
+        const bday = Number(c.dataset.birthday||'0');
+        if(bday===((dayNumber-1)%365)+1){
+          c.dataset.emotion='happy';
+          c.textContent='🎂';
+          celebrate('A birthday is happening!');
+        }
+      }
+    }
+  }
+}
+setInterval(tickClock, 250); // 1 min per 250ms
+
+/* Weather: clouds + random rain (13s) */
 function driftClouds(){
   cloudPos = (cloudPos+1) % size;
   for(let x=0;x<size;x++){
@@ -99,69 +245,246 @@ function driftClouds(){
     cell.textContent = (x===cloudPos) ? "☁️" : "";
   }
 }
-setInterval(driftClouds,1000);
+setInterval(driftClouds, 800);
 
-// rain event
 function startRain(){
+  if(raining) return;
   raining=true;
   setTimeout(()=>{ raining=false; },13000);
 }
-setInterval(()=>{
-  if(Math.random()<0.01 && !raining){ startRain(); }
-},2000);
+setInterval(()=>{ if(Math.random()<0.02 && !raining) startRain(); }, 2000);
 
-// day/night cycle
-function cycleDayNight(){
-  cycleStep++;
-  if(cycleStep>=60){
-    day=!day;
-    cycleStep=0;
-  }
-  if(day){
-    document.body.style.background="#87ceeb";
-    document.body.style.color="#000";
-  } else {
-    document.body.style.background="#0b0c10";
-    document.body.style.color="#eee";
+/* Traffic lights cycle */
+function cycleTraffic(){
+  trafficTick++;
+  for(let j=0;j<cells.length;j++){
+    const c=cells[j];
+    if(c.classList.contains('traffic')){
+      const phase = trafficTick % 30; // ~10s if step is ~300ms
+      if(phase<10){ c.textContent="🟢"; c.dataset.state="green"; }
+      else if(phase<20){ c.textContent="🟡"; c.dataset.state="yellow"; }
+      else { c.textContent="🔴"; c.dataset.state="red"; }
+    }
   }
 }
-setInterval(cycleDayNight,1000);
+setInterval(cycleTraffic, 300);
 
-// simulation loop
+/* Disasters */
+function triggerEarthquake(){
+  celebrate('Earthquake!');
+  for(let k=0;k<cells.length;k++){
+    if(Math.random()<0.08){
+      cells[k].className='cell';
+      cells[k].textContent='';
+    }
+  }
+  // Fear response
+  fearEveryone();
+}
+function triggerFlood(){
+  celebrate('Flood!');
+  // seed random waters
+  for(let n=0;n<30;n++){
+    const r = Math.floor(Math.random()*cells.length);
+    cells[r].className='cell water';
+  }
+}
+function triggerFirestorm(){
+  celebrate('Firestorm!');
+  for(let n=0;n<40;n++){
+    const r = Math.floor(Math.random()*cells.length);
+    cells[r].className='cell fire';
+  }
+  fearEveryone();
+}
+function fearEveryone(){
+  for(const c of cells){
+    if(c.classList.contains('person')){
+      c.dataset.emotion='scared';
+      c.textContent='😱';
+    }
+  }
+}
+
+/* Movement helpers */
+function findNearest(sx,sy,type){
+  let best=null, dist=9999;
+  for(let j=0;j<cells.length;j++){
+    const cx=j%size, cy=Math.floor(j/size);
+    const c=cells[j];
+    if(c.classList.contains(type)){
+      const d=Math.abs(cx-sx)+Math.abs(cy-sy);
+      if(d<dist){ dist=d; best={x:cx,y:cy}; }
+    }
+  }
+  return best;
+}
+function moveToward(cell,x,y,tx,ty,klass){
+  const dx = tx-x, dy = ty-y;
+  const stepX = dx===0?0:(dx>0?1:-1);
+  const stepY = dy===0?0:(dy>0?1:-1);
+  const tryOrder = Math.random()<0.5 ? [[stepX,0],[0,stepY]] : [[0,stepY],[stepX,0]];
+  for(const [mx,my] of tryOrder){
+    const nx = clamp(x+mx,0,size-1), ny = clamp(y+my,0,size-1);
+    const next=cells[idx(nx,ny)];
+    if(!next.classList[1]){
+      next.className='cell '+klass;
+      next.dataset.age = cell.dataset.age||'0';
+      next.dataset.birthday = cell.dataset.birthday||'0';
+      next.dataset.emotion = cell.dataset.emotion||'happy';
+      next.dataset.hasUmbrella = cell.dataset.hasUmbrella||'0';
+      next.dataset.job = cell.dataset.job||'';
+      next.dataset.sleeping = cell.dataset.sleeping||'0';
+      cell.className='cell';
+      cell.textContent='';
+      return true;
+    }
+  }
+  return false;
+}
+
+/* Conversations between adjacent people */
+function tryConverse(x,y){
+  const i = idx(x,y);
+  const me=cells[i];
+  if(!me.classList.contains('person')) return;
+  const emotions = {happy:'😀',sad:'😢',scared:'😱',tired:'😴'};
+  const linesHappy = ["Great weather today!","I love this city.","Happy birthday!"];
+  const linesSad = ["I need a job.","I wish I had a home.","Long day..."];
+  const linesScared = ["Did you feel that quake?","The storm is scary.","I’m heading to shelter!"];
+  const linesTired = ["I need sleep.","Where’s my bed?","Yawn..."];
+  const pick = (arr)=>arr[Math.floor(Math.random()*arr.length)];
+  const e = me.dataset.emotion||'happy';
+  const msg = (e==='happy')?pick(linesHappy):(e==='sad')?pick(linesSad):(e==='scared')?pick(linesScared):pick(linesTired);
+  const dirs=[[0,-1],[0,1],[-1,0],[1,0]];
+  for(const [dx,dy] of dirs){
+    const nx=x+dx, ny=y+dy;
+    if(nx<0||nx>=size||ny<0||ny>=size) continue;
+    const other=cells[idx(nx,ny)];
+    if(other.classList.contains('person')){
+      const line = `[${displayTime()}] ${emotions[e]||'🙂'} “${msg}”`;
+      conversations.push(line); capConvo();
+      return;
+    }
+  }
+}
+
+/* Simulation loop */
 function step(){
   for(let y=size-1;y>=0;y--){
     for(let x=0;x<size;x++){
-      const i = idx(x,y);
-      const cell = cells[i];
-      const type = cell.classList[1];
+      const i=idx(x,y);
+      const cell=cells[i];
+      const type=cell.classList[1];
       if(!type) continue;
 
-      // people walk + react to rain + sleep at night
+      /* Person behavior */
       if(type==='person'){
+        // umbrella tile grants umbrella
+        if(cell.classList.contains('umbrella')) cell.dataset.hasUmbrella='1';
+
+        const age = Number(cell.dataset.age||'0');
+        const isAdult = age>=18;
+        const sleeping = cell.dataset.sleeping==='1';
+
+        // Night: go home and sleep inside
         if(!day){
-          const target=findNearest(x,y,"house");
-          if(target){ moveToward(cell,x,y,target.x,target.y,"person"); }
-          else { cell.textContent="💤"; }
-        } else if(raining && !cell.classList.contains('house') && !cell.classList.contains('umbrella')){
-          cell.dataset.say="I need shelter!";
-          cell.textContent="💬";
-          const target=findNearest(x,y,"house");
-          if(target){ moveToward(cell,x,y,target.x,target.y,"person"); }
-        } else {
-          cell.textContent="";
-          const dir=[[0,-1],[0,1],[-1,0],[1,0]][Math.floor(Math.random()*4)];
-          const nx=x+dir[0], ny=y+dir[1];
-          if(nx>=0&&nx<size&&ny>=0&&ny<size){
-            const neighbor=cells[idx(nx,ny)];
-            if(!neighbor.classList[1]){
-              neighbor.className='cell person';
-              cell.className='cell';
+          const target=findNearest(x,y,'house');
+          if(target){
+            moveToward(cell,x,y,target.x,target.y,'person');
+          }else{
+            cell.textContent='💤';
+            cell.dataset.emotion='tired';
+          }
+          cell.dataset.sleeping='1';
+        }else{
+          // Daytime
+          cell.dataset.sleeping='0';
+          // Rain: seek shelter unless umbrella
+          if(raining && cell.dataset.hasUmbrella!=='1'){
+            const hs=findNearest(x,y,'house');
+            if(hs) moveToward(cell,x,y,hs.x,hs.y,'person');
+            cell.dataset.emotion='scared';
+            cell.textContent='💬';
+          }else{
+            // Jobs: adults seek workplace
+            if(isAdult && jobsEnabled){
+              const work = findNearest(x,y, Math.random()<0.5?'office':'factory');
+              if(work && Math.random()<0.6){
+                moveToward(cell,x,y,work.x,work.y,'person');
+                cell.dataset.job='working';
+                cell.dataset.emotion='happy';
+              }else if(!work){
+                cell.dataset.job='';
+                cell.dataset.emotion='sad';
+              }
+            }else{
+              // wander
+              const dir = [[0,-1],[0,1],[-1,0],[1,0]][Math.floor(Math.random()*4)];
+              const nx=x+dir[0], ny=y+dir[1];
+              if(nx>=0&&nx<size&&ny>=0&&ny<size){
+                const neighbor=cells[idx(nx,ny)];
+                if(!neighbor.classList[1]){
+                  neighbor.className='cell person';
+                  neighbor.dataset.age=String(age);
+                  neighbor.dataset.birthday=cell.dataset.birthday||'0';
+                  neighbor.dataset.emotion=cell.dataset.emotion||'happy';
+                  neighbor.dataset.hasUmbrella=cell.dataset.hasUmbrella||'0';
+                  neighbor.dataset.job=cell.dataset.job||'';
+                  neighbor.dataset.sleeping='0';
+                  cell.className='cell';
+                  cell.textContent='';
+                }
+              }
+              // talk sometimes
+              if(Math.random()<0.02) tryConverse(x,y);
             }
+            cell.textContent='';
+          }
+
+          // Births: two adjacent adults may spawn child (if enabled)
+          if(birthsEnabled && isAdult){
+            const dirs=[[0,-1],[0,1],[-1,0],[1,0]];
+            for(const [dx,dy] of dirs){
+              const nx=x+dx, ny=y+dy;
+              if(nx<0||nx>=size||ny<0||ny>=size) continue;
+              const near=cells[idx(nx,ny)];
+              if(near.classList.contains('person') && Number(near.dataset.age||'0')>=18){
+                if(Math.random()<0.005){ // rare
+                  // spawn baby in a free adjacent cell
+                  for(const [sx,sy] of dirs){
+                    const bx=x+sx, by=y+sy;
+                    if(bx<0||bx>=size||by<0||by>=size) continue;
+                    const spot=cells[idx(bx,by)];
+                    if(!spot.classList[1]){
+                      spot.className='cell person';
+                      spot.dataset.age='0';
+                      spot.dataset.birthday=String(1+Math.floor(Math.random()*365));
+                      spot.dataset.emotion='happy';
+                      spot.dataset.hasUmbrella='0';
+                      spot.dataset.job='';
+                      spot.dataset.sleeping='0';
+                      spot.textContent='👶';
+                      celebrate('A baby was born!');
+                      cell.dataset.emotion='happy';
+                      near.dataset.emotion='happy';
+                      break;
+                    }
+                  }
+                  break;
+                }
+              }
+            }
+          }
+
+          // Age up occasionally
+          if(Math.random()<0.01){
+            cell.dataset.age = String(age+1);
           }
         }
       }
 
-      // animals wander
+      /* Animals: wander & eat grass */
       if(type==='animal'){
         const dir=[[0,-1],[0,1],[-1,0],[1,0]][Math.floor(Math.random()*4)];
         const nx=x+dir[0], ny=y+dir[1];
@@ -175,41 +498,97 @@ function step(){
         }
       }
 
-      // cars obey traffic lights
+      /* Cars obey traffic lights and roads loosely */
       if(type==='car'){
         const dir=[[0,-1],[0,1],[-1,0],[1,0]][Math.floor(Math.random()*4)];
         const nx=x+dir[0], ny=y+dir[1];
         if(nx>=0&&nx<size&&ny>=0&&ny<size){
           const next=cells[idx(nx,ny)];
-          if(next.classList.contains("traffic")){
+          if(next.classList.contains('traffic')){
             if(next.dataset.state==="red"){ /* stop */ }
-            else {
-              next.className="cell car";
-              cell.className="cell road";
-            }
-          } else if(!next.classList[1]){
-            next.className="cell car";
-            cell.className="cell road";
+            else { next.className="cell car"; cell.className="cell road"; }
+          } else if(!next.classList[1] || next.classList.contains('road')){
+            next.className="cell car"; cell.className="cell road";
           }
         }
       }
 
-      // police patrol
+      /* Police patrol arresting criminals */
       if(type==='police'){
         const dir=[[0,-1],[0,1],[-1,0],[1,0]][Math.floor(Math.random()*4)];
         const nx=x+dir[0], ny=y+dir[1];
         if(nx>=0&&nx<size&&ny>=0&&ny<size){
           const neighbor=cells[idx(nx,ny)];
           if(neighbor.classList.contains('criminal')){
-            neighbor.className='cell'; // arrest
+            neighbor.className='cell'; neighbor.textContent='';
           } else if(!neighbor.classList[1]){
-            neighbor.className='cell police';
+            neighbor.className='cell police'; cell.className='cell';
+          }
+        }
+      }
+
+      /* Criminals get bolder at night */
+      if(type==='criminal'){
+        const dir=[[0,-1],[0,1],[-1,0],[1,0]][Math.floor(Math.random()*4)];
+        const nx=x+dir[0], ny=y+dir[1];
+        if(nx>=0&&nx<size&&ny>=0&&ny<size){
+          const neighbor=cells[idx(nx,ny)];
+          if(neighbor.classList.contains('house') && (!day || Math.random()<0.2)){
+            neighbor.className='cell'; neighbor.textContent='';
+          }
+          if(!neighbor.classList[1]){
+            neighbor.className='cell criminal';
             cell.className='cell';
           }
         }
       }
 
-      // criminals wander
-      if(type==='criminal'){
-        const dir=[[0,-1],[0,1],[-1,0],[1,0]][Math.floor(Math.random()*4)];
-        const nx=x+dir[0], ny=y+dir[1];
+      /* Fire cooling to ash; lava to stone (simple) */
+      if(type==='fire'){
+        if(Math.random()<0.05){ cell.className='cell ash'; cell.textContent=''; }
+      }
+      if(type==='lava'){
+        if(Math.random()<0.02){ cell.className='cell stone'; cell.textContent=''; }
+      }
+    }
+  }
+
+  /* Flood spread */
+  if(raining || Math.random()<0.02){
+    for(let y=0;y<size;y++){
+      for(let x=0;x<size;x++){
+        const c=cells[idx(x,y)];
+        if(c.classList.contains('water')){
+          const dirs=[[0,1],[1,0],[-1,0],[0,-1]];
+          const [dx,dy]=dirs[Math.floor(Math.random()*dirs.length)];
+          const nx=x+dx, ny=y+dy;
+          if(nx>=0&&nx<size&&ny>=0&&ny<size){
+            const n=cells[idx(nx,ny)];
+            if(!n.classList[1] || n.classList.contains('sand') || n.classList.contains('grass')){
+              n.className='cell water';
+            }
+          }
+        }
+      }
+    }
+  }
+
+}
+setInterval(step, 300);
+
+/* Clouds trigger visual rain drops */
+setInterval(()=>{
+  if(raining){
+    for(let n=0;n<30;n++){
+      const r = Math.floor(Math.random()*cells.length);
+      if(!cells[r].classList[1]) cells[r].textContent='💧';
+    }
+  }else{
+    for(const c of cells){ if(c.textContent==='💧') c.textContent=''; }
+  }
+}, 400);
+
+/* Done! */
+</script>
+</body>
+</html>
