@@ -31,7 +31,6 @@
 
 <div id="topbar">
   <button onclick="window.location.href='https://jacobcreation.github.io/'">🏠 Back to Home</button>
-  <button id="hoverBtn" onclick="toggleHover()">🛸 Hover OFF (painting)</button>
   <button onclick="toggleDrone()">🚁 Drone View</button>
   <button onclick="zoomIn()">➕ Zoom In</button>
   <button onclick="zoomOut()">➖ Zoom Out</button>
@@ -46,7 +45,6 @@ const cells=[];
 let tool='road';
 let drone=false;
 let zoomLevel=1.2;
-let hoverMode=false; // false = painting enabled, true = disabled
 let mouseDown=false;
 let minute=0;
 let dayNumber=1;
@@ -60,17 +58,13 @@ function setTool(t){tool=t;}
 function toggleDrone(){ drone=!drone; if(drone){ world.classList.add("drone"); } else { world.classList.remove("drone"); } }
 function zoomIn(){ if(drone){ zoomLevel+=0.2; world.style.setProperty('--zoom',zoomLevel); } }
 function zoomOut(){ if(drone && zoomLevel>0.4){ zoomLevel-=0.2; world.style.setProperty('--zoom',zoomLevel); } }
-function toggleHover(){
-  hoverMode=!hoverMode;
-  document.getElementById("hoverBtn").textContent = hoverMode ? "🛸 Hover ON (no paint)" : "🛸 Hover OFF (painting)";
-}
 
 // Build grid
 for(let i=0;i<size*size;i++){
   const cell=document.createElement('div');
   cell.className='cell';
-  cell.addEventListener('click',()=>{ if(!hoverMode) place(cell); });
-  cell.addEventListener('mouseover',()=>{ if(!hoverMode && mouseDown) place(cell); });
+  cell.addEventListener('click',()=>place(cell));
+  cell.addEventListener('mouseover',()=>{ if(mouseDown) place(cell); });
   world.appendChild(cell);
   cells.push(cell);
 }
@@ -133,7 +127,7 @@ function step(){
 
       // Person behavior
       if(type==='person'){
-        // Birth trigger: if inside house with another person
+        // Birth trigger: if inside house
         for(const [nx,ny] of neighbors4(x,y)){
           const neighbor=cells[idx(nx,ny)];
           if(neighbor.classList.contains('house') && Math.random()<0.005){
@@ -183,3 +177,30 @@ function step(){
           if(next.classList.contains('park')){
             next.className='cell kid';
             next.textContent='🧒';
+            cell.className='cell';
+            cell.textContent='';
+            moved=true;
+            break;
+          }
+        }
+        if(!moved){
+          const [dx,dy]=randomDir();
+          const nx=x+dx, ny=y+dy;
+          if(nx>=0&&nx<size&&ny>=0&&ny<size){
+            const next=cells[idx(nx,ny)];
+            if(!next.classList[1] || next.classList.contains('road') || next.classList.contains('park')){
+              next.className='cell kid';
+              next.textContent='🧒';
+              cell.className='cell';
+              cell.textContent='';
+            }
+          }
+        }
+      }
+    }
+  }
+}
+setInterval(step,200);
+</script>
+</body>
+</html>
