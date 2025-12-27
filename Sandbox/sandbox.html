@@ -5,87 +5,141 @@
 <title>City Life Sandbox Simulator</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
 <style>
-  :root{
-    --sky-day:#87ceeb;
-    --sky-night:#0b0c10;
-    --text-day:#000;
-    --text-night:#eee;
-  }
-  body { background:var(--sky-day); color:var(--text-day); font-family:sans-serif; text-align:center; transition:background 1s,color 1s; }
+  body { background:#87ceeb; color:#000; font-family:sans-serif; text-align:center; transition:background 1s,color 1s; }
   #toolbar { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:10px auto; }
-  #world { display:grid; grid-template-columns:repeat(20,28px); grid-template-rows:repeat(20,28px); margin:16px auto; width:fit-content; }
-  .cell { width:28px; height:28px; border:1px solid #222; border-radius:6px; box-shadow:inset 0 0 4px rgba(0,0,0,0.35); text-align:center; font-size:11px; line-height:28px; user-select:none; }
-  /* base tiles */
-  .water { background:#4fc3f7; }
-  .fire { background:#ff6b6b; }
-  .tree { background:#22c55e; }
-  .lava { background:#d35400; }
-  .sand { background:#f1c40f; }
-  .grass { background:#2ecc71; }
-  .stone { background:#95a5a6; }
-  .ash { background:#7f8c8d; }
-  .lightning { background:#ecf0f1; }
-  .crystal { background:#9b59b6; }
-  .tornado { background:#bdc3c7; }
-  .rainbow { background:linear-gradient(45deg,red,orange,yellow,green,blue,indigo,violet); }
+  #world { display:grid; grid-template-columns:repeat(20,28px); grid-template-rows:repeat(20,28px); margin:16px auto; width:fit-content; transition:transform 1s; }
+  .cell { width:28px; height:28px; border:1px solid #222; border-radius:6px; text-align:center; font-size:18px; line-height:28px; user-select:none; }
   .road { background:#555; }
-  /* entities */
-  .person { background:#3498db; color:#fff; font-size:10px; }
-  .animal { background:#e67e22; }
-  .car { background:#f39c12; border-radius:50%; }
-  .house { background:#8e44ad; color:#fff; }
-  .police { background:#2980b9; color:#fff; }
-  .criminal { background:#c0392b; color:#fff; }
-  .umbrella { background:#16a085; color:#fff; }
-  .traffic { background:#333; color:#fff; font-size:12px; }
-  .office { background:#34495e; color:#fff; }
-  .factory { background:#7f8c8d; color:#fff; }
-  /* UI */
-  #topbar { margin:8px auto; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; align-items:center; }
-  #listenLog { width:90%; max-width:680px; height:80px; margin:8px auto; border:1px solid #444; border-radius:8px; padding:6px; background:#111; color:#eee; overflow:auto; text-align:left; }
-  button { padding:6px 10px; border-radius:6px; border:1px solid #333; background:#222; color:#eee; cursor:pointer; }
-  button:hover { background:#2a2a2a; }
-  input { padding:6px 8px; border-radius:6px; border:1px solid #333; background:#181818; color:#eee; }
+  .traffic { background:#333; color:#fff; }
+  /* Drone view tilt */
+  .drone { transform: rotateX(60deg) rotateZ(45deg) scale(1.2); transform-style:preserve-3d; }
 </style>
 </head>
 <body>
 <h1>🌍 City Life Sandbox Simulator</h1>
-<p>Tap a tool, then tap cells. Enter mystery codes to unlock rare elements and features.</p>
 
 <div id="toolbar">
-  <button onclick="setTool('water')">💧 Water</button>
-  <button onclick="setTool('fire')">🔥 Fire</button>
-  <button onclick="setTool('tree')">🌳 Tree</button>
-  <button onclick="setTool('lava')">🌋 Lava</button>
-  <button onclick="setTool('sand')">🏖️ Sand</button>
-  <button onclick="setTool('grass')">🌱 Grass</button>
   <button onclick="setTool('road')">🛣️ Road</button>
   <button onclick="setTool('house')">🏠 House</button>
-  <button onclick="setTool('person')">👥 Person</button>
-  <button onclick="setTool('animal')">🐶 Animal</button>
+  <button onclick="setTool('person')">👤 Person</button>
   <button onclick="setTool('car')">🚗 Car</button>
+  <button onclick="setTool('traffic')">🚦 Traffic Light</button>
 </div>
 
 <div id="topbar">
-  <input id="codeInput" placeholder="Enter mystery code" />
-  <button onclick="unlock()">Unlock</button>
-  <button id="hoverBtn" onclick="toggleHover()">🛸 Hover Mode</button>
-  <button id="listenBtn" onclick="showConversation()">👂 Listen</button>
-  <!-- Back to Home button -->
   <button onclick="window.location.href='https://jacobcreation.github.io/'">🏠 Back to Home</button>
-  <span id="clock">Day 1 • 06:00</span>
+  <button onclick="toggleDrone()">🚁 Drone View</button>
 </div>
 
 <div id="world"></div>
-<div id="listenLog" title="Latest conversations"></div>
-
-<!-- Confetti + sound -->
-<canvas id="confetti" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>
-<audio id="cheerSound" src="https://actions.google.com/sounds/v1/ambiences/crowd_cheer.ogg"></audio>
 
 <script>
-/* Your full simulation script goes here (day/night, weather, disasters, people, jobs, families, etc.) */
-/* The only change is the Back to Home button above, which navigates to your GitHub Pages homepage */
+const world=document.getElementById('world');
+const size=20;
+const cells=[];
+let tool='road';
+let drone=false;
+
+function idx(x,y){return y*size+x;}
+function setTool(t){tool=t;}
+function toggleDrone(){
+  drone=!drone;
+  if(drone){ world.classList.add("drone"); }
+  else { world.classList.remove("drone"); }
+}
+
+// Build grid
+for(let i=0;i<size*size;i++){
+  const cell=document.createElement('div');
+  cell.className='cell';
+  cell.addEventListener('click',()=>place(cell));
+  world.appendChild(cell);
+  cells.push(cell);
+}
+
+function place(cell){
+  cell.className='cell '+tool;
+  if(tool==='road') cell.textContent='🛣️';
+  if(tool==='house') cell.textContent='🏠';
+  if(tool==='person'){ cell.textContent='👤'; cell.dataset.age='20'; }
+  if(tool==='car'){ cell.textContent='🚗'; cell.dataset.driver='0'; }
+  if(tool==='traffic'){ cell.textContent='🟢'; cell.dataset.state='green'; }
+}
+
+// Traffic light cycle
+function cycleTraffic(){
+  for(const c of cells){
+    if(c.classList.contains('traffic')){
+      let state=c.dataset.state||'green';
+      if(state==='green'){ c.dataset.state='yellow'; c.textContent='🟡'; }
+      else if(state==='yellow'){ c.dataset.state='red'; c.textContent='🔴'; }
+      else { c.dataset.state='green'; c.textContent='🟢'; }
+    }
+  }
+}
+setInterval(cycleTraffic,2000);
+
+// Simulation loop
+function step(){
+  for(let y=size-1;y>=0;y--){
+    for(let x=0;x<size;x++){
+      const i=idx(x,y);
+      const cell=cells[i];
+      const type=cell.classList[1];
+      if(!type) continue;
+
+      // Person can enter car
+      if(type==='person'){
+        const dirs=[[0,-1],[0,1],[-1,0],[1,0]];
+        const [dx,dy]=dirs[Math.floor(Math.random()*4)];
+        const nx=x+dx, ny=y+dy;
+        if(nx>=0&&nx<size&&ny>=0&&ny<size){
+          const neighbor=cells[idx(nx,ny)];
+          if(neighbor.classList.contains('car') && neighbor.dataset.driver==='0'){
+            neighbor.dataset.driver='1';
+            neighbor.textContent='🚗';
+            cell.className='cell';
+            cell.textContent='';
+          }
+        }
+      }
+
+      // Car moves only if driver inside, only on roads, obey traffic lights
+      if(type==='car'){
+        if(cell.dataset.driver==='1'){
+          const dirs=[[0,-1],[0,1],[-1,0],[1,0]];
+          const [dx,dy]=dirs[Math.floor(Math.random()*4)];
+          const nx=x+dx, ny=y+dy;
+          if(nx>=0&&nx<size&&ny>=0&&ny<size){
+            const next=cells[idx(nx,ny)];
+            if(next.classList.contains('road')){
+              next.className='cell car';
+              next.textContent='🚗';
+              next.dataset.driver='1';
+              cell.className='cell road';
+              cell.textContent='🛣️';
+            }
+            else if(next.classList.contains('traffic')){
+              const state=next.dataset.state;
+              if(state==='green'){
+                next.className='cell car';
+                next.textContent='🚗';
+                next.dataset.driver='1';
+                cell.className='cell road';
+                cell.textContent='🛣️';
+              } else {
+                cell.textContent='🚗'; // stop at red/yellow
+              }
+            }
+          }
+        } else {
+          cell.textContent='🚗'; // parked car
+        }
+      }
+    }
+  }
+}
+setInterval(step,500);
 </script>
 </body>
 </html>
