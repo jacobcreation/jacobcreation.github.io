@@ -7,12 +7,12 @@
 <style>
   body { background:#87ceeb; color:#000; font-family:sans-serif; text-align:center; transition:background 1s,color 1s; }
   #toolbar { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:10px auto; }
-  #world { display:grid; grid-template-columns:repeat(20,28px); grid-template-rows:repeat(20,28px); margin:16px auto; width:fit-content; transition:transform 1s; }
+  #world { display:grid; grid-template-columns:repeat(20,28px); grid-template-rows:repeat(20,28px); margin:16px auto; width:fit-content; transition:transform 0.8s; }
   .cell { width:28px; height:28px; border:1px solid #222; border-radius:6px; text-align:center; font-size:18px; line-height:28px; user-select:none; }
   .road { background:#555; }
   .traffic { background:#333; color:#fff; }
   /* Drone view tilt */
-  .drone { transform: rotateX(60deg) rotateZ(45deg) scale(1.2); transform-style:preserve-3d; }
+  .drone { transform: rotateX(60deg) rotateZ(45deg) scale(var(--zoom,1.2)); transform-style:preserve-3d; }
 </style>
 </head>
 <body>
@@ -28,7 +28,10 @@
 
 <div id="topbar">
   <button onclick="window.location.href='https://jacobcreation.github.io/'">🏠 Back to Home</button>
+  <button id="hoverBtn" onclick="toggleHover()">🛸 Hover Mode</button>
   <button onclick="toggleDrone()">🚁 Drone View</button>
+  <button onclick="zoomIn()">➕ Zoom In</button>
+  <button onclick="zoomOut()">➖ Zoom Out</button>
 </div>
 
 <div id="world"></div>
@@ -39,6 +42,8 @@ const size=20;
 const cells=[];
 let tool='road';
 let drone=false;
+let zoomLevel=1.2;
+let hoverMode=false;
 
 function idx(x,y){return y*size+x;}
 function setTool(t){tool=t;}
@@ -47,12 +52,23 @@ function toggleDrone(){
   if(drone){ world.classList.add("drone"); }
   else { world.classList.remove("drone"); }
 }
+function zoomIn(){
+  if(drone){ zoomLevel+=0.2; world.style.setProperty('--zoom',zoomLevel); }
+}
+function zoomOut(){
+  if(drone && zoomLevel>0.4){ zoomLevel-=0.2; world.style.setProperty('--zoom',zoomLevel); }
+}
+function toggleHover(){
+  hoverMode=!hoverMode;
+  document.getElementById("hoverBtn").textContent = hoverMode ? "🛸 Hover ON" : "🛸 Hover Mode";
+}
 
 // Build grid
 for(let i=0;i<size*size;i++){
   const cell=document.createElement('div');
   cell.className='cell';
   cell.addEventListener('click',()=>place(cell));
+  cell.addEventListener('mouseover',()=>{ if(hoverMode) place(cell); });
   world.appendChild(cell);
   cells.push(cell);
 }
