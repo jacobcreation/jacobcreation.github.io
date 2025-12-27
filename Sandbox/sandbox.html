@@ -24,9 +24,7 @@
   <button onclick="setTool('person')">👤 Person</button>
   <button onclick="setTool('car')">🚗 Car</button>
   <button onclick="setTool('traffic')">🚦 Traffic Light</button>
-  <button onclick="setTool('office')">🏢 Office</button>
-  <button onclick="setTool('factory')">🏭 Factory</button>
-  <button onclick="setTool('umbrella')">☂️ Umbrella</button>
+  <button onclick="setTool('bench')">🪑 Bench</button>
 </div>
 
 <div id="topbar">
@@ -47,10 +45,6 @@ let tool='road';
 let drone=false;
 let zoomLevel=1.2;
 let hoverMode=false;
-let minute=360; // start at 06:00
-let dayNumber=1;
-let day=true;
-let raining=false;
 
 function idx(x,y){return y*size+x;}
 function setTool(t){tool=t;}
@@ -65,24 +59,22 @@ for(let i=0;i<size*size;i++){
   cell.className='cell';
   cell.addEventListener('click',()=>place(cell));
   cell.addEventListener('mouseover',()=>{ if(hoverMode) place(cell); });
-  cell.dataset.talkTimer='0';
-  cell.dataset.emotion='happy';
   world.appendChild(cell);
   cells.push(cell);
 }
 
 function place(cell){
   cell.className='cell '+tool;
-  cell.dataset.talkTimer='0';
   if(tool==='road'){ cell.textContent='🛣️'; }
   if(tool==='house'){ cell.textContent='🏠'; }
-  if(tool==='person'){ cell.textContent='👤'; cell.dataset.age='20'; cell.dataset.emotion='happy'; cell.dataset.birthday=String(1+Math.floor(Math.random()*365)); }
+  if(tool==='person'){ cell.textContent='👤'; cell.dataset.walkTimer='0'; }
   if(tool==='car'){ cell.textContent='🚗'; cell.dataset.driver='0'; }
   if(tool==='traffic'){ cell.textContent='🟢'; cell.dataset.state='green'; }
-  if(tool==='office'){ cell.textContent='🏢'; }
-  if(tool==='factory'){ cell.textContent='🏭'; }
-  if(tool==='umbrella'){ cell.textContent='☂️'; }
+  if(tool==='bench'){ cell.textContent='🪑'; }
 }
+
+function neighbors4(x,y){ return [[0,-1],[0,1],[-1,0],[1,0]].map(([dx,dy])=>[x+dx,y+dy]).filter(([nx,ny])=>nx>=0&&nx<size&&ny>=0&&ny<size); }
+function randomDir(){ const d=[[0,-1],[0,1],[-1,0],[1,0]]; return d[Math.floor(Math.random()*d.length)]; }
 
 // Traffic light cycle
 function cycleTraffic(){
@@ -97,28 +89,6 @@ function cycleTraffic(){
 }
 setInterval(cycleTraffic,2000);
 
-function neighbors4(x,y){ return [[0,-1],[0,1],[-1,0],[1,0]].map(([dx,dy])=>[x+dx,y+dy]).filter(([nx,ny])=>nx>=0&&nx<size&&ny>=0&&ny<size); }
-function randomDir(){ const d=[[0,-1],[0,1],[-1,0],[1,0]]; return d[Math.floor(Math.random()*d.length)]; }
-
-// Clock tick
-function tickClock(){
-  minute++;
-  if(minute>=1440){ minute=0; dayNumber++; }
-  day=(minute>=360 && minute<1080);
-  // birthdays at 08:00
-  if(minute%1440===480){
-    for(const c of cells){
-      if(c.classList.contains('person')){
-        if(Number(c.dataset.birthday||'0')===((dayNumber-1)%365)+1){
-          c.textContent='🎂';
-          c.dataset.talkTimer='5';
-        }
-      }
-    }
-  }
-}
-setInterval(tickClock,250);
-
 // Simulation loop
 function step(){
   for(let y=size-1;y>=0;y--){
@@ -130,17 +100,29 @@ function step(){
 
       // Person behavior
       if(type==='person'){
-        // Night: seek house
-        if(!day){
+        // increment walk timer
+        cell.dataset.walkTimer = String(Number(cell.dataset.walkTimer||'0')+1);
+
+        // if walked for ~10s (50 ticks at 200ms), look for bench
+        if(Number(cell.dataset.walkTimer)>=50){
           for(const [nx,ny] of neighbors4(x,y)){
-            const n=cells[idx(nx,ny)];
-            if(n.classList.contains('house')){
-              cell.textContent='😴';
-              cell.dataset.talkTimer='5';
+            const bench=cells[idx(nx,ny)];
+            if(bench.classList.contains('bench')){
+              cell.textContent='📱'; // sitting, watching phone
+              cell.dataset.restTimer='20'; // rest for 20 ticks
+              cell.dataset.walkTimer='0'; // reset walk timer
             }
           }
+        }
+
+        // if resting
+        if(cell.textContent==='📱'){
+          cell.dataset.restTimer = String(Number(cell.dataset.restTimer)-1);
+          if(Number(cell.dataset.restTimer)<=0){
+            cell.textContent='👤'; // stand up again
+          }
         } else {
-          // Day: wander
+          // wander
           const [dx,dy]=randomDir();
           const nx=x+dx, ny=y+dy;
           if(nx>=0&&nx<size&&ny>=0&&ny<size){
@@ -148,23 +130,9 @@ function step(){
             if(!next.classList[1] || next.classList.contains('road')){
               next.className='cell person';
               next.textContent='👤';
-              next.dataset.age=cell.dataset.age;
-              next.dataset.emotion=cell.dataset.emotion;
-              next.dataset.birthday=cell.dataset.birthday;
+              next.dataset.walkTimer=cell.dataset.walkTimer;
               cell.className='cell';
               cell.textContent='';
-            }
-          }
-          // Talk
-          if(Math.random()<0.04){
-            for(const [nx,ny] of neighbors4(x,y)){
-              const other=cells[idx(nx,ny)];
-              if(other.classList.contains('person')){
-                cell.textContent='💬';
-                cell.dataset.talkTimer='5';
-                other.textContent='💬';
-                other.dataset.talkTimer='5';
-              }
             }
           }
         }
@@ -175,4 +143,36 @@ function step(){
         if(cell.dataset.driver==='1'){
           const [dx,dy]=randomDir();
           const nx=x+dx, ny=y+dy;
-          if(nx>=0
+          if(nx>=0&&nx<size&&ny>=0&&ny<size){
+            const next=cells[idx(nx,ny)];
+            if(next.classList.contains('road')){
+              next.className='cell car';
+              next.textContent='🚗';
+              next.dataset.driver='1';
+              cell.className='cell road';
+              cell.textContent='🛣️';
+            }
+            else if(next.classList.contains('traffic')){
+              const state=next.dataset.state;
+              if(state==='green'){
+                next.className='cell car';
+                next.textContent='🚗';
+                next.dataset.driver='1';
+                cell.className='cell road';
+                cell.textContent='🛣️';
+              } else {
+                cell.textContent='🚗'; // stop at red/yellow
+              }
+            }
+          }
+        } else {
+          cell.textContent='🚗'; // parked car
+        }
+      }
+    }
+  }
+}
+setInterval(step,200); // faster ticks so walking is visible
+</script>
+</body>
+</html>
