@@ -47,6 +47,11 @@ let tool='road';
 let drone=false;
 let zoomLevel=1.2;
 let hoverMode=false;
+let mouseDown=false;
+
+// Track mouse state
+document.addEventListener('mousedown', ()=>{ mouseDown=true; });
+document.addEventListener('mouseup', ()=>{ mouseDown=false; });
 
 function idx(x,y){return y*size+x;}
 function setTool(t){tool=t;}
@@ -60,7 +65,7 @@ for(let i=0;i<size*size;i++){
   const cell=document.createElement('div');
   cell.className='cell';
   cell.addEventListener('click',()=>place(cell));
-  cell.addEventListener('mouseover',()=>{ if(hoverMode) place(cell); });
+  cell.addEventListener('mouseover',()=>{ if(hoverMode && mouseDown) place(cell); });
   world.appendChild(cell);
   cells.push(cell);
 }
@@ -76,96 +81,6 @@ function place(cell){
   if(tool==='bench'){ cell.textContent='🪑'; }
   if(tool==='park'){ cell.textContent='🌳'; }
 }
-
-function neighbors4(x,y){ return [[0,-1],[0,1],[-1,0],[1,0]].map(([dx,dy])=>[x+dx,y+dy]).filter(([nx,ny])=>nx>=0&&nx<size&&ny>=0&&ny<size); }
-function randomDir(){ const d=[[0,-1],[0,1],[-1,0],[1,0]]; return d[Math.floor(Math.random()*d.length)]; }
-
-// Traffic light cycle
-function cycleTraffic(){
-  for(const c of cells){
-    if(c.classList.contains('traffic')){
-      let state=c.dataset.state||'green';
-      if(state==='green'){ c.dataset.state='yellow'; c.textContent='🟡'; }
-      else if(state==='yellow'){ c.dataset.state='red'; c.textContent='🔴'; }
-      else { c.dataset.state='green'; c.textContent='🟢'; }
-    }
-  }
-}
-setInterval(cycleTraffic,2000);
-
-// Simulation loop
-function step(){
-  for(let y=size-1;y>=0;y--){
-    for(let x=0;x<size;x++){
-      const i=idx(x,y);
-      const cell=cells[i];
-      const type=cell.classList[1];
-      if(!type) continue;
-
-      // Person behavior
-      if(type==='person'){
-        cell.dataset.walkTimer = String(Number(cell.dataset.walkTimer||'0')+1);
-        if(Number(cell.dataset.walkTimer)>=50){
-          for(const [nx,ny] of neighbors4(x,y)){
-            const bench=cells[idx(nx,ny)];
-            if(bench.classList.contains('bench')){
-              cell.textContent='📱';
-              cell.dataset.restTimer='20';
-              cell.dataset.walkTimer='0';
-            }
-          }
-        }
-        if(cell.textContent==='📱'){
-          cell.dataset.restTimer = String(Number(cell.dataset.restTimer)-1);
-          if(Number(cell.dataset.restTimer)<=0){ cell.textContent='👤'; }
-        } else {
-          const [dx,dy]=randomDir();
-          const nx=x+dx, ny=y+dy;
-          if(nx>=0&&nx<size&&ny>=0&&ny<size){
-            const next=cells[idx(nx,ny)];
-            if(!next.classList[1] || next.classList.contains('road') || next.classList.contains('park')){
-              next.className='cell person';
-              next.textContent='👤';
-              next.dataset.walkTimer=cell.dataset.walkTimer;
-              cell.className='cell';
-              cell.textContent='';
-            }
-          }
-        }
-      }
-
-      // Kid behavior
-      if(type==='kid'){
-        cell.dataset.playTimer = String(Number(cell.dataset.playTimer||'0')+1);
-        // Play with nearby kids
-        for(const [nx,ny] of neighbors4(x,y)){
-          const other=cells[idx(nx,ny)];
-          if(other.classList.contains('kid') && Math.random()<0.1){
-            cell.textContent='😂';
-            other.textContent='⚽';
-            cell.dataset.playTimer='0';
-          }
-        }
-        // Sit briefly on bench
-        if(Number(cell.dataset.playTimer)>=30){
-          for(const [nx,ny] of neighbors4(x,y)){
-            const bench=cells[idx(nx,ny)];
-            if(bench.classList.contains('bench')){
-              cell.textContent='😆';
-              cell.dataset.restTimer='10';
-              cell.dataset.playTimer='0';
-            }
-          }
-        }
-        if(cell.textContent==='😆'){
-          cell.dataset.restTimer = String(Number(cell.dataset.restTimer)-1);
-          if(Number(cell.dataset.restTimer)<=0){ cell.textContent='🧒'; }
-        } else {
-          // wander faster
-          const [dx,dy]=randomDir();
-          const nx=x+dx, ny=y+dy;
-          if(nx>=0&&nx<size&&ny>=0&&ny<size){
-            const next=cells[idx(nx,ny)];
-            if(!next.classList[1] || next.classList.contains('road') || next.classList.contains('park')){
-              next.className='cell kid';
-              next.textContent
+</script>
+</body>
+</html>
