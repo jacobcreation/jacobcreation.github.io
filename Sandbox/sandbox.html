@@ -11,8 +11,8 @@
   .cell { width:28px; height:28px; border:1px solid #222; border-radius:6px; text-align:center; font-size:18px; line-height:28px; user-select:none; }
   .road { background:#555; }
   .traffic { background:#333; color:#fff; }
-  /* Drone view tilt */
   .drone { transform: rotateX(60deg) rotateZ(45deg) scale(var(--zoom,1.2)); transform-style:preserve-3d; }
+  #topbar { display:flex; gap:8px; justify-content:center; align-items:center; margin:10px auto; }
 </style>
 </head>
 <body>
@@ -24,6 +24,9 @@
   <button onclick="setTool('person')">👤 Person</button>
   <button onclick="setTool('car')">🚗 Car</button>
   <button onclick="setTool('traffic')">🚦 Traffic Light</button>
+  <button onclick="setTool('office')">🏢 Office</button>
+  <button onclick="setTool('factory')">🏭 Factory</button>
+  <button onclick="setTool('umbrella')">☂️ Umbrella</button>
 </div>
 
 <div id="topbar">
@@ -44,24 +47,17 @@ let tool='road';
 let drone=false;
 let zoomLevel=1.2;
 let hoverMode=false;
+let minute=360; // start at 06:00
+let dayNumber=1;
+let day=true;
+let raining=false;
 
 function idx(x,y){return y*size+x;}
 function setTool(t){tool=t;}
-function toggleDrone(){
-  drone=!drone;
-  if(drone){ world.classList.add("drone"); }
-  else { world.classList.remove("drone"); }
-}
-function zoomIn(){
-  if(drone){ zoomLevel+=0.2; world.style.setProperty('--zoom',zoomLevel); }
-}
-function zoomOut(){
-  if(drone && zoomLevel>0.4){ zoomLevel-=0.2; world.style.setProperty('--zoom',zoomLevel); }
-}
-function toggleHover(){
-  hoverMode=!hoverMode;
-  document.getElementById("hoverBtn").textContent = hoverMode ? "🛸 Hover ON" : "🛸 Hover Mode";
-}
+function toggleDrone(){ drone=!drone; if(drone){ world.classList.add("drone"); } else { world.classList.remove("drone"); } }
+function zoomIn(){ if(drone){ zoomLevel+=0.2; world.style.setProperty('--zoom',zoomLevel); } }
+function zoomOut(){ if(drone && zoomLevel>0.4){ zoomLevel-=0.2; world.style.setProperty('--zoom',zoomLevel); } }
+function toggleHover(){ hoverMode=!hoverMode; document.getElementById("hoverBtn").textContent = hoverMode ? "🛸 Hover ON" : "🛸 Hover Mode"; }
 
 // Build grid
 for(let i=0;i<size*size;i++){
@@ -69,17 +65,23 @@ for(let i=0;i<size*size;i++){
   cell.className='cell';
   cell.addEventListener('click',()=>place(cell));
   cell.addEventListener('mouseover',()=>{ if(hoverMode) place(cell); });
+  cell.dataset.talkTimer='0';
+  cell.dataset.emotion='happy';
   world.appendChild(cell);
   cells.push(cell);
 }
 
 function place(cell){
   cell.className='cell '+tool;
-  if(tool==='road') cell.textContent='🛣️';
-  if(tool==='house') cell.textContent='🏠';
-  if(tool==='person'){ cell.textContent='👤'; cell.dataset.age='20'; }
+  cell.dataset.talkTimer='0';
+  if(tool==='road'){ cell.textContent='🛣️'; }
+  if(tool==='house'){ cell.textContent='🏠'; }
+  if(tool==='person'){ cell.textContent='👤'; cell.dataset.age='20'; cell.dataset.emotion='happy'; cell.dataset.birthday=String(1+Math.floor(Math.random()*365)); }
   if(tool==='car'){ cell.textContent='🚗'; cell.dataset.driver='0'; }
   if(tool==='traffic'){ cell.textContent='🟢'; cell.dataset.state='green'; }
+  if(tool==='office'){ cell.textContent='🏢'; }
+  if(tool==='factory'){ cell.textContent='🏭'; }
+  if(tool==='umbrella'){ cell.textContent='☂️'; }
 }
 
 // Traffic light cycle
@@ -95,6 +97,28 @@ function cycleTraffic(){
 }
 setInterval(cycleTraffic,2000);
 
+function neighbors4(x,y){ return [[0,-1],[0,1],[-1,0],[1,0]].map(([dx,dy])=>[x+dx,y+dy]).filter(([nx,ny])=>nx>=0&&nx<size&&ny>=0&&ny<size); }
+function randomDir(){ const d=[[0,-1],[0,1],[-1,0],[1,0]]; return d[Math.floor(Math.random()*d.length)]; }
+
+// Clock tick
+function tickClock(){
+  minute++;
+  if(minute>=1440){ minute=0; dayNumber++; }
+  day=(minute>=360 && minute<1080);
+  // birthdays at 08:00
+  if(minute%1440===480){
+    for(const c of cells){
+      if(c.classList.contains('person')){
+        if(Number(c.dataset.birthday||'0')===((dayNumber-1)%365)+1){
+          c.textContent='🎂';
+          c.dataset.talkTimer='5';
+        }
+      }
+    }
+  }
+}
+setInterval(tickClock,250);
+
 // Simulation loop
 function step(){
   for(let y=size-1;y>=0;y--){
@@ -104,58 +128,51 @@ function step(){
       const type=cell.classList[1];
       if(!type) continue;
 
-      // Person can enter car
+      // Person behavior
       if(type==='person'){
-        const dirs=[[0,-1],[0,1],[-1,0],[1,0]];
-        const [dx,dy]=dirs[Math.floor(Math.random()*4)];
-        const nx=x+dx, ny=y+dy;
-        if(nx>=0&&nx<size&&ny>=0&&ny<size){
-          const neighbor=cells[idx(nx,ny)];
-          if(neighbor.classList.contains('car') && neighbor.dataset.driver==='0'){
-            neighbor.dataset.driver='1';
-            neighbor.textContent='🚗';
-            cell.className='cell';
-            cell.textContent='';
+        // Night: seek house
+        if(!day){
+          for(const [nx,ny] of neighbors4(x,y)){
+            const n=cells[idx(nx,ny)];
+            if(n.classList.contains('house')){
+              cell.textContent='😴';
+              cell.dataset.talkTimer='5';
+            }
+          }
+        } else {
+          // Day: wander
+          const [dx,dy]=randomDir();
+          const nx=x+dx, ny=y+dy;
+          if(nx>=0&&nx<size&&ny>=0&&ny<size){
+            const next=cells[idx(nx,ny)];
+            if(!next.classList[1] || next.classList.contains('road')){
+              next.className='cell person';
+              next.textContent='👤';
+              next.dataset.age=cell.dataset.age;
+              next.dataset.emotion=cell.dataset.emotion;
+              next.dataset.birthday=cell.dataset.birthday;
+              cell.className='cell';
+              cell.textContent='';
+            }
+          }
+          // Talk
+          if(Math.random()<0.04){
+            for(const [nx,ny] of neighbors4(x,y)){
+              const other=cells[idx(nx,ny)];
+              if(other.classList.contains('person')){
+                cell.textContent='💬';
+                cell.dataset.talkTimer='5';
+                other.textContent='💬';
+                other.dataset.talkTimer='5';
+              }
+            }
           }
         }
       }
 
-      // Car moves only if driver inside, only on roads, obey traffic lights
+      // Car behavior
       if(type==='car'){
         if(cell.dataset.driver==='1'){
-          const dirs=[[0,-1],[0,1],[-1,0],[1,0]];
-          const [dx,dy]=dirs[Math.floor(Math.random()*4)];
+          const [dx,dy]=randomDir();
           const nx=x+dx, ny=y+dy;
-          if(nx>=0&&nx<size&&ny>=0&&ny<size){
-            const next=cells[idx(nx,ny)];
-            if(next.classList.contains('road')){
-              next.className='cell car';
-              next.textContent='🚗';
-              next.dataset.driver='1';
-              cell.className='cell road';
-              cell.textContent='🛣️';
-            }
-            else if(next.classList.contains('traffic')){
-              const state=next.dataset.state;
-              if(state==='green'){
-                next.className='cell car';
-                next.textContent='🚗';
-                next.dataset.driver='1';
-                cell.className='cell road';
-                cell.textContent='🛣️';
-              } else {
-                cell.textContent='🚗'; // stop at red/yellow
-              }
-            }
-          }
-        } else {
-          cell.textContent='🚗'; // parked car
-        }
-      }
-    }
-  }
-}
-setInterval(step,500);
-</script>
-</body>
-</html>
+          if(nx>=0
