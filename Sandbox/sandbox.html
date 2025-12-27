@@ -22,9 +22,11 @@
   <button onclick="setTool('road')">🛣️ Road</button>
   <button onclick="setTool('house')">🏠 House</button>
   <button onclick="setTool('person')">👤 Person</button>
+  <button onclick="setTool('kid')">🧒 Kid</button>
   <button onclick="setTool('car')">🚗 Car</button>
   <button onclick="setTool('traffic')">🚦 Traffic Light</button>
   <button onclick="setTool('bench')">🪑 Bench</button>
+  <button onclick="setTool('park')">🌳 Park</button>
 </div>
 
 <div id="topbar">
@@ -68,9 +70,11 @@ function place(cell){
   if(tool==='road'){ cell.textContent='🛣️'; }
   if(tool==='house'){ cell.textContent='🏠'; }
   if(tool==='person'){ cell.textContent='👤'; cell.dataset.walkTimer='0'; }
+  if(tool==='kid'){ cell.textContent='🧒'; cell.dataset.playTimer='0'; }
   if(tool==='car'){ cell.textContent='🚗'; cell.dataset.driver='0'; }
   if(tool==='traffic'){ cell.textContent='🟢'; cell.dataset.state='green'; }
   if(tool==='bench'){ cell.textContent='🪑'; }
+  if(tool==='park'){ cell.textContent='🌳'; }
 }
 
 function neighbors4(x,y){ return [[0,-1],[0,1],[-1,0],[1,0]].map(([dx,dy])=>[x+dx,y+dy]).filter(([nx,ny])=>nx>=0&&nx<size&&ny>=0&&ny<size); }
@@ -100,34 +104,26 @@ function step(){
 
       // Person behavior
       if(type==='person'){
-        // increment walk timer
         cell.dataset.walkTimer = String(Number(cell.dataset.walkTimer||'0')+1);
-
-        // if walked for ~10s (50 ticks at 200ms), look for bench
         if(Number(cell.dataset.walkTimer)>=50){
           for(const [nx,ny] of neighbors4(x,y)){
             const bench=cells[idx(nx,ny)];
             if(bench.classList.contains('bench')){
-              cell.textContent='📱'; // sitting, watching phone
-              cell.dataset.restTimer='20'; // rest for 20 ticks
-              cell.dataset.walkTimer='0'; // reset walk timer
+              cell.textContent='📱';
+              cell.dataset.restTimer='20';
+              cell.dataset.walkTimer='0';
             }
           }
         }
-
-        // if resting
         if(cell.textContent==='📱'){
           cell.dataset.restTimer = String(Number(cell.dataset.restTimer)-1);
-          if(Number(cell.dataset.restTimer)<=0){
-            cell.textContent='👤'; // stand up again
-          }
+          if(Number(cell.dataset.restTimer)<=0){ cell.textContent='👤'; }
         } else {
-          // wander
           const [dx,dy]=randomDir();
           const nx=x+dx, ny=y+dy;
           if(nx>=0&&nx<size&&ny>=0&&ny<size){
             const next=cells[idx(nx,ny)];
-            if(!next.classList[1] || next.classList.contains('road')){
+            if(!next.classList[1] || next.classList.contains('road') || next.classList.contains('park')){
               next.className='cell person';
               next.textContent='👤';
               next.dataset.walkTimer=cell.dataset.walkTimer;
@@ -138,41 +134,38 @@ function step(){
         }
       }
 
-      // Car behavior
-      if(type==='car'){
-        if(cell.dataset.driver==='1'){
+      // Kid behavior
+      if(type==='kid'){
+        cell.dataset.playTimer = String(Number(cell.dataset.playTimer||'0')+1);
+        // Play with nearby kids
+        for(const [nx,ny] of neighbors4(x,y)){
+          const other=cells[idx(nx,ny)];
+          if(other.classList.contains('kid') && Math.random()<0.1){
+            cell.textContent='😂';
+            other.textContent='⚽';
+            cell.dataset.playTimer='0';
+          }
+        }
+        // Sit briefly on bench
+        if(Number(cell.dataset.playTimer)>=30){
+          for(const [nx,ny] of neighbors4(x,y)){
+            const bench=cells[idx(nx,ny)];
+            if(bench.classList.contains('bench')){
+              cell.textContent='😆';
+              cell.dataset.restTimer='10';
+              cell.dataset.playTimer='0';
+            }
+          }
+        }
+        if(cell.textContent==='😆'){
+          cell.dataset.restTimer = String(Number(cell.dataset.restTimer)-1);
+          if(Number(cell.dataset.restTimer)<=0){ cell.textContent='🧒'; }
+        } else {
+          // wander faster
           const [dx,dy]=randomDir();
           const nx=x+dx, ny=y+dy;
           if(nx>=0&&nx<size&&ny>=0&&ny<size){
             const next=cells[idx(nx,ny)];
-            if(next.classList.contains('road')){
-              next.className='cell car';
-              next.textContent='🚗';
-              next.dataset.driver='1';
-              cell.className='cell road';
-              cell.textContent='🛣️';
-            }
-            else if(next.classList.contains('traffic')){
-              const state=next.dataset.state;
-              if(state==='green'){
-                next.className='cell car';
-                next.textContent='🚗';
-                next.dataset.driver='1';
-                cell.className='cell road';
-                cell.textContent='🛣️';
-              } else {
-                cell.textContent='🚗'; // stop at red/yellow
-              }
-            }
-          }
-        } else {
-          cell.textContent='🚗'; // parked car
-        }
-      }
-    }
-  }
-}
-setInterval(step,200); // faster ticks so walking is visible
-</script>
-</body>
-</html>
+            if(!next.classList[1] || next.classList.contains('road') || next.classList.contains('park')){
+              next.className='cell kid';
+              next.textContent
