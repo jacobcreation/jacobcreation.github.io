@@ -1,63 +1,214 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Mini World Sandbox</title>
-  <style>
-    body { background:#111; color:#eee; font-family:sans-serif; text-align:center; }
-    #world { display:grid; grid-template-columns:repeat(20,20px); grid-template-rows:repeat(20,20px); margin:20px auto; }
-    .cell { width:20px; height:20px; border:1px solid #222; }
-    .water { background:#4fc3f7; }
-    .fire { background:#ff6b6b; }
-    .tree { background:#22c55e; }
-    .lava { background:#d35400; }
-    .sand { background:#f1c40f; }
-    .grass { background:#2ecc71; }
-  </style>
+<meta charset="UTF-8">
+<title>City Sandbox Simulator</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<style>
+  body { background:#87ceeb; color:#000; font-family:sans-serif; text-align:center; transition:background 2s,color 2s; }
+  #world { display:grid; grid-template-columns:repeat(20,28px); grid-template-rows:repeat(20,28px); margin:20px auto; }
+  .cell { width:28px; height:28px; border:1px solid #222; border-radius:6px; box-shadow:inset 0 0 4px rgba(0,0,0,0.4); text-align:center; font-size:10px; line-height:28px; }
+  .water { background:#4fc3f7; }
+  .fire { background:#ff6b6b; }
+  .tree { background:#22c55e; }
+  .lava { background:#d35400; }
+  .sand { background:#f1c40f; }
+  .grass { background:#2ecc71; }
+  .stone { background:#95a5a6; }
+  .ash { background:#7f8c8d; }
+  .lightning { background:#ecf0f1; }
+  .crystal { background:#9b59b6; }
+  .tornado { background:#bdc3c7; }
+  .rainbow { background:linear-gradient(45deg,red,orange,yellow,green,blue,indigo,violet); }
+  .person { background:#3498db; color:#fff; font-size:8px; }
+  .animal { background:#e67e22; }
+  .car { background:#f39c12; border-radius:50%; }
+  .road { background:#555; }
+  .house { background:#8e44ad; }
+  .police { background:#2980b9; }
+  .criminal { background:#c0392b; }
+  .umbrella { background:#16a085; }
+  .traffic { background:#333; color:#fff; font-size:12px; }
+</style>
 </head>
 <body>
-  <h1>🌍 Mini World Sandbox</h1>
-  <p>Click a tool, then click cells to place elements.</p>
-  <div>
-    <button onclick="setTool('water')">💧 Water</button>
-    <button onclick="setTool('fire')">🔥 Fire</button>
-    <button onclick="setTool('tree')">🌳 Tree</button>
-    <button onclick="setTool('lava')">🌋 Lava</button>
-    <button onclick="setTool('sand')">🏖️ Sand</button>
-    <button onclick="setTool('grass')">🌱 Grass</button>
-  </div>
-  <div id="world"></div>
-  <script>
-    const world = document.getElementById('world');
-    let tool = 'water';
+<h1>🌍 City Sandbox Simulator</h1>
+<p>Tap a tool, then tap cells. Enter mystery codes to unlock rare elements!</p>
+<div id="toolbar">
+  <button onclick="setTool('water')">💧 Water</button>
+  <button onclick="setTool('fire')">🔥 Fire</button>
+  <button onclick="setTool('tree')">🌳 Tree</button>
+  <button onclick="setTool('lava')">🌋 Lava</button>
+  <button onclick="setTool('sand')">🏖️ Sand</button>
+  <button onclick="setTool('grass')">🌱 Grass</button>
+</div>
+<div style="margin:10px;">
+  <input id="codeInput" placeholder="Enter mystery code" />
+  <button onclick="unlock()">Unlock</button>
+  <button id="hoverBtn" onclick="toggleHover()">🛸 Hover Mode</button>
+</div>
+<div id="world"></div>
 
-    function setTool(t){ tool = t; }
+<!-- Confetti + sound -->
+<canvas id="confetti" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>
+<audio id="cheerSound" src="https://actions.google.com/sounds/v1/ambiences/crowd_cheer.ogg"></audio>
 
-    // build grid
-    const cells = [];
-    for(let i=0;i<400;i++){
-      const cell = document.createElement('div');
-      cell.className = 'cell';
-      cell.addEventListener('click', () => {
-        cell.className = 'cell ' + tool;
-        interact(cell, tool);
-      });
-      world.appendChild(cell);
-      cells.push(cell);
+<script>
+const world = document.getElementById('world');
+let tool = 'water';
+const size = 20;
+const cells = [];
+let hoverMode=false;
+let raining=false;
+let cloudPos=0;
+let day=true;
+let cycleStep=0;
+
+function setTool(t){ tool = t; }
+
+// build grid
+for(let i=0;i<size*size;i++){
+  const cell = document.createElement('div');
+  cell.className = 'cell';
+  cell.addEventListener('click', () => {
+    cell.className = 'cell ' + tool;
+    cell.textContent="";
+  });
+  cell.addEventListener('mouseover',()=>{
+    if(hoverMode && tool){
+      cell.className='cell '+tool;
+      cell.textContent="";
     }
+  });
+  world.appendChild(cell);
+  cells.push(cell);
+}
 
-    function interact(cell, type){
-      // simple reactions
-      if(type==='fire' && cell.classList.contains('tree')){
-        cell.className = 'cell fire'; // tree burns
+function idx(x,y){ return y*size+x; }
+
+function toggleHover(){
+  hoverMode=!hoverMode;
+  document.getElementById("hoverBtn").textContent = hoverMode ? "🛸 Hover ON" : "🛸 Hover Mode";
+}
+
+// clouds drift
+function driftClouds(){
+  cloudPos = (cloudPos+1) % size;
+  for(let x=0;x<size;x++){
+    const cell = cells[idx(x,0)];
+    cell.textContent = (x===cloudPos) ? "☁️" : "";
+  }
+}
+setInterval(driftClouds,1000);
+
+// rain event
+function startRain(){
+  raining=true;
+  setTimeout(()=>{ raining=false; },13000);
+}
+setInterval(()=>{
+  if(Math.random()<0.01 && !raining){ startRain(); }
+},2000);
+
+// day/night cycle
+function cycleDayNight(){
+  cycleStep++;
+  if(cycleStep>=60){
+    day=!day;
+    cycleStep=0;
+  }
+  if(day){
+    document.body.style.background="#87ceeb";
+    document.body.style.color="#000";
+  } else {
+    document.body.style.background="#0b0c10";
+    document.body.style.color="#eee";
+  }
+}
+setInterval(cycleDayNight,1000);
+
+// simulation loop
+function step(){
+  for(let y=size-1;y>=0;y--){
+    for(let x=0;x<size;x++){
+      const i = idx(x,y);
+      const cell = cells[i];
+      const type = cell.classList[1];
+      if(!type) continue;
+
+      // people walk + react to rain + sleep at night
+      if(type==='person'){
+        if(!day){
+          const target=findNearest(x,y,"house");
+          if(target){ moveToward(cell,x,y,target.x,target.y,"person"); }
+          else { cell.textContent="💤"; }
+        } else if(raining && !cell.classList.contains('house') && !cell.classList.contains('umbrella')){
+          cell.dataset.say="I need shelter!";
+          cell.textContent="💬";
+          const target=findNearest(x,y,"house");
+          if(target){ moveToward(cell,x,y,target.x,target.y,"person"); }
+        } else {
+          cell.textContent="";
+          const dir=[[0,-1],[0,1],[-1,0],[1,0]][Math.floor(Math.random()*4)];
+          const nx=x+dir[0], ny=y+dir[1];
+          if(nx>=0&&nx<size&&ny>=0&&ny<size){
+            const neighbor=cells[idx(nx,ny)];
+            if(!neighbor.classList[1]){
+              neighbor.className='cell person';
+              cell.className='cell';
+            }
+          }
+        }
       }
-      if(type==='water' && cell.classList.contains('lava')){
-        cell.className = 'cell sand'; // lava cools into sand
+
+      // animals wander
+      if(type==='animal'){
+        const dir=[[0,-1],[0,1],[-1,0],[1,0]][Math.floor(Math.random()*4)];
+        const nx=x+dir[0], ny=y+dir[1];
+        if(nx>=0&&nx<size&&ny>=0&&ny<size){
+          const neighbor=cells[idx(nx,ny)];
+          if(neighbor.classList.contains('grass')) neighbor.className='cell';
+          if(!neighbor.classList[1]){
+            neighbor.className='cell animal';
+            cell.className='cell';
+          }
+        }
       }
-      if(type==='water' && cell.classList.contains('fire')){
-        cell.className = 'cell grass'; // fire quenched, grass grows
+
+      // cars obey traffic lights
+      if(type==='car'){
+        const dir=[[0,-1],[0,1],[-1,0],[1,0]][Math.floor(Math.random()*4)];
+        const nx=x+dir[0], ny=y+dir[1];
+        if(nx>=0&&nx<size&&ny>=0&&ny<size){
+          const next=cells[idx(nx,ny)];
+          if(next.classList.contains("traffic")){
+            if(next.dataset.state==="red"){ /* stop */ }
+            else {
+              next.className="cell car";
+              cell.className="cell road";
+            }
+          } else if(!next.classList[1]){
+            next.className="cell car";
+            cell.className="cell road";
+          }
+        }
       }
-    }
-  </script>
-</body>
-</html>
+
+      // police patrol
+      if(type==='police'){
+        const dir=[[0,-1],[0,1],[-1,0],[1,0]][Math.floor(Math.random()*4)];
+        const nx=x+dir[0], ny=y+dir[1];
+        if(nx>=0&&nx<size&&ny>=0&&ny<size){
+          const neighbor=cells[idx(nx,ny)];
+          if(neighbor.classList.contains('criminal')){
+            neighbor.className='cell'; // arrest
+          } else if(!neighbor.classList[1]){
+            neighbor.className='cell police';
+            cell.className='cell';
+          }
+        }
+      }
+
+      // criminals wander
+      if(type==='criminal'){
+        const dir=[[
