@@ -31,7 +31,7 @@
 
 <div id="topbar">
   <button onclick="window.location.href='https://jacobcreation.github.io/'">🏠 Back to Home</button>
-  <button id="hoverBtn" onclick="toggleHover()">🛸 Hover Mode</button>
+  <button id="hoverBtn" onclick="toggleHover()">🛸 Hover OFF (painting)</button>
   <button onclick="toggleDrone()">🚁 Drone View</button>
   <button onclick="zoomIn()">➕ Zoom In</button>
   <button onclick="zoomOut()">➖ Zoom Out</button>
@@ -46,8 +46,10 @@ const cells=[];
 let tool='road';
 let drone=false;
 let zoomLevel=1.2;
-let hoverMode=false;
+let hoverMode=false; // false = painting enabled, true = disabled
 let mouseDown=false;
+let minute=0;
+let dayNumber=1;
 
 // Track mouse state
 document.addEventListener('mousedown', ()=>{ mouseDown=true; });
@@ -58,14 +60,17 @@ function setTool(t){tool=t;}
 function toggleDrone(){ drone=!drone; if(drone){ world.classList.add("drone"); } else { world.classList.remove("drone"); } }
 function zoomIn(){ if(drone){ zoomLevel+=0.2; world.style.setProperty('--zoom',zoomLevel); } }
 function zoomOut(){ if(drone && zoomLevel>0.4){ zoomLevel-=0.2; world.style.setProperty('--zoom',zoomLevel); } }
-function toggleHover(){ hoverMode=!hoverMode; document.getElementById("hoverBtn").textContent = hoverMode ? "🛸 Hover ON" : "🛸 Hover Mode"; }
+function toggleHover(){
+  hoverMode=!hoverMode;
+  document.getElementById("hoverBtn").textContent = hoverMode ? "🛸 Hover ON (no paint)" : "🛸 Hover OFF (painting)";
+}
 
 // Build grid
 for(let i=0;i<size*size;i++){
   const cell=document.createElement('div');
   cell.className='cell';
-  cell.addEventListener('click',()=>place(cell));
-  cell.addEventListener('mouseover',()=>{ if(hoverMode && mouseDown) place(cell); });
+  cell.addEventListener('click',()=>{ if(!hoverMode) place(cell); });
+  cell.addEventListener('mouseover',()=>{ if(!hoverMode && mouseDown) place(cell); });
   world.appendChild(cell);
   cells.push(cell);
 }
@@ -81,6 +86,100 @@ function place(cell){
   if(tool==='bench'){ cell.textContent='🪑'; }
   if(tool==='park'){ cell.textContent='🌳'; }
 }
-</script>
-</body>
-</html>
+
+function neighbors4(x,y){ return [[0,-1],[0,1],[-1,0],[1,0]].map(([dx,dy])=>[x+dx,y+dy]).filter(([nx,ny])=>nx>=0&&nx<size&&ny>=0&&ny<size); }
+function randomDir(){ const d=[[0,-1],[0,1],[-1,0],[1,0]]; return d[Math.floor(Math.random()*d.length)]; }
+
+// Clock tick for births
+function tickClock(){
+  minute++;
+  if(minute>=1440){ // one day passed
+    minute=0;
+    dayNumber++;
+    for(const c of cells){
+      if(c.textContent==='🤰'){
+        c.dataset.birthDays = String(Number(c.dataset.birthDays||'0')+1);
+        if(Number(c.dataset.birthDays)>=13){
+          c.textContent='🧑‍🍼';
+          c.dataset.stroller='true';
+        }
+      }
+    }
+  }
+}
+setInterval(tickClock,250); // fast clock for demo
+
+// Traffic light cycle
+function cycleTraffic(){
+  for(const c of cells){
+    if(c.classList.contains('traffic')){
+      let state=c.dataset.state||'green';
+      if(state==='green'){ c.dataset.state='yellow'; c.textContent='🟡'; }
+      else if(state==='yellow'){ c.dataset.state='red'; c.textContent='🔴'; }
+      else { c.dataset.state='green'; c.textContent='🟢'; }
+    }
+  }
+}
+setInterval(cycleTraffic,2000);
+
+// Simulation loop
+function step(){
+  for(let y=size-1;y>=0;y--){
+    for(let x=0;x<size;x++){
+      const i=idx(x,y);
+      const cell=cells[i];
+      const type=cell.classList[1];
+      if(!type) continue;
+
+      // Person behavior
+      if(type==='person'){
+        // Birth trigger: if inside house with another person
+        for(const [nx,ny] of neighbors4(x,y)){
+          const neighbor=cells[idx(nx,ny)];
+          if(neighbor.classList.contains('house') && Math.random()<0.005){
+            cell.textContent='🤰';
+            cell.dataset.birthDays='0';
+          }
+        }
+        // Stroller parent spawns kid
+        if(cell.textContent==='🧑‍🍼'){
+          if(Math.random()<0.02){
+            const [dx,dy]=randomDir();
+            const nx=x+dx, ny=y+dy;
+            if(nx>=0&&nx<size&&ny>=0&&ny<size){
+              const next=cells[idx(nx,ny)];
+              if(!next.classList[1]){
+                next.className='cell kid';
+                next.textContent='🧒';
+                cell.textContent='👤'; // parent returns to normal
+                cell.dataset.stroller='false';
+              }
+            }
+          }
+        }
+        // Normal walking
+        if(cell.textContent==='👤'){
+          const [dx,dy]=randomDir();
+          const nx=x+dx, ny=y+dy;
+          if(nx>=0&&nx<size&&ny>=0&&ny<size){
+            const next=cells[idx(nx,ny)];
+            if(!next.classList[1] || next.classList.contains('road') || next.classList.contains('park')){
+              next.className='cell person';
+              next.textContent='👤';
+              cell.className='cell';
+              cell.textContent='';
+            }
+          }
+        }
+      }
+
+      // Kid behavior
+      if(type==='kid'){
+        cell.dataset.playTimer = String(Number(cell.dataset.playTimer||'0')+1);
+        // prefer parks
+        let moved=false;
+        for(const [dx,dy] of neighbors4(x,y)){
+          const next=cells[idx(nx,ny)];
+          if(next.classList.contains('park')){
+            next.className='cell kid';
+            next.textContent='🧒';
