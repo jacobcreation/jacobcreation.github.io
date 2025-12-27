@@ -1,280 +1,63 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mobile-friendly HTML Sandbox</title>
+  <meta charset="UTF-8">
+  <title>Mini World Sandbox</title>
   <style>
-    :root {
-      --bg: #0f172a;        /* slate-900 */
-      --panel: #111827;     /* gray-900 */
-      --text: #e5e7eb;      /* gray-200 */
-      --muted: #9ca3af;     /* gray-400 */
-      --accent: #22c55e;    /* green-500 */
-      --border: #1f2937;    /* gray-800 */
-      --focus: #38bdf8;     /* sky-400 */
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --rounded: 12px;
-    }
-
-    * { box-sizing: border-box; }
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
-    }
-
-    .app {
-      display: grid;
-      grid-template-rows: auto 1fr;
-      min-height: 100vh;
-    }
-
-    header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent);
-    }
-
-    header h1 {
-      font-size: 16px;
-      margin: 0;
-      letter-spacing: 0.2px;
-      color: var(--text);
-    }
-
-    .container {
-      display: grid;
-      gap: 12px;
-      padding: 12px;
-      grid-template-rows: auto 1fr;
-    }
-
-    .editors {
-      display: grid;
-      gap: 12px;
-      grid-template-columns: 1fr;
-    }
-
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--rounded);
-      overflow: hidden;
-    }
-
-    .panel header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border: 0;
-      padding: 10px 12px;
-      background: rgba(255,255,255,0.03);
-    }
-
-    .label {
-      font-size: 12px;
-      color: var(--muted);
-      letter-spacing: 0.3px;
-      text-transform: uppercase;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 140px;
-      resize: vertical;
-      border: 0;
-      outline: none;
-      padding: 12px;
-      background: transparent;
-      color: var(--text);
-      font-family: var(--mono);
-      font-size: 13px;
-      line-height: 1.4;
-    }
-
-    .actions {
-      display: flex;
-      gap: 10px;
-      padding: 8px 0 0 2px;
-    }
-
-    button {
-      appearance: none;
-      border: 1px solid var(--border);
-      background: var(--panel);
-      color: var(--text);
-      padding: 10px 14px;
-      font-size: 14px;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-    button:hover { border-color: var(--muted); }
-    button.run { background: var(--accent); color: #052e15; border-color: transparent; }
-    button.run:hover { filter: brightness(1.05); }
-
-    .preview {
-      display: grid;
-      grid-template-rows: auto 1fr;
-      min-height: 240px;
-    }
-
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: 0;
-      background: white;
-      border-radius: 0 0 var(--rounded) var(--rounded);
-    }
-
-    /* Larger screens: editors side-by-side */
-    @media (min-width: 900px) {
-      .editors {
-        grid-template-columns: repeat(3, 1fr);
-      }
-      textarea { min-height: 220px; }
-      .preview { min-height: 320px; }
-    }
-
-    /* Improve touch targets on small screens */
-    @media (max-width: 380px) {
-      button { width: 100%; }
-      .actions { flex-direction: column; }
-    }
+    body { background:#111; color:#eee; font-family:sans-serif; text-align:center; }
+    #world { display:grid; grid-template-columns:repeat(20,20px); grid-template-rows:repeat(20,20px); margin:20px auto; }
+    .cell { width:20px; height:20px; border:1px solid #222; }
+    .water { background:#4fc3f7; }
+    .fire { background:#ff6b6b; }
+    .tree { background:#22c55e; }
+    .lava { background:#d35400; }
+    .sand { background:#f1c40f; }
+    .grass { background:#2ecc71; }
   </style>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <h1>HTML/CSS/JS Sandbox</h1>
-      <div class="actions" role="group" aria-label="Actions">
-        <button class="run" id="runBtn" title="Run (Ctrl+Enter)">Run</button>
-        <button id="resetBtn" title="Reset editors">Reset</button>
-      </div>
-    </header>
-
-    <main class="container">
-      <section class="editors" aria-label="Editors">
-        <div class="panel">
-          <header><span class="label">HTML</span></header>
-          <textarea id="htmlInput" spellcheck="false" aria-label="HTML input">
-<div class="wrap">
-  <h1>Hello, sandbox 👋</h1>
-  <p>Edit HTML, CSS, and JS, then press Run.</p>
-  <button id="demoBtn">Click me</button>
-</div>
-          </textarea>
-        </div>
-
-        <div class="panel">
-          <header><span class="label">CSS</span></header>
-          <textarea id="cssInput" spellcheck="false" aria-label="CSS input">
-:root { --brand: #22c55e; }
-body { font-family: system-ui, sans-serif; padding: 24px; }
-.wrap { max-width: 60ch; margin: 0 auto; }
-h1 { color: var(--brand); margin: 0 0 8px; }
-button {
-  background: var(--brand); color: #052e15; border: 0;
-  padding: 10px 14px; border-radius: 10px; cursor: pointer;
-}
-button:hover { filter: brightness(1.05); }
-          </textarea>
-        </div>
-
-        <div class="panel">
-          <header><span class="label">JavaScript</span></header>
-          <textarea id="jsInput" spellcheck="false" aria-label="JavaScript input">
-document.getElementById('demoBtn')?.addEventListener('click', () => {
-  alert('It works! 🎉');
-});
-          </textarea>
-        </div>
-      </section>
-
-      <section class="panel preview" aria-label="Preview">
-        <header><span class="label">Preview</span></header>
-        <iframe id="preview" title="Output preview" sandbox="allow-scripts allow-same-origin"></iframe>
-      </section>
-    </main>
+  <h1>🌍 Mini World Sandbox</h1>
+  <p>Click a tool, then click cells to place elements.</p>
+  <div>
+    <button onclick="setTool('water')">💧 Water</button>
+    <button onclick="setTool('fire')">🔥 Fire</button>
+    <button onclick="setTool('tree')">🌳 Tree</button>
+    <button onclick="setTool('lava')">🌋 Lava</button>
+    <button onclick="setTool('sand')">🏖️ Sand</button>
+    <button onclick="setTool('grass')">🌱 Grass</button>
   </div>
-
+  <div id="world"></div>
   <script>
-    const html = document.getElementById('htmlInput');
-    const css = document.getElementById('cssInput');
-    const js = document.getElementById('jsInput');
-    const iframe = document.getElementById('preview');
-    const runBtn = document.getElementById('runBtn');
-    const resetBtn = document.getElementById('resetBtn');
+    const world = document.getElementById('world');
+    let tool = 'water';
 
-    const TEMPLATE =
-`<!doctype html>
-<html lang="en">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>/* User CSS */\n{{CSS}}\n</style>
-<body>
-<!-- User HTML -->
-{{HTML}}
-<script>/* User JS */\n{{JS}}\n</` + `script>
-</body>
-</html>`;
+    function setTool(t){ tool = t; }
 
-    function run() {
-      const doc = TEMPLATE
-        .replace('{{HTML}}', html.value)
-        .replace('{{CSS}}', css.value)
-        .replace('{{JS}}', js.value);
-
-      const blob = new Blob([doc], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      iframe.src = url;
-      // Revoke after iframe loads to free memory
-      iframe.onload = () => URL.revokeObjectURL(url);
+    // build grid
+    const cells = [];
+    for(let i=0;i<400;i++){
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.addEventListener('click', () => {
+        cell.className = 'cell ' + tool;
+        interact(cell, tool);
+      });
+      world.appendChild(cell);
+      cells.push(cell);
     }
 
-    function reset() {
-      html.value =
-`<div class="wrap">
-  <h1>Hello, sandbox 👋</h1>
-  <p>Edit HTML, CSS, and JS, then press Run.</p>
-  <button id="demoBtn">Click me</button>
-</div>`;
-      css.value =
-`:root { --brand: #22c55e; }
-body { font-family: system-ui, sans-serif; padding: 24px; }
-.wrap { max-width: 60ch; margin: 0 auto; }
-h1 { color: var(--brand); margin: 0 0 8px; }
-button {
-  background: var(--brand); color: #052e15; border: 0;
-  padding: 10px 14px; border-radius: 10px; cursor: pointer;
-}
-button:hover { filter: brightness(1.05); }`;
-      js.value =
-`document.getElementById('demoBtn')?.addEventListener('click', () => {
-  alert('It works! 🎉');
-});`;
-      run();
-    }
-
-    // Keyboard shortcut: Ctrl/Cmd+Enter to Run
-    window.addEventListener('keydown', (e) => {
-      const isMac = navigator.platform.toLowerCase().includes('mac');
-      if ((isMac ? e.metaKey : e.ctrlKey) && e.key === 'Enter') {
-        e.preventDefault();
-        run();
+    function interact(cell, type){
+      // simple reactions
+      if(type==='fire' && cell.classList.contains('tree')){
+        cell.className = 'cell fire'; // tree burns
       }
-    });
-
-    runBtn.addEventListener('click', run);
-    resetBtn.addEventListener('click', reset);
-
-    // First render
-    run();
+      if(type==='water' && cell.classList.contains('lava')){
+        cell.className = 'cell sand'; // lava cools into sand
+      }
+      if(type==='water' && cell.classList.contains('fire')){
+        cell.className = 'cell grass'; // fire quenched, grass grows
+      }
+    }
   </script>
 </body>
 </html>
