@@ -211,4 +211,5 @@ function step(){
 
       // criminals wander
       if(type==='criminal'){
-        const dir=[[
+        const dir=[[0,-1],[0,1],[-1,0],[1,0]][Math.floor(Math.random()*4)];
+        const nx=x+dir[0], ny=y+dir[1];
