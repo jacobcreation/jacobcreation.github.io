@@ -22,6 +22,7 @@
       --text: #333;
       --card-bg: #ffffff;
       --accent: #eaf6ff;
+      --shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
     body {
@@ -42,10 +43,10 @@
       color: white;
       padding: 20px 0;
       text-align: center;
-      font-size: 1.8em;
-      font-weight: 600;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-      text-shadow: 0 0 8px rgba(255,255,255,0.6);
+      font-size: 2em;
+      font-weight: 700;
+      box-shadow: var(--shadow);
+      letter-spacing: 1px;
     }
 
     main {
@@ -74,21 +75,25 @@
     }
 
     .links a {
-      display: block;
+      min-height: 80px; /* ✅ uniform height */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
       padding: 18px;
       font-size: 1.1em;
       text-decoration: none;
       color: var(--text);
       background: var(--card-bg);
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      box-shadow: var(--shadow);
       transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
     }
 
     .links a:hover,
     .links a:focus {
-      transform: scale(1.05);
-      box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+      transform: translateY(-4px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
       background: var(--accent);
     }
 
@@ -107,7 +112,7 @@
       padding: 25px;
       background: #fff8e1;
       border-radius: 15px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      box-shadow: var(--shadow);
       border: 2px dashed #ff9800;
     }
 
@@ -157,10 +162,10 @@
       <a href="https://jacobcreation.github.io/ab" target="_blank" rel="noopener">🐦 Angry Birds</a>
       <a href="https://jacobcreation.github.io/as" target="_blank" rel="noopener">👾 Asteroids</a>
       <a href="https://jacobcreation.github.io/pm" target="_blank" rel="noopener">🟡 Pac-Man</a>
-      <a href="https://jacobcreation.github.io/pm" target="_blank" rel="noopener">🎨 Paint</a>
+      <a href="https://jacobcreation.github.io/paint" target="_blank" rel="noopener">🎨 Paint</a>
       <a href="https://jacobcreation.github.io/rcs" target="_blank" rel="noopener">🔄 Rubik's Cube Solver</a>
       <a href="https://jacobcreation.github.io/riddles" target="_blank" rel="noopener">🧠 Riddles</a>
-      <a href="https://jacobcreation.github.io/piano" target="_blank" rel="noopener"> Piano</a>
+      <a href="https://jacobcreation.github.io/piano" target="_blank" rel="noopener">🎹 Piano</a>
     </nav>
 
     <!-- 🎁 Mystery Code Reward Section -->
@@ -175,28 +180,4 @@
     </section>
   </main>
 
-  <footer>© 2025 JacobCreation. All rights reserved.</footer>
-
-  <script>
-    function checkMysteryCode() {
-      const input = document.getElementById("birthdayInput").value.trim();
-      const rewardDiv = document.getElementById("rewardMessage");
-      const audio = document.getElementById("rewardAudio");
-
-      // Mystery code (your birthday digits)
-      const secretParts = ["14", "29", "11"];
-      const secret = secretParts.join(""); // "142911"
-
-      if (input === secret) {
-        rewardDiv.innerHTML = `🎉 Mystery Code Unlocked! 🎉<br>
-                               Your special audio reward is playing... 🎶`;
-        audio.play().catch(() => {
-          rewardDiv.innerHTML += "<br>⚠️ Please click play if audio didn’t start!";
-        });
-      } else {
-        rewardDiv.innerHTML = "❌ Incorrect code. Try again!";
-      }
-    }
-  </script>
-</body>
-</html>
+  <footer>© 2025 Jacob
