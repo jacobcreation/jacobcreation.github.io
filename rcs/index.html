@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <!-- We only include this to explicitly loosen the CSP of various packager environments. It does not provide any security. -->
   <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:">
-  <title>Rubiks Cube Solver</title>
+  <title>Rubiks cube solver</title>
   <style>
     body {
       color: #ffffff;
@@ -224,7 +224,7 @@
       scaffolding.setAccentColor("#ff4c4c");
 
       try {
-        scaffolding.addCloudProvider(new Scaffolding.Cloud.WebSocketProvider(["wss://clouddata.turbowarp.org","wss://clouddata.turbowarp.xyz"], "147051001"));
+        scaffolding.addCloudProvider(new Scaffolding.Cloud.WebSocketProvider(["wss://clouddata.turbowarp.org","wss://clouddata.turbowarp.xyz"], "829260137"));
       } catch (error) {
         console.error(error);
       }
@@ -334,13 +334,13 @@
       }
 
       vm.setTurboMode(false);
-      if (vm.setInterpolation) vm.setInterpolation(false);
+      if (vm.setInterpolation) vm.setInterpolation(true);
       if (vm.setFramerate) vm.setFramerate(30);
-      if (vm.renderer.setUseHighQualityRender) vm.renderer.setUseHighQualityRender(false);
+      if (vm.renderer.setUseHighQualityRender) vm.renderer.setUseHighQualityRender(true);
       if (vm.setRuntimeOptions) vm.setRuntimeOptions({
         fencing: true,
-        miscLimits: true,
-        maxClones: 300,
+        miscLimits: false,
+        maxClones: 9999999999,
       });
       if (vm.setCompilerOptions) vm.setCompilerOptions({
         enabled: true,
@@ -373,7 +373,7 @@
       const getProjectData = (function() {
         const storage = scaffolding.storage;
         storage.onprogress = (total, loaded) => {
-          setProgress(interpolate(0.75, 0.98, loaded / total));
+          setProgress(interpolate(0.2, 0.98, loaded / total));
         };
         
         storage.addWebStore(
@@ -399,11 +399,11 @@
         };
         xhr.onprogress = (e) => {
           if (e.lengthComputable) {
-            setProgress(interpolate(0.1, 0.75, e.loaded / e.total));
+            setProgress(interpolate(0.1, 0.2, e.loaded / e.total));
           }
         };
         xhr.responseType = 'arraybuffer';
-        xhr.open('GET', "./project.zip");
+        xhr.open('GET', "./assets/project.json");
         xhr.send();
       });
       })();
