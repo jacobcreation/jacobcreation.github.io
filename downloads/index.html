@@ -6,64 +6,92 @@
   <title>Downloads</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: #f4f6f9;
       color: #333;
-      max-width: 800px;
+      max-width: 900px;
       margin: 40px auto;
       padding: 20px;
     }
     h1 {
       text-align: center;
       color: #0b74de;
+      margin-bottom: 30px;
     }
-    ul {
-      list-style: none;
-      padding: 0;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
     }
-    li {
-      margin: 10px 0;
-      padding: 12px;
+    .card {
       background: #fff;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      transition: background 0.2s ease;
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      text-align: center;
     }
-    li:hover {
-      background: #eaf6ff;
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.12);
     }
-    a {
+    .card .icon {
+      font-size: 40px;
+      color: #0b74de;
+    }
+    .card a {
       text-decoration: none;
       color: #0b74de;
       font-weight: bold;
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 14px;
+      border: 1px solid #0b74de;
+      border-radius: 6px;
+      background: #f0f8ff;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+    .card a:hover {
+      background: #0b74de;
+      color: #fff;
     }
   </style>
 </head>
 <body>
   <h1>📂 Downloads</h1>
-  <ul id="fileList">
-    <li>Loading files.json…</li>
-  </ul>
+  <div id="fileGrid" class="grid">
+    <p>Loading files.json…</p>
+  </div>
 
   <script>
     fetch('./files.json')
       .then(res => res.json())
       .then(files => {
-        const list = document.getElementById('fileList');
-        list.innerHTML = '';
+        const grid = document.getElementById('fileGrid');
+        grid.innerHTML = '';
         files.forEach(file => {
-          const li = document.createElement('li');
+          const card = document.createElement('div');
+          card.className = 'card';
+
+          // icon
+          const icon = document.createElement('div');
+          icon.className = 'icon';
+          icon.textContent = "📄";
+
+          // link
           const link = document.createElement('a');
           link.href = file;
-          link.textContent = file;
-          link.setAttribute('download', ''); // ✅ forces download
-          li.appendChild(link);
-          list.appendChild(li);
+          link.textContent = file.split("/").pop().replace(".html", ""); // ✅ show only filename, no path, no extension
+          link.setAttribute('download', '');
+
+          card.appendChild(icon);
+          card.appendChild(link);
+          grid.appendChild(card);
         });
       })
       .catch(err => {
-        document.getElementById('fileList').innerHTML =
-          "<li style='color:red;'>⚠️ Could not load files.json</li>";
+        document.getElementById('fileGrid').innerHTML =
+          "<p style='color:red;'>⚠️ Could not load files.json</p>";
         console.error(err);
       });
   </script>
