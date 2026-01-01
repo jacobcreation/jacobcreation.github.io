@@ -62,13 +62,30 @@
   <header>📂 Downloads</header>
   <main>
     <h2>Available Files</h2>
-    <ul>
-      <!-- ✅ List your files here -->
-      <li><a href="game.exe">game.exe</a></li>
-      <li><a href="readme.txt">readme.txt</a></li>
-      <li><a href="setup.html">setup.html</a></li>
-      <li><a href="file1.zip">file1.zip</a></li>
-    </ul>
+    <ul id="fileList"></ul>
   </main>
+
+  <script>
+    // Load files.json dynamically
+    fetch('files.json')
+      .then(response => response.json())
+      .then(files => {
+        const list = document.getElementById('fileList');
+        list.innerHTML = ""; // clear any old content
+        files.forEach(file => {
+          const li = document.createElement('li');
+          const link = document.createElement('a');
+          link.href = file;
+          link.textContent = file;
+          li.appendChild(link);
+          list.appendChild(li);
+        });
+      })
+      .catch(err => {
+        document.getElementById('fileList').innerHTML =
+          "<li style='color:red;'>⚠️ Could not load files.json</li>";
+        console.error(err);
+      });
+  </script>
 </body>
 </html>
