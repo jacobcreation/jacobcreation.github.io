@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chess PGN Importer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="header">
+    <h1>♟️ Chess PGN importer</h1>
+    <p class="sub">Load PGN, pick a game, and step through moves.</p>
+  </header>
+
+  <main class="container">
+    <section class="loader">
+      <div class="input-row">
+        <label class="btn">
+          <input type="file" id="pgnFile" accept=".pgn,text/plain" hidden />
+          📁 Load PGN file
+        </label>
+        <button id="demoBtn" class="btn btn-secondary">Try demo PGN</button>
+        <button id="clearBtn" class="btn btn-light">Clear</button>
+      </div>
+
+      <textarea id="pgnText" placeholder="Paste PGN here…" rows="6"></textarea>
+
+      <div class="input-row">
+        <button id="importBtn" class="btn">Import PGN</button>
+        <span id="status" class="status"></span>
+      </div>
+    </section>
+
+    <section class="games">
+      <h2>Games</h2>
+      <select id="gameSelect" size="6"></select>
+    </section>
+
+    <section class="board-area">
+      <div class="board" id="board" aria-label="Chess board"></div>
+
+      <div class="controls">
+        <button id="resetBtn" class="btn btn-light">⟲ Reset</button>
+        <button id="prevBtn" class="btn btn-light">⟵ Prev</button>
+        <button id="nextBtn" class="btn btn-light">Next ⟶</button>
+        <button id="playBtn" class="btn btn-secondary">▶ Play</button>
+        <button id="downloadBtn" class="btn btn-secondary">⬇️ Download PGN</button>
+      </div>
+
+      <div class="meta">
+        <div><strong>Move:</strong> <span id="plyInfo">0 / 0</span></div>
+        <div><strong>Turn:</strong> <span id="turnInfo">White</span></div>
+        <div><strong>Result:</strong> <span id="resultInfo">—</span></div>
+      </div>
+
+      <div class="moves">
+        <h3>Moves</h3>
+        <div id="moveList" class="move-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <small>Made for simple, robust PGN viewing. No external libs.</small>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
