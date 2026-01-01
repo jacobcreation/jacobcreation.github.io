@@ -77,70 +77,74 @@
   }
 
   function rcToSquare(r, f) {
-    const chunks = cleaned
-  .split(/\n(?=
-
-\[Event\s)|\n{2,}/)   // ✅ regex properly closed, all on one line
-  .filter(s => s.trim());
-
-    .filter(s => s.trim());
-  const out = [];
-  for (let chunk of chunks) {
-    const { tags, movetext } = extractTagsAndMovetext(chunk);
-    const { moves, result } = parseMovetext(movetext);
-    if (moves.length) {
-      out.push({
-        tags,
-        moves,
-        result: result || tags.Result || '—',
-        raw: chunk.trim()
-      });
-    }
+    return `${FILES[f]}${8 - r}`;
   }
-  return out;
-}
 
-function extractTagsAndMovetext(chunk) {
-  const tags = {};
-  const lines = chunk.split('\n');
-  let i = 0;
-  while (i < lines.length && lines[i].startsWith('[')) {
-    const m = lines[i].match(/^
+  // --- PGN parsing ---
+  function parsePGN(text) {
+    const cleaned = text.replace(/\r\n/g, '\n').trim();
+    // Split by blank lines between games OR by tags start
+    const chunks = cleaned
+      .split(/\n(?=
+
+\[Event\s)|\n{2,}/)   // regex properly closed
+      .filter(s => s.trim());
+    const out = [];
+    for (let chunk of chunks) {
+      const { tags, movetext } = extractTagsAndMovetext(chunk);
+      const { moves, result } = parseMovetext(movetext);
+      if (moves.length) {
+        out.push({
+          tags,
+          moves,
+          result: result || tags.Result || '—',
+          raw: chunk.trim()
+        });
+      }
+    }
+    return out;
+  }
+
+  function extractTagsAndMovetext(chunk) {
+    const tags = {};
+    const lines = chunk.split('\n');
+    let i = 0;
+    while (i < lines.length && lines[i].startsWith('[')) {
+      const m = lines[i].match(/^
 
 \[(\w+)\s+"(.*)"\]
 
 $/);
-    if (m) tags[m[1]] = m[2];
-    i++;
-  }
-  const movetext = lines.slice(i).join(' ');
-  return { tags, movetext };
-}
-
-function parseMovetext(mtext) {
-  // Remove comments {...}, NAGs $x, and variations (...) for simplicity
-  let s = mtext
-    .replace(/\{[^}]*\}/g, ' ')
-    .replace(/\$[0-9]+/g, ' ')
-    .replace(/\([^)]*\)/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  // Extract result token
-  let result = null;
-  const resMatch = s.match(/\s(1-0|0-1|1\/2-1\/2|\*)\s?$/);
-  if (resMatch) {
-    result = resMatch[1];
-    s = s.replace(/\s(1-0|0-1|1\/2-1\/2|\*)\s?$/, ' ').trim();
+      if (m) tags[m[1]] = m[2];
+      i++;
+    }
+    const movetext = lines.slice(i).join(' ');
+    return { tags, movetext };
   }
 
-  // Remove move numbers like "12." or "12..."
-  s = s.replace(/\b\d+\.(\.\.)?/g, ' ').replace(/\s+/g, ' ').trim();
-  const toks = s.split(' ').filter(Boolean);
+  function parseMovetext(mtext) {
+    // Remove comments {...}, NAGs $x, and variations (...) for simplicity
+    let s = mtext
+      .replace(/\{[^}]*\}/g, ' ')
+      .replace(/\$[0-9]+/g, ' ')
+      .replace(/\([^)]*\)/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
 
-  return { moves: toks, result };
-}
+    // Extract result token
+    let result = null;
+    const resMatch = s.match(/\s(1-0|0-1|1\/2-1\/2|\*)\s?$/);
+    if (resMatch) {
+      result = resMatch[1];
+      s = s.replace(/\s(1-0|0-1|1\/2-1\/2|\*)\s?$/, ' ').trim();
+    }
 
+    // Remove move numbers like "12." or "12..."
+    s = s.replace(/\b\d+\.(\.\.)?/g, ' ').replace(/\s+/g, ' ').trim();
+    const toks = s.split(' ').filter(Boolean);
+
+    return { moves: toks, result };
+  }
 
   // --- Setup and controls ---
   function setupFromStart() {
@@ -224,4 +228,120 @@ function parseMovetext(mtext) {
     const demo = `
 [Event "Demo"]
 [Site "Internet"]
-[Date "2026.01.01
+[Date "2026.01.01"]
+[Round "1"]
+[White "White"]
+[Black "Black"]
+[Result "1-0"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7
+6. Re1 b5 7. Bb3 d6 8. c3 O-O 9. h3 Nb8 10. d4 Nbd7
+11. Nbd2 Bb7 12. Bc2 Re8 13. Nf1 Bf8 14. Ng3 g6 15. Bg5 h6
+16. Be3 Bg7 17. Qd2 Kh7 18. a4 c5 19. d5 c4 20. Nh2 Nc5
+21. Ng4 Nxg4 22. hxg4 Qh4 23. Qe2 Nd7 24. Nf1 Nf6 25. f3 Nd7
+26. g3 Qe7 27. Qh2 Rh8 28. Kg2 Kg8 29. Nd2 Nf8 30. Rh1 g5
+31. Qg1 Ng6 32. Qf2 Qd7 33. Rh5 Nf8 34. Rah1 Bc8 35. Bxg5 f6
+36. Bxh6 Rxh6 37. Rxh6 Rxh6 38. Rxh6 Bxh6 39. Nf1 Qh7 40. Ne3 Qg7
+41. Nf5 Bxf5 42. exf5 Qg5 43. axb5 axb5 44. Qb6 Qd2+ 45. Qf2 Qc1
+46. Qe2 Qxb2 47. f4 exf4 48. gxf4 Qxc3 49. g5 fxg5 50. fxg5 Bxg5
+51. Qg4 Nh7 52. Qe4 Qe5 53. Qxe5 dxe5 54. Kf3 Nf6 55. d6 Kf7
+56. Be4 Nxe4 57. Kxe4 Ke8 58. Kxe5 c3 59. d7+ Kxd7 60. f6 Bxf6+
+61. Kxf6 c2 62. Ke5 c1=Q 63. Ke4 Qc5 64. Kf4 b4 65. Ke4 b3 66. Kd3 b2
+67. Kd2 b1=Q 68. Ke2 Qbc2+ 69. Kf3 Qd4 70. Kg3 Qcf2+ 71. Kh3 Qdh4#
+1-0
+    `.trim();
+    pgnText.value = demo;
+    statusEl.textContent = 'Loaded demo PGN';
+  });
+
+  importBtn.addEventListener('click', () => {
+    const text = pgnText.value.trim();
+    if (!text) {
+      statusEl.textContent = 'Paste PGN or load a file';
+      return;
+    }
+    games = parsePGN(text);
+    gameSelect.innerHTML = '';
+    if (!games.length) {
+      statusEl.textContent = 'No games parsed';
+      return;
+    }
+    games.forEach((g, i) => {
+      const opt = document.createElement('option');
+      const white = g.tags.White || 'White';
+      const black = g.tags.Black || 'Black';
+      const event = g.tags.Event || 'Event';
+      const res = g.result || '—';
+      opt.value = i;
+      opt.textContent = `${i + 1}. ${white} vs ${black} • ${event} • ${res}`;
+      gameSelect.appendChild(opt);
+    });
+    gameSelect.selectedIndex = 0;
+    selectGame(0);
+    statusEl.textContent = `Imported ${games.length} game(s)`;
+  });
+
+  gameSelect.addEventListener('change', (e) => {
+    const idx = Number(e.target.value);
+    selectGame(idx);
+  });
+
+  function selectGame(idx) {
+    currentGame = games[idx];
+    setupFromStart();
+  }
+
+  resetBtn.addEventListener('click', () => {
+    setupFromStart();
+  });
+
+  prevBtn.addEventListener('click', () => {
+    stopPlay();
+    applyPrev();
+  });
+
+  nextBtn.addEventListener('click', () => {
+    stopPlay();
+    applyNext();
+  });
+
+  playBtn.addEventListener('click', () => {
+    if (autoplayTimer) {
+      stopPlay();
+      return;
+    }
+    playBtn.textContent = '⏸ Pause';
+    autoplayTimer = setInterval(() => {
+      if (!currentGame || plyIndex >= currentGame.moves.length) {
+        stopPlay();
+        return;
+      }
+      applyNext();
+    }, 800);
+  });
+
+  function stopPlay() {
+    if (autoplayTimer) {
+      clearInterval(autoplayTimer);
+      autoplayTimer = null;
+    }
+    playBtn.textContent = '▶ Play';
+  }
+
+  downloadBtn.addEventListener('click', () => {
+    if (!currentGame) return;
+    const blob = new Blob([currentGame.raw], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const name = `${currentGame.tags.White || 'White'}-vs-${currentGame.tags.Black || 'Black'}.pgn`.replace(/\s+/g, '_');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  // Init
+  setupFromStart();
+})();
