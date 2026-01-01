@@ -81,64 +81,71 @@
   }
 
   // --- PGN parsing ---
-  function parsePGN(text) {
-    const cleaned = text.replace(/\r\n/g, '\n').trim();
-    // ✅ Regex properly closed
-    const chunks = cleaned.split(/\n(?=
+function parsePGN(text) {
+  const cleaned = text.replace(/\r\n/g, '\n').trim();
+  // Split by blank lines between games OR by tags start
+  const chunks = cleaned
+    .split(/\n(?=
 
-\[Event\s)|\n{2,}/).filter(s => s.trim());
-    const out = [];
-    for (let chunk of chunks) {
-      const { tags, movetext } = extractTagsAndMovetext(chunk);
-      const { moves, result } = parseMovetext(movetext);
-      if (moves.length) {
-        out.push({
-          tags,
-          moves,
-          result: result || tags.Result || '—',
-          raw: chunk.trim()
-        });
-      }
+\[Event\s)|\n{2,}/)   // ✅ regex properly closed
+    .filter(s => s.trim());
+  const out = [];
+  for (let chunk of chunks) {
+    const { tags, movetext } = extractTagsAndMovetext(chunk);
+    const { moves, result } = parseMovetext(movetext);
+    if (moves.length) {
+      out.push({
+        tags,
+        moves,
+        result: result || tags.Result || '—',
+        raw: chunk.trim()
+      });
     }
-    return out;
   }
+  return out;
+}
 
-  function extractTagsAndMovetext(chunk) {
-    const tags = {};
-    const lines = chunk.split('\n');
-    let i = 0;
-    while (i < lines.length && lines[i].startsWith('[')) {
-      const m = lines[i].match(/^
+function extractTagsAndMovetext(chunk) {
+  const tags = {};
+  const lines = chunk.split('\n');
+  let i = 0;
+  while (i < lines.length && lines[i].startsWith('[')) {
+    const m = lines[i].match(/^
 
 \[(\w+)\s+"(.*)"\]
 
 $/);
-      if (m) tags[m[1]] = m[2];
-      i++;
-    }
-    const movetext = lines.slice(i).join(' ');
-    return { tags, movetext };
+    if (m) tags[m[1]] = m[2];
+    i++;
+  }
+  const movetext = lines.slice(i).join(' ');
+  return { tags, movetext };
+}
+
+function parseMovetext(mtext) {
+  // Remove comments {...}, NAGs $x, and variations (...) for simplicity
+  let s = mtext
+    .replace(/\{[^}]*\}/g, ' ')
+    .replace(/\$[0-9]+/g, ' ')
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Extract result token
+  let result = null;
+  const resMatch = s.match(/\s(1-0|0-1|1\/2-1\/2|\*)\s?$/);
+  if (resMatch) {
+    result = resMatch[1];
+    s = s.replace(/\s(1-0|0-1|1\/2-1\/2|\*)\s?$/, ' ').trim();
   }
 
-  function parseMovetext(mtext) {
-    let s = mtext
-      .replace(/\{[^}]*\}/g, ' ')
-      .replace(/\$[0-9]+/g, ' ')
-      .replace(/\([^)]*\)/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+  // Remove move numbers like "12." or "12..."
+  s = s.replace(/\b\d+\.(\.\.)?/g, ' ').replace(/\s+/g, ' ').trim();
+  const toks = s.split(' ').filter(Boolean);
 
-    let result = null;
-    const resMatch = s.match(/\s(1-0|0-1|1\/2-1\/2|\*)\s?$/);
-    if (resMatch) {
-      result = resMatch[1];
-      s = s.replace(/\s(1-0|0-1|1\/2-1\/2|\*)\s?$/, ' ').trim();
-    }
+  return { moves: toks, result };
+}
 
-    s = s.replace(/\b\d+\.(\.\.)?/g, ' ').replace(/\s+/g, ' ').trim();
-    const toks = s.split(' ').filter(Boolean);
-    return { moves: toks, result };
-  }
 
   // --- Setup and controls ---
   function setupFromStart() {
