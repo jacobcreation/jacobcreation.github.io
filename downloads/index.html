@@ -1,259 +1,71 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Downloads</title>
   <style>
-    :root {
-      color-scheme: light dark;
-      --bg: #fff;
-      --fg: #222;
-      --muted: #666;
-      --accent: #0b74de;
-      --row: #f7f9fc;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0f1216;
-        --fg: #e7eaf0;
-        --muted: #a6adbb;
-        --accent: #6aa8ff;
-        --row: #151922;
-      }
-    }
     body {
-      margin: 0 auto;
-      max-width: 980px;
-      padding: 24px;
-      font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
-      background: var(--bg);
-      color: var(--fg);
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 12px;
-      margin-bottom: 16px;
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      color: #333;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
     }
     h1 {
-      margin: 0;
-      font-size: 20px;
+      text-align: center;
+      color: #0b74de;
     }
-    #controls {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
+    ul {
+      list-style: none;
+      padding: 0;
     }
-    input, select {
-      padding: 6px 8px;
-      border: 1px solid var(--muted);
+    li {
+      margin: 10px 0;
+      padding: 12px;
+      background: #fff;
       border-radius: 6px;
-      background: transparent;
-      color: inherit;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: background 0.2s ease;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 8px;
-    }
-    th, td {
-      text-align: left;
-      padding: 10px 8px;
-      border-bottom: 1px solid rgba(127,127,127,0.25);
-    }
-    tbody tr:nth-child(odd) {
-      background: var(--row);
+    li:hover {
+      background: #eaf6ff;
     }
     a {
-      color: var(--accent);
       text-decoration: none;
+      color: #0b74de;
+      font-weight: bold;
     }
-    a:hover { text-decoration: underline; }
-    .muted { color: var(--muted); font-size: 12px; }
-    .tag {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 12px;
-      border: 1px solid rgba(127,127,127,0.35);
-      margin-right: 6px;
-      font-size: 12px;
-    }
-    tfoot td {
-      padding-top: 14px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Downloads</h1>
-    <div id="controls">
-      <input id="search" type="search" placeholder="Search name or tags…" aria-label="Search" />
-      <select id="sort" aria-label="Sort">
-        <option value="date-desc">Newest</option>
-        <option value="date-asc">Oldest</option>
-        <option value="name-asc">Name A–Z</option>
-        <option value="name-desc">Name Z–A</option>
-        <option value="size-desc">Largest</option>
-        <option value="size-asc">Smallest</option>
-      </select>
-      <button id="refresh" type="button">Reload</button>
-    </div>
-  </header>
-
-  <table aria-label="Downloads table">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th class="muted">Tags</th>
-        <th>Size</th>
-        <th>Date</th>
-      </tr>
-    </thead>
-    <tbody id="rows"></tbody>
-    <tfoot>
-      <tr>
-        <td colspan="4" id="status" class="muted">Loading files.json…</td>
-      </tr>
-    </tfoot>
-  </table>
+  <h1>📂 Downloads</h1>
+  <ul id="fileList">
+    <li>Loading files.json…</li>
+  </ul>
 
   <script>
-    // Config: path to files.json relative to this page
-    const FILES_JSON_URL = './files.json';
-
-    // Fallback data if fetch fails (optional; keep empty for clean errors)
-    const FALLBACK = []; // e.g., [{name:"example.zip", url:"downloads/example.zip", size:123456, date:"2025-12-31", tags:["demo","zip"]}]
-
-    // State
-    let allItems = [];
-    let filtered = [];
-
-    // Utils
-    const fmtBytes = (n) => {
-      if (n == null || isNaN(n)) return '—';
-      const units = ['B','KB','MB','GB','TB'];
-      let i = 0, v = Number(n);
-      while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
-      return `${v.toFixed(v < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
-    };
-    const fmtDate = (d) => {
-      if (!d) return '—';
-      const x = new Date(d);
-      if (isNaN(x)) return d;
-      return x.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-    };
-    const norm = (s) => (s || '').toString().toLowerCase();
-
-    function render(items) {
-      const tbody = document.getElementById('rows');
-      tbody.innerHTML = '';
-      for (const it of items) {
-        const tr = document.createElement('tr');
-
-        const name = document.createElement('td');
-        const link = document.createElement('a');
-        link.href = it.url || '#';
-        link.textContent = it.name || '(untitled)';
-        link.setAttribute('download', '');
-        name.appendChild(link);
-        if (it.description) {
-          const desc = document.createElement('div');
-          desc.className = 'muted';
-          desc.textContent = it.description;
-          name.appendChild(desc);
-        }
-
-        const tags = document.createElement('td');
-        if (Array.isArray(it.tags) && it.tags.length) {
-          for (const t of it.tags) {
-            const span = document.createElement('span');
-            span.className = 'tag';
-            span.textContent = t;
-            tags.appendChild(span);
-          }
-        } else {
-          tags.textContent = '—';
-          tags.classList.add('muted');
-        }
-
-        const size = document.createElement('td');
-        size.textContent = fmtBytes(it.size);
-
-        const date = document.createElement('td');
-        date.textContent = fmtDate(it.date);
-
-        tr.appendChild(name);
-        tr.appendChild(tags);
-        tr.appendChild(size);
-        tr.appendChild(date);
-        tbody.appendChild(tr);
-      }
-
-      const status = document.getElementById('status');
-      status.textContent = `${items.length} item${items.length === 1 ? '' : 's'}`;
-    }
-
-    function applySearchSort() {
-      const q = norm(document.getElementById('search').value);
-      const sort = document.getElementById('sort').value;
-
-      filtered = allItems.filter(it => {
-        const hay = `${norm(it.name)} ${norm((it.tags || []).join(' '))} ${norm(it.description)}`;
-        return hay.includes(q);
+    fetch('./files.json')
+      .then(res => res.json())
+      .then(files => {
+        const list = document.getElementById('fileList');
+        list.innerHTML = '';
+        files.forEach(file => {
+          const li = document.createElement('li');
+          const link = document.createElement('a');
+          link.href = file;
+          link.textContent = file;
+          link.setAttribute('download', ''); // ✅ forces download
+          li.appendChild(link);
+          list.appendChild(li);
+        });
+      })
+      .catch(err => {
+        document.getElementById('fileList').innerHTML =
+          "<li style='color:red;'>⚠️ Could not load files.json</li>";
+        console.error(err);
       });
-
-      const byName = (a, b) => norm(a.name).localeCompare(norm(b.name));
-      const byDate = (a, b) => new Date(a.date || 0) - new Date(b.date || 0);
-      const bySize = (a, b) => (a.size || 0) - (b.size || 0);
-
-      switch (sort) {
-        case 'name-asc': filtered.sort(byName); break;
-        case 'name-desc': filtered.sort((a,b) => byName(b,a)); break;
-        case 'date-asc': filtered.sort(byDate); break;
-        case 'date-desc': filtered.sort((a,b) => byDate(b,a)); break;
-        case 'size-asc': filtered.sort(bySize); break;
-        case 'size-desc': filtered.sort((a,b) => bySize(b,a)); break;
-      }
-
-      render(filtered);
-    }
-
-    async function load() {
-      const status = document.getElementById('status');
-      status.textContent = 'Loading files.json…';
-      try {
-        const res = await fetch(FILES_JSON_URL, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        if (!Array.isArray(data)) throw new Error('Expected an array');
-        allItems = data;
-        status.textContent = `Loaded ${data.length} item${data.length === 1 ? '' : 's'}`;
-      } catch (err) {
-        console.warn('Failed to load files.json:', err);
-        if (FALLBACK.length) {
-          allItems = FALLBACK;
-          status.textContent = 'Using fallback data';
-        } else {
-          allItems = [];
-          status.textContent = 'Could not load files.json';
-        }
-      }
-      applySearchSort();
-    }
-
-    // Events
-    document.getElementById('search').addEventListener('input', applySearchSort);
-    document.getElementById('sort').addEventListener('change', applySearchSort);
-    document.getElementById('refresh').addEventListener('click', load);
-
-    // Start
-    load();
   </script>
 </body>
 </html>
