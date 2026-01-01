@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -89,3 +90,22 @@
   </script>
 </body>
 </html>
+=======
+[
+  "sandbox.html",
+  "chess.html",
+  "flappybird.html",
+  "snake.html"
+  "shootthemonster.html"
+  "Rubik's cube solver.html"
+  "Paint.html"
+  "PacMan.html"
+  "Asteroids.html"
+  "Plants Vs Zombies.html"
+  "Tetris.html"
+  "Block Blast.html"
+  "Piano.html"
+  "Riddles.html"
+  
+]
+>>>>>>> 6f2ab7947482e1b2c3f0673f7ec3f4507ea1ebec
