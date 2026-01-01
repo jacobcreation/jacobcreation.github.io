@@ -77,17 +77,12 @@
   }
 
   function rcToSquare(r, f) {
-    return `${FILES[f]}${8 - r}`;
-  }
+    const chunks = cleaned
+  .split(/\n(?=
 
-  // --- PGN parsing ---
-function parsePGN(text) {
-  const cleaned = text.replace(/\r\n/g, '\n').trim();
-  // Split by blank lines between games OR by tags start
-  const chunks = cleaned
-    .split(/\n(?=
+\[Event\s)|\n{2,}/)   // ✅ regex properly closed, all on one line
+  .filter(s => s.trim());
 
-\[Event\s)|\n{2,}/)   // ✅ regex properly closed
     .filter(s => s.trim());
   const out = [];
   for (let chunk of chunks) {
