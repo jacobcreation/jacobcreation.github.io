@@ -4,9 +4,6 @@
    - Parse multiple games, select one
    - Render board and step through SAN moves
    - Auto-play, reset, download selected PGN
-   Notes:
-   - Basic SAN parser including captures, promotions, checks, castling
-   - Ignores comments {...} and variations (...) gracefully
 */
 
 (() => {
@@ -30,27 +27,22 @@
   const resultInfo = document.getElementById('resultInfo');
 
   // State
-  let games = [];            // [{tags, moves[], result, raw}]
-  let currentGame = null;    // same shape
-  let board = null;          // Board object
-  let history = [];          // Applied moves (for stepping)
-  let plyIndex = 0;          // Current ply index
+  let games = [];
+  let currentGame = null;
+  let board = null;
+  let history = [];
+  let plyIndex = 0;
   let autoplayTimer = null;
 
-  // --- Board representation ---
-  // Pieces: 'P','N','B','R','Q','K' for white, lowercase for black
-  const START_FEN = "startpos";
   const FILES = ['a','b','c','d','e','f','g','h'];
 
   function createBoard() {
-    // 8x8 array [rank][file], rank 0 is 8th rank (top), rank 7 is 1st rank (bottom)
     const b = Array.from({ length: 8 }, () => Array(8).fill(null));
-    // Place starting pieces
     const backRank = ['R','N','B','Q','K','B','N','R'];
-    b[0] = backRank.map(p => p.toLowerCase());         // black 8th rank
-    b[1] = Array(8).fill('p');                         // black pawns
-    b[6] = Array(8).fill('P');                         // white pawns
-    b[7] = backRank.map(p => p);                       // white 1st rank
+    b[0] = backRank.map(p => p.toLowerCase());
+    b[1] = Array(8).fill('p');
+    b[6] = Array(8).fill('P');
+    b[7] = backRank.map(p => p);
     return b;
   }
 
@@ -72,8 +64,8 @@
   function pieceToEmoji(p) {
     if (!p) return '';
     const map = {
-      'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
-      'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟︎'
+      'K': '♔','Q': '♕','R': '♖','B': '♗','N': '♘','P': '♙',
+      'k': '♚','q': '♛','r': '♜','b': '♝','n': '♞','p': '♟︎'
     };
     return map[p] || '';
   }
@@ -91,16 +83,10 @@
   // --- PGN parsing ---
   function parsePGN(text) {
     const cleaned = text.replace(/\r\n/g, '\n').trim();
-    // Split by blank lines between games OR by tags start
-      // --- PGN parsing ---
-  function parsePGN(text) {
-    const cleaned = text.replace(/\r\n/g, '\n').trim();
-    // Split by blank lines between games OR by tags start
-    const chunks = cleaned
-      .split(/\n(?=
+    // ✅ Regex properly closed
+    const chunks = cleaned.split(/\n(?=
 
-\[Event\s)|\n{2,}/)   // ✅ regex is properly closed
-      .filter(s => s.trim());
+\[Event\s)|\n{2,}/).filter(s => s.trim());
     const out = [];
     for (let chunk of chunks) {
       const { tags, movetext } = extractTagsAndMovetext(chunk);
@@ -135,7 +121,6 @@ $/);
   }
 
   function parseMovetext(mtext) {
-    // Remove comments {...}, NAGs $x, and variations (...) for simplicity
     let s = mtext
       .replace(/\{[^}]*\}/g, ' ')
       .replace(/\$[0-9]+/g, ' ')
@@ -143,7 +128,6 @@ $/);
       .replace(/\s+/g, ' ')
       .trim();
 
-    // Extract result token
     let result = null;
     const resMatch = s.match(/\s(1-0|0-1|1\/2-1\/2|\*)\s?$/);
     if (resMatch) {
@@ -151,10 +135,91 @@ $/);
       s = s.replace(/\s(1-0|0-1|1\/2-1\/2|\*)\s?$/, ' ').trim();
     }
 
-    // Remove move numbers like "12." or "12..."; keep SAN
     s = s.replace(/\b\d+\.(\.\.)?/g, ' ').replace(/\s+/g, ' ').trim();
     const toks = s.split(' ').filter(Boolean);
-
-    // Moves are alternating: White, Black
     return { moves: toks, result };
   }
+
+  // --- Setup and controls ---
+  function setupFromStart() {
+    board = createBoard();
+    history = [];
+    plyIndex = 0;
+    renderBoard();
+    updateInfo();
+    renderMoveList();
+  }
+
+  function applyNext() {
+    if (!currentGame) return;
+    if (plyIndex >= currentGame.moves.length) return;
+    const san = currentGame.moves[plyIndex];
+    plyIndex++;
+    history.push(san);
+    renderBoard();
+    updateInfo();
+    renderMoveList();
+  }
+
+  function applyPrev() {
+    if (plyIndex <= 0) return;
+    const target = plyIndex - 1;
+    setupFromStart();
+    for (let i = 0; i < target; i++) applyNext();
+  }
+
+  function updateInfo() {
+    plyInfo.textContent = `${plyIndex} / ${currentGame ? currentGame.moves.length : 0}`;
+    turnInfo.textContent = (plyIndex % 2 === 0) ? 'White' : 'Black';
+    resultInfo.textContent = currentGame ? currentGame.result : '—';
+  }
+
+  function renderMoveList() {
+    moveListEl.innerHTML = '';
+    if (!currentGame) return;
+    const wrapper = document.createElement('div');
+    let out = '';
+    for (let i = 0; i < currentGame.moves.length; i += 2) {
+      const w = currentGame.moves[i] || '';
+      const b = currentGame.moves[i + 1] || '';
+      const turnNum = (i / 2) + 1;
+      out += `<span class="ply ${i === plyIndex ? 'active' : ''}">${turnNum}. ${w}</span> `;
+      if (b) out += `<span class="ply ${i + 1 === plyIndex ? 'active' : ''}">${b}</span> `;
+    }
+    wrapper.innerHTML = out;
+    moveListEl.appendChild(wrapper);
+  }
+
+  function highlightCurrentSquares() {
+    [...boardEl.querySelectorAll('.square')].forEach(s => s.classList.remove('highlight'));
+    if (!currentGame || plyIndex <= 0) return;
+    const prevSAN = currentGame.moves[plyIndex - 1];
+    const toMatch = prevSAN.match(/([a-h][1-8])$/);
+    const toSq = toMatch ? toMatch[1] : null;
+    if (toSq) {
+      const el = boardEl.querySelector(`.square[data-square="${toSq}"]`);
+      if (el) el.classList.add('highlight');
+    }
+  }
+
+  // --- Event wiring ---
+  pgnFile.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    pgnText.value = text;
+    statusEl.textContent = `Loaded file: ${file.name}`;
+  });
+
+  clearBtn.addEventListener('click', () => {
+    pgnText.value = '';
+    gameSelect.innerHTML = '';
+    currentGame = null;
+    setupFromStart();
+  });
+
+  demoBtn.addEventListener('click', () => {
+    const demo = `
+[Event "Demo"]
+[Site "Internet"]
+[Date "2026.01.01
