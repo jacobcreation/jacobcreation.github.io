@@ -1,432 +1,325 @@
 <!DOCTYPE html>
-<!-- Created with https://packager.turbowarp.org/ -->
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <!-- We only include this to explicitly loosen the CSP of various packager environments. It does not provide any security. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:">
-  <title>Salary calculator</title>
+  <meta charset="UTF-8" />
+  <title>Philippine Peso Salary Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    :root {
+      --bg: #f7fbff;
+      --card: #ffffff;
+      --accent: #2d8cff;
+      --accent-2: #00c389;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --warn: #f59e0b;
+    }
+    * { box-sizing: border-box; }
     body {
-      color: #0080c0;
-      font-family: sans-serif;
-      overflow: hidden;
       margin: 0;
-      padding: 0;
+      padding: 24px;
+      background: radial-gradient(1200px at 10% 10%, #eaf5ff 0, var(--bg) 40%, #f9fcff 100%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
     }
-    :root, body.is-fullscreen {
-      background-color: #000000;
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
     }
-    [hidden] {
-      display: none !important;
-    }
-    h1 {
-      font-weight: normal;
-    }
-    a {
-      color: inherit;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-
-    #app, #loading, #error, #launch {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-    }
-    .screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+    header {
       text-align: center;
-      cursor: default;
-      user-select: none;
-      -webkit-user-select: none;
-      background-color: #000000;
+      margin-bottom: 20px;
     }
-    #launch {
-      background-color: rgba(0, 0, 0, 0.7);
-      cursor: pointer;
+    header h1 {
+      margin: 0 0 6px;
+      font-size: 1.8rem;
+      color: var(--accent);
     }
-    .green-flag {
-      width: 80px;
-      height: 80px;
-      padding: 16px;
-      border-radius: 100%;
-      background: rgba(255, 255, 255, 0.75);
-      border: 3px solid hsla(0, 100%, 100%, 1);
+    header p {
+      margin: 0;
+      color: var(--muted);
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      padding: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+    }
+    .field {
+      grid-column: span 12;
+    }
+    @media (min-width: 640px) {
+      .field.half { grid-column: span 6; }
+      .field.third { grid-column: span 4; }
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .hint {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--text);
+      font-size: 1rem;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(45, 140, 255, 0.15);
+    }
+    .row {
       display: flex;
-      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
       align-items: center;
-      box-sizing: border-box;
+      margin-top: 12px;
     }
-    #loading {
-      
-    }
-    .progress-bar-outer {
-      border: 1px solid currentColor;
-      height: 10px;
-      width: 200px;
-      max-width: 200px;
-    }
-    .progress-bar-inner {
-      height: 100%;
-      width: 0;
-      background-color: currentColor;
-    }
-    .loading-text, noscript {
-      font-weight: normal;
-      font-size: 36px;
-      margin: 0 0 16px;
-    }
-    .loading-image {
-      margin: 0 0 16px;
-    }
-    #error-message, #error-stack {
-      font-family: monospace;
-      max-width: 600px;
-      white-space: pre-wrap;
-      user-select: text;
-      -webkit-user-select: text;
-    }
-    #error-stack {
-      text-align: left;
-      max-height: 200px;
-      overflow: auto;
-    }
-    .control-button {
-      width: 2rem;
-      height: 2rem;
-      padding: 0.375rem;
-      margin-top: 0.5rem;
-      margin-bottom: 0.5rem;
-      user-select: none;
-      -webkit-user-select: none;
+    button {
+      appearance: none;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 700;
       cursor: pointer;
-      border: 0;
-      border-radius: 4px;
+      transition: transform 0.05s ease, box-shadow 0.15s ease, background 0.15s ease;
     }
-    .control-button-highlight:hover {
-      background: #8000ff26;
+    .primary {
+      background: linear-gradient(135deg, var(--accent), #6aa9ff);
+      color: white;
+      box-shadow: 0 6px 16px rgba(45, 140, 255, 0.35);
     }
-    .control-button-highlight.active {
-      background: #8000ff59;
+    .primary:hover { transform: translateY(-1px); }
+    .secondary {
+      background: linear-gradient(135deg, var(--accent-2), #44d3a7);
+      color: white;
+      box-shadow: 0 6px 16px rgba(0, 195, 137, 0.35);
     }
-    .fullscreen-button {
-      background: white;
+    .danger {
+      background: linear-gradient(135deg, #ef4444, #f97373);
+      color: white;
+      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
     }
-    .standalone-fullscreen-button {
-      position: absolute;
-      top: 0;
-      right: 0;
-      background-color: rgba(0, 0, 0, 0.5);
-      border-radius: 0 0 0 4px;
-      padding: 4px;
-      cursor: pointer;
+    .outputs {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
     }
-    .sc-canvas {
-      cursor: auto;
+    .tile {
+      grid-column: span 12;
+      background: #f9fbff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
     }
-    .sc-monitor-root[data-opcode^="data_"] .sc-monitor-value-color {
-      background-color: #ff8c1a;
+    @media (min-width: 640px) {
+      .tile.third { grid-column: span 4; }
+      .tile.half { grid-column: span 6; }
     }
-    .sc-monitor-row-value-outer {
-      background-color: #fc662c;
+    .tile h3 {
+      margin: 0 0 8px;
+      font-size: 1.05rem;
+      color: var(--text);
     }
-    .sc-monitor-row-value-editing .sc-monitor-row-value-outer {
-      background-color: #e25b27;
+    .big {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--accent);
     }
-    
+    .sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 6px;
+    }
+    .warn {
+      color: var(--warn);
+      font-weight: 600;
+    }
+    .footer {
+      margin-top: 16px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
   </style>
-  <meta name="theme-color" content="#000000">
-  
 </head>
 <body>
-  <div id="app"></div>
+  <div class="container">
+    <header>
+      <h1>₱ Salary Calculator</h1>
+      <p>Compute weekly, monthly, and annual salary in Philippine pesos.</p>
+    </header>
 
-  <div id="launch" class="screen" hidden title="Click to start">
-    <div class="green-flag">
-      <svg viewBox="0 0 16.63 17.5" width="42" height="44">
-        <defs><style>.cls-1,.cls-2{fill:#4cbf56;stroke:#45993d;stroke-linecap:round;stroke-linejoin:round;}.cls-2{stroke-width:1.5px;}</style></defs>
-        <path class="cls-1" d="M.75,2A6.44,6.44,0,0,1,8.44,2h0a6.44,6.44,0,0,0,7.69,0V12.4a6.44,6.44,0,0,1-7.69,0h0a6.44,6.44,0,0,0-7.69,0"/>
-        <line class="cls-2" x1="0.75" y1="16.75" x2="0.75" y2="0.75"/>
-      </svg>
+    <div class="card">
+      <div class="grid">
+        <div class="field half">
+          <label for="hourly">Hourly rate (₱)</label>
+          <input id="hourly" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g., 120" />
+          <div class="hint">Your pay per hour in PHP.</div>
+        </div>
+
+        <div class="field half">
+          <label for="regularHours">Regular hours per week</label>
+          <input id="regularHours" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g., 40" />
+          <div class="hint">Typical weekly hours (excluding overtime).</div>
+        </div>
+
+        <div class="field third">
+          <label for="overtimeHours">Overtime hours per week</label>
+          <input id="overtimeHours" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g., 5" />
+          <div class="hint">Extra hours beyond regular schedule.</div>
+        </div>
+
+        <div class="field third">
+          <label for="otMultiplier">Overtime multiplier</label>
+          <input id="otMultiplier" type="number" inputmode="decimal" min="1" step="0.01" value="1.25" />
+          <div class="hint">Common OT rate is 1.25× (or 1.3× for night diff).</div>
+        </div>
+
+        <div class="field third">
+          <label for="deductionPct">Deductions (%)</label>
+          <input id="deductionPct" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g., 10" />
+          <div class="hint">Optional total % for SSS, PhilHealth, Pag‑IBIG, taxes.</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="primary" id="calcBtn">Calculate</button>
+        <button class="secondary" id="resetBtn">Reset</button>
+        <span id="status" class="hint"></span>
+      </div>
+
+      <div class="outputs">
+        <div class="tile third">
+          <h3>Weekly gross</h3>
+          <div class="big" id="weeklyGross">₱0.00</div>
+          <div class="sub">Regular + overtime before deductions.</div>
+        </div>
+        <div class="tile third">
+          <h3>Monthly gross</h3>
+          <div class="big" id="monthlyGross">₱0.00</div>
+          <div class="sub">Approx. 4.333 weeks per month.</div>
+        </div>
+        <div class="tile third">
+          <h3>Annual gross</h3>
+          <div class="big" id="annualGross">₱0.00</div>
+          <div class="sub">52 weeks per year.</div>
+        </div>
+
+        <div class="tile half">
+          <h3>Weekly net</h3>
+          <div class="big" id="weeklyNet">₱0.00</div>
+          <div class="sub">After deductions.</div>
+        </div>
+        <div class="tile half">
+          <h3>Monthly net</h3>
+          <div class="big" id="monthlyNet">₱0.00</div>
+          <div class="sub">After deductions.</div>
+        </div>
+
+        <div class="tile">
+          <h3>Breakdown</h3>
+          <div id="breakdown" class="sub">
+            Enter values and click Calculate to see details.
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        Estimates only. Deductions vary by employer and regulations.
+      </div>
     </div>
   </div>
 
-  <div id="loading" class="screen">
-    <noscript>Enable JavaScript</noscript>
-    
-    
-    <div class="progress-bar-outer"><div class="progress-bar-inner" id="loading-inner"></div></div>
-  </div>
-
-  <div id="error" class="screen" hidden>
-    <h1>Error</h1>
-    <details>
-      <summary id="error-message"></summary>
-      <p id="error-stack"></p>
-    </details>
-  </div>
-
-  <script src="script.js"></script>
   <script>
-    const appElement = document.getElementById('app');
-    const launchScreen = document.getElementById('launch');
-    const loadingScreen = document.getElementById('loading');
-    const loadingInner = document.getElementById('loading-inner');
-    const errorScreen = document.getElementById('error');
-    const errorScreenMessage = document.getElementById('error-message');
-    const errorScreenStack = document.getElementById('error-stack');
+    const fmtPHP = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' });
 
-    const handleError = (error) => {
-      console.error(error);
-      if (!errorScreen.hidden) return;
-      errorScreen.hidden = false;
-      errorScreenMessage.textContent = '' + error;
-      let debug = error && error.stack || 'no stack';
-      debug += '\nUser agent: ' + navigator.userAgent;
-      errorScreenStack.textContent = debug;
-    };
-    const setProgress = (progress) => {
-      if (loadingInner) loadingInner.style.width = progress * 100 + '%';
-    };
-    const interpolate = (a, b, t) => a + t * (b - a);
+    const el = id => document.getElementById(id);
+    const inputs = ['hourly','regularHours','overtimeHours','otMultiplier','deductionPct'].map(el);
 
-    try {
-      setProgress(0.1);
-
-      const scaffolding = new Scaffolding.Scaffolding();
-      scaffolding.width = 480;
-      scaffolding.height = 360;
-      scaffolding.resizeMode = "preserve-ratio";
-      scaffolding.editableLists = false;
-      scaffolding.usePackagedRuntime = true;
-      scaffolding.setup();
-      scaffolding.appendTo(appElement);
-
-      const vm = scaffolding.vm;
-      window.scaffolding = scaffolding;
-      window.vm = scaffolding.vm;
-      window.Scratch = {
-        vm,
-        renderer: vm.renderer,
-        audioEngine: vm.runtime.audioEngine,
-        bitmapAdapter: vm.runtime.v2BitmapAdapter,
-        videoProvider: vm.runtime.ioDevices.video.provider
-      };
-
-      scaffolding.setUsername("player####".replace(/#/g, () => Math.floor(Math.random() * 10)));
-      scaffolding.setAccentColor("#8000ff");
-
-      try {
-        scaffolding.addCloudProvider(new Scaffolding.Cloud.WebSocketProvider(["wss://clouddata.turbowarp.org","wss://clouddata.turbowarp.xyz"], "1210293497"));
-      } catch (error) {
-        console.error(error);
-      }
-
-      const greenFlagButton = document.createElement('img');
-      greenFlagButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16.63 17.5"><path d="M.75 2a6.44 6.44 0 017.69 0h0a6.44 6.44 0 007.69 0v10.4a6.44 6.44 0 01-7.69 0h0a6.44 6.44 0 00-7.69 0" fill="#4cbf56" stroke="#45993d" stroke-linecap="round" stroke-linejoin="round"/><path stroke-width="1.5" fill="#4cbf56" stroke="#45993d" stroke-linecap="round" stroke-linejoin="round" d="M.75 16.75v-16"/></svg>');
-      greenFlagButton.className = 'control-button control-button-highlight green-flag-button';
-      greenFlagButton.draggable = false;
-      greenFlagButton.addEventListener('click', () => {
-        scaffolding.greenFlag();
-      });
-      scaffolding.addEventListener('PROJECT_RUN_START', () => {
-        greenFlagButton.classList.add('active');
-      });
-      scaffolding.addEventListener('PROJECT_RUN_STOP', () => {
-        greenFlagButton.classList.remove('active');
-      });
-      scaffolding.addControlButton({
-        element: greenFlagButton,
-        where: 'top-left'
-      });
-
-      const pauseButton = document.createElement('img');
-      pauseButton.className = 'control-button control-button-highlight pause-button';
-      pauseButton.draggable = false;
-      let isPaused = false;
-      pauseButton.addEventListener('click', () => {
-        vm.setPaused(!isPaused);
-      });
-      const updatePause = () => {
-        if (isPaused) {
-          pauseButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg width="16" height="16" viewBox="0 0 4.2333332 4.2333335" xmlns="http://www.w3.org/2000/svg"><path d="m3.95163484 2.02835365-1.66643921.9621191-1.66643913.96211911V.10411543l1.66643922.9621191z" fill="#ffae00"/></svg>');
-        } else {
-          pauseButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg width="16" height="16" viewBox="0 0 4.2333332 4.2333335" xmlns="http://www.w3.org/2000/svg"><g fill="#ffae00"><path d="M.389.19239126h1.2631972v3.8485508H.389zM2.5810001.19239126h1.2631972v3.8485508H2.5810001z"/></g></svg>');
-        }
-      };
-      vm.runtime.on('RUNTIME_PAUSED', () => {
-        isPaused = true;
-        updatePause();
-      });
-      vm.runtime.on('RUNTIME_UNPAUSED', () => {
-        isPaused = false;
-        updatePause();
-      });
-      updatePause();
-      scaffolding.addControlButton({
-        element: pauseButton,
-        where: 'top-left'
-      });
-
-      const stopAllButton = document.createElement('img');
-      stopAllButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 14"><path fill="#ec5959" stroke="#b84848" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M4.3.5h5.4l3.8 3.8v5.4l-3.8 3.8H4.3L.5 9.7V4.3z"/></svg>');
-      stopAllButton.className = 'control-button control-button-highlight stop-all-button';
-      stopAllButton.draggable = false;
-      stopAllButton.addEventListener('click', () => {
-        scaffolding.stopAll();
-      });
-      scaffolding.addControlButton({
-        element: stopAllButton,
-        where: 'top-left'
-      });
-
-      if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
-        let isFullScreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
-        const fullscreenButton = document.createElement('img');
-        fullscreenButton.draggable = false;
-        fullscreenButton.className = 'control-button fullscreen-button';
-        fullscreenButton.addEventListener('click', () => {
-          if (isFullScreen) {
-            if (document.exitFullscreen) {
-              document.exitFullscreen();
-            } else if (document.webkitExitFullscreen) {
-              document.webkitExitFullscreen();
-            }
-          } else {
-            if (document.body.requestFullscreen) {
-              document.body.requestFullscreen();
-            } else if (document.body.webkitRequestFullscreen) {
-              document.body.webkitRequestFullscreen();
-            }
-          }
-        });
-        const otherControlsExist = true;
-        const fillColor = otherControlsExist ? '#575E75' : '#0080c0';
-        const updateFullScreen = () => {
-          isFullScreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
-          document.body.classList.toggle('is-fullscreen', isFullScreen);
-          if (isFullScreen) {
-            fullscreenButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><g fill="' + fillColor + '" fill-rule="evenodd"><path d="M12.662 3.65l.89.891 3.133-2.374a.815.815 0 011.15.165.819.819 0 010 .986L15.467 6.46l.867.871c.25.25.072.664-.269.664L12.388 8A.397.397 0 0112 7.611V3.92c0-.341.418-.514.662-.27M7.338 16.35l-.89-.89-3.133 2.374a.817.817 0 01-1.15-.166.819.819 0 010-.985l2.37-3.143-.87-.871a.387.387 0 01.27-.664L7.612 12a.397.397 0 01.388.389v3.692a.387.387 0 01-.662.27M7.338 3.65l-.89.891-3.133-2.374a.815.815 0 00-1.15.165.819.819 0 000 .986l2.37 3.142-.87.871a.387.387 0 00.27.664L7.612 8A.397.397 0 008 7.611V3.92a.387.387 0 00-.662-.27M12.662 16.35l.89-.89 3.133 2.374a.817.817 0 001.15-.166.819.819 0 000-.985l-2.368-3.143.867-.871a.387.387 0 00-.269-.664L12.388 12a.397.397 0 00-.388.389v3.692c0 .342.418.514.662.27"/></g></svg>');
-          } else {
-            fullscreenButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><g fill="' + fillColor + '" fill-rule="evenodd"><path d="M16.338 7.35l-.89-.891-3.133 2.374a.815.815 0 01-1.15-.165.819.819 0 010-.986l2.368-3.142-.867-.871a.387.387 0 01.269-.664L16.612 3a.397.397 0 01.388.389V7.08a.387.387 0 01-.662.27M3.662 12.65l.89.89 3.133-2.374a.817.817 0 011.15.166.819.819 0 010 .985l-2.37 3.143.87.871c.248.25.071.664-.27.664L3.388 17A.397.397 0 013 16.611V12.92c0-.342.418-.514.662-.27M3.662 7.35l.89-.891 3.133 2.374a.815.815 0 001.15-.165.819.819 0 000-.986L6.465 4.54l.87-.871a.387.387 0 00-.27-.664L3.388 3A.397.397 0 003 3.389V7.08c0 .341.418.514.662.27M16.338 12.65l-.89.89-3.133-2.374a.817.817 0 00-1.15.166.819.819 0 000 .985l2.368 3.143-.867.871a.387.387 0 00.269.664l3.677.005a.397.397 0 00.388-.389V12.92a.387.387 0 00-.662-.27"/></g></svg>');
-          }
-        };
-        updateFullScreen();
-        document.addEventListener('fullscreenchange', updateFullScreen);
-        document.addEventListener('webkitfullscreenchange', updateFullScreen);
-        if (otherControlsExist) {
-          fullscreenButton.className = 'control-button fullscreen-button';
-          scaffolding.addControlButton({
-            element: fullscreenButton,
-            where: 'top-right'
-          });
-        } else {
-          fullscreenButton.className = 'standalone-fullscreen-button';
-          document.body.appendChild(fullscreenButton);
-        }
-      }
-
-      vm.setTurboMode(false);
-      if (vm.setInterpolation) vm.setInterpolation(true);
-      if (vm.setFramerate) vm.setFramerate(30);
-      if (vm.renderer.setUseHighQualityRender) vm.renderer.setUseHighQualityRender(false);
-      if (vm.setRuntimeOptions) vm.setRuntimeOptions({
-        fencing: true,
-        miscLimits: false,
-        maxClones: 300,
-      });
-      if (vm.setCompilerOptions) vm.setCompilerOptions({
-        enabled: true,
-        warpTimer: false
-      });
-      if (vm.renderer.setMaxTextureDimension) vm.renderer.setMaxTextureDimension(2048);
-
-      // enforcePrivacy threat model only makes sense in the editor
-      if (vm.runtime.setEnforcePrivacy) vm.runtime.setEnforcePrivacy(false);
-
-      if (typeof ScaffoldingAddons !== 'undefined') {
-        ScaffoldingAddons.run(scaffolding, {"gamepad":false,"pointerlock":false,"specialCloudBehaviors":false,"unsafeCloudBehaviors":false,"pause":true});
-      }
-
-      scaffolding.setExtensionSecurityManager({
-        getSandboxMode: () => 'unsandboxed',
-        canLoadExtensionFromProject: () => true
-      });
-      for (const extension of []) {
-        vm.extensionManager.loadExtensionURL(extension);
-      }
-
-    } catch (e) {
-      handleError(e);
+    function parseNum(v) {
+      const n = parseFloat(v);
+      return Number.isFinite(n) ? n : 0;
     }
-  </script>
-  
-  
-    <script>
-      const getProjectData = (function() {
-        const storage = scaffolding.storage;
-        storage.onprogress = (total, loaded) => {
-          setProgress(interpolate(0.2, 0.98, loaded / total));
-        };
-        
-        storage.addWebStore(
-          [
-            storage.AssetType.ImageVector,
-            storage.AssetType.ImageBitmap,
-            storage.AssetType.Sound,
-            storage.AssetType.Font
-          ].filter(i => i),
-          (asset) => new URL('./assets/' + asset.assetId + '.' + asset.dataFormat, location).href
-        );
-        return () => new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.onload = () => {
-          resolve(xhr.response);
-        };
-        xhr.onerror = () => {
-          if (location.protocol === 'file:') {
-            reject(new Error('Zip environment must be used on a website, not on a local file. To fix this error, use the "Plain HTML" environment instead.'));
-          } else {
-            reject(new Error('Request to load project data failed.'));
-          }
-        };
-        xhr.onprogress = (e) => {
-          if (e.lengthComputable) {
-            setProgress(interpolate(0.1, 0.2, e.loaded / e.total));
-          }
-        };
-        xhr.responseType = 'arraybuffer';
-        xhr.open('GET', "./assets/project.json");
-        xhr.send();
-      });
-      })();
-    </script>
-  <script>
-    const run = async () => {
-      const projectData = await getProjectData();
-      await scaffolding.loadProject(projectData);
-      setProgress(1);
-      loadingScreen.hidden = true;
-      if (false) {
-        scaffolding.start();
+
+    function calculate() {
+      const rate = parseNum(el('hourly').value);
+      const regH = parseNum(el('regularHours').value);
+      const otH  = parseNum(el('overtimeHours').value);
+      const otM  = Math.max(1, parseNum(el('otMultiplier').value) || 1.25);
+      const dedP = Math.max(0, parseNum(el('deductionPct').value));
+
+      if (rate <= 0 || regH < 0 || otH < 0) {
+        el('status').textContent = 'Please enter valid positive values for rate and hours.';
+        el('status').classList.remove('warn');
+        el('status').classList.add('warn');
+        return;
       } else {
-        launchScreen.hidden = false;
-        launchScreen.addEventListener('click', () => {
-          launchScreen.hidden = true;
-          scaffolding.start();
-        });
-        launchScreen.focus();
+        el('status').textContent = '';
       }
-    };
-    run().catch(handleError);
-  </script><<link rel="stylesheet" href="./assets/back-to-home.css">
-<script src="./assets/back-to-home.js" defer></script>
+
+      const regularPay = rate * regH;
+      const overtimePay = rate * otH * otM;
+      const weeklyGross = regularPay + overtimePay;
+
+      const monthlyGross = weeklyGross * 4.333; // average weeks/month
+      const annualGross = weeklyGross * 52;
+
+      const dedFactor = dedP > 0 ? (1 - dedP / 100) : 1;
+      const weeklyNet = weeklyGross * dedFactor;
+      const monthlyNet = monthlyGross * dedFactor;
+
+      // Update UI
+      el('weeklyGross').textContent = fmtPHP.format(weeklyGross);
+      el('monthlyGross').textContent = fmtPHP.format(monthlyGross);
+      el('annualGross').textContent = fmtPHP.format(annualGross);
+
+      el('weeklyNet').textContent = fmtPHP.format(weeklyNet);
+      el('monthlyNet').textContent = fmtPHP.format(monthlyNet);
+
+      const lines = [
+        `Regular pay: ${fmtPHP.format(regularPay)} = ₱${rate.toFixed(2)} × ${regH}h`,
+        `Overtime pay: ${fmtPHP.format(overtimePay)} = ₱${rate.toFixed(2)} × ${otH}h × ${otM.toFixed(2)}×`,
+        `Deductions: ${dedP > 0 ? dedP.toFixed(2) + '%' : 'None'}`,
+        `Weekly gross: ${fmtPHP.format(weeklyGross)}`,
+        `Weekly net: ${fmtPHP.format(weeklyNet)}`
+      ];
+      el('breakdown').innerHTML = lines.map(l => `• ${l}`).join('<br>');
+    }
+
+    function resetAll() {
+      inputs.forEach(i => i.value = '');
+      ['weeklyGross','monthlyGross','annualGross','weeklyNet','monthlyNet'].forEach(id => {
+        el(id).textContent = fmtPHP.format(0);
+      });
+      el('breakdown').textContent = 'Enter values and click Calculate to see details.';
+      el('status').textContent = '';
+    }
+
+    el('calcBtn').addEventListener('click', calculate);
+    el('resetBtn').addEventListener('click', resetAll);
+
+    // Live update on input changes (optional quality-of-life)
+    inputs.forEach(i => i.addEventListener('input', () => {
+      if (i.id === 'otMultiplier' && parseNum(i.value) < 1) i.value = '1.00';
+    }));
+  </script>
 </body>
 </html>
