@@ -1,325 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Philippine Peso Salary Calculator</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <title>Philippine Peso Salary Calculator (2025 Official + Hourly)</title>
   <style>
-    :root {
-      --bg: #f7fbff;
-      --card: #ffffff;
-      --accent: #2d8cff;
-      --accent-2: #00c389;
-      --text: #1f2937;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --warn: #f59e0b;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      padding: 24px;
-      background: radial-gradient(1200px at 10% 10%, #eaf5ff 0, var(--bg) 40%, #f9fcff 100%);
-      color: var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-    }
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    header h1 {
-      margin: 0 0 6px;
-      font-size: 1.8rem;
-      color: var(--accent);
-    }
-    header p {
-      margin: 0;
-      color: var(--muted);
-    }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-      padding: 20px;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 12px;
-    }
-    .field {
-      grid-column: span 12;
-    }
-    @media (min-width: 640px) {
-      .field.half { grid-column: span 6; }
-      .field.third { grid-column: span 4; }
-    }
-    label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-    .hint {
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-    input, select {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: #fff;
-      color: var(--text);
-      font-size: 1rem;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    input:focus, select:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 4px rgba(45, 140, 255, 0.15);
-    }
-    .row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      align-items: center;
-      margin-top: 12px;
-    }
-    button {
-      appearance: none;
-      border: none;
-      border-radius: 12px;
-      padding: 12px 16px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.05s ease, box-shadow 0.15s ease, background 0.15s ease;
-    }
-    .primary {
-      background: linear-gradient(135deg, var(--accent), #6aa9ff);
-      color: white;
-      box-shadow: 0 6px 16px rgba(45, 140, 255, 0.35);
-    }
-    .primary:hover { transform: translateY(-1px); }
-    .secondary {
-      background: linear-gradient(135deg, var(--accent-2), #44d3a7);
-      color: white;
-      box-shadow: 0 6px 16px rgba(0, 195, 137, 0.35);
-    }
-    .danger {
-      background: linear-gradient(135deg, #ef4444, #f97373);
-      color: white;
-      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
-    }
-    .outputs {
-      margin-top: 16px;
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 12px;
-    }
-    .tile {
-      grid-column: span 12;
-      background: #f9fbff;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-    }
-    @media (min-width: 640px) {
-      .tile.third { grid-column: span 4; }
-      .tile.half { grid-column: span 6; }
-    }
-    .tile h3 {
-      margin: 0 0 8px;
-      font-size: 1.05rem;
-      color: var(--text);
-    }
-    .big {
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: var(--accent);
-    }
-    .sub {
-      color: var(--muted);
-      font-size: 0.9rem;
-      margin-top: 6px;
-    }
-    .warn {
-      color: var(--warn);
-      font-weight: 600;
-    }
-    .footer {
-      margin-top: 16px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
+    body { font-family: Arial, sans-serif; background:#f9f9f9; margin:40px; }
+    .container { max-width:900px; margin:auto; background:#fff; padding:20px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+    h2 { text-align:center; color:#2d8cff; }
+    label { font-weight:bold; display:block; margin-top:10px; }
+    input { width:100%; padding:8px; margin-top:5px; border:1px solid #ccc; border-radius:5px; }
+    button { margin-top:15px; padding:10px; width:100%; background:#2d8cff; color:#fff; border:none; border-radius:5px; cursor:pointer; }
+    button:hover { background:#1a6fd1; }
+    .result { margin-top:20px; padding:15px; background:#f1faff; border-radius:8px; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th, td { border:1px solid #ccc; padding:8px; text-align:right; }
+    th { background:#eaf3ff; text-align:left; }
+    .net { font-weight:bold; color:#2d8cff; }
+    .tiles { display:flex; flex-wrap:wrap; gap:12px; margin-top:20px; }
+    .tile { flex:1; min-width:200px; background:#f9fbff; border:1px solid #ccc; border-radius:8px; padding:12px; }
+    .tile h3 { margin:0 0 8px; font-size:1rem; }
+    .tile .big { font-size:1.3rem; font-weight:bold; color:#2d8cff; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>₱ Salary Calculator</h1>
-      <p>Compute weekly, monthly, and annual salary in Philippine pesos.</p>
-    </header>
+<div class="container">
+  <h2>₱ Salary Calculator (2025 Official + Hourly)</h2>
+  <form id="salaryForm">
+    <label for="hourly">Hourly Rate (₱)</label>
+    <input type="number" id="hourly" placeholder="e.g. 120">
 
-    <div class="card">
-      <div class="grid">
-        <div class="field half">
-          <label for="hourly">Hourly rate (₱)</label>
-          <input id="hourly" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g., 120" />
-          <div class="hint">Your pay per hour in PHP.</div>
-        </div>
+    <label for="regularHours">Regular Hours per Week</label>
+    <input type="number" id="regularHours" placeholder="e.g. 40">
 
-        <div class="field half">
-          <label for="regularHours">Regular hours per week</label>
-          <input id="regularHours" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g., 40" />
-          <div class="hint">Typical weekly hours (excluding overtime).</div>
-        </div>
+    <label for="overtimeHours">Overtime Hours per Week</label>
+    <input type="number" id="overtimeHours" placeholder="e.g. 5">
 
-        <div class="field third">
-          <label for="overtimeHours">Overtime hours per week</label>
-          <input id="overtimeHours" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g., 5" />
-          <div class="hint">Extra hours beyond regular schedule.</div>
-        </div>
+    <label for="otMultiplier">Overtime Multiplier</label>
+    <input type="number" id="otMultiplier" value="1.25">
 
-        <div class="field third">
-          <label for="otMultiplier">Overtime multiplier</label>
-          <input id="otMultiplier" type="number" inputmode="decimal" min="1" step="0.01" value="1.25" />
-          <div class="hint">Common OT rate is 1.25× (or 1.3× for night diff).</div>
-        </div>
+    <label for="allowance">Monthly Allowances (₱)</label>
+    <input type="number" id="allowance" value="0">
 
-        <div class="field third">
-          <label for="deductionPct">Deductions (%)</label>
-          <input id="deductionPct" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g., 10" />
-          <div class="hint">Optional total % for SSS, PhilHealth, Pag‑IBIG, taxes.</div>
-        </div>
-      </div>
+    <button type="submit">Calculate</button>
+    <button type="button" id="resetBtn">Reset</button>
+  </form>
 
-      <div class="row">
-        <button class="primary" id="calcBtn">Calculate</button>
-        <button class="secondary" id="resetBtn">Reset</button>
-        <span id="status" class="hint"></span>
-      </div>
-
-      <div class="outputs">
-        <div class="tile third">
-          <h3>Weekly gross</h3>
-          <div class="big" id="weeklyGross">₱0.00</div>
-          <div class="sub">Regular + overtime before deductions.</div>
-        </div>
-        <div class="tile third">
-          <h3>Monthly gross</h3>
-          <div class="big" id="monthlyGross">₱0.00</div>
-          <div class="sub">Approx. 4.333 weeks per month.</div>
-        </div>
-        <div class="tile third">
-          <h3>Annual gross</h3>
-          <div class="big" id="annualGross">₱0.00</div>
-          <div class="sub">52 weeks per year.</div>
-        </div>
-
-        <div class="tile half">
-          <h3>Weekly net</h3>
-          <div class="big" id="weeklyNet">₱0.00</div>
-          <div class="sub">After deductions.</div>
-        </div>
-        <div class="tile half">
-          <h3>Monthly net</h3>
-          <div class="big" id="monthlyNet">₱0.00</div>
-          <div class="sub">After deductions.</div>
-        </div>
-
-        <div class="tile">
-          <h3>Breakdown</h3>
-          <div id="breakdown" class="sub">
-            Enter values and click Calculate to see details.
-          </div>
-        </div>
-      </div>
-
-      <div class="footer">
-        Estimates only. Deductions vary by employer and regulations.
-      </div>
+  <div class="result" id="output" style="display:none;">
+    <h3>Results</h3>
+    <div class="tiles">
+      <div class="tile"><h3>Weekly Gross</h3><div class="big" id="weeklyGross"></div></div>
+      <div class="tile"><h3>Monthly Gross</h3><div class="big" id="monthlyGross"></div></div>
+      <div class="tile"><h3>Annual Gross</h3><div class="big" id="annualGross"></div></div>
+      <div class="tile"><h3>Weekly Net</h3><div class="big" id="weeklyNet"></div></div>
+      <div class="tile"><h3>Monthly Net</h3><div class="big" id="monthlyNet"></div></div>
     </div>
+
+    <table>
+      <tr><th>Gross Pay (Monthly)</th><td id="gross"></td></tr>
+      <tr><th>SSS (EE share)</th><td id="sss"></td></tr>
+      <tr><th>PhilHealth (EE share)</th><td id="philhealth"></td></tr>
+      <tr><th>Pag-IBIG</th><td id="pagibig"></td></tr>
+      <tr><th>Withholding Tax</th><td id="tax"></td></tr>
+      <tr><th class="net">Net Pay (Monthly)</th><td class="net" id="net"></td></tr>
+    </table>
   </div>
+</div>
 
-  <script>
-    const fmtPHP = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' });
+<script>
+function formatPHP(amount) {
+  return "₱" + amount.toFixed(2);
+}
 
-    const el = id => document.getElementById(id);
-    const inputs = ['hourly','regularHours','overtimeHours','otMultiplier','deductionPct'].map(el);
+document.getElementById("salaryForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  const rate = parseFloat(document.getElementById("hourly").value) || 0;
+  const regH = parseFloat(document.getElementById("regularHours").value) || 0;
+  const otH = parseFloat(document.getElementById("overtimeHours").value) || 0;
+  const otM = parseFloat(document.getElementById("otMultiplier").value) || 1.25;
+  const allowance = parseFloat(document.getElementById("allowance").value) || 0;
 
-    function parseNum(v) {
-      const n = parseFloat(v);
-      return Number.isFinite(n) ? n : 0;
-    }
+  // Weekly gross
+  const weeklyGross = (rate * regH) + (rate * otH * otM);
+  const monthlyGross = weeklyGross * 4.333 + allowance;
+  const annualGross = weeklyGross * 52 + allowance * 12;
 
-    function calculate() {
-      const rate = parseNum(el('hourly').value);
-      const regH = parseNum(el('regularHours').value);
-      const otH  = parseNum(el('overtimeHours').value);
-      const otM  = Math.max(1, parseNum(el('otMultiplier').value) || 1.25);
-      const dedP = Math.max(0, parseNum(el('deductionPct').value));
+  // --- Official 2025 deductions ---
+  // SSS: 7.5% of MSC (floor ₱5,000, ceiling ₱35,000)
+  let msc = Math.min(Math.max(monthlyGross, 5000), 35000);
+  let sss = msc * 0.075;
 
-      if (rate <= 0 || regH < 0 || otH < 0) {
-        el('status').textContent = 'Please enter valid positive values for rate and hours.';
-        el('status').classList.remove('warn');
-        el('status').classList.add('warn');
-        return;
-      } else {
-        el('status').textContent = '';
-      }
+  // PhilHealth: 5% premium split equally, floor ₱10,000, ceiling ₱100,000
+  let phBase = Math.min(Math.max(monthlyGross, 10000), 100000);
+  let philhealth = phBase * 0.05 / 2;
 
-      const regularPay = rate * regH;
-      const overtimePay = rate * otH * otM;
-      const weeklyGross = regularPay + overtimePay;
+  // Pag-IBIG: 2% capped at ₱200
+  let pagibig = Math.min(monthlyGross * 0.02, 200);
 
-      const monthlyGross = weeklyGross * 4.333; // average weeks/month
-      const annualGross = weeklyGross * 52;
+  // Taxable income
+  let taxable = monthlyGross - (sss + philhealth + pagibig);
 
-      const dedFactor = dedP > 0 ? (1 - dedP / 100) : 1;
-      const weeklyNet = weeklyGross * dedFactor;
-      const monthlyNet = monthlyGross * dedFactor;
+  // TRAIN law withholding tax (monthly)
+  let tax = 0;
+  if (taxable <= 20833) {
+    tax = 0;
+  } else if (taxable <= 33333) {
+    tax = (taxable - 20833) * 0.20;
+  } else if (taxable <= 66667) {
+    tax = 2500 + (taxable - 33333) * 0.25;
+  } else if (taxable <= 166667) {
+    tax = 10833 + (taxable - 66667) * 0.30;
+  } else if (taxable <= 666667) {
+    tax = 40833 + (taxable - 166667) * 0.32;
+  } else {
+    tax = 200833 + (taxable - 666667) * 0.35;
+  }
 
-      // Update UI
-      el('weeklyGross').textContent = fmtPHP.format(weeklyGross);
-      el('monthlyGross').textContent = fmtPHP.format(monthlyGross);
-      el('annualGross').textContent = fmtPHP.format(annualGross);
+  const monthlyNet = monthlyGross - (sss + philhealth + pagibig + tax);
+  const weeklyNet = monthlyNet / 4.333;
 
-      el('weeklyNet').textContent = fmtPHP.format(weeklyNet);
-      el('monthlyNet').textContent = fmtPHP.format(monthlyNet);
+  // --- Display results ---
+  document.getElementById("output").style.display = "block";
+  document.getElementById("weeklyGross").textContent = formatPHP(weeklyGross);
+  document.getElementById("monthlyGross").textContent = formatPHP(monthlyGross);
+  document.getElementById("annualGross").textContent = formatPHP(annualGross);
+  document.getElementById("weeklyNet").textContent = formatPHP(weeklyNet);
+  document.getElementById("monthlyNet").textContent = formatPHP(monthlyNet);
 
-      const lines = [
-        `Regular pay: ${fmtPHP.format(regularPay)} = ₱${rate.toFixed(2)} × ${regH}h`,
-        `Overtime pay: ${fmtPHP.format(overtimePay)} = ₱${rate.toFixed(2)} × ${otH}h × ${otM.toFixed(2)}×`,
-        `Deductions: ${dedP > 0 ? dedP.toFixed(2) + '%' : 'None'}`,
-        `Weekly gross: ${fmtPHP.format(weeklyGross)}`,
-        `Weekly net: ${fmtPHP.format(weeklyNet)}`
-      ];
-      el('breakdown').innerHTML = lines.map(l => `• ${l}`).join('<br>');
-    }
+  document.getElementById("gross").textContent = formatPHP(monthlyGross);
+  document.getElementById("sss").textContent = formatPHP(sss);
+  document.getElementById("philhealth").textContent = formatPHP(philhealth);
+  document.getElementById("pagibig").textContent = formatPHP(pagibig);
+  document.getElementById("tax").textContent = formatPHP(tax);
+  document.getElementById("net").textContent = formatPHP(monthlyNet);
+});
 
-    function resetAll() {
-      inputs.forEach(i => i.value = '');
-      ['weeklyGross','monthlyGross','annualGross','weeklyNet','monthlyNet'].forEach(id => {
-        el(id).textContent = fmtPHP.format(0);
-      });
-      el('breakdown').textContent = 'Enter values and click Calculate to see details.';
-      el('status').textContent = '';
-    }
-
-    el('calcBtn').addEventListener('click', calculate);
-    el('resetBtn').addEventListener('click', resetAll);
-
-    // Live update on input changes (optional quality-of-life)
-    inputs.forEach(i => i.addEventListener('input', () => {
-      if (i.id === 'otMultiplier' && parseNum(i.value) < 1) i.value = '1.00';
-    }));
-  </script>
-</body>
-</html>
+document.getElementById("resetBtn").addEventListener("click", function(){
+  document.getElementById("salaryForm").reset();
+  document.getElementById("output").style.display = "none";
+});
+</script
