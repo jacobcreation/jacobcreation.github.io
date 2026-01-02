@@ -37,33 +37,52 @@
       align-items: center;
     }
 
+    /* ✅ Sticky header with nav buttons */
     header {
       width: 100%;
       background: linear-gradient(90deg, var(--blue), var(--blue-dark));
       color: white;
-      padding: 20px 0;
-      text-align: center;
-      font-size: 2em;
-      font-weight: 700;
       box-shadow: var(--shadow);
-      letter-spacing: 1px;
-      position: relative;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 10px 20px;
+    }
+
+    .logo {
+      font-size: 1.8em;
+      font-weight: 700;
     }
 
     header nav {
-      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     header nav a {
+      background: var(--blue);
       color: white;
       text-decoration: none;
-      font-size: 1em;
-      margin: 0 15px;
-      transition: color 0.3s ease;
+      padding: 6px 12px;
+      border-radius: 20px; /* pill shape */
+      font-size: 0.85em;
+      font-weight: 600;
+      transition: background 0.3s ease, transform 0.2s ease;
     }
 
     header nav a:hover {
-      color: #ffeb3b;
+      background: var(--blue-dark);
+      transform: translateY(-2px);
     }
 
     main {
@@ -189,47 +208,31 @@
 </head>
 
 <body>
+  <!-- ✅ Header with all buttons -->
   <header>
-    🌟 JacobCreation
-    <nav>
-      <a href="https://jacobcreation.github.io/about">About</a>
-    </nav>
-  </header>
-
-  <main>
-    <h1>Welcome to JacobCreation!</h1>
-    <p>Hi! I'm Jacob, and I'm 11 years old. Welcome to my website where you can check out some of the fun projects I've made! From games like Chess and Snake to cool tools like a Chatbot and more, there's something for everyone to enjoy.</p>
-
-    <nav class="links" aria-label="Project Links">
-      <!-- your project links here -->
-    </nav>
-
-    <!-- 🎁 Mystery Code Reward Section -->
-    <section id="rewardSection">
-      <h2>🎁 Mystery Code Reward 🎉</h2>
-      <p>Enter the secret mystery code to unlock your surprise!</p>
-      <div class="rewardInputGroup">
-        <input type="text" id="birthdayInput" placeholder="Enter code..." />
-        <button onclick="checkMysteryCode()">✨ Unlock Reward ✨</button>
-      </div>
-      <div id="rewardMessage"></div>
-    </section>
-  </main>
-
-  <footer>
-    © 2026 JacobCreation. All rights reserved.
-  </footer>
-
-  <script>
-    function checkMysteryCode() {
-      const code = document.getElementById("birthdayInput").value.trim();
-      const message = document.getElementById("rewardMessage");
-      if (code === "happy11") {
-        message.textContent = "🎉 Correct! You unlocked the reward!";
-      } else {
-        message.textContent = "❌ Wrong code, try again!";
-      }
-    }
-  </script>
-</body>
-</html>
+    <div class="header-container">
+      <div class="logo">🌟 JacobCreation</div>
+      <nav>
+        <a href="https://jacobcreation.github.io/about">About</a>
+        <a href="https://jacobcreation.github.io/chess/chess.html">♟ Chess</a>
+        <a href="https://jacobcreation.github.io/chatbot/chatbot.html">💬 Chatbot</a>
+        <a href="https://jacobcreation.github.io/flappybird/flappybird.html">🐦 Flappy Bird</a>
+        <a href="https://jacobcreation.github.io/shootthemonster/shootmonster.html">👾 Shoot The Monster</a>
+        <a href="https://jacobcreation.github.io/snake/snake.html">🐍 Snake</a>
+        <a href="https://jacobcreation.github.io/Sandbox/sandbox.html">🧪 Sandbox</a>
+        <a href="https://jacobcreation.github.io/pvz">🌻 Plants Vs Zombies</a>
+        <a href="https://jacobcreation.github.io/Tetris">🟦 Tetris</a>
+        <a href="https://jacobcreation.github.io/bb">🧩 Block Blast</a>
+        <a href="https://jacobcreation.github.io/Minecraft">⛏ 2D Minecraft</a>
+        <a href="https://jacobcreation.github.io/Wordscapes">🔤 Wordscapes</a>
+        <a href="https://jacobcreation.github.io/Salary calculator">💰 Salary Calculator</a>
+        <a href="https://jacobcreation.github.io/calculator">🧮 Calculator</a>
+        <a href="https://jacobcreation.github.io/solitaire">🃏 Solitaire</a>
+        <a href="https://jacobcreation.github.io/minesweeper">💣 Minesweeper</a>
+        <a href="https://jacobcreation.github.io/cc">🚗 Car Chase</a>
+        <a href="https://jacobcreation.github.io/ab">🐦 Angry Birds</a>
+        <a href="https://jacobcreation.github.io/as">👾 Asteroids</a>
+        <a href="https://jacobcreation.github.io/pm">🟡 Pac-Man</a>
+        <a href="https://jacobcreation.github.io/paint">🎨 Paint</a>
+        <a href="https://jacobcreation.github.io/rcs">🔄 Rubik's Cube Solver</a>
+        <a href
