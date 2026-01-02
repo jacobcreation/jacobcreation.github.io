@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doctor Patient Timer</title>
+<style>
+  :root {
+    --primary: #4CAF50;
+    --danger: #e74c3c;
+    --bg: #f0f4f8;
+    --card-bg: #ffffff;
+    --text: #333;
+    --radius: 12px;
+  }
+
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    margin: 0; padding: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column; align-items: center;
+  }
+
+  h1 {
+    margin: 20px;
+    color: var(--primary);
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .btn {
+    background: var(--primary);
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 16px;
+    cursor: pointer;
+    margin: 10px;
+    width: 90%;
+    transition: background 0.3s;
+  }
+  .btn:hover { background: #43a047; }
+
+  .patient-list {
+    width: 95%; max-width: 600px;
+    margin-top: 20px;
+  }
+
+  .patient {
+    background: var(--card-bg);
+    padding: 16px;
+    margin: 12px 0;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+    transition: transform 0.2s;
+  }
+  .patient:hover { transform: translateY(-2px); }
+
+  .patient strong {
+    color: var(--primary);
+    font-size: 18px;
+  }
+
+  .countdown {
+    color: var(--danger);
+    font-weight: bold;
+    margin-top: 8px;
+    font-size: 16px;
+  }
+
+  .remove-btn {
+    background: var(--danger);
+    color: white;
+    padding: 8px 14px;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.3s;
+  }
+  .remove-btn:hover { background: #c0392b; }
+</style>
+</head>
+<body>
+
+<h1>Doctor's Patient Timer</h1>
+<button class="btn" onclick="addPatient()">➕ Add Patient</button>
+
+<div class="patient-list" id="patientList"></div>
+
+<script>
+let patientCounter = 0;
+let patients = [];
+
+document.addEventListener("DOMContentLoaded", () => {
+  if ("Notification" in window) {
+    Notification.requestPermission();
+  }
+});
+
+function addPatient() {
+  const name = prompt("Enter patient name:");
+  if (!name) return;
+  const timeInput = prompt("Enter appointment time (HH:MM, 24h format):");
+  if (!timeInput) return;
+
+  patientCounter++;
+  const patientId = patientCounter;
+  const appointmentTime = new Date();
+  const [hours, minutes] = timeInput.split(":");
+  appointmentTime.setHours(hours, minutes, 0, 0);
+
+  const patient = { id: patientId, name, appointmentTime, interval: null };
+  patients.push(patient);
+  renderPatients();
+  startTimer(patient);
+}
+
+function renderPatients() {
+  const list = document.getElementById("patientList");
+  list.innerHTML = "";
+  patients.forEach(p => {
+    const div = document.createElement("div");
+    div.className = "patient";
+    div.id = "patient-" + p.id;
+    div.innerHTML = `
+      <strong>Patient ${p.id}:</strong> ${p.name}<br>
+      Appointment: ${p.appointmentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+      <div class="countdown" id="countdown-${p.id}">Countdown: calculating...</div>
+      <button class="remove-btn" onclick="removePatient(${p.id})">🗑 Remove Patient</button>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function startTimer(patient) {
+  const countdownEl = document.getElementById("countdown-" + patient.id);
+  patient.interval = setInterval(() => {
+    const now = new Date();
+    const diff = patient.appointmentTime - now;
+
+    if (diff <= 0) {
+      clearInterval(patient.interval);
+      countdownEl.textContent = "Countdown: 00:00";
+      notifyDoctor(patient);
+    } else {
+      const minutes = Math.floor(diff / 1000 / 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+      countdownEl.textContent = `Countdown: ${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+    }
+  }, 1000);
+}
+
+function notifyDoctor(patient) {
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification("⏰ Appointment Reminder", {
+      body: `It is time for patient ${patient.id}: ${patient.name}`,
+      icon: "https://cdn-icons-png.flaticon.com/512/2966/2966488.png"
+    });
+  } else {
+    alert(`⏰ It is time for patient ${patient.id}: ${patient.name}`);
+  }
+}
+
+function removePatient(id) {
+  const patient = patients.find(p => p.id === id);
+  if (!patient) return;
+
+  if (confirm("Are you sure you want to remove this patient?")) {
+    clearInterval(patient.interval);
+    patients = patients.filter(p => p.id !== id);
+    renderPatients();
+  }
+}
+</script>
+
+</body>
+</html>
