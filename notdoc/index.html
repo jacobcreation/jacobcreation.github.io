@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Doctor Patient Timer</title>
+<title>Appointment Reminder</title>
 <style>
   :root {
     --primary: #4CAF50;
@@ -85,66 +85,75 @@
 </head>
 <body>
 
-<h1>Doctor's Patient Timer</h1>
-<button class="btn" onclick="addPatient()">➕ Add Patient</button>
+<h1>Appointment Reminder</h1>
+<button class="btn" onclick="requestNotificationPermission()">🔔 Enable Notifications</button>
+<button class="btn" onclick="addAppointment()">➕ Add Appointment</button>
 
 <div class="patient-list" id="patientList"></div>
 
 <script>
-let patientCounter = 0;
-let patients = [];
+let appointmentCounter = 0;
+let appointments = [];
 
-document.addEventListener("DOMContentLoaded", () => {
+function requestNotificationPermission() {
   if ("Notification" in window) {
-    Notification.requestPermission();
+    Notification.requestPermission().then(permission => {
+      if (permission === "granted") {
+        alert("✅ Notifications enabled! You’ll get reminders when appointments are due.");
+      } else {
+        alert("⚠️ Notifications are blocked. Please enable them in site settings.");
+      }
+    });
+  } else {
+    alert("Notifications are not supported in this browser.");
   }
-});
+}
 
-function addPatient() {
-  const name = prompt("Enter patient name:");
+function addAppointment() {
+  const name = prompt("Enter appointment name:");
   if (!name) return;
   const timeInput = prompt("Enter appointment time (HH:MM, 24h format):");
   if (!timeInput) return;
 
-  patientCounter++;
-  const patientId = patientCounter;
+  appointmentCounter++;
+  const appointmentId = appointmentCounter;
   const appointmentTime = new Date();
   const [hours, minutes] = timeInput.split(":");
   appointmentTime.setHours(hours, minutes, 0, 0);
 
-  const patient = { id: patientId, name, appointmentTime, interval: null };
-  patients.push(patient);
-  renderPatients();
-  startTimer(patient);
+  const appointment = { id: appointmentId, name, appointmentTime, interval: null };
+  appointments.push(appointment);
+  renderAppointments();
+  startTimer(appointment);
 }
 
-function renderPatients() {
+function renderAppointments() {
   const list = document.getElementById("patientList");
   list.innerHTML = "";
-  patients.forEach(p => {
+  appointments.forEach(a => {
     const div = document.createElement("div");
     div.className = "patient";
-    div.id = "patient-" + p.id;
+    div.id = "appointment-" + a.id;
     div.innerHTML = `
-      <strong>Patient ${p.id}:</strong> ${p.name}<br>
-      Appointment: ${p.appointmentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-      <div class="countdown" id="countdown-${p.id}">Countdown: calculating...</div>
-      <button class="remove-btn" onclick="removePatient(${p.id})">🗑 Remove Patient</button>
+      <strong>Appointment ${a.id}:</strong> ${a.name}<br>
+      Time: ${a.appointmentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+      <div class="countdown" id="countdown-${a.id}">Countdown: calculating...</div>
+      <button class="remove-btn" onclick="removeAppointment(${a.id})">🗑 Remove Appointment</button>
     `;
     list.appendChild(div);
   });
 }
 
-function startTimer(patient) {
-  const countdownEl = document.getElementById("countdown-" + patient.id);
-  patient.interval = setInterval(() => {
+function startTimer(appointment) {
+  const countdownEl = document.getElementById("countdown-" + appointment.id);
+  appointment.interval = setInterval(() => {
     const now = new Date();
-    const diff = patient.appointmentTime - now;
+    const diff = appointment.appointmentTime - now;
 
     if (diff <= 0) {
-      clearInterval(patient.interval);
+      clearInterval(appointment.interval);
       countdownEl.textContent = "Countdown: 00:00";
-      notifyDoctor(patient);
+      notifyUser(appointment);
     } else {
       const minutes = Math.floor(diff / 1000 / 60);
       const seconds = Math.floor((diff / 1000) % 60);
@@ -153,25 +162,25 @@ function startTimer(patient) {
   }, 1000);
 }
 
-function notifyDoctor(patient) {
+function notifyUser(appointment) {
   if ("Notification" in window && Notification.permission === "granted") {
     new Notification("⏰ Appointment Reminder", {
-      body: `It is time for patient ${patient.id}: ${patient.name}`,
+      body: `It is time for appointment ${appointment.id}: ${appointment.name}`,
       icon: "https://cdn-icons-png.flaticon.com/512/2966/2966488.png"
     });
   } else {
-    alert(`⏰ It is time for patient ${patient.id}: ${patient.name}`);
+    alert(`⏰ It is time for appointment ${appointment.id}: ${appointment.name}`);
   }
 }
 
-function removePatient(id) {
-  const patient = patients.find(p => p.id === id);
-  if (!patient) return;
+function removeAppointment(id) {
+  const appointment = appointments.find(a => a.id === id);
+  if (!appointment) return;
 
-  if (confirm("Are you sure you want to remove this patient?")) {
-    clearInterval(patient.interval);
-    patients = patients.filter(p => p.id !== id);
-    renderPatients();
+  if (confirm("Are you sure you want to remove this appointment?")) {
+    clearInterval(appointment.interval);
+    appointments = appointments.filter(a => a.id !== id);
+    renderAppointments();
   }
 }
 </script>
