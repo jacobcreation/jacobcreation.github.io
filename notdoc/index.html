@@ -1,336 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Appointment Reminder</title>
+  <meta charset="UTF-8">
+  <title>Reminder App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- PWA hooks (manifest + icons). Keep for later; safe to include now -->
+  <!-- Manifest for PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#4CAF50">
 
-  <style>
-    :root {
-      --primary: #4CAF50;
-      --danger: #e74c3c;
-      --bg: #f0f4f8;
-      --card-bg: #ffffff;
-      --text: #333;
-      --radius: 12px;
-    }
-
-    * { box-sizing: border-box; }
-    body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      display: flex; flex-direction: column; align-items: center;
-    }
-    header {
-      width: 100%;
-      padding: 20px 16px;
-      text-align: center;
-    }
-    h1 {
-      margin: 0;
-      color: var(--primary);
-      font-weight: 600;
-    }
-    .toolbar {
-      width: 95%; max-width: 800px;
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-      margin: 8px auto 16px;
-    }
-    .btn {
-      background: var(--primary); color: #fff;
-      padding: 12px 16px; border: 0; border-radius: var(--radius);
-      font-size: 16px; cursor: pointer; transition: background .2s;
-    }
-    .btn:hover { background: #43a047; }
-    .btn-danger { background: var(--danger); }
-    .btn-danger:hover { background: #c0392b; }
-
-    .card {
-      width: 95%; max-width: 800px;
-      background: var(--card-bg); border-radius: var(--radius);
-      box-shadow: 0 6px 14px rgba(0,0,0,.08);
-      padding: 16px; margin: 10px auto;
-    }
-
-    /* Inline add form */
-    .form-row {
-      display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px;
-      align-items: center;
-    }
-    .input {
-      padding: 12px; border: 1px solid #dfe5ec; border-radius: var(--radius);
-      font-size: 15px; background: #fbfdff;
-    }
-    .hint {
-      font-size: 13px; color: #666; margin-top: 6px;
-    }
-
-    /* Appointments list */
-    .list { display: grid; gap: 12px; }
-    .item {
-      background: #fff; border-radius: var(--radius);
-      border: 1px solid #e7edf3; padding: 14px;
-      display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center;
-    }
-    .title { color: var(--primary); font-weight: 600; }
-    .meta { font-size: 14px; color: #555; }
-    .countdown { font-weight: 700; color: var(--danger); }
-    .actions { display: flex; gap: 8px; }
-
-    /* In-app banner notification (fallback + visibility) */
-    .banner {
-      display: none;
-      position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-      background: #ffffff; border: 1px solid #e7edf3; border-radius: 14px;
-      box-shadow: 0 10px 20px rgba(0,0,0,.12);
-      padding: 12px 16px; max-width: 90%;
-      z-index: 9999;
-    }
-    .banner.show { display: flex; align-items: center; gap: 10px; }
-    .banner strong { color: var(--primary); }
-  </style>
+  <!-- Firebase compat SDKs (global firebase object) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging-compat.js"></script>
 </head>
 <body>
-
-  <header>
-    <h1>Appointment Reminder</h1>
-    <div class="toolbar">
-      <button class="btn" id="enableBtn">🔔 Enable notifications</button>
-      <button class="btn" id="testBtn">🔔 Test notification</button>
-    </div>
-  </header>
-
-  <!-- Add Appointment -->
-  <section class="card">
-    <h2 style="margin:0 0 10px;">Add appointment</h2>
-    <div class="form-row">
-      <input class="input" id="nameInput" type="text" placeholder="Appointment name (e.g., Team Meeting)" />
-      <input class="input" id="timeInput" type="time" />
-      <button class="btn" id="addBtn">➕ Add</button>
-    </div>
-    <div class="hint">Tip: Set a time today in 24h format. Notifications need to be enabled first.</div>
-  </section>
-
-  <!-- Appointment List -->
-  <section class="card">
-    <h2 style="margin:0 0 10px;">Upcoming appointments</h2>
-    <div class="list" id="list"></div>
-    <div style="margin-top:12px; display:flex; gap:8px;">
-      <button class="btn btn-danger" id="clearBtn">🗑 Clear all</button>
-    </div>
-  </section>
-
-  <!-- In-app banner (visible fallback so users always see something) -->
-  <div class="banner" id="banner">
-    <span>⏰</span>
-    <div>
-      <strong id="bannerTitle">Reminder</strong>
-      <div id="bannerBody" style="font-size:14px; color:#555;"></div>
-    </div>
-    <button class="btn" id="bannerClose" style="padding:8px 10px; font-size:14px;">Close</button>
-  </div>
+  <h1>⏰ Reminder App</h1>
+  <p>Click the button below to enable notifications.</p>
+  <button onclick="enableNotifications()">Enable Notifications</button>
 
   <script>
-    // State
-    let counter = 0;
-    const appointments = new Map(); // id -> { name, time, interval }
+    // Firebase config from your project
+    const firebaseConfig = {
+      apiKey: "AIzaSyDw611ny0fT5UMFfVnlW_4-RzABPgNTmH8",
+      authDomain: "reminder-app-fb072.firebaseapp.com",
+      projectId: "reminder-app-fb072",
+      storageBucket: "reminder-app-fb072.appspot.com",   // ✅ fixed
+      messagingSenderId: "280281930384",
+      appId: "1:280281930384:web:81167b17c17e0f17cc5615",
+      measurementId: "G-F6LZJPSQKW"
+    };
 
-    // Elements
-    const enableBtn = document.getElementById('enableBtn');
-    const testBtn = document.getElementById('testBtn');
-    const addBtn = document.getElementById('addBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const nameInput = document.getElementById('nameInput');
-    const timeInput = document.getElementById('timeInput');
-    const listEl = document.getElementById('list');
-    const bannerEl = document.getElementById('banner');
-    const bannerTitleEl = document.getElementById('bannerTitle');
-    const bannerBodyEl = document.getElementById('bannerBody');
-    const bannerCloseEl = document.getElementById('bannerClose');
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
 
-    // Request permission ONLY inside a user-generated event handler
-    enableBtn.addEventListener('click', () => {
-      if (!('Notification' in window)) {
-        alert('Notifications are not supported in this browser.');
-        return;
-      }
-      Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-          alert('✅ Notifications enabled! You’ll get reminders even if the screen is off (phone must be on).');
-        } else {
-          alert('⚠️ Notifications blocked. You can enable them in the site settings.');
-        }
-      });
-    });
-
-    // Test notification (immediate)
-    testBtn.addEventListener('click', () => {
-      if ('Notification' in window && Notification.permission === 'granted') {
-        try {
-          new Notification('Test notification', { body: 'This should pop up as a system notification.' });
-        } catch (e) {
-          showBanner('Test notification', 'System notification failed. Showing in-app banner instead.');
-        }
-      } else {
-        showBanner('Notifications not enabled', 'Click “Enable notifications” first.');
-        alert('Notifications not enabled. Please click “Enable notifications”.');
-      }
-    });
-
-    // Add appointment
-    addBtn.addEventListener('click', () => {
-      const name = (nameInput.value || '').trim();
-      const timeVal = timeInput.value; // "HH:MM"
-      if (!name) { alert('Please enter an appointment name.'); return; }
-      if (!timeVal) { alert('Please pick a time.'); return; }
-
-      const [hh, mm] = timeVal.split(':').map(Number);
-      const target = new Date();
-      target.setHours(hh, mm, 0, 0);
-
-      // If the time is in the past for today, roll to tomorrow (friendly behavior)
-      if (target.getTime() < Date.now()) {
-        target.setDate(target.getDate() + 1);
-      }
-
-      const id = ++counter;
-      const item = { id, name, time: target, interval: null };
-      appointments.set(id, item);
-
-      render();
-      startCountdown(item);
-
-      // Clear inputs for next entry
-      nameInput.value = '';
-      timeInput.value = '';
-    });
-
-    // Clear all appointments
-    clearBtn.addEventListener('click', () => {
-      if (!confirm('Clear all appointments?')) return;
-      for (const appt of appointments.values()) {
-        if (appt.interval) clearInterval(appt.interval);
-      }
-      appointments.clear();
-      render();
-    });
-
-    // Banner helpers
-    function showBanner(title, body) {
-      bannerTitleEl.textContent = title;
-      bannerBodyEl.textContent = body;
-      bannerEl.classList.add('show');
-    }
-    bannerCloseEl.addEventListener('click', () => bannerEl.classList.remove('show'));
-
-    // Render list
-    function render() {
-      listEl.innerHTML = '';
-      const items = Array.from(appointments.values()).sort((a, b) => a.time - b.time);
-      items.forEach(a => {
-        const wrap = document.createElement('div');
-        wrap.className = 'item';
-
-        const left = document.createElement('div');
-        left.innerHTML = `
-          <div class="title">#${a.id} ${escapeHtml(a.name)}</div>
-          <div class="meta">Time: ${a.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-          <div class="countdown" id="cd-${a.id}">Countdown: calculating…</div>
-        `;
-        const actions = document.createElement('div');
-        actions.className = 'actions';
-
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'btn btn-danger';
-        removeBtn.textContent = '🗑 Remove';
-        removeBtn.addEventListener('click', () => removeAppointment(a.id));
-
-        actions.appendChild(removeBtn);
-        wrap.appendChild(left);
-        wrap.appendChild(actions);
-        listEl.appendChild(wrap);
-      });
-    }
-
-    // Countdown
-    function startCountdown(appt) {
-      const el = document.getElementById('cd-' + appt.id);
-      if (!el) return;
-
-      if (appt.interval) clearInterval(appt.interval);
-      appt.interval = setInterval(() => {
-        const diff = appt.time.getTime() - Date.now();
-        if (diff <= 0) {
-          clearInterval(appt.interval);
-          el.textContent = 'Countdown: 00:00';
-          fireReminder(appt);
-          return;
-        }
-        const m = Math.floor(diff / 60000);
-        const s = Math.floor((diff % 60000) / 1000);
-        el.textContent = `Countdown: ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-      }, 1000);
-    }
-
-    // Fire reminder (system notification + visible banner)
-    function fireReminder(appt) {
-      const title = '⏰ Appointment Reminder';
-      const body = `It is time for #${appt.id}: ${appt.name}`;
-      // Always show a visible in-app banner (so the user sees something even if system notification is suppressed)
-      showBanner(title, body);
-
-      if ('Notification' in window && Notification.permission === 'granted') {
-        try {
-          new Notification(title, {
-            body: body,
-            icon: 'https://cdn-icons-png.flaticon.com/512/2966/2966488.png'
-          });
-        } catch (e) {
-          // If system notification fails, banner is already visible.
-          console.warn('System notification failed:', e);
-        }
-      }
-      // Optional: make a sound (commented out to keep page quiet)
-      // new Audio('ding.mp3').play();
-    }
-
-    // Remove appointment
-    function removeAppointment(id) {
-      const appt = appointments.get(id);
-      if (!appt) return;
-      if (appt.interval) clearInterval(appt.interval);
-      appointments.delete(id);
-      render();
-    }
-
-    // Utility: basic HTML escape for names
-    function escapeHtml(str) {
-      return str.replace(/[&<>"']/g, s => ({
-        '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
-      }[s]));
-    }
-
-    // Optional: register service worker (safe no-op if missing).
-    // This prepares for PWA upgrades later (push notifications when screen is off).
+    // Register service worker
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      navigator.serviceWorker.register('firebase-messaging-sw.js')
+        .then(reg => console.log('✅ Service Worker registered:', reg))
+        .catch(err => console.error('❌ Service Worker registration failed:', err));
+    }
+
+    // Ask for notification permission and get FCM token
+    function enableNotifications() {
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          messaging.getToken({
+            vapidKey: "BNxQFLXg4YGiJsePlujYNT9pXVdRgrKaqLrczlRuJ8k5raLeh5E11GiEVjpSYDCBo7m6Y2RbRkjUZd62yXYhW4E"
+          })
+          .then(token => {
+            alert("✅ Notifications enabled!");
+            // Automatically send token to backend
+            fetch("/save-token", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token })
+            })
+            .then(() => console.log("Token sent to server"))
+            .catch(err => console.error("Error sending token:", err));
+          })
+          .catch(err => console.error("❌ Token error:", err));
+        } else {
+          alert("⚠️ Notifications blocked.");
+        }
       });
     }
-  <script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('Service Worker registered', reg))
-      .catch(err => console.error('SW registration failed', err));
-  });
-}
-</script>
+  </script>
 </body>
 </html>
