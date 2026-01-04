@@ -1,53 +1,29 @@
-const { GoogleAuth } = require("google-auth-library");
-const fetch = require("node-fetch");
+const admin = require("firebase-admin");
 
-// Load your service account JSON
-const key = require("D:/Jacobs Stuff/firebase-key.json");
+// Load the service account key you uploaded
+const serviceAccount = require("./serviceAccountKey.json");
 
-// Normalize the private key (turn \\n into real newlines)
-key.private_key = key.private_key.replace(/\\n/g, '\n');
-
-// Create GoogleAuth instance with your credentials
-const auth = new GoogleAuth({
-  credentials: key,
-  scopes: ["https://www.googleapis.com/auth/firebase.messaging"]
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
 });
 
-async function sendPush() {
-  try {
-    // Get an authorized client
-    const client = await auth.getClient();
+// Replace this with the token you got from Enable Notifications
+const registrationTokens = [
+  "YOUR-FCM-TOKEN-HERE"
+];
 
-    // Get an access token
-    const accessToken = await client.getAccessToken();
-    console.log("✅ Access token acquired!");
+const message = {
+  notification: {
+    title: "⏰ Reminder",
+    body: "This is your first test push!"
+  },
+  tokens: registrationTokens
+};
 
-    // Replace with your actual FCM device token
-    const deviceToken = "YOUR_FCM_DEVICE_TOKEN";
-
-    // Send push notification
-    const res = await fetch("https://fcm.googleapis.com/v1/projects/reminder-app-fb072/messages:send", {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer " + accessToken.token,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: {
-          token: deviceToken,
-          notification: {
-            title: "⏰ Appointment Reminder",
-            body: "It’s time for your meeting!"
-          }
-        }
-      })
-    });
-
-    const data = await res.json();
-    console.log("📨 FCM response:", data);
-  } catch (err) {
-    console.error("❌ Push error:", err);
-  }
-}
-
-sendPush();
+admin.messaging().sendMulticast(message)
+  .then((response) => {
+    console.log("✅ Successfully sent:", response);
+  })
+  .catch((error) => {
+    console.error("❌ Error sending message:", error);
+  });

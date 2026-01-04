@@ -2,66 +2,76 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Reminder App</title>
+  <title>Reminder App (Debug Mode)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- Manifest for PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#4CAF50">
 
-  <!-- Firebase compat SDKs (global firebase object) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging-compat.js"></script>
 </head>
 <body>
-  <h1>⏰ Reminder App</h1>
+  <h1>⏰ Reminder App (Debug Mode)</h1>
   <p>Click the button below to enable notifications.</p>
   <button onclick="enableNotifications()">Enable Notifications</button>
 
   <script>
-    // Firebase config from your project
+    alert("✅ Script loaded!");
+
     const firebaseConfig = {
       apiKey: "AIzaSyDw611ny0fT5UMFfVnlW_4-RzABPgNTmH8",
       authDomain: "reminder-app-fb072.firebaseapp.com",
       projectId: "reminder-app-fb072",
-      storageBucket: "reminder-app-fb072.appspot.com",   // ✅ fixed
+      storageBucket: "reminder-app-fb072.appspot.com",
       messagingSenderId: "280281930384",
       appId: "1:280281930384:web:81167b17c17e0f17cc5615",
       measurementId: "G-F6LZJPSQKW"
     };
 
-    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
 
-    // Register service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('firebase-messaging-sw.js')
-        .then(reg => console.log('✅ Service Worker registered:', reg))
-        .catch(err => console.error('❌ Service Worker registration failed:', err));
+        .then(reg => {
+          console.log('✅ Service Worker registered:', reg);
+          alert("✅ Service Worker registered!");
+        })
+        .catch(err => {
+          console.error('❌ Service Worker registration failed:', err);
+          alert("❌ Service Worker registration failed!");
+        });
+    } else {
+      alert("⚠️ Service Worker not supported in this browser.");
     }
 
-    // Ask for notification permission and get FCM token
     function enableNotifications() {
+      alert("🔔 Button clicked!");
       Notification.requestPermission().then(permission => {
+        console.log("🔐 Permission result:", permission);
         if (permission === "granted") {
+          alert("✅ Permission granted!");
           messaging.getToken({
             vapidKey: "BNxQFLXg4YGiJsePlujYNT9pXVdRgrKaqLrczlRuJ8k5raLeh5E11GiEVjpSYDCBo7m6Y2RbRkjUZd62yXYhW4E"
           })
           .then(token => {
-            alert("✅ Notifications enabled!");
-            // Automatically send token to backend
+            alert("✅ Token received!");
+            console.log("📨 FCM Token:", token);
             fetch("/save-token", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ token })
             })
-            .then(() => console.log("Token sent to server"))
-            .catch(err => console.error("Error sending token:", err));
+            .then(() => console.log("✅ Token sent to server"))
+            .catch(err => console.error("❌ Error sending token:", err));
           })
-          .catch(err => console.error("❌ Token error:", err));
+          .catch(err => {
+            console.error("❌ Token error:", err);
+            alert("❌ Token error! See console.");
+          });
         } else {
-          alert("⚠️ Notifications blocked.");
+          alert("⚠️ Notifications blocked or dismissed.");
         }
       });
     }
