@@ -2,67 +2,48 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Advanced JavaScript Sandbox</title>
+<title>Web Sandbox v2 — Shipped</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-:root {
-  --bg:#0f1220; --panel:#161a2e; --text:#e7eaf6; --muted:#9aa3c7;
-  --accent:#6ee7ff; --success:#9bf8a0; --danger:#ff6b6b; --warn:#ffd166;
+/* ===================== THEME ===================== */
+:root{
+  --bg:#0f1220;--panel:#161a2e;--text:#e7eaf6;--muted:#9aa3c7;
+  --accent:#6ee7ff;--ok:#9bf8a0;--warn:#ffd166;--err:#ff6b6b;
+}
+.light{
+  --bg:#f4f6ff;--panel:#ffffff;--text:#0f1220;--muted:#555;
 }
 *{box-sizing:border-box}
 body{
-  margin:0;font-family:system-ui,monospace;
-  background:linear-gradient(135deg,#0f1220,#101639);
-  color:var(--text);min-height:100vh;
-  display:grid;grid-template-rows:auto 1fr auto
+  margin:0;font-family:system-ui,ui-monospace,monospace;
+  background:linear-gradient(135deg,var(--bg),#101639);
+  color:var(--text);
+  min-height:100vh;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
 }
+body.zen header,
+body.zen footer,
+body.zen #previewPane{display:none}
+body.zen main{grid-template-columns:1fr}
 
-/* HEADER */
-header{
-  padding:12px 16px;
+/* ===================== LAYOUT ===================== */
+header,footer{
+  padding:10px 14px;
   background:rgba(255,255,255,.05);
-  border-bottom:1px solid rgba(255,255,255,.08);
-  display:flex;
-  align-items:center;
-  gap:12px
+  border-bottom:1px solid rgba(255,255,255,.08)
 }
-
-/* HOME BUTTON */
-.home-btn{
-  background:linear-gradient(135deg,#6ee7ff,#9bf8a0);
-  color:#0f1220;
-  border:none;
-  border-radius:999px;
-  padding:6px 14px;
-  font-weight:600;
-  cursor:pointer;
-  box-shadow:0 0 12px rgba(110,231,255,.4);
-  transition:transform .15s ease, box-shadow .15s ease;
-}
-.home-btn:hover{
-  transform:translateY(-1px) scale(1.05);
-  box-shadow:0 0 18px rgba(155,248,160,.6);
-}
-.home-btn:active{
-  transform:scale(.97);
-}
-
-/* FOOTER */
 footer{
-  padding:12px 16px;
-  background:rgba(255,255,255,.05);
   border-top:1px solid rgba(255,255,255,.08);
-  font-size:12px;
-  color:var(--muted)
+  font-size:12px;color:var(--muted)
 }
-
-/* LAYOUT */
+header{display:flex;gap:8px;align-items:center}
 main{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:16px;
-  padding:16px
+  gap:14px;
+  padding:14px
 }
 .panel{
   background:var(--panel);
@@ -71,58 +52,90 @@ main{
   flex-direction:column;
   overflow:hidden
 }
-.toolbar{
-  display:flex;
-  gap:8px;
-  padding:8px;
-  border-bottom:1px solid rgba(255,255,255,.08)
-}
+
+/* ===================== BUTTONS ===================== */
 button{
   background:rgba(255,255,255,.1);
   border:1px solid rgba(255,255,255,.2);
   color:var(--text);
   border-radius:8px;
-  padding:6px 12px;
+  padding:4px 10px;
   cursor:pointer
 }
-button:disabled{
-  opacity:.4;
-  cursor:not-allowed
+button.primary{
+  background:linear-gradient(135deg,#6ee7ff,#9bf8a0);
+  color:#0f1220;
+  font-weight:600
 }
+button:active{transform:scale(.97)}
+
+/* ===================== EDITOR ===================== */
+.tabs{display:flex;gap:4px;padding:4px;border-bottom:1px solid rgba(255,255,255,.1)}
+.tab{
+  padding:4px 10px;border-radius:6px;
+  cursor:pointer;font-size:13px;
+  background:rgba(255,255,255,.05)
+}
+.tab.active{background:rgba(110,231,255,.25)}
 textarea{
-  flex:1;
-  background:transparent;
-  border:none;
-  color:var(--text);
+  flex:1;background:transparent;border:none;
+  color:var(--text);padding:12px;
   font-family:ui-monospace,monospace;
-  padding:12px;
-  resize:none;
-  outline:none
+  resize:none;outline:none
 }
-.output{
+
+/* ===================== CONSOLE ===================== */
+.console{
   background:#0b1024;
-  font-family:ui-monospace,monospace;
-  font-size:12px;
-  height:180px;
-  overflow:auto;
-  border-top:1px solid rgba(255,255,255,.08)
+  font-size:12px;height:160px;
+  overflow:auto
 }
-.line{
-  display:flex;
-  gap:8px;
-  padding:2px 6px
-}
-.ts{color:var(--muted);min-width:80px}
-.tag{min-width:50px;font-weight:bold}
+.line{padding:3px 6px;border-bottom:1px solid rgba(255,255,255,.05)}
 .log{color:var(--accent)}
-.info{color:var(--success)}
 .warn{color:var(--warn)}
-.error{color:var(--danger)}
-iframe{
-  flex:1;
-  border:0;
-  background:#fff
+.err{color:var(--err)}
+.ok{color:var(--ok)}
+
+/* ===================== PREVIEW ===================== */
+#previewPane{display:flex;flex-direction:column}
+iframe,canvas{flex:1;border:0;background:#fff}
+
+/* ===================== TOASTS ===================== */
+#toasts{
+  position:fixed;bottom:16px;right:16px;
+  display:flex;flex-direction:column;gap:8px;
+  z-index:9999
 }
+.toast{
+  background:var(--panel);
+  padding:10px 14px;border-radius:8px;
+  font-size:13px;
+  box-shadow:0 10px 30px rgba(0,0,0,.4)
+}
+
+/* ===================== PALETTE ===================== */
+#palette{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;justify-content:center;
+  padding-top:12vh;z-index:999
+}
+#paletteBox{
+  width:460px;max-width:90%;
+  background:var(--panel);
+  border-radius:12px;overflow:hidden
+}
+#paletteBox input{
+  width:100%;padding:14px;
+  background:transparent;border:none;
+  color:var(--text);outline:none
+}
+#paletteBox li{
+  list-style:none;padding:10px 14px;
+  cursor:pointer;display:flex;
+  justify-content:space-between
+}
+#paletteBox li:hover{background:rgba(110,231,255,.2)}
 
 @media(max-width:900px){
   main{grid-template-columns:1fr}
@@ -133,112 +146,246 @@ iframe{
 <body>
 
 <header>
-  <button class="home-btn" onclick="goHome()">🏠 Back to Home</button>
-  <strong>🧪 JavaScript Sandbox</strong>
+  <button class="primary" onclick="goHome()">🏠 Home</button>
+  <strong>Web Sandbox v2</strong>
+  <span style="margin-left:auto" id="status">Ready</span>
 </header>
 
 <main>
 
+<!-- ===================== EDITOR ===================== -->
 <section class="panel">
-  <div class="toolbar">
-    <button id="runBtn">Run</button>
-    <button id="resetBtn">Reset</button>
-    <button id="clearBtn">Clear console</button>
-  </div>
+  <div class="tabs" id="tabs"></div>
   <textarea id="editor"></textarea>
-  <div class="output" id="console"></div>
+  <div class="console" id="console"></div>
 </section>
 
-<section class="panel">
+<!-- ===================== PREVIEW ===================== -->
+<section class="panel" id="previewPane">
+  <div style="display:flex;gap:6px;padding:6px;border-bottom:1px solid rgba(255,255,255,.1)">
+    <button onclick="run()">▶ Run</button>
+    <button onclick="toggleCanvas()">🧪 Canvas</button>
+    <button onclick="toggleAudio()">🎵 Audio</button>
+    <button onclick="copyShare()">🔗 Share</button>
+    <button onclick="toggleZen()">🕶 Zen</button>
+  </div>
   <iframe id="frame" sandbox="allow-scripts"></iframe>
+  <canvas id="canvas" hidden></canvas>
 </section>
 
 </main>
 
 <footer>
-  Safe iframe sandbox • Auto-save • Empty editor = silent
+  Ctrl+Shift+P Command Palette • v2 Shipped
 </footer>
 
+<div id="toasts"></div>
+
+<!-- ===================== COMMAND PALETTE ===================== -->
+<div id="palette">
+  <div id="paletteBox">
+    <input id="paletteInput" placeholder="Type a command…" />
+    <ul id="paletteList"></ul>
+  </div>
+</div>
+
 <script>
-function goHome(){
-  window.location.href = "index.html"; // change if needed
+/* ============================================================
+   CORE STATE
+============================================================ */
+const DEFAULT={
+  html:"<h1>Hello Sandbox</h1>",
+  css:"body{font-family:system-ui;text-align:center}",
+  js:"console.log('Ready')"
+};
+let files=JSON.parse(localStorage.v2files||"null")||DEFAULT;
+let current="html";
+let mode="dom"; // dom | canvas | audio
+
+const editor=document.getElementById("editor");
+const tabs=document.getElementById("tabs");
+const frame=document.getElementById("frame");
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+const consoleEl=document.getElementById("console");
+const status=document.getElementById("status");
+
+/* ============================================================
+   UI HELPERS
+============================================================ */
+function toast(msg){
+  const t=document.createElement("div");
+  t.className="toast";
+  t.textContent=msg;
+  toasts.appendChild(t);
+  setTimeout(()=>t.remove(),2500);
 }
-
-const editor = document.getElementById('editor');
-const consoleEl = document.getElementById('console');
-const frame = document.getElementById('frame');
-const runBtn = document.getElementById('runBtn');
-const resetBtn = document.getElementById('resetBtn');
-const clearBtn = document.getElementById('clearBtn');
-
-const SAMPLE = `console.log("Hello sandbox!");
-
-const btn = document.createElement("button");
-btn.textContent = "Click me";
-btn.onclick = () => console.log("Clicked!");
-document.body.appendChild(btn);`;
-
-editor.value = localStorage.getItem('sandbox_code') || SAMPLE;
-updateRunState();
-
-function ts(){return new Date().toLocaleTimeString();}
-function addLine(type,msg){
-  const d=document.createElement('div');
-  d.className='line '+type;
-  d.innerHTML=\`<span class="ts">\${ts()}</span>
-               <span class="tag">\${type.toUpperCase()}</span>
-               <span>\${msg}</span>\`;
+function log(type,msg){
+  const d=document.createElement("div");
+  d.className="line "+type;
+  d.textContent=msg;
   consoleEl.appendChild(d);
   consoleEl.scrollTop=consoleEl.scrollHeight;
 }
+function setStatus(t){status.textContent=t}
 
-function clearAll(){
-  consoleEl.textContent='';
-  frame.srcdoc='<!DOCTYPE html><html><body></body></html>';
+/* ============================================================
+   EDITOR
+============================================================ */
+function renderTabs(){
+  tabs.innerHTML="";
+  ["html","css","js"].forEach(t=>{
+    const el=document.createElement("div");
+    el.className="tab"+(t===current?" active":"");
+    el.textContent=t.toUpperCase();
+    el.onclick=()=>switchTab(t);
+    tabs.appendChild(el);
+  });
+}
+function switchTab(t){
+  save();current=t;
+  editor.value=files[t];
+  renderTabs();
+}
+function save(){
+  files[current]=editor.value;
+  localStorage.v2files=JSON.stringify(files);
+}
+editor.oninput=save;
+
+/* ============================================================
+   RUN MODES
+============================================================ */
+function run(){
+  save();
+  consoleEl.textContent="";
+  setStatus("Running…");
+  if(mode==="dom") runDOM();
+  if(mode==="canvas") runCanvas();
+  if(mode==="audio") runAudio();
 }
 
-function updateRunState(){
-  runBtn.disabled=!editor.value.trim();
+function runDOM(){
+  canvas.hidden=true;frame.hidden=false;
+  frame.srcdoc=`
+<!DOCTYPE html>
+<html><head><style>${files.css}</style></head>
+<body>${files.html}
+<script>
+const send=(t,m)=>parent.postMessage({t,m},'*');
+console.log=(...a)=>send('log',a.join(' '));
+try{(()=>{${files.js}})();send('ok','Done')}
+catch(e){send('err',e.toString())}
+<\/script>
+</body></html>`;
 }
 
-editor.addEventListener('input',()=>{
-  localStorage.setItem('sandbox_code',editor.value);
-  updateRunState();
-  if(!editor.value.trim()) clearAll();
-});
+function runCanvas(){
+  frame.hidden=true;canvas.hidden=false;
+  resizeCanvas();
+  let last=performance.now(),frames=0;
+  function loop(t){
+    frames++;
+    if(t-last>1000){
+      setStatus("FPS: "+frames);
+      frames=0;last=t;
+    }
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    try{eval(files.js)}catch(e){log("err",e.toString())}
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+}
 
-window.addEventListener('message',e=>{
-  if(e.data?.__sandbox) addLine(e.data.type,e.data.text);
-});
+function runAudio(){
+  frame.hidden=true;canvas.hidden=true;
+  const ctxA=new (window.AudioContext||window.webkitAudioContext)();
+  const osc=ctxA.createOscillator();
+  const gain=ctxA.createGain();
+  osc.connect(gain).connect(ctxA.destination);
+  osc.frequency.value=440;
+  gain.gain.value=0.1;
+  osc.start();
+  setTimeout(()=>osc.stop(),1000);
+  toast("Audio played");
+}
 
-runBtn.onclick=()=>runCode(editor.value);
-clearBtn.onclick=()=>consoleEl.textContent='';
-resetBtn.onclick=()=>{
-  editor.value=SAMPLE;
-  localStorage.setItem('sandbox_code',SAMPLE);
-  updateRunState();
-  runCode(SAMPLE);
+/* ============================================================
+   TOGGLES
+============================================================ */
+function toggleCanvas(){mode="canvas";toast("Canvas mode")}
+function toggleAudio(){mode="audio";toast("Audio mode")}
+function toggleZen(){document.body.classList.toggle("zen")}
+function goHome(){location.href="https://jacobcreation.github.io/"}
+
+/* ============================================================
+   SHARING
+============================================================ */
+function copyShare(){
+  const data=btoa(JSON.stringify(files));
+  navigator.clipboard.writeText(location.origin+location.pathname+"?code="+data);
+  toast("Share link copied");
+}
+const p=new URLSearchParams(location.search);
+if(p.has("code")){
+  try{files=JSON.parse(atob(p.get("code")))}catch{}
+}
+
+/* ============================================================
+   COMMAND PALETTE
+============================================================ */
+const palette=document.getElementById("palette");
+const pi=document.getElementById("paletteInput");
+const pl=document.getElementById("paletteList");
+
+const commands=[
+  ["Run",run],
+  ["Canvas Mode",()=>toggleCanvas()],
+  ["Audio Mode",()=>toggleAudio()],
+  ["Toggle Zen",()=>toggleZen()],
+  ["Switch HTML",()=>switchTab("html")],
+  ["Switch CSS",()=>switchTab("css")],
+  ["Switch JS",()=>switchTab("js")],
+  ["Toggle Theme",()=>document.body.classList.toggle("light")],
+  ["Share",copyShare],
+  ["Go Home",goHome]
+];
+
+function openPalette(){
+  palette.style.display="flex";
+  pi.value="";renderPalette();pi.focus();
+}
+function closePalette(){palette.style.display="none"}
+function renderPalette(){
+  pl.innerHTML="";
+  commands.filter(c=>c[0].toLowerCase().includes(pi.value.toLowerCase()))
+    .forEach(c=>{
+      const li=document.createElement("li");
+      li.innerHTML=`<span>${c[0]}</span>`;
+      li.onclick=()=>{c[1]();closePalette()};
+      pl.appendChild(li);
+    });
+}
+pi.oninput=renderPalette;
+
+window.onkeydown=e=>{
+  if(e.ctrlKey&&e.shiftKey&&e.key==="P"){e.preventDefault();openPalette()}
+  if(e.ctrlKey&&e.key==="Enter"){e.preventDefault();run()}
+  if(e.key==="Escape")closePalette();
 };
 
-function runCode(code){
-  if(!code.trim()){clearAll();return;}
-  consoleEl.textContent='';
-  frame.srcdoc=\`
-<!DOCTYPE html>
-<html><body>
-<script>
-const send=(type,text)=>parent.postMessage({__sandbox:1,type,text},'*');
-console.log=(...a)=>send('log',a.join(' '));
-console.warn=(...a)=>send('warn',a.join(' '));
-console.error=(...a)=>send('error',a.join(' '));
-window.onerror=(m,s,l,c,e)=>send('error',e?.stack||m);
-try{(function(){\${code}})();send('info','Execution finished');}
-catch(e){console.error(e.stack||e);}
-<\/script>
-</body></html>\`;
+/* ============================================================
+   INIT
+============================================================ */
+renderTabs();
+switchTab("html");
+run();
+window.onmessage=e=>log(e.data.t||"log",e.data.m);
+function resizeCanvas(){
+  canvas.width=canvas.clientWidth;
+  canvas.height=canvas.clientHeight;
 }
-
-runCode(editor.value);
+window.onresize=resizeCanvas;
 </script>
 
 </body>
