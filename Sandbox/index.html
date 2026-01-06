@@ -10,9 +10,6 @@
   --bg:#0f1220;--panel:#161a2e;--text:#e7eaf6;--muted:#9aa3c7;
   --accent:#6ee7ff;--ok:#9bf8a0;--warn:#ffd166;--err:#ff6b6b;
 }
-.light{
-  --bg:#f4f6ff;--panel:#ffffff;--text:#0f1220;--muted:#555;
-}
 *{box-sizing:border-box}
 body{
   margin:0;font-family:system-ui,ui-monospace,monospace;
@@ -22,11 +19,6 @@ body{
   display:grid;
   grid-template-rows:auto 1fr auto;
 }
-body.zen header,
-body.zen footer,
-body.zen #previewPane{display:none}
-body.zen main{grid-template-columns:1fr}
-
 header,footer{
   padding:10px 14px;
   background:rgba(255,255,255,.05);
@@ -37,7 +29,6 @@ footer{
   font-size:12px;color:var(--muted)
 }
 header{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-
 main{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -51,7 +42,6 @@ main{
   flex-direction:column;
   overflow:hidden
 }
-
 button{
   background:rgba(255,255,255,.1);
   border:1px solid rgba(255,255,255,.2);
@@ -65,7 +55,6 @@ button.primary{
   color:#0f1220;
   font-weight:600
 }
-
 .tabs{display:flex;gap:4px;padding:4px;border-bottom:1px solid rgba(255,255,255,.1)}
 .tab{
   padding:4px 10px;border-radius:6px;
@@ -73,14 +62,12 @@ button.primary{
   background:rgba(255,255,255,.05)
 }
 .tab.active{background:rgba(110,231,255,.25)}
-
 textarea{
   flex:1;background:transparent;border:none;
   color:var(--text);padding:12px;
   font-family:ui-monospace,monospace;
   resize:none;outline:none
 }
-
 .console{
   background:#0b1024;
   font-size:12px;height:140px;
@@ -91,10 +78,7 @@ textarea{
 .warn{color:var(--warn)}
 .err{color:var(--err)}
 .ok{color:var(--ok)}
-
-#previewPane{display:flex;flex-direction:column}
 iframe,canvas{flex:1;border:0;background:#fff}
-
 #aiPanel{
   border-top:1px solid rgba(255,255,255,.1);
   padding:8px;
@@ -103,7 +87,6 @@ iframe,canvas{flex:1;border:0;background:#fff}
   max-height:160px;
   overflow:auto;
 }
-
 @media(max-width:900px){
   main{grid-template-columns:1fr}
 }
@@ -119,38 +102,34 @@ iframe,canvas{flex:1;border:0;background:#fff}
   <button onclick="uploadFiles()">📂 Upload</button>
   <button onclick="downloadZip()">⬇ Download ZIP</button>
   <button onclick="askAI()">🤖 Ask AI</button>
-  <button onclick="toggleZen()">🕶 Zen</button>
   <strong>Web Sandbox v2</strong>
   <span style="margin-left:auto" id="status">Ready</span>
 </header>
 
 <main>
-
 <section class="panel">
   <div class="tabs" id="tabs"></div>
   <textarea id="editor"></textarea>
   <div class="console" id="console"></div>
 </section>
 
-<section class="panel" id="previewPane">
+<section class="panel">
   <iframe id="frame" sandbox="allow-scripts"></iframe>
   <canvas id="canvas" hidden></canvas>
   <div id="aiPanel">AI help will appear here…</div>
 </section>
-
 </main>
 
-<footer>
-  Upload • Split • Run • AI • Download ZIP
-</footer>
+<footer>Upload • Split • Run • AI • Download ZIP</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
 <script>
 const WORKER_URL="https://sandbox-ai.b4rjxr9lk.workers.dev/";
 
 const DEFAULT={
   html:"<h1>Hello Sandbox</h1>",
-  css:"body{font-family:system-ui;text-align:center}",
+  css:"body{text-align:center}",
   js:"console.log('Ready')"
 };
 
@@ -158,13 +137,12 @@ let files=JSON.parse(localStorage.v2files||"null")||DEFAULT;
 let current="html";
 let mode="dom";
 
-const editor=tabs=frame=canvas=consoleEl=aiPanel=status=null;
 const editorEl=document.getElementById("editor");
 const tabsEl=document.getElementById("tabs");
 const frameEl=document.getElementById("frame");
 const canvasEl=document.getElementById("canvas");
 const ctx=canvasEl.getContext("2d");
-const consoleEl2=document.getElementById("console");
+const consoleEl=document.getElementById("console");
 const aiPanelEl=document.getElementById("aiPanel");
 const statusEl=document.getElementById("status");
 
@@ -193,36 +171,40 @@ function log(type,msg){
   const d=document.createElement("div");
   d.className="line "+type;
   d.textContent=msg;
-  consoleEl2.appendChild(d);
-  consoleEl2.scrollTop=consoleEl2.scrollHeight;
+  consoleEl.appendChild(d);
+  consoleEl.scrollTop=consoleEl.scrollHeight;
 }
-function setStatus(t){statusEl.textContent=t}
 
 function run(){
-  save();consoleEl2.textContent="";
+  save();consoleEl.textContent="";
   if(mode==="dom") runDOM();
   if(mode==="canvas") runCanvas();
   if(mode==="audio") runAudio();
 }
 
 function runDOM(){
+  const safeJS = files.js.replace(/`/g,"\\`");
   canvasEl.hidden=true;frameEl.hidden=false;
   frameEl.srcdoc=`
 <!DOCTYPE html>
-<html><head><style>${files.css}</style></head>
-<body>${files.html}
+<html>
+<head><style>${files.css}</style></head>
+<body>
+${files.html}
 <script>
 const send=(t,m)=>parent.postMessage({t,m},'*');
 console.log=(...a)=>send('log',a.join(' '));
-try{(()=>{${files.js}})();send('ok','Done')}
+try{(()=>{${safeJS}})();send('ok','Done')}
 catch(e){send('err',e.toString())}
 <\/script>
-</body></html>`;
+</body>
+</html>`;
 }
 
 function runCanvas(){
   frameEl.hidden=true;canvasEl.hidden=false;
-  resizeCanvas();
+  canvasEl.width=canvasEl.clientWidth;
+  canvasEl.height=canvasEl.clientHeight;
   function loop(){
     ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
     try{eval(files.js)}catch(e){log("err",e.toString())}
@@ -232,94 +214,25 @@ function runCanvas(){
 }
 
 function runAudio(){
-  frameEl.hidden=true;canvasEl.hidden=true;
-  const a=new (AudioContext||webkitAudioContext)();
+  const a=new AudioContext();
   const o=a.createOscillator();
-  const g=a.createGain();
-  o.connect(g).connect(a.destination);
-  g.gain.value=0.1;o.start();setTimeout(()=>o.stop(),1000);
+  o.connect(a.destination);
+  o.start();setTimeout(()=>o.stop(),500);
 }
 
 function toggleCanvas(){mode="canvas"}
 function toggleAudio(){mode="audio"}
-function toggleZen(){document.body.classList.toggle("zen")}
 
-/* ========= UPLOAD ========= */
-function uploadFiles(){
-  const input=document.createElement("input");
-  input.type="file";
-  input.multiple=true;
-  input.accept=".html,.css,.js";
-  input.onchange=async()=>{
-    const list=[...input.files];
-    if(list.length===1 && list[0].name.endsWith(".html")){
-      splitHTML(await list[0].text());
-    }else{
-      for(const f of list){
-        const t=await f.text();
-        if(f.name.endsWith(".html")) files.html=t;
-        if(f.name.endsWith(".css")) files.css=t;
-        if(f.name.endsWith(".js")) files.js=t;
-      }
-    }
-    save();switchTab("html");run();
-  };
-  input.click();
-}
-
-function splitHTML(src){
-  let html=src,css="",js="";
-  html=html.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi,(m,c)=>{css+=c+"\n";return""});
-  html=html.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi,(m,c)=>{js+=c+"\n";return""});
-  const body=html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-  files.html=(body?body[1]:html).trim();
-  files.css=css.trim();
-  files.js=js.trim();
-}
-
-/* ========= DOWNLOAD ZIP ========= */
-async function downloadZip(){
-  const zip=new JSZip();
-  zip.file("index.html",`
-<!DOCTYPE html>
-<html>
-<head>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-${files.html}
-<script src="script.js"></script>
-</body>
-</html>`.trim());
-  zip.file("style.css",files.css);
-  zip.file("script.js",files.js);
-  const blob=await zip.generateAsync({type:"blob"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="sandbox.zip";
-  a.click();
-}
-
-/* ========= AI ========= */
 async function askAI(){
   aiPanelEl.textContent="Thinking…";
   const res=await fetch(WORKER_URL,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      prompt:`Analyze:\nHTML:\n${files.html}\nCSS:\n${files.css}\nJS:\n${files.js}`
-    })
+    body:JSON.stringify({prompt:JSON.stringify(files)})
   });
   const data=await res.json();
   aiPanelEl.textContent=data.reply||"No response";
 }
-
-window.onmessage=e=>log(e.data.t||"log",e.data.m);
-function resizeCanvas(){
-  canvasEl.width=canvasEl.clientWidth;
-  canvasEl.height=canvasEl.clientHeight;
-}
-window.onresize=resizeCanvas;
 
 renderTabs();
 switchTab("html");
