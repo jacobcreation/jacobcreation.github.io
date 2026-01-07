@@ -10,11 +10,13 @@
 <body>
 <header>
   <button id="run">▶ Run</button>
+
   <div id="tabs">
     <button data-file="html" class="active">HTML</button>
     <button data-file="css">CSS</button>
     <button data-file="js">JS</button>
   </div>
+
   <strong style="margin-left:auto">Web Sandbox</strong>
 </header>
 
@@ -26,6 +28,11 @@
 
   <section id="preview">
     <iframe id="frame"></iframe>
+
+    <div id="ai">
+      <div id="aiLog">🤖 AI ready. Ask about your code.</div>
+      <input id="aiInput" placeholder="Ask AI…" />
+    </div>
   </section>
 </main>
 
