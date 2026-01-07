@@ -10,14 +10,20 @@ export function initEditor() {
   document.getElementById("code").value = files[current];
 
   document.querySelectorAll("#tabs button").forEach(btn => {
-    btn.addEventListener("click", () => setFile(btn.dataset.file));
+    btn.addEventListener("click", () => setTab(btn.dataset.file));
   });
 }
 
-export function setFile(name) {
+export function setTab(name) {
   saveCurrentFile();
-  current = name;
-  document.getElementById("code").value = files[name];
+
+  document.getElementById("code").hidden = name === "ai";
+  document.getElementById("aiPanel").hidden = name !== "ai";
+
+  if (name !== "ai") {
+    current = name;
+    document.getElementById("code").value = files[name];
+  }
 
   document.querySelectorAll("#tabs button").forEach(b =>
     b.classList.toggle("active", b.dataset.file === name)
@@ -25,5 +31,7 @@ export function setFile(name) {
 }
 
 export function saveCurrentFile() {
-  files[current] = document.getElementById("code").value;
+  if (current !== "ai") {
+    files[current] = document.getElementById("code").value;
+  }
 }
