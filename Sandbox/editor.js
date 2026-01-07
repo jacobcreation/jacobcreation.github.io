@@ -6,25 +6,24 @@ export const files = {
 
 let current = "html";
 
-export function renderFiles() {
-  const list = document.getElementById("files");
-  list.innerHTML = "";
-
-  Object.keys(files).forEach(name => {
-    const el = document.createElement("div");
-    el.textContent = name.toUpperCase();
-    el.onclick = () => selectFile(name);
-    list.appendChild(el);
-  });
-
-  selectFile(current);
-}
-
-export function selectFile(name) {
+export function setFile(name) {
+  saveCurrentFile();
   current = name;
   document.getElementById("code").value = files[name];
+
+  document.querySelectorAll("#tabs button").forEach(b =>
+    b.classList.toggle("active", b.dataset.file === name)
+  );
 }
 
 export function saveCurrentFile() {
   files[current] = document.getElementById("code").value;
+}
+
+export function initEditor() {
+  document.getElementById("code").value = files[current];
+
+  document.querySelectorAll("#tabs button").forEach(b => {
+    b.addEventListener("click", () => setFile(b.dataset.file));
+  });
 }
