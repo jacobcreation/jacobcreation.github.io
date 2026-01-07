@@ -1,29 +1,36 @@
-const WORKER = "https://sandbox-ai.b4rjxr9lk.workers.dev/";
+const WORKER_URL = "https://sandbox-ai.b4rjxr9lk.workers.dev/";
 
 let history = [];
 
-export async function askAI(message) {
-  history.push({role:"user",content:message});
-  const res = await fetch(WORKER,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({ message, history, files: JSON.parse(localStorage.files||"{}") })
-  });
-  const data = await res.json();
-  history.push({role:"assistant",content:data.reply});
-  log(data.reply);
-}
+export async function askAI(message, files) {
+  if (!message.trim()) return;
 
-export function fixWithAI() {
-  askAI("Fix my code and explain changes.");
-}
+  const log = document.getElementById("aiLog");
+  log.textContent += `\n\n🧑 ${message}\n🤖 Thinking…`;
+  log.scrollTop = log.scrollHeight;
 
-export function explainLastError() {
-  askAI("Explain the last error and how to fix it.");
-}
+  history.push({ role: "user", content: message });
+  history = history.slice(-6);
 
-function log(t){
-  const el=document.getElementById("aiLog");
-  el.textContent+="\n"+t;
-  el.scrollTop=el.scrollHeight;
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message,
+        history,
+        files
+      })
+    });
+
+    const data = await res.json();
+    const reply = data.reply || "No reply.";
+
+    log.textContent += `\n${reply}`;
+    history.push({ role: "assistant", content: reply });
+  } catch (e) {
+    log.textContent += `\n❌ AI error: ${e.message}`;
+  }
+
+  log.scrollTop = log.scrollHeight;
 }
