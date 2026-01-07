@@ -40,7 +40,13 @@ header button {
 main {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(320px,1fr) 6px minmax(320px,1fr);
+}
+
+/* RESIZE DIVIDER */
+#divider {
+  cursor: col-resize;
+  background: rgba(255,255,255,.08);
 }
 
 /* EDITOR COLUMN */
@@ -50,7 +56,7 @@ main {
   border-right: 1px solid rgba(255,255,255,.1);
 }
 
-/* CODE EDITOR */
+/* CODE */
 textarea {
   width: 100%;
   height: 100%;
@@ -65,8 +71,6 @@ textarea {
 
 /* AI PANEL */
 #aiPanel {
-  width: 100%;
-  height: 100%;
   background: #0b1024;
   display: flex;
   flex-direction: column;
@@ -75,7 +79,7 @@ textarea {
 #aiLog {
   flex: 1;
   padding: 10px;
-  overflow-y: auto;       /* 👈 AI scrolls here */
+  overflow-y: auto;
   white-space: pre-wrap;
   font-size: 13px;
 }
