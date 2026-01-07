@@ -17,12 +17,15 @@ export function initEditor() {
 export function setTab(name) {
   saveCurrentFile();
 
-  document.getElementById("code").hidden = name === "ai";
-  document.getElementById("aiPanel").hidden = name !== "ai";
+  const code = document.getElementById("code");
+  const ai = document.getElementById("aiPanel");
+
+  code.hidden = name === "ai";
+  ai.hidden = name !== "ai";
 
   if (name !== "ai") {
     current = name;
-    document.getElementById("code").value = files[name];
+    code.value = files[name];
   }
 
   document.querySelectorAll("#tabs button").forEach(b =>
