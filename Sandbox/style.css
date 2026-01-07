@@ -1,0 +1,59 @@
+body {
+  margin: 0;
+  font-family: system-ui, monospace;
+  background: #0f1220;
+  color: #e7eaf6;
+}
+
+header {
+  display: flex;
+  gap: 6px;
+  padding: 10px;
+  background: #161a2e;
+}
+
+main {
+  display: grid;
+  grid-template-columns: 200px 1fr 1fr;
+  height: calc(100vh - 48px);
+}
+
+aside {
+  background: #101639;
+  padding: 6px;
+  overflow: auto;
+}
+
+textarea {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  color: #e7eaf6;
+  border: none;
+  padding: 10px;
+}
+
+#console {
+  height: 140px;
+  background: #0b1024;
+  overflow: auto;
+  font-size: 12px;
+}
+
+#ai {
+  height: 220px;
+  background: #0b1024;
+  display: flex;
+  flex-direction: column;
+}
+
+#aiLog {
+  flex: 1;
+  overflow: auto;
+  padding: 6px;
+}
+
+#aiInput {
+  border: none;
+  padding: 6px;
+}
