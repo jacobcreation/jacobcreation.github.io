@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Web Sandbox v2 — AI</title>
+<title>Web Sandbox v2 — AI FIXED</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -29,6 +29,7 @@ footer{
   font-size:12px;color:var(--muted)
 }
 header{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
 main{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -78,14 +79,37 @@ textarea{
 .warn{color:var(--warn)}
 .err{color:var(--err)}
 .ok{color:var(--ok)}
+
 iframe,canvas{flex:1;border:0;background:#fff}
-#aiPanel{
-  border-top:1px solid rgba(255,255,255,.1);
+
+/* AI CHAT */
+#aiBox{
+  border-top:1px solid rgba(255,255,255,.15);
+  background:#0b1024;
+  display:flex;
+  flex-direction:column;
+  height:220px;
+}
+#aiMessages{
+  flex:1;
+  overflow:auto;
   padding:8px;
   font-size:13px;
   white-space:pre-wrap;
-  max-height:160px;
-  overflow:auto;
+}
+#aiInput{
+  display:flex;
+  gap:6px;
+  padding:6px;
+  border-top:1px solid rgba(255,255,255,.1);
+}
+#aiInput input{
+  flex:1;
+  background:#161a2e;
+  border:1px solid rgba(255,255,255,.2);
+  color:var(--text);
+  border-radius:6px;
+  padding:6px;
 }
 @media(max-width:900px){
   main{grid-template-columns:1fr}
@@ -97,16 +121,16 @@ iframe,canvas{flex:1;border:0;background:#fff}
 
 <header>
   <button class="primary" onclick="run()">▶ Run</button>
-  <button onclick="toggleCanvas()">🧪 Canvas</button>
-  <button onclick="toggleAudio()">🎵 Audio</button>
+  <button onclick="setMode('canvas')">🧪 Canvas</button>
+  <button onclick="setMode('audio')">🎵 Audio</button>
   <button onclick="uploadFiles()">📂 Upload</button>
   <button onclick="downloadZip()">⬇ Download ZIP</button>
-  <button onclick="askAI()">🤖 Ask AI</button>
   <strong>Web Sandbox v2</strong>
   <span style="margin-left:auto" id="status">Ready</span>
 </header>
 
 <main>
+
 <section class="panel">
   <div class="tabs" id="tabs"></div>
   <textarea id="editor"></textarea>
@@ -116,8 +140,17 @@ iframe,canvas{flex:1;border:0;background:#fff}
 <section class="panel">
   <iframe id="frame" sandbox="allow-scripts"></iframe>
   <canvas id="canvas" hidden></canvas>
-  <div id="aiPanel">AI help will appear here…</div>
+
+  <!-- AI CHATBOX -->
+  <div id="aiBox">
+    <div id="aiMessages">🤖 AI ready. Ask about your code.</div>
+    <div id="aiInput">
+      <input id="aiText" placeholder="Ask AI about your code…">
+      <button onclick="askAI()">Send</button>
+    </div>
+  </div>
 </section>
+
 </main>
 
 <footer>Upload • Split • Run • AI • Download ZIP</footer>
@@ -143,8 +176,8 @@ const frameEl=document.getElementById("frame");
 const canvasEl=document.getElementById("canvas");
 const ctx=canvasEl.getContext("2d");
 const consoleEl=document.getElementById("console");
-const aiPanelEl=document.getElementById("aiPanel");
-const statusEl=document.getElementById("status");
+const aiMsg=document.getElementById("aiMessages");
+const aiText=document.getElementById("aiText");
 
 function renderTabs(){
   tabsEl.innerHTML="";
@@ -175,6 +208,11 @@ function log(type,msg){
   consoleEl.scrollTop=consoleEl.scrollHeight;
 }
 
+window.addEventListener("message",e=>{
+  if(!e.data?.t) return;
+  log(e.data.t,e.data.m);
+});
+
 function run(){
   save();consoleEl.textContent="";
   if(mode==="dom") runDOM();
@@ -183,31 +221,33 @@ function run(){
 }
 
 function runDOM(){
-  const safeJS = files.js.replace(/`/g,"\\`");
   canvasEl.hidden=true;frameEl.hidden=false;
-  frameEl.srcdoc=`
-<!DOCTYPE html>
+  const safeJS=files.js.replace(/`/g,"\\`");
+  frameEl.srcdoc=`<!DOCTYPE html>
 <html>
 <head><style>${files.css}</style></head>
-<body>
-${files.html}
+<body>${files.html}
 <script>
 const send=(t,m)=>parent.postMessage({t,m},'*');
 console.log=(...a)=>send('log',a.join(' '));
 try{(()=>{${safeJS}})();send('ok','Done')}
 catch(e){send('err',e.toString())}
 <\/script>
-</body>
-</html>`;
+</body></html>`;
 }
 
+let canvasFn=null;
 function runCanvas(){
   frameEl.hidden=true;canvasEl.hidden=false;
   canvasEl.width=canvasEl.clientWidth;
   canvasEl.height=canvasEl.clientHeight;
+  try{
+    canvasFn=new Function("ctx","w","h",files.js);
+  }catch(e){log("err",e.toString());return}
   function loop(){
     ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
-    try{eval(files.js)}catch(e){log("err",e.toString())}
+    try{canvasFn(ctx,canvasEl.width,canvasEl.height)}
+    catch(e){log("err",e.toString())}
     requestAnimationFrame(loop);
   }
   loop();
@@ -217,21 +257,41 @@ function runAudio(){
   const a=new AudioContext();
   const o=a.createOscillator();
   o.connect(a.destination);
-  o.start();setTimeout(()=>o.stop(),500);
+  o.start();
+  setTimeout(()=>o.stop(),500);
 }
 
-function toggleCanvas(){mode="canvas"}
-function toggleAudio(){mode="audio"}
+function setMode(m){mode=m;run();}
 
 async function askAI(){
-  aiPanelEl.textContent="Thinking…";
-  const res=await fetch(WORKER_URL,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({prompt:JSON.stringify(files)})
+  const q=aiText.value.trim();
+  if(!q) return;
+  aiText.value="";
+  aiMsg.textContent+="\n\n🧑 "+q+"\n🤖 Thinking...";
+  aiMsg.scrollTop=aiMsg.scrollHeight;
+  try{
+    const res=await fetch(WORKER_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({prompt:q,files})
+    });
+    const data=await res.json();
+    aiMsg.textContent+="\n"+(data.reply||"No response");
+  }catch(e){
+    aiMsg.textContent+="\nAI ERROR: "+e.message;
+  }
+}
+
+function uploadFiles(){alert("Upload not implemented yet")}
+function downloadZip(){
+  const zip=new JSZip();
+  Object.entries(files).forEach(([k,v])=>zip.file(k+"."+k,v));
+  zip.generateAsync({type:"blob"}).then(b=>{
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(b);
+    a.download="sandbox.zip";
+    a.click();
   });
-  const data=await res.json();
-  aiPanelEl.textContent=data.reply||"No response";
 }
 
 renderTabs();
