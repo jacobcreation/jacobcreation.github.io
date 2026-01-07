@@ -9,7 +9,7 @@
 
 body {
   margin: 0;
-  font-family: system-ui, monospace;
+  font-family: system-ui, ui-monospace, monospace;
   background: var(--bg);
   color: var(--text);
   height: 100vh;
@@ -69,9 +69,38 @@ textarea {
   overflow: auto;
 }
 
-#preview iframe {
-  width: 100%;
-  height: 100%;
+#preview {
+  display: flex;
+  flex-direction: column;
+}
+
+iframe {
+  flex: 1;
   border: none;
   background: #fff;
+}
+
+/* AI PANEL */
+#ai {
+  height: 220px;
+  background: #0b1024;
+  border-top: 1px solid rgba(255,255,255,.15);
+  display: flex;
+  flex-direction: column;
+}
+
+#aiLog {
+  flex: 1;
+  padding: 8px;
+  font-size: 13px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+#aiInput {
+  border: none;
+  padding: 8px;
+  background: #161a2e;
+  color: var(--text);
+  outline: none;
 }
