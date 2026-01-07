@@ -1,303 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Web Sandbox v2 — AI FIXED</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-:root{
-  --bg:#0f1220;--panel:#161a2e;--text:#e7eaf6;--muted:#9aa3c7;
-  --accent:#6ee7ff;--ok:#9bf8a0;--warn:#ffd166;--err:#ff6b6b;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;font-family:system-ui,ui-monospace,monospace;
-  background:linear-gradient(135deg,var(--bg),#101639);
-  color:var(--text);
-  min-height:100vh;
-  display:grid;
-  grid-template-rows:auto 1fr auto;
-}
-header,footer{
-  padding:10px 14px;
-  background:rgba(255,255,255,.05);
-  border-bottom:1px solid rgba(255,255,255,.08)
-}
-footer{
-  border-top:1px solid rgba(255,255,255,.08);
-  font-size:12px;color:var(--muted)
-}
-header{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-
-main{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-  padding:14px
-}
-.panel{
-  background:var(--panel);
-  border-radius:12px;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden
-}
-button{
-  background:rgba(255,255,255,.1);
-  border:1px solid rgba(255,255,255,.2);
-  color:var(--text);
-  border-radius:8px;
-  padding:4px 10px;
-  cursor:pointer
-}
-button.primary{
-  background:linear-gradient(135deg,#6ee7ff,#9bf8a0);
-  color:#0f1220;
-  font-weight:600
-}
-.tabs{display:flex;gap:4px;padding:4px;border-bottom:1px solid rgba(255,255,255,.1)}
-.tab{
-  padding:4px 10px;border-radius:6px;
-  cursor:pointer;font-size:13px;
-  background:rgba(255,255,255,.05)
-}
-.tab.active{background:rgba(110,231,255,.25)}
-textarea{
-  flex:1;background:transparent;border:none;
-  color:var(--text);padding:12px;
-  font-family:ui-monospace,monospace;
-  resize:none;outline:none
-}
-.console{
-  background:#0b1024;
-  font-size:12px;height:140px;
-  overflow:auto
-}
-.line{padding:3px 6px;border-bottom:1px solid rgba(255,255,255,.05)}
-.log{color:var(--accent)}
-.warn{color:var(--warn)}
-.err{color:var(--err)}
-.ok{color:var(--ok)}
-
-iframe,canvas{flex:1;border:0;background:#fff}
-
-/* AI CHAT */
-#aiBox{
-  border-top:1px solid rgba(255,255,255,.15);
-  background:#0b1024;
-  display:flex;
-  flex-direction:column;
-  height:220px;
-}
-#aiMessages{
-  flex:1;
-  overflow:auto;
-  padding:8px;
-  font-size:13px;
-  white-space:pre-wrap;
-}
-#aiInput{
-  display:flex;
-  gap:6px;
-  padding:6px;
-  border-top:1px solid rgba(255,255,255,.1);
-}
-#aiInput input{
-  flex:1;
-  background:#161a2e;
-  border:1px solid rgba(255,255,255,.2);
-  color:var(--text);
-  border-radius:6px;
-  padding:6px;
-}
-@media(max-width:900px){
-  main{grid-template-columns:1fr}
-}
-</style>
+  <meta charset="utf-8">
+  <title>Web Sandbox — AI Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-
 <header>
-  <button class="primary" onclick="run()">▶ Run</button>
-  <button onclick="setMode('canvas')">🧪 Canvas</button>
-  <button onclick="setMode('audio')">🎵 Audio</button>
-  <button onclick="uploadFiles()">📂 Upload</button>
-  <button onclick="downloadZip()">⬇ Download ZIP</button>
-  <strong>Web Sandbox v2</strong>
-  <span style="margin-left:auto" id="status">Ready</span>
+  <button id="run">▶ Run</button>
+  <button id="fix">🧠 Fix with AI</button>
+  <button id="explain">❓ Explain Error</button>
+  <button id="zip">⬇ ZIP</button>
+  <strong>Web Sandbox AI</strong>
 </header>
 
 <main>
+  <aside id="files"></aside>
 
-<section class="panel">
-  <div class="tabs" id="tabs"></div>
-  <textarea id="editor"></textarea>
-  <div class="console" id="console"></div>
-</section>
+  <section id="editor">
+    <textarea id="code"></textarea>
+    <div id="console"></div>
+  </section>
 
-<section class="panel">
-  <iframe id="frame" sandbox="allow-scripts"></iframe>
-  <canvas id="canvas" hidden></canvas>
-
-  <!-- AI CHATBOX -->
-  <div id="aiBox">
-    <div id="aiMessages">🤖 AI ready. Ask about your code.</div>
-    <div id="aiInput">
-      <input id="aiText" placeholder="Ask AI about your code…">
-      <button onclick="askAI()">Send</button>
+  <section id="preview">
+    <iframe id="frame"></iframe>
+    <canvas id="canvas"></canvas>
+    <div id="ai">
+      <div id="aiLog"></div>
+      <input id="aiInput" placeholder="Ask AI…" />
     </div>
-  </div>
-</section>
-
+  </section>
 </main>
 
-<footer>Upload • Split • Run • AI • Download ZIP</footer>
-
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-
-<script>
-const WORKER_URL="https://sandbox-ai.b4rjxr9lk.workers.dev/";
-
-const DEFAULT={
-  html:"<h1>Hello Sandbox</h1>",
-  css:"body{text-align:center}",
-  js:"console.log('Ready')"
-};
-
-let files=JSON.parse(localStorage.v2files||"null")||DEFAULT;
-let current="html";
-let mode="dom";
-
-const editorEl=document.getElementById("editor");
-const tabsEl=document.getElementById("tabs");
-const frameEl=document.getElementById("frame");
-const canvasEl=document.getElementById("canvas");
-const ctx=canvasEl.getContext("2d");
-const consoleEl=document.getElementById("console");
-const aiMsg=document.getElementById("aiMessages");
-const aiText=document.getElementById("aiText");
-
-function renderTabs(){
-  tabsEl.innerHTML="";
-  ["html","css","js"].forEach(t=>{
-    const el=document.createElement("div");
-    el.className="tab"+(t===current?" active":"");
-    el.textContent=t.toUpperCase();
-    el.onclick=()=>switchTab(t);
-    tabsEl.appendChild(el);
-  });
-}
-function switchTab(t){
-  save();current=t;
-  editorEl.value=files[t]||"";
-  renderTabs();
-}
-function save(){
-  files[current]=editorEl.value;
-  localStorage.v2files=JSON.stringify(files);
-}
-editorEl.oninput=save;
-
-function log(type,msg){
-  const d=document.createElement("div");
-  d.className="line "+type;
-  d.textContent=msg;
-  consoleEl.appendChild(d);
-  consoleEl.scrollTop=consoleEl.scrollHeight;
-}
-
-window.addEventListener("message",e=>{
-  if(!e.data?.t) return;
-  log(e.data.t,e.data.m);
-});
-
-function run(){
-  save();consoleEl.textContent="";
-  if(mode==="dom") runDOM();
-  if(mode==="canvas") runCanvas();
-  if(mode==="audio") runAudio();
-}
-
-function runDOM(){
-  canvasEl.hidden=true;frameEl.hidden=false;
-  const safeJS=files.js.replace(/`/g,"\\`");
-  frameEl.srcdoc=`<!DOCTYPE html>
-<html>
-<head><style>${files.css}</style></head>
-<body>${files.html}
-<script>
-const send=(t,m)=>parent.postMessage({t,m},'*');
-console.log=(...a)=>send('log',a.join(' '));
-try{(()=>{${safeJS}})();send('ok','Done')}
-catch(e){send('err',e.toString())}
-<\/script>
-</body></html>`;
-}
-
-let canvasFn=null;
-function runCanvas(){
-  frameEl.hidden=true;canvasEl.hidden=false;
-  canvasEl.width=canvasEl.clientWidth;
-  canvasEl.height=canvasEl.clientHeight;
-  try{
-    canvasFn=new Function("ctx","w","h",files.js);
-  }catch(e){log("err",e.toString());return}
-  function loop(){
-    ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
-    try{canvasFn(ctx,canvasEl.width,canvasEl.height)}
-    catch(e){log("err",e.toString())}
-    requestAnimationFrame(loop);
-  }
-  loop();
-}
-
-function runAudio(){
-  const a=new AudioContext();
-  const o=a.createOscillator();
-  o.connect(a.destination);
-  o.start();
-  setTimeout(()=>o.stop(),500);
-}
-
-function setMode(m){mode=m;run();}
-
-async function askAI(){
-  const q=aiText.value.trim();
-  if(!q) return;
-  aiText.value="";
-  aiMsg.textContent+="\n\n🧑 "+q+"\n🤖 Thinking...";
-  aiMsg.scrollTop=aiMsg.scrollHeight;
-  try{
-    const res=await fetch(WORKER_URL,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({prompt:q,files})
-    });
-    const data=await res.json();
-    aiMsg.textContent+="\n"+(data.reply||"No response");
-  }catch(e){
-    aiMsg.textContent+="\nAI ERROR: "+e.message;
-  }
-}
-
-function uploadFiles(){alert("Upload not implemented yet")}
-function downloadZip(){
-  const zip=new JSZip();
-  Object.entries(files).forEach(([k,v])=>zip.file(k+"."+k,v));
-  zip.generateAsync({type:"blob"}).then(b=>{
-    const a=document.createElement("a");
-    a.href=URL.createObjectURL(b);
-    a.download="sandbox.zip";
-    a.click();
-  });
-}
-
-renderTabs();
-switchTab("html");
-run();
-</script>
-
+<script type="module" src="app.js"></script>
 </body>
 </html>
