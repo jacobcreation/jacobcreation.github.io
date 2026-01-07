@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Sandbox — Stable</title>
+  <title>Web Sandbox</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="./style.css" />
 </head>
@@ -10,12 +10,15 @@
 <body>
 <header>
   <button id="run">▶ Run</button>
-  <strong>Web Sandbox</strong>
+  <div id="tabs">
+    <button data-file="html" class="active">HTML</button>
+    <button data-file="css">CSS</button>
+    <button data-file="js">JS</button>
+  </div>
+  <strong style="margin-left:auto">Web Sandbox</strong>
 </header>
 
 <main>
-  <aside id="files"></aside>
-
   <section id="editor">
     <textarea id="code"></textarea>
     <div id="console"></div>
