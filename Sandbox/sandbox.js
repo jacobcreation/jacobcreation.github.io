@@ -14,12 +14,12 @@ export function runSandbox() {
 <body>
 ${files.html}
 <script>
-  const log = (...a) => parent.postMessage(a.join(" "), "*");
-  console.log = log;
+  const send = (...a) => parent.postMessage(a.join(" "), "*");
+  console.log = send;
   try {
     ${files.js}
   } catch (e) {
-    log("ERR: " + e.message);
+    send("ERR: " + e.message);
   }
 <\/script>
 </body>
