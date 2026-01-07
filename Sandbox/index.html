@@ -15,6 +15,7 @@
     <button data-file="html" class="active">HTML</button>
     <button data-file="css">CSS</button>
     <button data-file="js">JS</button>
+    <button data-file="ai">AI</button>
   </div>
 
   <strong style="margin-left:auto">Web Sandbox</strong>
@@ -22,17 +23,20 @@
 
 <main>
   <section id="editor">
+    <!-- CODE EDITOR -->
     <textarea id="code"></textarea>
+
+    <!-- AI CHAT (HIDDEN BY DEFAULT) -->
+    <div id="aiPanel" hidden>
+      <div id="aiLog">🤖 AI ready. Ask about your code.</div>
+      <input id="aiInput" placeholder="Ask AI…" />
+    </div>
+
     <div id="console"></div>
   </section>
 
   <section id="preview">
     <iframe id="frame"></iframe>
-
-    <div id="ai">
-      <div id="aiLog">🤖 AI ready. Ask about your code.</div>
-      <input id="aiInput" placeholder="Ask AI…" />
-    </div>
   </section>
 </main>
 
