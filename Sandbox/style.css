@@ -2,7 +2,6 @@
   --bg:#0f1220;
   --panel:#161a2e;
   --text:#e7eaf6;
-  --accent:#6ee7ff;
 }
 
 * { box-sizing: border-box }
@@ -44,14 +43,17 @@ main {
   grid-template-columns: 1fr 1fr;
 }
 
+/* EDITOR COLUMN */
 #editor {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: 1fr 140px;
   border-right: 1px solid rgba(255,255,255,.1);
 }
 
+/* CODE EDITOR */
 textarea {
-  flex: 1;
+  width: 100%;
+  height: 100%;
   background: transparent;
   color: var(--text);
   border: none;
@@ -61,8 +63,10 @@ textarea {
   outline: none;
 }
 
+/* AI PANEL */
 #aiPanel {
-  flex: 1;
+  width: 100%;
+  height: 100%;
   background: #0b1024;
   display: flex;
   flex-direction: column;
@@ -71,7 +75,7 @@ textarea {
 #aiLog {
   flex: 1;
   padding: 10px;
-  overflow: auto;
+  overflow-y: auto;       /* 👈 AI scrolls here */
   white-space: pre-wrap;
   font-size: 13px;
 }
@@ -84,15 +88,17 @@ textarea {
   outline: none;
 }
 
+/* CONSOLE */
 #console {
   height: 140px;
   background: #0b1024;
   font-size: 12px;
   padding: 6px;
-  overflow: auto;
+  overflow-y: auto;
 }
 
-iframe {
+/* PREVIEW */
+#preview iframe {
   width: 100%;
   height: 100%;
   border: none;
