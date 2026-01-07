@@ -6,6 +6,14 @@ export const files = {
 
 let current = "html";
 
+export function initEditor() {
+  document.getElementById("code").value = files[current];
+
+  document.querySelectorAll("#tabs button").forEach(btn => {
+    btn.addEventListener("click", () => setFile(btn.dataset.file));
+  });
+}
+
 export function setFile(name) {
   saveCurrentFile();
   current = name;
@@ -18,12 +26,4 @@ export function setFile(name) {
 
 export function saveCurrentFile() {
   files[current] = document.getElementById("code").value;
-}
-
-export function initEditor() {
-  document.getElementById("code").value = files[current];
-
-  document.querySelectorAll("#tabs button").forEach(b => {
-    b.addEventListener("click", () => setFile(b.dataset.file));
-  });
 }
