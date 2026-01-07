@@ -16,11 +16,7 @@ export async function askAI(message, files) {
     const res = await fetch(WORKER_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message,
-        history,
-        files
-      })
+      body: JSON.stringify({ message, history, files })
     });
 
     const data = await res.json();
