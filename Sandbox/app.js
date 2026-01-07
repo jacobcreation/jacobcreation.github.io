@@ -1,10 +1,10 @@
-import { renderFiles, saveCurrentFile } from "./editor.js";
+import { initEditor, saveCurrentFile } from "./editor.js";
 import { runSandbox } from "./sandbox.js";
 
 function init() {
   console.log("Sandbox init");
 
-  renderFiles();
+  initEditor();
 
   document.getElementById("run").addEventListener("click", () => {
     saveCurrentFile();
