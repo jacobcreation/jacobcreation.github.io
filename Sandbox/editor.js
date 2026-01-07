@@ -1,43 +1,30 @@
-export const files = JSON.parse(localStorage.files || "null") || {
+export const files = {
   html: "<h1>Hello Sandbox</h1>",
-  css: "body{text-align:center}",
-  js: "console.log('Ready')"
+  css: "body { text-align: center; }",
+  js: "console.log('JS running');"
 };
 
+let current = "html";
+
 export function renderFiles() {
-  const el = document.getElementById("files");
-  el.innerHTML = "";
+  const list = document.getElementById("files");
+  list.innerHTML = "";
 
   Object.keys(files).forEach(name => {
-    const d = document.createElement("div");
-    d.textContent = name;
-    d.onclick = () => {
-      document.getElementById("files").dataset.current = name;
-      document.getElementById("code").value = files[name];
-    };
-    el.appendChild(d);
+    const el = document.createElement("div");
+    el.textContent = name.toUpperCase();
+    el.onclick = () => selectFile(name);
+    list.appendChild(el);
   });
+
+  selectFile(current);
 }
 
-export function getCurrentFile() {
-  return document.getElementById("files").dataset.current;
+export function selectFile(name) {
+  current = name;
+  document.getElementById("code").value = files[name];
 }
 
-export function saveCurrentFile(type) {
-  const name = getCurrentFile();
-  if (name) {
-    files[name] = document.getElementById("code").value;
-    localStorage.files = JSON.stringify(files);
-  }
-
-  if (type === "zip") {
-    const zip = new JSZip();
-    Object.entries(files).forEach(([k,v]) => zip.file(k, v));
-    zip.generateAsync({type:"blob"}).then(b=>{
-      const a=document.createElement("a");
-      a.href=URL.createObjectURL(b);
-      a.download="project.zip";
-      a.click();
-    });
-  }
+export function saveCurrentFile() {
+  files[current] = document.getElementById("code").value;
 }
