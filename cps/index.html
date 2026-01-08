@@ -63,7 +63,7 @@
     <div class="notice muted">
       Tips:
       - In Swiss mode, click “Next Round” to generate pairings, select results, then “Finalize Results” to update the standings.
-      - If there’s an odd number of players, one player gets a bye worth 1 point.
+      - If there’s an odd number of players, one player gets a bye worth 1 point (lowest-ranked without prior bye).
     </div>
   </div>
 
@@ -94,7 +94,7 @@
       });
     }
 
-    // Round Robin (single listing of all unique pairs)
+    // Round Robin (simple all unique pairs listing)
     function generateRoundRobin() {
       pairingsTbody.innerHTML="";
       let board=1;
@@ -109,7 +109,7 @@
       statusEl.textContent="Round Robin schedule generated";
     }
 
-    // Swiss pairing (simple: sort by score/rating, top-down; bye goes to lowest without previous bye)
+    // Swiss pairing (stable thisRound to avoid broken references)
     function generateSwiss() {
       if (state.players.length < 2) {
         alert("Add at least 2 players to generate Swiss pairings.");
@@ -117,15 +117,16 @@
       }
 
       pairingsTbody.innerHTML="";
+      const thisRound = state.round + 1;
+
       const sorted = state.players.slice().sort(
         (a,b)=> (b.score - a.score) || (b.rating - a.rating)
       );
       state.pairings = [];
       let board = 1;
 
-      // Bye if odd number
+      // Bye if odd number: lowest-ranked without previous bye, else absolute lowest
       if (sorted.length % 2 === 1) {
-        // choose lowest-ranked player who hasn't had a bye; fallback to absolute lowest
         let byeIndex = -1;
         for (let i = sorted.length - 1; i >= 0; i--) {
           if (!sorted[i].hadBye) { byeIndex = i; break; }
@@ -134,24 +135,25 @@
 
         const byePlayer = sorted.splice(byeIndex, 1)[0];
         byePlayer.hadBye = true;
-        state.pairings.push({ round: state.round + 1, board: board, white: byePlayer, black: null, result: "bye" });
 
+        state.pairings.push({ round: thisRound, board: board, white: byePlayer, black: null, result: "bye" });
         const trBye = document.createElement("tr");
-        trBye.innerHTML = `<td>${state.round + 1}</td><td>${board}</td><td>${byePlayer.name}</td><td>(bye)</td><td>Bye (1 point)</td>`;
+        trBye.innerHTML = `<td>${thisRound}</td><td>${board}</td><td>${byePlayer.name}</td><td>(bye)</td><td>Bye (1 point)</td>`;
         pairingsTbody.appendChild(trBye);
         board++;
       }
 
+      // Pair top-down within sorted list
       for (let i = 0; i < sorted.length; i += 2) {
         const a = sorted[i], b = sorted[i+1];
         if (!b) break;
-        const pr = { round: state.round + 1, board: board, white: a, black: b, result: "pending" };
+        const pr = { round: thisRound, board: board, white: a, black: b, result: "pending" };
         state.pairings.push(pr);
 
         const tr=document.createElement("tr");
         tr.innerHTML=`<td>${pr.round}</td><td>${pr.board}</td><td>${pr.white.name}</td><td>${pr.black.name}</td>
           <td>
-            <select data-board="${pr.board}">
+            <select data-round="${thisRound}" data-board="${pr.board}">
               <option value="pending">Enter result</option>
               <option value="1-0">1-0</option>
               <option value="0-1">0-1</option>
@@ -162,29 +164,30 @@
         board++;
       }
 
-      // Hook result selectors for this round
-      document.querySelectorAll("select[data-board]").forEach(sel=>{
+      // Hook result selectors for this round (use thisRound to avoid mismatch)
+      document.querySelectorAll(`select[data-round="${thisRound}"]`).forEach(sel=>{
         sel.addEventListener("change",()=>{
           const boardNum = Number(sel.getAttribute("data-board"));
-          const pr = state.pairings.find(x=>x.board===boardNum && x.round===state.round+1);
+          const pr = state.pairings.find(x=>x.board===boardNum && x.round===thisRound);
           if (pr) pr.result = sel.value;
         });
       });
 
-      state.round++;
+      state.round = thisRound;
       statusEl.textContent=`Swiss Round ${state.round} generated`;
+      renderPlayers(); // auto-refresh standings after pairing (sorted by current score)
     }
 
-    // Finalize results (with bye fix and proper UI updates)
+    // Finalize results (handles bye correctly and refreshes UI)
     function finalizeResults() {
       if (!state.pairings.length) {
         alert("No pairings to finalize.");
         return;
       }
 
-      // Require all non-bye results to be entered
+      // Check: all non-bye games must have results
       for (const pr of state.pairings) {
-        if (pr.black === null || pr.result === "bye") continue; // skip bye checks
+        if (pr.black === null || pr.result === "bye") continue;
         if (pr.result === "pending") {
           alert("Please enter all results before finalizing.");
           return;
@@ -207,11 +210,15 @@
         }
       }
 
-      // Save history (optional, useful for future stats)
+      // Save round history (ids only)
       state.history.push({
         round: state.round,
         pairings: state.pairings.map(pr => ({
-          round: pr.round, board: pr.board, white: pr.white.id, black: pr.black ? pr.black.id : null, result: pr.result
+          round: pr.round,
+          board: pr.board,
+          white: pr.white.id,
+          black: pr.black ? pr.black.id : null,
+          result: pr.result
         }))
       });
 
@@ -239,14 +246,12 @@
     });
 
     document.getElementById("roundRobinBtn").addEventListener("click",()=>{
-      tournamentMode="roundrobin"; state.round=0; state.pairings=[]; state.history=[];
-      statusEl.textContent="Round Robin mode selected";
+      tournamentMode="roundrobin"; state.pairings=[]; statusEl.textContent="Round Robin mode selected";
       generateRoundRobin();
     });
 
     document.getElementById("swissBtn").addEventListener("click",()=>{
-      tournamentMode="swiss"; state.round=0; state.pairings=[]; state.history=[];
-      statusEl.textContent="Swiss mode selected";
+      tournamentMode="swiss"; state.round=0; state.pairings=[]; statusEl.textContent="Swiss mode selected";
       generateSwiss();
     });
 
