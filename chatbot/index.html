@@ -3,57 +3,64 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Chat + Minigames (animated)</title>
+<title>Chat + Minigames Hub</title>
 <style>
   :root{
-    --accent:#ff7eb6;
-    --accent-dark:#ff5fa3;
-    --soft:#ffe8cc;
-    --bg:#fff;
-    --text:#1f2937;
-    --muted:#6b7280;
-    --radius:16px;
-    --shadow:0 12px 30px rgba(0,0,0,0.15);
+    --accent:#ff7eb6; --accent-dark:#ff5fa3; --soft:#ffe8cc;
+    --bg:#fff; --text:#1f2937; --muted:#6b7280;
+    --radius:20px; --shadow:0 12px 30px rgba(0,0,0,0.15);
   }
-  body{margin:0;background:#fdf6f9;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text);}
+  body{
+    margin:0;
+    font-family:"Poppins",system-ui,sans-serif;
+    background:linear-gradient(135deg,#ffe8f0,#e6faff);
+    background-size:400% 400%;
+    animation:bgShift 15s ease infinite;
+    color:var(--text);
+  }
+  @keyframes bgShift{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
   .wrap{display:flex;justify-content:center;align-items:flex-end;min-height:100vh;padding:24px;}
   .container{display:flex;gap:20px;flex-wrap:wrap;}
 
   /* Chat panel */
-  .chat-panel{width:340px;height:500px;background:var(--bg);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;}
+  .chat-panel{width:340px;height:500px;background:rgba(255,255,255,0.9);backdrop-filter:blur(12px);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;}
   .chat-header{background:linear-gradient(135deg,#fff0f6,var(--soft));padding:12px 14px;font-weight:700;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:10px}
   .chat-avatar{width:36px;height:36px;border-radius:50%;background:#ffd1e3;display:grid;place-items:center;font-size:20px}
-  .chat-body{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px;background:#fff}
-  .bubble{max-width:80%;border-radius:18px;padding:10px 12px;line-height:1.4;box-shadow:0 2px 10px rgba(0,0,0,0.06);animation:bubbleIn .3s ease;}
+  .chat-body{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px;background:transparent}
+  .bubble{max-width:80%;border-radius:24px;padding:12px 16px;line-height:1.4;box-shadow:0 4px 12px rgba(0,0,0,0.08);animation:bubbleIn .4s cubic-bezier(.25,.8,.25,1.2);}
   .bubble.bot{background:#fff7e6;align-self:flex-start}
   .bubble.user{background:#e6f4ff;align-self:flex-end}
-  .chat-input{border-top:1px solid #f0f0f0;padding:10px;display:grid;grid-template-columns:1fr auto;gap:8px;background:#fff}
+  .chat-input{border-top:1px solid #f0f0f0;padding:10px;display:grid;grid-template-columns:1fr auto;gap:8px;background:transparent}
   .chat-input input{border:1px solid #e5e7eb;border-radius:999px;padding:10px 14px;outline:none;transition:box-shadow .15s ease,border-color .15s ease}
   .chat-input input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,126,182,0.2)}
-  .send-btn{border:none;border-radius:999px;padding:10px 16px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer;transition:transform .15s ease,background .3s ease}
-  .send-btn:hover{transform:scale(1.05);background:var(--accent-dark)}
+  .send-btn{border:none;border-radius:999px;padding:10px 16px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer;transition:transform .15s ease,background .3s ease,box-shadow .3s ease}
+  .send-btn:hover{transform:scale(1.05);background:var(--accent-dark);box-shadow:0 0 12px rgba(255,126,182,0.6)}
   .send-btn:active{transform:scale(0.95)}
 
   /* Animations */
-  @keyframes bubbleIn {from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-  @keyframes fadeIn {from{opacity:0;}to{opacity:1;}}
-  @keyframes pulse {0%{transform:scale(1);}50%{transform:scale(1.2);color:var(--accent);}100%{transform:scale(1);}}
+  @keyframes bubbleIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  @keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.2);color:var(--accent);}100%{transform:scale(1);}}
   .pulse{animation:pulse .4s ease;}
+  @keyframes ripple{0%{box-shadow:0 0 0 0 rgba(255,126,182,0.6);}100%{box-shadow:0 0 0 12px rgba(255,126,182,0);}}
+  .ripple{animation:ripple .6s ease;}
 
   /* Game panel */
-  .game-panel{width:520px;height:500px;background:var(--bg);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;}
+  .game-panel{width:640px;height:500px;background:rgba(255,255,255,0.9);backdrop-filter:blur(12px);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;}
   .game-tabs{display:flex;border-bottom:1px solid #eee;}
-  .game-tabs button{flex:1;padding:10px;border:none;background:var(--soft);cursor:pointer;font-weight:700;color:var(--text);transition:transform .15s ease,background .3s ease,color .3s ease}
+  .game-tabs button{flex:1;padding:10px;border:none;background:var(--soft);cursor:pointer;font-weight:700;color:var(--text);transition:transform .15s ease,background .3s ease,color .3s ease;position:relative}
   .game-tabs button.active{background:var(--accent);color:#fff}
+  .game-tabs button.active::after{content:"";position:absolute;bottom:0;left:0;width:100%;height:3px;background:var(--accent);animation:slideIn .3s ease;}
+  @keyframes slideIn{from{width:0;}to{width:100%;}}
   .game-tabs button:hover{transform:scale(1.05)}
-  .game-area{flex:1;display:flex;align-items:center;justify-content:center;padding:10px;position:relative}
+  .game-area{flex:1;display:flex;align-items:center;justify-content:center;padding:10px;position:relative;overflow:auto}
   .game-area>*{animation:fadeIn .4s ease;}
   .panel-title{position:absolute;top:8px;left:12px;font-size:14px;color:var(--muted)}
   canvas{background:#fff;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,0.08)}
-  .control-row{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+  .control-row{display:flex;gap:10px;align-items:center;margin-top:10px}
   .pill{border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;background:#fff}
-  .primary{background:var(--accent);color:#fff;border:none;border-radius:999px;padding:8px 12px;font-weight:700;cursor:pointer;transition:transform .15s ease,background .3s ease}
-  .primary:hover{background:var(--accent-dark);transform:scale(1.05)}
+  .primary{background:var(--accent);color:#fff;border:none;border-radius:999px;padding:8px 12px;font-weight:700;cursor:pointer;transition:transform .15s ease,background .3s ease,box-shadow .3s ease}
+  .primary:hover{background:var(--accent-dark);transform:scale(1.05);box-shadow:0 0 12px rgba(255,126,182,0.6)}
   .primary:active{transform:scale(0.95)}
 
   @media (max-width:900px){.chat-panel,.game-panel{width:100%}}
@@ -96,7 +103,6 @@
           <h3 style="margin:6px 0">Clicker Game</h3>
           <p>Score: <span id="clickScore">0</span></p>
           <button class="primary" onclick="incrementClicker()">Click me!</button>
-          <p style="color:var(--muted);font-size:12px">Tip: Try to beat your best streak!</p>
         </div>
       </div>
     </section>
@@ -117,16 +123,22 @@ function addBubble(text, who='bot'){
   chatBody.appendChild(div);
   chatBody.scrollTop = chatBody.scrollHeight;
 }
+
 chatForm.addEventListener('submit', async (e)=>{
   e.preventDefault();
   const msg = chatText.value.trim();
   if(!msg) return;
   addBubble(msg,'user'); chatText.value='';
   try{
-    const res = await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});
-    if(!res.ok) throw new Error('Network error');
+    const res = await fetch(ENDPOINT,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:msg})
+    });
+    if(!res.ok) throw new Error('Network error: '+res.status);
     const data = await res.json();
-    addBubble((data && data.reply) ? data.reply : "I’m here, but I couldn’t read that reply.");
+    console.log('Worker response:', data);
+    addBubble(data.reply || data.text || (typeof data === 'string' ? data : JSON.stringify(data)));
   }catch(err){
     addBubble('Hmm, I hit a snag. Please try again in a moment.');
     console.error(err);
@@ -144,7 +156,6 @@ tabs.forEach(btn=>{
     showGame(btn.dataset.game);
   });
 });
-
 function showGame(name){
   panelTitle.textContent = name.charAt(0).toUpperCase()+name.slice(1);
   gameArea.innerHTML = `<div class="panel-title">${panelTitle.textContent}</div>`;
@@ -160,12 +171,11 @@ function showGame(name){
 let clickScore = 0;
 function renderClicker(){
   const div = document.createElement('div');
-  div.id='clicker'; div.style.textAlign='center';
+  div.style.textAlign='center';
   div.innerHTML = `
     <h3 style="margin:6px 0">Clicker Game</h3>
     <p>Score: <span id="clickScore">0</span></p>
-    <button class="primary" onclick="incrementClicker()">Click me!</button>
-    <p style="color:var(--muted);font-size:12px">Tip: Try to beat your best streak!</p>`;
+    <button class="primary" onclick="incrementClicker()">Click me!</button>`;
   gameArea.appendChild(div); clickScore=0;
 }
 function incrementClicker(){
@@ -176,14 +186,14 @@ function incrementClicker(){
   setTimeout(()=>scoreEl.classList.remove('pulse'),400);
 }
 
-/* Memory Match */
+/* Memory */
 function renderMemory(){
   const div = document.createElement('div');
-  div.style.width='100%'; div.style.maxWidth='440px';
+  div.style.maxWidth='480px';
   div.innerHTML = `
     <div class="control-row">
       <button class="primary" id="memReset">Shuffle</button>
-      <span class="pill">Pairs found: <span id="pairs">0</span>/8</span>
+      <span class="pill">Pairs: <span id="pairs">0</span>/8</span>
     </div>
     <div id="grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"></div>`;
   gameArea.appendChild(div);
@@ -191,12 +201,12 @@ function renderMemory(){
   const deck = [...icons,...icons].sort(()=>Math.random()-0.5);
   const grid = div.querySelector('#grid');
   let first=null, lock=false, found=0;
-  deck.forEach((val)=>{
+  deck.forEach(val=>{
     const card = document.createElement('button');
     card.className='pill'; card.style.height='70px'; card.style.fontSize='24px';
     card.dataset.val = val; card.textContent='❓';
     card.addEventListener('click', ()=>{
-      if(lock || card.textContent!== '❓') return;
+      if(lock || card.textContent!=='❓') return;
       card.textContent = val;
       if(!first){ first = card; }
       else {
@@ -222,22 +232,21 @@ function renderSnake(){
   let grid=20, size=20;
   let snake=[{x:10,y:10}], dx=1, dy=0;
   let food={x:5,y:5};
-  let timer = setInterval(loop,140);
-  function onKey(e){
-    if(e.key==='ArrowUp' && dy===0){dx=0;dy=-1}
-    if(e.key==='ArrowDown' && dy===0){dx=0;dy=1}
-    if(e.key==='ArrowLeft' && dx===0){dx=-1;dy=0}
-    if(e.key==='ArrowRight' && dx===0){dx=1;dy=0}
-  }
+  const onKey=(e)=>{
+    if(e.key==='ArrowUp'&&dy===0){dx=0;dy=-1}
+    if(e.key==='ArrowDown'&&dy===0){dx=0;dy=1}
+    if(e.key==='ArrowLeft'&&dx===0){dx=-1;dy=0}
+    if(e.key==='ArrowRight'&&dx===0){dx=1;dy=0}
+  };
   window.addEventListener('keydown', onKey);
+  const timer = setInterval(loop,140);
   function loop(){
-    const head = {x:snake[0].x+dx, y:snake[0].y+dy};
+    const head={x:snake[0].x+dx,y:snake[0].y+dy};
     snake.unshift(head);
-    if(head.x===food.x && head.y===food.y){
-      food.x=Math.floor(Math.random()*grid);
-      food.y=Math.floor(Math.random()*grid);
-    } else { snake.pop(); }
-    if(head.x<0||head.y<0||head.x>=grid||head.y>=grid || collide()){
+    if(head.x===food.x&&head.y===food.y){
+      food.x=Math.floor(Math.random()*grid); food.y=Math.floor(Math.random()*grid);
+    } else snake.pop();
+    if(head.x<0||head.y<0||head.x>=grid||head.y>=grid||collide()){
       snake=[{x:10,y:10}]; dx=1; dy=0;
     }
     draw();
@@ -260,11 +269,10 @@ function renderPong(){
   canvas.width=480; canvas.height=320; gameArea.appendChild(canvas);
   const ctx = canvas.getContext('2d');
   let paddle={x:10,y:120,w:10,h:80}, ball={x:240,y:160,vx:3,vy:2,r:6};
-  function onMouse(e){
+  canvas.addEventListener('mousemove', e=>{
     const rect = canvas.getBoundingClientRect();
     paddle.y = Math.min(canvas.height-paddle.h, Math.max(0, e.clientY-rect.top - paddle.h/2));
-  }
-  canvas.addEventListener('mousemove', onMouse);
+  });
   function loop(){
     ball.x+=ball.vx; ball.y+=ball.vy;
     if(ball.y<ball.r||ball.y>canvas.height-ball.r) ball.vy*=-1;
@@ -294,26 +302,19 @@ function renderTetris(){
   const COLS=10, ROWS=20, SIZE=20;
   const colors = ['#ff7eb6','#ffe8cc','#e6f4ff','#ffd1e3','#c3f0ca','#cde1ff'];
   const SHAPES = {
-    I:[[1,1,1,1]],
-    O:[[1,1],[1,1]],
-    T:[[0,1,0],[1,1,1]],
-    S:[[0,1,1],[1,1,0]],
-    Z:[[1,1,0],[0,1,1]],
-    J:[[1,0,0],[1,1,1]],
-    L:[[0,0,1],[1,1,1]]
+    I:[[1,1,1,1]], O:[[1,1],[1,1]], T:[[0,1,0],[1,1,1]],
+    S:[[0,1,1],[1,1,0]], Z:[[1,1,0],[0,1,1]],
+    J:[[1,0,0],[1,1,1]], L:[[0,0,1],[1,1,1]]
   };
   let board = Array.from({length:ROWS},()=>Array(COLS).fill(0));
   let piece = newPiece();
   let dropCounter=0, dropInterval=500, lastTime=0;
-
-  function onKey(e){
+  window.addEventListener('keydown', e=>{
     if(e.key==='ArrowLeft'){ piece.x--; if(collide()) piece.x++; }
     if(e.key==='ArrowRight'){ piece.x++; if(collide()) piece.x--; }
-    if(e.key==='ArrowUp'){ rotate(); if(collide()) { rotate(); rotate(); rotate(); } }
+    if(e.key==='ArrowUp'){ rotate(); if(collide()){ rotate(); rotate(); rotate(); } }
     if(e.key==='ArrowDown'){ drop(); }
-  }
-  window.addEventListener('keydown', onKey);
-
+  });
   function newPiece(){
     const types=Object.keys(SHAPES);
     const t = types[Math.floor(Math.random()*types.length)];
@@ -322,17 +323,13 @@ function renderTetris(){
   function collide(){
     for(let y=0;y<piece.shape.length;y++){
       for(let x=0;x<piece.shape[y].length;x++){
-        if(piece.shape[y][x] &&
-          (piece.y+y>=ROWS || piece.x+x<0 || piece.x+x>=COLS || board[piece.y+y][piece.x+x]))
-          return true;
+        if(piece.shape[y][x] && (piece.y+y>=ROWS || piece.x+x<0 || piece.x+x>=COLS || board[piece.y+y][piece.x+x])) return true;
       }
     }
     return false;
   }
   function merge(){
-    piece.shape.forEach((row,dy)=>{
-      row.forEach((val,dx)=>{ if(val) board[piece.y+dy][piece.x+dx]=piece.color; });
-    });
+    piece.shape.forEach((row,dy)=>row.forEach((val,dx)=>{ if(val) board[piece.y+dy][piece.x+dx]=piece.color; }));
   }
   function rotate(){
     const s = piece.shape;
@@ -365,24 +362,23 @@ function renderTetris(){
   update();
 }
 
-/* Chess with built-in engine (minimax; no castling/en passant; promotion to queen) */
+/* Chess (320x320 board, controls stacked) */
 function renderChess(){
   const container = document.createElement('div');
   container.style.display='grid';
-  container.style.gridTemplateColumns='1fr auto';
+  container.style.gridTemplateColumns='1fr';
   container.style.gap='12px';
   container.style.alignItems='start';
 
-  // Left: board
   const boardEl = document.createElement('div');
   boardEl.style.display='grid';
-  boardEl.style.gridTemplateColumns='repeat(8,48px)';
-  boardEl.style.gridTemplateRows='repeat(8,48px)';
+  boardEl.style.gridTemplateColumns='repeat(8,40px)';
+  boardEl.style.gridTemplateRows='repeat(8,40px)';
+  boardEl.style.width='320px'; boardEl.style.height='320px';
   boardEl.style.borderRadius='12px';
   boardEl.style.overflow='hidden';
   boardEl.style.boxShadow='0 4px 14px rgba(0,0,0,0.08)';
 
-  // Right: controls
   const controls = document.createElement('div');
   controls.innerHTML = `
     <div class="control-row">
@@ -402,10 +398,7 @@ function renderChess(){
   container.appendChild(controls);
   gameArea.appendChild(container);
 
-  const PIECES = {
-    'P':'♙','N':'♘','B':'♗','R':'♖','Q':'♕','K':'♔',
-    'p':'♟','n':'♞','b':'♝','r':'♜','q':'♛','k':'♚'
-  };
+  const PIECES = {'P':'♙','N':'♘','B':'♗','R':'♖','Q':'♕','K':'♔','p':'♟','n':'♞','b':'♝','r':'♜','q':'♛','k':'♚'};
   const START = [
     ['r','n','b','q','k','b','n','r'],
     ['p','p','p','p','p','p','p','p'],
@@ -419,108 +412,76 @@ function renderChess(){
   let board = START.map(r=>r.slice());
   let whiteToMove = true;
   let selected = null;
-  let depth = parseInt(document.getElementById('chessDiff').value,10);
-  let lastMove = null; // for highlighting
-  const status = document.getElementById('chessStatus');
-
-  document.getElementById('chessDiff').addEventListener('change', e=>{
-    depth = parseInt(e.target.value,10);
-  });
-  document.getElementById('chessNew').addEventListener('click', ()=>{
-    board = START.map(r=>r.slice());
-    whiteToMove = true; selected=null; lastMove=null; render(); status.textContent='White to move';
-  });
+  let lastMove = null;
+  let depth = 2;
+  const status = controls.querySelector('#chessStatus');
+  controls.querySelector('#chessDiff').addEventListener('change', e=>{ depth = parseInt(e.target.value,10); });
+  controls.querySelector('#chessNew').addEventListener('click', ()=>{ board = START.map(r=>r.slice()); whiteToMove=true; selected=null; lastMove=null; render(); status.textContent='White to move'; });
 
   function render(){
     boardEl.innerHTML='';
     for(let r=0;r<8;r++){
       for(let c=0;c<8;c++){
         const cell = document.createElement('button');
-        cell.style.width='48px'; cell.style.height='48px';
-        cell.style.border='none';
-        cell.style.fontSize='28px';
-        cell.style.cursor='pointer';
-        cell.style.background = ((r+c)%2===0)?'#fff':'#ffe8cc';
-        cell.style.color = '#1f2937';
-        cell.dataset.r=r; cell.dataset.c=c;
-        const p = board[r][c];
-        cell.textContent = p?PIECES[p]:'';
-        if(selected && selected.r===r && selected.c===c){
-          cell.style.boxShadow='inset 0 0 0 3px rgba(255,126,182,0.6)';
-        }
-        if(lastMove && lastMove.tr===r && lastMove.tc===c){
-          cell.style.boxShadow='0 0 0 3px rgba(255,126,182,0.6)';
-        }
+        cell.style.width='40px'; cell.style.height='40px';
+        cell.style.border='none'; cell.style.fontSize='22px'; cell.style.cursor='pointer';
+        cell.style.background = ((r+c)%2===0)?'#fff':'#ffe8cc'; cell.style.color = '#1f2937';
+        const p = board[r][c]; cell.textContent = p?PIECES[p]:'';
+        if(selected && selected.r===r && selected.c===c){ cell.style.boxShadow='inset 0 0 0 3px rgba(255,126,182,0.6)'; }
+        if(lastMove && (lastMove.tr===r && lastMove.tc===c || lastMove.sr===r && lastMove.sc===c)){ cell.classList.add('ripple'); setTimeout(()=>cell.classList.remove('ripple'),600); }
         cell.addEventListener('click', ()=>onCell(r,c));
         boardEl.appendChild(cell);
       }
     }
   }
-
-  function isWhite(p){ return p && p===p.toUpperCase(); }
-  function isBlack(p){ return p && p===p.toLowerCase(); }
+  const isWhite=p=>p&&p===p.toUpperCase(), isBlack=p=>p&&p===p.toLowerCase();
+  const inBounds=(r,c)=>r>=0 && r<8 && c>=0 && c<8;
 
   function onCell(r,c){
     const p = board[r][c];
-    if(whiteToMove){
-      if(selected){
-        const moves = legalMoves(selected.r, selected.c);
-        const can = moves.some(m=>m.r===r && m.c===c);
-        if(can){
-          doMove({sr:selected.r,sc:selected.c,tr:r,tc:c});
-          whiteToMove=false; selected=null; render();
-          status.textContent='Black thinking...';
-          setTimeout(aiMove, 60);
-        } else {
-          selected = (p && isWhite(p)) ? {r,c} : null;
-          render();
-        }
+    if(!whiteToMove) return;
+    if(selected){
+      const moves = legalMoves(selected.r, selected.c);
+      const can = moves.some(m=>m.r===r && m.c===c);
+      if(can){
+        doMove({sr:selected.r,sc:selected.c,tr:r,tc:c});
+        whiteToMove=false; selected=null; render();
+        status.textContent='Black thinking...';
+        setTimeout(aiMove, 80);
       } else {
         selected = (p && isWhite(p)) ? {r,c} : null;
         render();
       }
+    } else {
+      selected = (p && isWhite(p)) ? {r,c} : null;
+      render();
     }
   }
-
   function move(sr,sc,tr,tc){
     const p = board[sr][sc];
-    board[tr][tc] = p;
-    board[sr][sc] = '';
+    board[tr][tc] = p; board[sr][sc] = '';
     if(p==='P' && tr===0) board[tr][tc]='Q';
     if(p==='p' && tr===7) board[tr][tc]='q';
   }
-  function doMove(m){
-    move(m.sr,m.sc,m.tr,m.tc);
-    lastMove = { ...m };
-  }
-
-  function inBounds(r,c){ return r>=0 && r<8 && c>=0 && c<8; }
+  function doMove(m){ move(m.sr,m.sc,m.tr,m.tc); lastMove = { ...m }; }
 
   function legalMoves(r,c){
-    const p = board[r][c]; if(!p) return [];
-    const white = isWhite(p);
-    const dirs = [];
-    let moves = [];
+    const p = board[r][c]; if(!p) return []; const white=isWhite(p);
+    const dirs=[]; let moves=[];
     if(p.toUpperCase()==='P'){
-      const dir = white? -1 : 1;
-      const start = white? 6 : 1;
+      const dir = white? -1 : 1; const start = white? 6 : 1;
       if(inBounds(r+dir,c) && !board[r+dir][c]) moves.push({r:r+dir,c});
       if(r===start && !board[r+dir][c] && !board[r+2*dir][c]) moves.push({r:r+2*dir,c});
       for(const dc of [-1,1]){
         const rr=r+dir, cc=c+dc;
         if(inBounds(rr,cc)){
-          const target = board[rr][cc];
-          if(target && (white? isBlack(target): isWhite(target))) moves.push({r:rr,c:cc});
+          const t=board[rr][cc];
+          if(t && (white? isBlack(t): isWhite(t))) moves.push({r:rr,c:cc});
         }
       }
     } else if(p.toUpperCase()==='N'){
-      const jumps=[[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]];
-      jumps.forEach(([dr,dc])=>{
-        const rr=r+dr, cc=c+dc;
-        if(inBounds(rr,cc)){
-          const t=board[rr][cc];
-          if(!t || (white? isBlack(t): isWhite(t))) moves.push({r:rr,c:cc});
-        }
+      [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]].forEach(([dr,dc])=>{
+        const rr=r+dr, cc=c+dc; if(inBounds(rr,cc)){ const t=board[rr][cc]; if(!t || (white? isBlack(t): isWhite(t))) moves.push({r:rr,c:cc}); }
       });
     } else if(p.toUpperCase()==='B' || p.toUpperCase()==='R' || p.toUpperCase()==='Q'){
       if(p.toUpperCase()!=='R'){ dirs.push([1,1],[1,-1],[-1,1],[-1,-1]); }
@@ -535,21 +496,13 @@ function renderChess(){
         }
       });
     } else if(p.toUpperCase()==='K'){
-      for(let dr=-1;dr<=1;dr++){
-        for(let dc=-1;dc<=1;dc++){
-          if(dr===0 && dc===0) continue;
-          const rr=r+dr, cc=c+dc;
-          if(inBounds(rr,cc)){
-            const t=board[rr][cc];
-            if(!t || (white? isBlack(t): isWhite(t))) moves.push({r:rr,c:cc});
-          }
-        }
+      for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+        if(dr===0&&dc===0) continue; const rr=r+dr, cc=c+dc;
+        if(inBounds(rr,cc)){ const t=board[rr][cc]; if(!t || (white? isBlack(t): isWhite(t))) moves.push({r:rr,c:cc}); }
       }
     }
-    // Filter out moves that leave king in check (simple validation)
     moves = moves.filter(m=>{
-      const saved = board[m.r][m.c];
-      const piece = board[r][c];
+      const saved = board[m.r][m.c], piece = board[r][c];
       board[m.r][m.c] = piece; board[r][c] = '';
       const ok = !isInCheck(white);
       board[r][c] = piece; board[m.r][m.c] = saved;
@@ -557,50 +510,27 @@ function renderChess(){
     });
     return moves;
   }
-
   function findKing(white){
-    for(let r=0;r<8;r++) for(let c=0;c<8;c++){
-      const p=board[r][c];
-      if(p && (white? p==='K': p==='k')) return {r,c};
-    }
+    for(let r=0;r<8;r++) for(let c=0;c<8;c++){ const p=board[r][c]; if(p && (white? p==='K': p==='k')) return {r,c}; }
     return null;
   }
-  function isInCheck(white){
-    const k = findKing(white); if(!k) return false;
-    for(let r=0;r<8;r++) for(let c=0;c<8;c++){
-      const p=board[r][c];
-      if(!p) continue;
-      if(white? isBlack(p): isWhite(p)){
-        const moves = pseudoMoves(r,c);
-        if(moves.some(m=>m.r===k.r && m.c===k.c)) return true;
-      }
-    }
-    return false;
-  }
   function pseudoMoves(r,c){
-    const p = board[r][c]; if(!p) return [];
-    const white = isWhite(p);
+    const p = board[r][c]; if(!p) return []; const white=isWhite(p);
     const dirs=[]; const moves=[];
     if(p.toUpperCase()==='P'){
-      const dir = white? -1 : 1;
-      const start = white? 6 : 1;
+      const dir = white? -1 : 1; const start = white? 6 : 1;
       if(inBounds(r+dir,c) && !board[r+dir][c]) moves.push({r:r+dir,c});
       if(r===start && !board[r+dir][c] && !board[r+2*dir][c]) moves.push({r:r+2*dir,c});
       for(const dc of [-1,1]){
         const rr=r+dir, cc=c+dc;
         if(inBounds(rr,cc)){
-          const target = board[rr][cc];
-          if(target && (white? isBlack(target): isWhite(target))) moves.push({r:rr,c:cc});
+          const t=board[rr][cc];
+          if(t && (white? isBlack(t): isWhite(t))) moves.push({r:rr,c:cc});
         }
       }
     } else if(p.toUpperCase()==='N'){
-      const jumps=[[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]];
-      jumps.forEach(([dr,dc])=>{
-        const rr=r+dr, cc=c+dc;
-        if(inBounds(rr,cc)){
-          const t=board[rr][cc];
-          if(!t || (white? isBlack(t): isWhite(t))) moves.push({r:rr,c:cc});
-        }
+      [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]].forEach(([dr,dc])=>{
+        const rr=r+dr, cc=c+dc; if(inBounds(rr,cc)){ const t=board[rr][cc]; if(!t || (white? isBlack(t): isWhite(t))) moves.push({r:rr,c:cc}); }
       });
     } else if(p.toUpperCase()==='B' || p.toUpperCase()==='R' || p.toUpperCase()==='Q'){
       if(p.toUpperCase()!=='R'){ dirs.push([1,1],[1,-1],[-1,1],[-1,-1]); }
@@ -615,20 +545,24 @@ function renderChess(){
         }
       });
     } else if(p.toUpperCase()==='K'){
-      for(let dr=-1;dr<=1;dr++){
-        for(let dc=-1;dc<=1;dc++){
-          if(dr===0 && dc===0) continue;
-          const rr=r+dr, cc=c+dc;
-          if(inBounds(rr,cc)){
-            const t=board[rr][cc];
-            if(!t || (white? isBlack(t): isWhite(t))) moves.push({r:rr,c:cc});
-          }
-        }
+      for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+        if(dr===0&&dc===0) continue; const rr=r+dr, cc=c+dc;
+        if(inBounds(rr,cc)){ const t=board[rr][cc]; if(!t || (white? isBlack(t): isWhite(t))) moves.push({r:rr,c:cc}); }
       }
     }
     return moves;
   }
-
+  function isInCheck(white){
+    const k = findKing(white); if(!k) return false;
+    for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+      const p=board[r][c]; if(!p) continue;
+      if(white? isBlack(p): isWhite(p)){
+        const moves = pseudoMoves(r,c);
+        if(moves.some(m=>m.r===k.r && m.c===k.c)) return true;
+      }
+    }
+    return false;
+  }
   function generateMoves(forWhite){
     const moves=[];
     for(let r=0;r<8;r++) for(let c=0;c<8;c++){
@@ -640,31 +574,21 @@ function renderChess(){
     }
     return moves;
   }
-
   function apply(m){
     const saved = {piece: board[m.sr][m.sc], cap: board[m.tr][m.tc], last:lastMove};
-    doMove(m);
-    return saved;
+    doMove(m); return saved;
   }
   function undo(m,saved){
-    board[m.sr][m.sc] = saved.piece;
-    board[m.tr][m.tc] = saved.cap;
-    lastMove = saved.last;
+    board[m.sr][m.sc] = saved.piece; board[m.tr][m.tc] = saved.cap; lastMove = saved.last;
   }
-
   const values = {'P':100,'N':320,'B':330,'R':500,'Q':900,'K':20000};
   function evaluate(){
     let score=0;
     for(let r=0;r<8;r++) for(let c=0;c<8;c++){
-      const p=board[r][c]; if(!p) continue;
-      const v = values[p.toUpperCase()]||0;
-      score += isWhite(p) ? v : -v;
+      const p=board[r][c]; if(!p) continue; const v=values[p.toUpperCase()]||0; score += isWhite(p)? v : -v;
     }
-    score += generateMoves(true).length*2;
-    score -= generateMoves(false).length*2;
-    return score;
+    score += generateMoves(true).length*2; score -= generateMoves(false).length*2; return score;
   }
-
   function minimax(d, alpha, beta, maximizing){
     if(d===0) return {score:evaluate()};
     const moves = generateMoves(maximizing);
@@ -673,44 +597,25 @@ function renderChess(){
       return {score: inCheck ? (maximizing? -20000 : 20000) : 0};
     }
     let best = {score: maximizing? -Infinity : Infinity, move:null};
-    moves.sort((a,b)=>{
-      const capA = board[a.tr][a.tc]? 1:0;
-      const capB = board[b.tr][b.tc]? 1:0;
-      return capB - capA;
-    });
+    moves.sort((a,b)=>{ const capA = board[a.tr][a.tc]?1:0; const capB=board[b.tr][b.tc]?1:0; return capB-capA; });
     for(const m of moves){
       const saved = apply(m);
       const res = minimax(d-1, alpha, beta, !maximizing);
       undo(m,saved);
       const sc = res.score;
-      if(maximizing){
-        if(sc>best.score){ best={score:sc, move:m}; }
-        alpha = Math.max(alpha, sc);
-        if(beta<=alpha) break;
-      } else {
-        if(sc<best.score){ best={score:sc, move:m}; }
-        beta = Math.min(beta, sc);
-        if(beta<=alpha) break;
-      }
+      if(maximizing){ if(sc>best.score){ best={score:sc,move:m}; } alpha=Math.max(alpha,sc); if(beta<=alpha) break; }
+      else { if(sc<best.score){ best={score:sc,move:m}; } beta=Math.min(beta,sc); if(beta<=alpha) break; }
     }
     return best;
   }
-
   function aiMove(){
-    const best = minimax(depth, -Infinity, Infinity, false); // Black to move
-    if(!best.move){
-      status.textContent = isInCheck(false) ? 'White wins by checkmate!' : 'Draw (stalemate).';
-      return;
-    }
+    const best = minimax(depth, -Infinity, Infinity, false); // Black
+    if(!best.move){ status.textContent = isInCheck(false) ? 'White wins!' : 'Draw.'; return; }
     apply(best.move);
     whiteToMove=true; render();
-    if(generateMoves(true).length===0){
-      status.textContent = isInCheck(true) ? 'Black wins by checkmate!' : 'Draw (stalemate).';
-    } else {
-      status.textContent='White to move';
-    }
+    if(generateMoves(true).length===0){ status.textContent = isInCheck(true) ? 'Black wins!' : 'Draw.'; }
+    else { status.textContent='White to move'; }
   }
-
   render();
 }
 </script>
