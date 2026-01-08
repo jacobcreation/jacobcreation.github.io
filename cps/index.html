@@ -1,272 +1,272 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Chess Tournament System</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body { margin:0; font-family:Arial,sans-serif; background:#0f172a; color:#e5e7eb; }
-    header { padding:20px; background:#111827; text-align:center; border-bottom:2px solid #1f2937; }
-    h1 { margin:0; }
-    .btn-bar { margin-top:12px; display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
-    button { padding:12px 18px; border-radius:10px; border:none; cursor:pointer; font-size:15px; transition:0.2s; }
-    .btn-primary { background:#22c55e; color:#fff; }
-    .btn-accent { background:#38bdf8; color:#fff; }
-    .btn-danger { background:#ef4444; color:#fff; }
-    button:hover { opacity:0.9; }
-    .container { max-width:1000px; margin:20px auto; padding:0 16px; }
-    table { width:100%; border-collapse:collapse; margin-top:12px; }
-    th,td { border:1px solid #1f2937; padding:8px; text-align:left; }
-    th { background:#0c1424; }
-    .notice { margin-top:10px; padding:10px; background:#0c1424; border-radius:8px; }
-    .muted { color:#9ca3af; }
-    select,input { background:#0c1424; color:#e5e7eb; border:1px solid #1f2937; border-radius:6px; padding:6px; }
-  </style>
+<meta charset="UTF-8" />
+<title>Chess Tournament System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<style>
+:root{
+  --bg:#020617;
+  --panel:#0f172a;
+  --panel-2:#111827;
+  --border:#1f2937;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+  --primary:#22c55e;
+  --accent:#38bdf8;
+  --danger:#ef4444;
+}
+*{ box-sizing:border-box }
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
+  background:radial-gradient(1000px 600px at top,#0f172a,#020617);
+  color:var(--text);
+}
+header{
+  padding:22px;
+  background:#020617;
+  border-bottom:1px solid var(--border);
+  text-align:center;
+}
+h1{ margin:0; font-size:26px }
+.btn-bar{
+  margin-top:12px;
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+button{
+  padding:8px 12px;
+  border-radius:10px;
+  border:none;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+}
+button:hover{ opacity:0.9 }
+.btn-primary{ background:var(--primary); color:#052e16 }
+.btn-accent{ background:var(--accent); color:#020617 }
+.btn-danger{ background:var(--danger); color:white }
+
+.container{
+  max-width:1100px;
+  margin:20px auto;
+  padding:0 16px;
+}
+.card{
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:16px;
+  margin-bottom:16px;
+}
+.notice{
+  margin-top:10px;
+  padding:10px;
+  background:#020617;
+  border-radius:10px;
+  border:1px dashed var(--border);
+  font-size:13px;
+  color:var(--muted);
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+th,td{
+  border-bottom:1px solid var(--border);
+  padding:8px;
+}
+th{ color:#c7d2fe; text-align:left }
+input{
+  background:#020617;
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:7px;
+}
+.small{
+  font-size:12px;
+  color:var(--muted);
+}
+</style>
 </head>
+
 <body>
-  <header>
-    <h1>Chess Tournament System</h1>
-    <div class="btn-bar">
-      <button id="roundRobinBtn" class="btn-accent">Round Robin</button>
-      <button id="swissBtn" class="btn-primary">Swiss</button>
-      <button id="nextRoundBtn" class="btn-primary">Next Round (Swiss)</button>
-      <button id="finalizeBtn" class="btn-accent">Finalize Results</button>
-      <button id="clearPlayersBtn" class="btn-danger">Clear Players</button>
-    </div>
-    <div class="notice" id="status">Mode not selected</div>
-  </header>
 
-  <div class="container">
-    <!-- Player input -->
-    <div class="btn-bar" style="justify-content:flex-start; gap:8px;">
-      <input id="playerName" placeholder="Player name" />
-      <input id="playerRating" type="number" placeholder="Rating" />
-      <button id="addPlayerBtn" class="btn-primary">➕ Add Player</button>
-    </div>
-
-    <h2>Standings</h2>
-    <table>
-      <thead>
-        <tr><th>Rank</th><th>Name</th><th>Rating</th><th>Score</th></tr>
-      </thead>
-      <tbody id="playersTbody"></tbody>
-    </table>
-
-    <h2>Pairings</h2>
-    <table>
-      <thead>
-        <tr><th>Round</th><th>Board</th><th>White</th><th>Black</th><th>Result</th></tr>
-      </thead>
-      <tbody id="pairingsTbody"></tbody>
-    </table>
-
-    <div class="notice muted">
-      Tips:
-      - In Swiss mode, click “Next Round” to generate pairings, select results, then “Finalize Results” to update the standings.
-      - If there’s an odd number of players, one player gets a bye worth 1 point (lowest-ranked without prior bye).
-    </div>
+<header>
+  <h1>♟ Chess Tournament System</h1>
+  <div class="btn-bar">
+    <button id="swissBtn" class="btn-primary">Swiss</button>
+    <button id="nextRoundBtn" class="btn-primary">Next Round</button>
+    <button id="clearPlayersBtn" class="btn-danger">Clear All</button>
   </div>
+  <div class="notice" id="status">Ready</div>
+</header>
 
-  <script>
-    let tournamentMode = null;
-    const state = { players: [], round: 0, pairings: [], history: [] };
-    const uid = (() => { let i=1; return () => i++; })();
+<div class="container">
 
-    const playersTbody = document.getElementById("playersTbody");
-    const pairingsTbody = document.getElementById("pairingsTbody");
-    const statusEl = document.getElementById("status");
+<div class="card">
+  <input id="playerName" placeholder="Player name (AI will set rating)" />
+  <button id="addPlayerBtn" class="btn-primary">➕ Add Player</button>
+  <div id="warning" class="small"></div>
+</div>
 
-    function addPlayer(name, rating) {
-      if (!name) return;
-      state.players.push({ id: uid(), name, rating: Number(rating)||0, score:0, hadBye:false });
-      renderPlayers();
+<div class="card">
+<h2>Standings</h2>
+<table>
+<thead>
+<tr>
+  <th>#</th>
+  <th>Name</th>
+  <th>Rating</th>
+  <th>Score</th>
+  <th></th>
+</tr>
+</thead>
+<tbody id="playersTbody"></tbody>
+</table>
+</div>
+
+<div class="card">
+<h2>Pairings</h2>
+<table>
+<thead>
+<tr><th>Rnd</th><th>Board</th><th>White</th><th>Black</th></tr>
+</thead>
+<tbody id="pairingsTbody"></tbody>
+</table>
+</div>
+
+</div>
+
+<script>
+/* =====================
+   STATE
+===================== */
+const state={ players:[], round:0 };
+let uid=1;
+const playersTbody=document.getElementById("playersTbody");
+const pairingsTbody=document.getElementById("pairingsTbody");
+const warningEl=document.getElementById("warning");
+
+/* =====================
+   RENDER
+===================== */
+function renderPlayers(){
+  const sorted=[...state.players].sort(
+    (a,b)=>(b.score-a.score)||(b.rating-a.rating)
+  );
+  playersTbody.innerHTML="";
+  sorted.forEach((p,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${i+1}</td>
+      <td>${p.name}</td>
+      <td>${p.rating}</td>
+      <td>${p.score.toFixed(1)}</td>
+      <td>
+        <button class="btn-danger" onclick="deletePlayer(${p.id})">🗑</button>
+      </td>`;
+    playersTbody.appendChild(tr);
+  });
+}
+
+/* =====================
+   DELETE PLAYER
+===================== */
+function deletePlayer(id){
+  if(!confirm("Delete this player?")) return;
+  state.players=state.players.filter(p=>p.id!==id);
+  renderPlayers();
+}
+
+/* =====================
+   AI AUTO ADD PLAYER
+===================== */
+async function addPlayerAI(){
+  const name=playerName.value.trim();
+  warningEl.textContent="";
+  if(!name) return;
+
+  playerName.value="Adding...";
+  try{
+    const res=await fetch(
+      "https://chess-pairing-ai.b4rjxr9lk.workers.dev/lookup?name="+
+      encodeURIComponent(name)
+    );
+    const data=await res.json();
+
+    let rating=0;
+    if(data.rating && data.rating<=2850 && data.rating>=800){
+      rating=data.rating;
+    }else{
+      warningEl.textContent="⚠ Rating uncertain, set to 0";
     }
 
-    function renderPlayers() {
-      const sorted = state.players.slice().sort(
-        (a,b)=> (b.score - a.score) || (b.rating - a.rating) || a.name.localeCompare(b.name)
-      );
-      playersTbody.innerHTML = "";
-      sorted.forEach((p,i)=>{
-        const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${i+1}</td><td>${p.name}</td><td>${p.rating}</td><td>${p.score.toFixed(1)}</td>`;
-        playersTbody.appendChild(tr);
-      });
-    }
-
-    // Round Robin (simple all unique pairs listing)
-    function generateRoundRobin() {
-      pairingsTbody.innerHTML="";
-      let board=1;
-      for(let i=0;i<state.players.length;i++){
-        for(let j=i+1;j<state.players.length;j++){
-          const tr=document.createElement("tr");
-          tr.innerHTML=`<td>All</td><td>${board}</td><td>${state.players[i].name}</td><td>${state.players[j].name}</td><td>-</td>`;
-          pairingsTbody.appendChild(tr);
-          board++;
-        }
-      }
-      statusEl.textContent="Round Robin schedule generated";
-    }
-
-    // Swiss pairing (stable thisRound to avoid broken references)
-    function generateSwiss() {
-      if (state.players.length < 2) {
-        alert("Add at least 2 players to generate Swiss pairings.");
-        return;
-      }
-
-      pairingsTbody.innerHTML="";
-      const thisRound = state.round + 1;
-
-      const sorted = state.players.slice().sort(
-        (a,b)=> (b.score - a.score) || (b.rating - a.rating)
-      );
-      state.pairings = [];
-      let board = 1;
-
-      // Bye if odd number: lowest-ranked without previous bye, else absolute lowest
-      if (sorted.length % 2 === 1) {
-        let byeIndex = -1;
-        for (let i = sorted.length - 1; i >= 0; i--) {
-          if (!sorted[i].hadBye) { byeIndex = i; break; }
-        }
-        if (byeIndex === -1) byeIndex = sorted.length - 1;
-
-        const byePlayer = sorted.splice(byeIndex, 1)[0];
-        byePlayer.hadBye = true;
-
-        state.pairings.push({ round: thisRound, board: board, white: byePlayer, black: null, result: "bye" });
-        const trBye = document.createElement("tr");
-        trBye.innerHTML = `<td>${thisRound}</td><td>${board}</td><td>${byePlayer.name}</td><td>(bye)</td><td>Bye (1 point)</td>`;
-        pairingsTbody.appendChild(trBye);
-        board++;
-      }
-
-      // Pair top-down within sorted list
-      for (let i = 0; i < sorted.length; i += 2) {
-        const a = sorted[i], b = sorted[i+1];
-        if (!b) break;
-        const pr = { round: thisRound, board: board, white: a, black: b, result: "pending" };
-        state.pairings.push(pr);
-
-        const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${pr.round}</td><td>${pr.board}</td><td>${pr.white.name}</td><td>${pr.black.name}</td>
-          <td>
-            <select data-round="${thisRound}" data-board="${pr.board}">
-              <option value="pending">Enter result</option>
-              <option value="1-0">1-0</option>
-              <option value="0-1">0-1</option>
-              <option value="0.5-0.5">½–½</option>
-            </select>
-          </td>`;
-        pairingsTbody.appendChild(tr);
-        board++;
-      }
-
-      // Hook result selectors for this round (use thisRound to avoid mismatch)
-      document.querySelectorAll(`select[data-round="${thisRound}"]`).forEach(sel=>{
-        sel.addEventListener("change",()=>{
-          const boardNum = Number(sel.getAttribute("data-board"));
-          const pr = state.pairings.find(x=>x.board===boardNum && x.round===thisRound);
-          if (pr) pr.result = sel.value;
-        });
-      });
-
-      state.round = thisRound;
-      statusEl.textContent=`Swiss Round ${state.round} generated`;
-      renderPlayers(); // auto-refresh standings after pairing (sorted by current score)
-    }
-
-    // Finalize results (handles bye correctly and refreshes UI)
-    function finalizeResults() {
-      if (!state.pairings.length) {
-        alert("No pairings to finalize.");
-        return;
-      }
-
-      // Check: all non-bye games must have results
-      for (const pr of state.pairings) {
-        if (pr.black === null || pr.result === "bye") continue;
-        if (pr.result === "pending") {
-          alert("Please enter all results before finalizing.");
-          return;
-        }
-      }
-
-      // Apply results
-      for (const pr of state.pairings) {
-        if (pr.black === null || pr.result === "bye") {
-          pr.white.score += 1; // bye = 1 point
-          continue;
-        }
-        if (pr.result === "1-0") {
-          pr.white.score += 1;
-        } else if (pr.result === "0-1") {
-          pr.black.score += 1;
-        } else if (pr.result === "0.5-0.5") {
-          pr.white.score += 0.5;
-          pr.black.score += 0.5;
-        }
-      }
-
-      // Save round history (ids only)
-      state.history.push({
-        round: state.round,
-        pairings: state.pairings.map(pr => ({
-          round: pr.round,
-          board: pr.board,
-          white: pr.white.id,
-          black: pr.black ? pr.black.id : null,
-          result: pr.result
-        }))
-      });
-
-      // Clear current pairings and refresh UI
-      state.pairings = [];
-      pairingsTbody.innerHTML = "";
-      renderPlayers();
-      statusEl.textContent = `Round ${state.round} finalized! Standings updated.`;
-    }
-
-    // Buttons
-    document.getElementById("addPlayerBtn").addEventListener("click",()=>{
-      const name=document.getElementById("playerName").value.trim();
-      const rating=document.getElementById("playerRating").value.trim();
-      addPlayer(name,rating);
-      document.getElementById("playerName").value = "";
-      document.getElementById("playerRating").value = "";
-      document.getElementById("playerName").focus();
+    state.players.push({
+      id:uid++,
+      name,
+      rating,
+      score:0
     });
 
-    document.getElementById("clearPlayersBtn").addEventListener("click",()=>{
-      state.players=[]; state.round=0; state.pairings=[]; state.history=[];
-      renderPlayers(); pairingsTbody.innerHTML="";
-      statusEl.textContent="Players cleared";
-    });
-
-    document.getElementById("roundRobinBtn").addEventListener("click",()=>{
-      tournamentMode="roundrobin"; state.pairings=[]; statusEl.textContent="Round Robin mode selected";
-      generateRoundRobin();
-    });
-
-    document.getElementById("swissBtn").addEventListener("click",()=>{
-      tournamentMode="swiss"; state.round=0; state.pairings=[]; statusEl.textContent="Swiss mode selected";
-      generateSwiss();
-    });
-
-    document.getElementById("nextRoundBtn").addEventListener("click",()=>{
-      if(tournamentMode==="swiss"){ generateSwiss(); }
-      else { alert("Next Round only works in Swiss mode."); }
-    });
-
-    document.getElementById("finalizeBtn").addEventListener("click",()=>{
-      if(tournamentMode==="swiss"){ finalizeResults(); }
-      else { alert("Finalize only works in Swiss mode."); }
-    });
-
-    // Initial render
     renderPlayers();
-  </script>
+  }catch{
+    warningEl.textContent="⚠ AI lookup failed, player added with rating 0";
+    state.players.push({
+      id:uid++,
+      name,
+      rating:0,
+      score:0
+    });
+    renderPlayers();
+  }
+
+  playerName.value="";
+}
+
+/* =====================
+   SWISS (simple)
+===================== */
+function generateSwiss(){
+  if(state.players.length<2) return alert("Need at least 2 players");
+  pairingsTbody.innerHTML="";
+  const sorted=[...state.players].sort(
+    (a,b)=>(b.score-a.score)||(b.rating-a.rating)
+  );
+  let board=1;
+
+  for(let i=0;i<sorted.length;i+=2){
+    if(!sorted[i+1]){
+      pairingsTbody.innerHTML+=`
+        <tr><td>${state.round+1}</td><td>${board++}</td>
+        <td>${sorted[i].name}</td><td>(bye)</td></tr>`;
+      sorted[i].score+=1;
+    }else{
+      pairingsTbody.innerHTML+=`
+        <tr><td>${state.round+1}</td><td>${board++}</td>
+        <td>${sorted[i].name}</td><td>${sorted[i+1].name}</td></tr>`;
+    }
+  }
+  state.round++;
+  renderPlayers();
+}
+
+/* =====================
+   EVENTS
+===================== */
+addPlayerBtn.onclick=addPlayerAI;
+swissBtn.onclick=generateSwiss;
+nextRoundBtn.onclick=generateSwiss;
+clearPlayersBtn.onclick=()=>location.reload();
+
+renderPlayers();
+</script>
+
 </body>
 </html>
