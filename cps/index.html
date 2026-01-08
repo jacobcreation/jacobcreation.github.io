@@ -20,8 +20,7 @@
     th { background:#0c1424; }
     .notice { margin-top:10px; padding:10px; background:#0c1424; border-radius:8px; }
     .muted { color:#9ca3af; }
-    select { background:#0c1424; color:#e5e7eb; border:1px solid #1f2937; border-radius:6px; padding:6px; }
-    input { background:#0c1424; color:#e5e7eb; border:1px solid #1f2937; border-radius:6px; padding:8px 10px; }
+    select,input { background:#0c1424; color:#e5e7eb; border:1px solid #1f2937; border-radius:6px; padding:6px; }
   </style>
 </head>
 <body>
@@ -64,13 +63,13 @@
     <div class="notice muted">
       Tips:
       - In Swiss mode, click “Next Round” to generate pairings, select results, then “Finalize Results” to update the standings.
-      - If there’s an odd number of players, the lowest-ranked available player gets a bye worth 1 point.
+      - If there’s an odd number of players, one player gets a bye worth 1 point.
     </div>
   </div>
 
   <script>
     let tournamentMode = null;
-    const state = { players: [], round: 0, pairings: [] };
+    const state = { players: [], round: 0, pairings: [], history: [] };
     const uid = (() => { let i=1; return () => i++; })();
 
     const playersTbody = document.getElementById("playersTbody");
@@ -84,7 +83,9 @@
     }
 
     function renderPlayers() {
-      const sorted = state.players.slice().sort((a,b)=> (b.score - a.score) || (b.rating - a.rating) || a.name.localeCompare(b.name));
+      const sorted = state.players.slice().sort(
+        (a,b)=> (b.score - a.score) || (b.rating - a.rating) || a.name.localeCompare(b.name)
+      );
       playersTbody.innerHTML = "";
       sorted.forEach((p,i)=>{
         const tr=document.createElement("tr");
@@ -93,7 +94,7 @@
       });
     }
 
-    // --- Round Robin pairing generator (single round listing of all unique pairs) ---
+    // Round Robin (single listing of all unique pairs)
     function generateRoundRobin() {
       pairingsTbody.innerHTML="";
       let board=1;
@@ -108,7 +109,7 @@
       statusEl.textContent="Round Robin schedule generated";
     }
 
-    // --- Swiss pairing generator with simple bye handling ---
+    // Swiss pairing (simple: sort by score/rating, top-down; bye goes to lowest without previous bye)
     function generateSwiss() {
       if (state.players.length < 2) {
         alert("Add at least 2 players to generate Swiss pairings.");
@@ -116,20 +117,23 @@
       }
 
       pairingsTbody.innerHTML="";
-      const sorted = state.players.slice().sort((a,b)=> (b.score - a.score) || (b.rating - a.rating));
+      const sorted = state.players.slice().sort(
+        (a,b)=> (b.score - a.score) || (b.rating - a.rating)
+      );
       state.pairings = [];
       let board = 1;
 
-      // Handle bye if odd number: pick lowest ranked player without a bye yet (fallback: absolute lowest)
+      // Bye if odd number
       if (sorted.length % 2 === 1) {
+        // choose lowest-ranked player who hasn't had a bye; fallback to absolute lowest
         let byeIndex = -1;
         for (let i = sorted.length - 1; i >= 0; i--) {
           if (!sorted[i].hadBye) { byeIndex = i; break; }
         }
         if (byeIndex === -1) byeIndex = sorted.length - 1;
+
         const byePlayer = sorted.splice(byeIndex, 1)[0];
         byePlayer.hadBye = true;
-
         state.pairings.push({ round: state.round + 1, board: board, white: byePlayer, black: null, result: "bye" });
 
         const trBye = document.createElement("tr");
@@ -138,7 +142,6 @@
         board++;
       }
 
-      // Pair top-down
       for (let i = 0; i < sorted.length; i += 2) {
         const a = sorted[i], b = sorted[i+1];
         if (!b) break;
@@ -159,7 +162,7 @@
         board++;
       }
 
-      // Hook dropdowns
+      // Hook result selectors for this round
       document.querySelectorAll("select[data-board]").forEach(sel=>{
         sel.addEventListener("change",()=>{
           const boardNum = Number(sel.getAttribute("data-board"));
@@ -172,7 +175,7 @@
       statusEl.textContent=`Swiss Round ${state.round} generated`;
     }
 
-    // --- Finalize results (visible update and clean-up) ---
+    // Finalize results (with bye fix and proper UI updates)
     function finalizeResults() {
       if (!state.pairings.length) {
         alert("No pairings to finalize.");
@@ -181,7 +184,7 @@
 
       // Require all non-bye results to be entered
       for (const pr of state.pairings) {
-        if (pr.black === null) continue; // bye
+        if (pr.black === null || pr.result === "bye") continue; // skip bye checks
         if (pr.result === "pending") {
           alert("Please enter all results before finalizing.");
           return;
@@ -190,9 +193,8 @@
 
       // Apply results
       for (const pr of state.pairings) {
-        if (pr.black === null) {
-          // Bye = 1 point
-          pr.white.score += 1;
+        if (pr.black === null || pr.result === "bye") {
+          pr.white.score += 1; // bye = 1 point
           continue;
         }
         if (pr.result === "1-0") {
@@ -204,6 +206,14 @@
           pr.black.score += 0.5;
         }
       }
+
+      // Save history (optional, useful for future stats)
+      state.history.push({
+        round: state.round,
+        pairings: state.pairings.map(pr => ({
+          round: pr.round, board: pr.board, white: pr.white.id, black: pr.black ? pr.black.id : null, result: pr.result
+        }))
+      });
 
       // Clear current pairings and refresh UI
       state.pairings = [];
@@ -223,18 +233,19 @@
     });
 
     document.getElementById("clearPlayersBtn").addEventListener("click",()=>{
-      state.players=[]; state.round=0; state.pairings=[];
+      state.players=[]; state.round=0; state.pairings=[]; state.history=[];
       renderPlayers(); pairingsTbody.innerHTML="";
       statusEl.textContent="Players cleared";
     });
 
     document.getElementById("roundRobinBtn").addEventListener("click",()=>{
-      tournamentMode="roundrobin"; statusEl.textContent="Round Robin mode selected";
+      tournamentMode="roundrobin"; state.round=0; state.pairings=[]; state.history=[];
+      statusEl.textContent="Round Robin mode selected";
       generateRoundRobin();
     });
 
     document.getElementById("swissBtn").addEventListener("click",()=>{
-      tournamentMode="swiss"; state.round=0; state.pairings=[];
+      tournamentMode="swiss"; state.round=0; state.pairings=[]; state.history=[];
       statusEl.textContent="Swiss mode selected";
       generateSwiss();
     });
