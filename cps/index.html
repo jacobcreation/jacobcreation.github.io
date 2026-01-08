@@ -9,7 +9,7 @@
     header { padding:20px; background:#111827; text-align:center; border-bottom:2px solid #1f2937; }
     h1 { margin:0; }
     .btn-bar { margin-top:12px; display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
-    button { padding:12px 18px; border-radius:10px; border:none; cursor:pointer; font-size:15px; transition:0.2s; }
+    button { padding:8px 14px; border-radius:8px; border:none; cursor:pointer; font-size:14px; transition:0.2s; }
     .btn-primary { background:#22c55e; color:#fff; }
     .btn-accent { background:#38bdf8; color:#fff; }
     .btn-danger { background:#ef4444; color:#fff; }
@@ -45,7 +45,9 @@
     <h2>Standings</h2>
     <table>
       <thead>
-        <tr><th>Rank</th><th>Name</th><th>Rating</th><th>Score</th></tr>
+        <tr>
+          <th>Rank</th><th>Name</th><th>Rating</th><th>Score</th><th>Action</th>
+        </tr>
       </thead>
       <tbody id="playersTbody"></tbody>
     </table>
@@ -73,13 +75,24 @@
       renderPlayers();
     }
 
+    function removePlayer(id) {
+      state.players = state.players.filter(p => p.id !== id);
+      renderPlayers();
+    }
+
     function renderPlayers() {
       // sort standings live
       const sorted = state.players.slice().sort((a,b)=>b.score-a.score||b.rating-a.rating);
       playersTbody.innerHTML = "";
       sorted.forEach((p,i)=>{
         const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${i+1}</td><td>${p.name}</td><td>${p.rating}</td><td>${p.score}</td>`;
+        tr.innerHTML=`
+          <td>${i+1}</td>
+          <td>${p.name}</td>
+          <td>${p.rating}</td>
+          <td>${p.score}</td>
+          <td><button class="btn-danger" onclick="removePlayer(${p.id})">Remove</button></td>
+        `;
         playersTbody.appendChild(tr);
       });
     }
