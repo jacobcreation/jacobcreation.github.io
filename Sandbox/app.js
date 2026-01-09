@@ -10,7 +10,7 @@ function renderAIMessage(container, text) {
   const parts = text.split("```");
 
   for (let i = 0; i < parts.length; i++) {
-    // Plain text
+    // Normal text
     if (i % 2 === 0) {
       if (parts[i].trim()) {
         const div = document.createElement("div");
@@ -21,8 +21,17 @@ function renderAIMessage(container, text) {
     }
     // Code block
     else {
-      const lines = parts[i].split("\n");
-      const lang = lines.shift(); // html / css / js (optional)
+      let block = parts[i].trimStart();
+
+      // Normalize:
+      // supports ```html OR ```\nhtml
+      const lines = block.split("\n");
+
+      let lang = "";
+      if (lines[0].match(/^(html|css|js)$/i)) {
+        lang = lines.shift();
+      }
+
       const code = lines.join("\n");
 
       const pre = document.createElement("pre");
@@ -38,6 +47,7 @@ function renderAIMessage(container, text) {
       btn.style.top = "6px";
       btn.style.right = "6px";
       btn.style.fontSize = "12px";
+
       btn.onclick = () => {
         navigator.clipboard.writeText(code);
         btn.textContent = "Copied!";
@@ -107,7 +117,6 @@ function init() {
       const question = aiInput.value.trim();
       if (!question) return;
 
-      // Show user message
       const userMsg = document.createElement("div");
       userMsg.textContent = "🧑 " + question;
       userMsg.style.marginBottom = "6px";
@@ -115,10 +124,8 @@ function init() {
 
       aiInput.value = "";
 
-      // Ask AI
       const reply = await askAI(question, files);
 
-      // Render AI response (ChatGPT-style)
       const aiMsg = document.createElement("div");
       aiMsg.style.marginBottom = "12px";
       aiLog.appendChild(aiMsg);
@@ -135,7 +142,6 @@ function init() {
   // Resizable divider
   const divider = document.getElementById("divider");
   let dragging = false;
-
   divider.onmousedown = () => (dragging = true);
   window.onmouseup = () => (dragging = false);
   window.onmousemove = e => {
