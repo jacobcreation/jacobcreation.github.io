@@ -2,13 +2,17 @@ import { initEditor, saveCurrentFile, files } from "./editor.js";
 import { runSandbox } from "./sandbox.js";
 import { askAI } from "./ai.js";
 
-/* ---------- NORMALIZE AI MARKDOWN ---------- */
-function normalizeMarkdown(text) {
+/* ---------- FORCE PROPER CODE FENCES ---------- */
+function forceTripleBackticks(text) {
   return text
-    // Fix: ```\nhtml → ```html
-    .replace(/```\s*\n\s*(html|css|js)\s*\n/gi, "```$1\n")
-    // Fix trailing single `
-    .replace(/\n`\s*$/g, "\n```");
+    // ``html → ```html
+    .replace(/``\s*(html|css|js)\n/gi, "```$1\n")
+    // `html → ```html
+    .replace(/`\s*(html|css|js)\n/gi, "```$1\n")
+    // ```\nhtml → ```html
+    .replace(/```\s*\n\s*(html|css|js)\n/gi, "```$1\n")
+    // fix bad closing `
+    .replace(/\n``?\s*$/g, "\n```");
 }
 
 /* ---------- RENDER AI MESSAGE ---------- */
@@ -110,13 +114,13 @@ function init() {
       aiInput.value = "";
 
       const reply = await askAI(q, files);
-      const normalized = normalizeMarkdown(reply);
+      const fixed = forceTripleBackticks(reply);
 
       const aiMsg = document.createElement("div");
       aiMsg.style.marginBottom = "12px";
       aiLog.appendChild(aiMsg);
 
-      renderAIMessage(aiMsg, normalized);
+      renderAIMessage(aiMsg, fixed);
     }
   });
 
