@@ -2,17 +2,25 @@ import { initEditor, saveCurrentFile, files } from "./editor.js";
 import { runSandbox } from "./sandbox.js";
 import { askAI } from "./ai.js";
 
-/* ---------- FORCE & NORMALIZE MARKDOWN ---------- */
+/* ---------- HARD NORMALIZE AI MARKDOWN ---------- */
 function normalizeMarkdown(text) {
   return text
-    // Fix broken fences
+    // Remove stray ``` before a real code fence
+    .replace(/```\s*```/g, "```")
+
+    // Fix ```\nhtml → ```html
+    .replace(/```\s*\n\s*(html|css|js|javascript)\s*\n/gi, "```$1\n")
+
+    // Fix ``html / `html → ```html
     .replace(/``\s*(html|css|js|javascript)\n/gi, "```$1\n")
     .replace(/`\s*(html|css|js|javascript)\n/gi, "```$1\n")
-    .replace(/```\s*\n\s*(html|css|js|javascript)\n/gi, "```$1\n")
+
     // Normalize language names
     .replace(/```javascript/gi, "```js")
     .replace(/```HTML/gi, "```html")
     .replace(/```CSS/gi, "```css")
+
+    // Fix bad closing `
     .replace(/\n``?\s*$/g, "\n```");
 }
 
