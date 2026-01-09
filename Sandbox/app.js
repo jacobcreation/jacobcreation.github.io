@@ -2,16 +2,11 @@ import { initEditor, saveCurrentFile, files } from "./editor.js";
 import { runSandbox } from "./sandbox.js";
 import { askAI } from "./ai.js";
 
-/* ---------- HARD NORMALIZE AI MARKDOWN ---------- */
+/* ========= HARD MARKDOWN NORMALIZER ========= */
 function normalizeMarkdown(text) {
-  return text
-    // Remove stray ``` before a real code fence
-    .replace(/```\s*```/g, "```")
-
-    // Fix ```\nhtml → ```html
+  // Fix broken openings
+  text = text
     .replace(/```\s*\n\s*(html|css|js|javascript)\s*\n/gi, "```$1\n")
-
-    // Fix ``html / `html → ```html
     .replace(/``\s*(html|css|js|javascript)\n/gi, "```$1\n")
     .replace(/`\s*(html|css|js|javascript)\n/gi, "```$1\n")
 
@@ -20,18 +15,26 @@ function normalizeMarkdown(text) {
     .replace(/```HTML/gi, "```html")
     .replace(/```CSS/gi, "```css")
 
-    // Fix bad closing `
-    .replace(/\n``?\s*$/g, "\n```");
+    // Remove duplicated fences
+    .replace(/```\s*```/g, "```");
+
+  // Auto-close unclosed fences
+  const fences = (text.match(/```/g) || []).length;
+  if (fences % 2 !== 0) {
+    text += "\n```";
+  }
+
+  return text;
 }
 
-/* ---------- RENDER AI MESSAGE ---------- */
+/* ========= RENDER AI MESSAGE ========= */
 function renderAIMessage(container, text) {
   container.innerHTML = "";
 
   const parts = text.split("```");
 
   for (let i = 0; i < parts.length; i++) {
-    // Plain text
+    // Normal text
     if (i % 2 === 0) {
       if (parts[i].trim()) {
         const div = document.createElement("div");
@@ -43,7 +46,7 @@ function renderAIMessage(container, text) {
     // Code block
     else {
       const lines = parts[i].trimStart().split("\n");
-      lines.shift(); // remove language
+      lines.shift(); // remove language line
       const code = lines.join("\n");
 
       const pre = document.createElement("pre");
@@ -74,7 +77,7 @@ function renderAIMessage(container, text) {
   container.scrollTop = container.scrollHeight;
 }
 
-/* ---------- INIT ---------- */
+/* ========= INIT ========= */
 function init() {
   initEditor();
   runSandbox();
