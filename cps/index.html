@@ -1,73 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Chess Tournament System</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body { margin:0; font-family:Arial,sans-serif; background:#0f172a; color:#e5e7eb; }
-    header { padding:20px; background:#111827; text-align:center; border-bottom:2px solid #1f2937; }
-    h1 { margin:0; }
-    .btn-bar { margin-top:12px; display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
-    button { padding:8px 14px; border-radius:8px; border:none; cursor:pointer; font-size:14px; }
-    .btn-primary { background:#22c55e; color:#fff; }
-    .btn-accent { background:#38bdf8; color:#fff; }
-    .btn-danger { background:#ef4444; color:#fff; }
-    .container { max-width:1000px; margin:20px auto; padding:0 16px; }
-    table { width:100%; border-collapse:collapse; margin-top:12px; }
-    th,td { border:1px solid #1f2937; padding:8px; }
-    th { background:#0c1424; }
-    .notice { margin-top:10px; padding:10px; background:#0c1424; border-radius:8px; }
-    select { background:#020617; color:#e5e7eb; }
-  </style>
+<meta charset="UTF-8" />
+<title>Chess Tournament System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<style>
+body { margin:0; font-family:Arial,sans-serif; background:#0f172a; color:#e5e7eb; }
+header { padding:20px; background:#111827; text-align:center; border-bottom:2px solid #1f2937; }
+h1 { margin:0; }
+.btn-bar { margin-top:12px; display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
+button { padding:8px 14px; border-radius:8px; border:none; cursor:pointer; font-size:14px; }
+.btn-primary { background:#22c55e; color:#fff; }
+.btn-accent { background:#38bdf8; color:#fff; }
+.btn-danger { background:#ef4444; color:#fff; }
+.container { max-width:1000px; margin:20px auto; padding:0 16px; }
+table { width:100%; border-collapse:collapse; margin-top:12px; }
+th,td { border:1px solid #1f2937; padding:8px; }
+th { background:#0c1424; }
+.notice { margin-top:10px; padding:10px; background:#0c1424; border-radius:8px; }
+select { background:#020617; color:#e5e7eb; }
+</style>
 </head>
+
 <body>
 
 <header>
-  <h1>Chess Tournament System</h1>
-  <div class="btn-bar">
-    <button id="roundRobinBtn" class="btn-accent">Round Robin</button>
-    <button id="swissBtn" class="btn-primary">Swiss</button>
-    <button id="nextRoundBtn" class="btn-primary">Next Round (Swiss)</button>
-    <button id="finalizeBtn" class="btn-accent">Finalize Results</button>
-  </div>
-  <div class="notice" id="status">Mode not selected</div>
+<h1>Chess Tournament System</h1>
+<div class="btn-bar">
+<button id="swissBtn" class="btn-primary">Swiss</button>
+<button id="nextRoundBtn" class="btn-primary">Next Round</button>
+<button id="finalizeBtn" class="btn-accent">Finalize Results</button>
+</div>
+<div class="notice" id="status">Mode not selected</div>
 </header>
 
 <div class="container">
 
-  <div>
-    <input id="playerName" placeholder="Player name">
-    <input id="playerRating" type="number" placeholder="Rating">
-    <button id="addPlayerBtn" class="btn-primary">➕ Add Player</button>
-    <button id="clearPlayersBtn" class="btn-danger">Clear Players</button>
-  </div>
+<div>
+<input id="playerName" placeholder="Player name">
+<input id="playerRating" type="number" placeholder="Rating">
+<button id="addPlayerBtn" class="btn-primary">➕ Add Player</button>
+<button id="clearPlayersBtn" class="btn-danger">Clear Players</button>
+</div>
 
-  <h2>Standings</h2>
-  <table>
-    <thead>
-      <tr><th>Rank</th><th>Name</th><th>Rating</th><th>Score</th><th></th></tr>
-    </thead>
-    <tbody id="playersTbody"></tbody>
-  </table>
+<h2>Standings</h2>
+<table>
+<thead>
+<tr><th>Rank</th><th>Name</th><th>Rating</th><th>Score</th><th></th></tr>
+</thead>
+<tbody id="playersTbody"></tbody>
+</table>
 
-  <h2>Pairings</h2>
-  <table>
-    <thead>
-      <tr><th>Round</th><th>Board</th><th>White</th><th>Black</th><th>Result</th></tr>
-    </thead>
-    <tbody id="pairingsTbody"></tbody>
-  </table>
+<h2>Pairings</h2>
+<table>
+<thead>
+<tr><th>Round</th><th>Board</th><th>White</th><th>Black</th><th>Result</th></tr>
+</thead>
+<tbody id="pairingsTbody"></tbody>
+</table>
 
 </div>
 
 <script>
 let tournamentMode = null;
+
 const state = {
-  players: [],
-  round: 0,
-  pairings: [],
-  finalized: false
+players: [],
+round: 0,
+pairings: [],
+finalized: true
 };
 
 const uid = (() => { let i=1; return () => i++; })();
@@ -76,163 +78,170 @@ const playersTbody = document.getElementById("playersTbody");
 const pairingsTbody = document.getElementById("pairingsTbody");
 const statusEl = document.getElementById("status");
 
-/* ---------- PLAYERS ---------- */
+/* ---------------- PLAYERS ---------------- */
 
 function addPlayer(name, rating) {
-  state.players.push({ id: uid(), name, rating:+rating||0, score:0 });
-  renderPlayers();
+state.players.push({ id: uid(), name, rating:+rating||0, score:0 });
+renderPlayers();
 }
 
 function removePlayer(id) {
-  state.players = state.players.filter(p => p.id !== id);
-  renderPlayers();
+state.players = state.players.filter(p=>p.id!==id);
+renderPlayers();
 }
 
 function renderPlayers() {
-  const sorted = [...state.players].sort((a,b)=>b.score-a.score||b.rating-a.rating);
-  playersTbody.innerHTML="";
-  sorted.forEach((p,i)=>{
-    playersTbody.innerHTML += `
-      <tr>
-        <td>${i+1}</td>
-        <td>${p.name}</td>
-        <td>${p.rating}</td>
-        <td>${p.score}</td>
-        <td><button class="btn-danger" onclick="removePlayer(${p.id})">Remove</button></td>
-      </tr>`;
-  });
+const sorted = [...state.players].sort((a,b)=>b.score-a.score||b.rating-a.rating);
+playersTbody.innerHTML="";
+sorted.forEach((p,i)=>{
+playersTbody.innerHTML += `
+<tr>
+<td>${i+1}</td>
+<td>${p.name}</td>
+<td>${p.rating}</td>
+<td>${p.score}</td>
+<td><button class="btn-danger" onclick="removePlayer(${p.id})">Remove</button></td>
+</tr>`;
+});
 }
 
-/* ---------- SWISS ---------- */
+/* ---------------- SWISS ---------------- */
 
 function generateSwiss() {
-  if (!state.finalized && state.round > 0) {
-    alert("Finalize current round first.");
-    return;
-  }
-
-  state.round++;
-  state.finalized = false;
-  state.pairings = [];
-  pairingsTbody.innerHTML="";
-
-  const sorted = [...state.players].sort((a,b)=>b.score-a.score||b.rating-a.rating);
-  let board = 1;
-
-  for (let i=0;i<sorted.length;i+=2) {
-
-    // BYE
-    if (!sorted[i+1]) {
-      state.pairings.push({
-        round: state.round,
-        board,
-        white: sorted[i],
-        black: null,
-        result: "BYE"
-      });
-
-      pairingsTbody.innerHTML += `
-        <tr>
-          <td>${state.round}</td>
-          <td>${board}</td>
-          <td>${sorted[i].name}</td>
-          <td>BYE</td>
-          <td>+1 point</td>
-        </tr>`;
-      break;
-    }
-
-    // NORMAL GAME
-    const pr = {
-      round: state.round,
-      board,
-      white: sorted[i],
-      black: sorted[i+1],
-      result: "pending"
-    };
-    state.pairings.push(pr);
-
-    pairingsTbody.innerHTML += `
-      <tr>
-        <td>${state.round}</td>
-        <td>${board}</td>
-        <td>${pr.white.name}</td>
-        <td>${pr.black.name}</td>
-        <td>
-          <select data-board="${board}">
-            <option value="pending">Select</option>
-            <option value="1-0">1-0</option>
-            <option value="0-1">0-1</option>
-            <option value="0.5-0.5">½–½</option>
-          </select>
-        </td>
-      </tr>`;
-    board++;
-  }
-
-  document.querySelectorAll("select").forEach(sel=>{
-    sel.addEventListener("change",()=>{
-      const pr = state.pairings.find(p=>p.board==sel.dataset.board);
-      if (pr) pr.result = sel.value;
-    });
-  });
-
-  statusEl.textContent = `Swiss Round ${state.round} generated`;
+if (!state.finalized) {
+alert("Finalize the current round first.");
+return;
 }
 
-/* ---------- FINALIZE ---------- */
+state.round++;
+state.finalized = false;
+state.pairings = [];
+pairingsTbody.innerHTML = "";
+
+const sorted = [...state.players].sort((a,b)=>b.score-a.score||b.rating-a.rating);
+let board = 1;
+
+for (let i=0;i<sorted.length;i+=2) {
+
+if (!sorted[i+1]) {
+state.pairings.push({
+round: state.round,
+board: null,
+white: sorted[i],
+black: null,
+result: "BYE"
+});
+
+pairingsTbody.innerHTML += `
+<tr>
+<td>${state.round}</td>
+<td>—</td>
+<td>${sorted[i].name}</td>
+<td>BYE</td>
+<td>+1 point</td>
+</tr>`;
+break;
+}
+
+const pr = {
+round: state.round,
+board,
+white: sorted[i],
+black: sorted[i+1],
+result: "pending"
+};
+
+state.pairings.push(pr);
+
+pairingsTbody.innerHTML += `
+<tr>
+<td>${state.round}</td>
+<td>${board}</td>
+<td>${pr.white.name}</td>
+<td>${pr.black.name}</td>
+<td>
+<select data-board="${board}">
+<option value="pending">Select</option>
+<option value="1-0">1-0</option>
+<option value="0-1">0-1</option>
+<option value="0.5-0.5">½–½</option>
+</select>
+</td>
+</tr>`;
+board++;
+}
+
+document.querySelectorAll("select").forEach(sel=>{
+sel.onchange = () => {
+const pr = state.pairings.find(p=>p.board==sel.dataset.board);
+if (pr) pr.result = sel.value;
+};
+});
+
+statusEl.textContent = `Swiss Round ${state.round} generated`;
+}
+
+/* ---------------- FINALIZE ---------------- */
 
 function finalizeResults() {
-  if (state.finalized) return;
+if (state.finalized) return;
 
-  for (const pr of state.pairings) {
-    if (pr.result === "BYE") {
-      pr.white.score += 1;
-    } else if (pr.result === "1-0") {
-      pr.white.score += 1;
-    } else if (pr.result === "0-1") {
-      pr.black.score += 1;
-    } else if (pr.result === "0.5-0.5") {
-      pr.white.score += 0.5;
-      pr.black.score += 0.5;
-    } else {
-      alert("All games must have results.");
-      return;
-    }
-  }
+for (const pr of state.pairings) {
 
-  state.finalized = true;
-  renderPlayers();
-  statusEl.textContent = `Round ${state.round} finalized`;
+if (pr.result === "BYE") {
+pr.white.score += 1;
+continue;
 }
 
-/* ---------- BUTTONS ---------- */
+if (pr.result === "pending") {
+alert("All games must have results.");
+return;
+}
 
-document.getElementById("addPlayerBtn").onclick = () => {
-  const n = playerName.value.trim();
-  if (n) addPlayer(n, playerRating.value);
+if (pr.result === "1-0") pr.white.score += 1;
+if (pr.result === "0-1") pr.black.score += 1;
+if (pr.result === "0.5-0.5") {
+pr.white.score += 0.5;
+pr.black.score += 0.5;
+}
+}
+
+state.finalized = true;
+renderPlayers();
+statusEl.textContent = `Round ${state.round} finalized`;
+}
+
+/* ---------------- BUTTONS ---------------- */
+
+addPlayerBtn.onclick = () => {
+const n = playerName.value.trim();
+if (n) addPlayer(n, playerRating.value);
 };
 
-document.getElementById("clearPlayersBtn").onclick = () => {
-  state.players=[]; state.round=0; state.finalized=false;
-  playersTbody.innerHTML=""; pairingsTbody.innerHTML="";
-  statusEl.textContent="Players cleared";
+clearPlayersBtn.onclick = () => {
+state.players=[];
+state.round=0;
+state.finalized=true;
+playersTbody.innerHTML="";
+pairingsTbody.innerHTML="";
+statusEl.textContent="Players cleared";
 };
 
-document.getElementById("swissBtn").onclick = () => {
-  tournamentMode="swiss";
-  state.round=0;
-  state.finalized=true;
-  generateSwiss();
+swissBtn.onclick = () => {
+tournamentMode="swiss";
+state.round=0;
+state.finalized=true;
+generateSwiss();
 };
 
-document.getElementById("nextRoundBtn").onclick = () => {
-  if (tournamentMode==="swiss") generateSwiss();
+nextRoundBtn.onclick = () => {
+if (tournamentMode==="swiss") generateSwiss();
 };
 
-document.getElementById("finalizeBtn").onclick = () => {
-  if (tournamentMode==="swiss") finalizeResults();
+finalizeBtn.onclick = () => {
+if (tournamentMode==="swiss") finalizeResults();
 };
 </script>
+
 </body>
 </html>
