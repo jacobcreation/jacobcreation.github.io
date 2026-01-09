@@ -2,12 +2,12 @@ import { initEditor, saveCurrentFile, files } from "./editor.js";
 import { runSandbox } from "./sandbox.js";
 import { askAI } from "./ai.js";
 
-/* ---------- NORMALIZE BROKEN AI MARKDOWN ---------- */
+/* ---------- NORMALIZE AI MARKDOWN ---------- */
 function normalizeMarkdown(text) {
   return text
-    // fix: `html → ```html
-    .replace(/\n`(html|css|js)\n/gi, "\n```$1\n")
-    // fix closing `
+    // Fix: ```\nhtml → ```html
+    .replace(/```\s*\n\s*(html|css|js)\s*\n/gi, "```$1\n")
+    // Fix trailing single `
     .replace(/\n`\s*$/g, "\n```");
 }
 
@@ -30,7 +30,7 @@ function renderAIMessage(container, text) {
     // Code block
     else {
       const lines = parts[i].trimStart().split("\n");
-      const lang = lines.shift();
+      lines.shift(); // remove language
       const code = lines.join("\n");
 
       const pre = document.createElement("pre");
@@ -84,7 +84,10 @@ function init() {
     if (e.key === "Tab") {
       e.preventDefault();
       const s = code.selectionStart;
-      code.value = code.value.slice(0, s) + "  " + code.value.slice(code.selectionEnd);
+      code.value =
+        code.value.slice(0, s) +
+        "  " +
+        code.value.slice(code.selectionEnd);
       code.selectionStart = code.selectionEnd = s + 2;
     }
   });
