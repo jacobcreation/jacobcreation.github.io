@@ -56,16 +56,11 @@ th{background:#eee;color:#000}
 <input id="nameInput" placeholder="Name">
 <input id="ratingInput" type="number" placeholder="Rating">
 <button class="ok" onclick="addPlayer()">Add</button>
-<input type="file" id="fileInput" accept=".txt,.csv">
-<button class="ac" onclick="loadPlayers()">Upload</button>
 <button class="bad" onclick="clearAll()">Clear</button>
 </div>
 </div>
 
 <h3>Standings</h3>
-<div class="grid no-print">
-<button class="ac" onclick="printStandings()">Print Standings</button>
-</div>
 <table>
 <thead>
 <tr><th>#</th><th>Name</th><th>Score</th><th>Buchholz</th><th>Rating</th></tr>
@@ -74,9 +69,6 @@ th{background:#eee;color:#000}
 </table>
 
 <h3>Pairings</h3>
-<div class="grid no-print">
-<button class="ac" onclick="printPairings()">Print Pairings</button>
-</div>
 <table>
 <thead>
 <tr><th>Rd</th><th>Bd</th><th>White</th><th>Black</th><th>Result</th></tr>
@@ -87,17 +79,11 @@ th{background:#eee;color:#000}
 </div>
 
 <script>
-/* DOM */
-const nameInput = document.getElementById("nameInput");
-const ratingInput = document.getElementById("ratingInput");
-const fileInput = document.getElementById("fileInput");
 const standingsBody = document.getElementById("standings");
 const pairingsBody = document.getElementById("pairings");
 const statusBox = document.getElementById("status");
 
-/* STATE */
 let uid = 1;
-let mode = null;
 let history = [];
 
 const S = {
@@ -112,55 +98,22 @@ const norm = n => n.trim().toLowerCase();
 /* PLAYERS */
 function addPlayer(){
   const n = nameInput.value.trim();
-  const r = Number(ratingInput.value) || 0;
+  const r = Number(ratingInput.value)||0;
   if(!n) return;
-
-  if(S.players.some(p => p.key === norm(n))){
-    alert("Duplicate player");
-    return;
-  }
+  if(S.players.some(p=>p.key===norm(n))) return alert("Duplicate");
 
   S.players.push({
     id: uid++,
-    name: n,
-    key: norm(n),
-    rating: r,
-    score: 0,
-    bh: 0,
-    opp: [],
-    bye: false
+    name:n,
+    key:norm(n),
+    rating:r,
+    score:0,
+    bh:0,
+    opp:[],
+    bye:false
   });
-
-  nameInput.value = "";
-  ratingInput.value = "";
-  render();
-}
-
-function loadPlayers(){
-  const f = fileInput.files[0];
-  if(!f) return;
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    reader.result.split(/\r?\n/).forEach(l=>{
-      if(l.trim()) addPlayerFromFile(l.trim());
-    });
-  };
-  reader.readAsText(f);
-}
-
-function addPlayerFromFile(name){
-  if(S.players.some(p=>p.key===norm(name))) return;
-  S.players.push({
-    id: uid++,
-    name,
-    key: norm(name),
-    rating: 0,
-    score: 0,
-    bh: 0,
-    opp: [],
-    bye: false
-  });
+  nameInput.value="";
+  ratingInput.value="";
   render();
 }
 
@@ -168,111 +121,101 @@ function addPlayerFromFile(name){
 function calcBH(){
   S.players.forEach(p=>{
     p.bh = p.opp.reduce((s,id)=>{
-      const o = S.players.find(x=>x.id===id);
-      return s + (o ? o.score : 0);
+      const o=S.players.find(x=>x.id===id);
+      return s+(o?o.score:0);
     },0);
   });
 }
 
 function render(){
   calcBH();
-  standingsBody.innerHTML = "";
+  standingsBody.innerHTML="";
   [...S.players]
     .sort((a,b)=>b.score-a.score||b.bh-a.bh||b.rating-a.rating)
     .forEach((p,i)=>{
-      standingsBody.innerHTML +=
-        `<tr><td>${i+1}</td><td>${p.name}</td><td>${p.score}</td><td>${p.bh}</td><td>${p.rating}</td></tr>`;
+      standingsBody.innerHTML+=
+      `<tr><td>${i+1}</td><td>${p.name}</td><td>${p.score}</td><td>${p.bh}</td><td>${p.rating}</td></tr>`;
     });
 }
 
 /* TOURNAMENT */
 function setMode(m){
-  mode = m;
-  statusBox.textContent = "Mode: " + m;
+  statusBox.textContent="Mode: "+m;
 }
 
 function nextRound(){
-  if(!S.finalized){ alert("Finalize first"); return; }
+  if(!S.finalized) return alert("Finalize first");
 
   history.push(JSON.stringify(S));
   S.round++;
-  S.finalized = false;
-  S.pairings = [];
-  pairingsBody.innerHTML = "";
+  S.finalized=false;
+  S.pairings=[];
+  pairingsBody.innerHTML="";
 
-  let list = [...S.players].sort((a,b)=>b.score-a.score||b.rating-a.rating);
-  let used = new Set();
-  let bd = 1;
+  let list=[...S.players].sort((a,b)=>b.score-a.score||b.rating-a.rating);
+  let used=new Set();
+  let board=1;
 
-  if(list.length % 2){
-    let bye = [...list].reverse().find(p=>!p.bye);
-    bye.bye = true;
+  if(list.length%2===1){
+    const bye=list.find(p=>!p.bye);
+    bye.bye=true;
     bye.score++;
-    used.add(bye.id);
-    pairingsBody.innerHTML +=
+    S.pairings.push({type:"bye",player:bye});
+    pairingsBody.innerHTML+=
       `<tr><td>${S.round}</td><td>—</td><td>${bye.name}</td><td>BYE</td><td>+1</td></tr>`;
+    used.add(bye.id);
   }
 
   for(let p of list){
     if(used.has(p.id)) continue;
-    let o = list.find(x=>!used.has(x.id)&&!p.opp.includes(x.id)&&x.id!==p.id);
+    const o=list.find(x=>!used.has(x.id)&&x.id!==p.id&&!p.opp.includes(x.id));
     if(!o) continue;
 
-    used.add(p.id); used.add(o.id);
-    S.pairings.push({board:bd,white:p,black:o,result:"pending"});
-
-    pairingsBody.innerHTML +=
-      `<tr><td>${S.round}</td><td>${bd}</td><td>${p.name}</td><td>${o.name}</td>
-      <td>
-      <select onchange="setRes(${bd},this.value)">
+    used.add(p.id);used.add(o.id);
+    S.pairings.push({type:"game",board,white:p,black:o,result:"pending"});
+    pairingsBody.innerHTML+=
+    `<tr><td>${S.round}</td><td>${board}</td><td>${p.name}</td><td>${o.name}</td>
+    <td>
+      <select onchange="setRes(${board},this.value)">
         <option value="pending">Select</option>
         <option value="1-0">1-0</option>
         <option value="0-1">0-1</option>
         <option value="0.5">½–½</option>
       </select>
-      </td></tr>`;
-    bd++;
+    </td></tr>`;
+    board++;
   }
+
+  if(S.pairings.every(p=>p.type==="bye")) finalize();
 }
 
 function setRes(b,v){
-  const p = S.pairings.find(x=>x.board===b);
-  if(p) p.result = v;
+  const p=S.pairings.find(x=>x.board===b);
+  if(p) p.result=v;
 }
 
 function finalize(){
   for(const p of S.pairings){
-    if(p.result==="pending"){ alert("Missing result"); return; }
+    if(p.type==="bye") continue;
+    if(p.result==="pending") return alert("Missing result");
     p.white.opp.push(p.black.id);
     p.black.opp.push(p.white.id);
     if(p.result==="1-0") p.white.score++;
     if(p.result==="0-1") p.black.score++;
-    if(p.result==="0.5"){ p.white.score+=0.5; p.black.score+=0.5; }
+    if(p.result==="0.5"){p.white.score+=0.5;p.black.score+=0.5;}
   }
-  S.finalized = true;
+  S.finalized=true;
   render();
 }
 
 function undoRound(){
   if(!history.length) return;
-  Object.assign(S, JSON.parse(history.pop()));
+  Object.assign(S,JSON.parse(history.pop()));
+  pairingsBody.innerHTML="";
   render();
-  pairingsBody.innerHTML = "";
 }
 
-/* PRINT */
-function printStandings(){
-  document.title = "Standings - Round " + S.round;
-  window.print();
-}
-function printPairings(){
-  document.title = "Pairings - Round " + S.round;
-  window.print();
-}
-
-function clearAll(){
-  location.reload();
-}
+function clearAll(){location.reload();}
 </script>
 
 </body>
