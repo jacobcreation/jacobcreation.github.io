@@ -2,6 +2,58 @@ import { initEditor, saveCurrentFile, files } from "./editor.js";
 import { runSandbox } from "./sandbox.js";
 import { askAI } from "./ai.js";
 
+/* ---------------- AI RENDERER ---------------- */
+
+function renderAIMessage(container, text) {
+  container.innerHTML = "";
+
+  const parts = text.split("```");
+
+  for (let i = 0; i < parts.length; i++) {
+    // Plain text
+    if (i % 2 === 0) {
+      if (parts[i].trim()) {
+        const div = document.createElement("div");
+        div.textContent = parts[i];
+        div.style.marginBottom = "8px";
+        container.appendChild(div);
+      }
+    }
+    // Code block
+    else {
+      const lines = parts[i].split("\n");
+      const lang = lines.shift(); // html / css / js (optional)
+      const code = lines.join("\n");
+
+      const pre = document.createElement("pre");
+      pre.style.position = "relative";
+
+      const codeEl = document.createElement("code");
+      codeEl.textContent = code;
+      pre.appendChild(codeEl);
+
+      const btn = document.createElement("button");
+      btn.textContent = "Copy";
+      btn.style.position = "absolute";
+      btn.style.top = "6px";
+      btn.style.right = "6px";
+      btn.style.fontSize = "12px";
+      btn.onclick = () => {
+        navigator.clipboard.writeText(code);
+        btn.textContent = "Copied!";
+        setTimeout(() => (btn.textContent = "Copy"), 1000);
+      };
+
+      pre.appendChild(btn);
+      container.appendChild(pre);
+    }
+  }
+
+  container.scrollTop = container.scrollHeight;
+}
+
+/* ---------------- INIT ---------------- */
+
 function init() {
   console.log("Sandbox init");
 
@@ -29,7 +81,10 @@ function init() {
     if (e.key === "Tab") {
       e.preventDefault();
       const s = code.selectionStart;
-      code.value = code.value.slice(0,s) + "  " + code.value.slice(code.selectionEnd);
+      code.value =
+        code.value.slice(0, s) +
+        "  " +
+        code.value.slice(code.selectionEnd);
       code.selectionStart = code.selectionEnd = s + 2;
     }
   });
@@ -43,30 +98,51 @@ function init() {
 
   // AI input
   const aiInput = document.getElementById("aiInput");
-  aiInput.addEventListener("keydown", e => {
+  const aiLog = document.getElementById("aiLog");
+
+  aiInput.addEventListener("keydown", async e => {
     if (e.key === "Enter") {
       saveCurrentFile();
-      askAI(aiInput.value, files);
+
+      const question = aiInput.value.trim();
+      if (!question) return;
+
+      // Show user message
+      const userMsg = document.createElement("div");
+      userMsg.textContent = "🧑 " + question;
+      userMsg.style.marginBottom = "6px";
+      aiLog.appendChild(userMsg);
+
       aiInput.value = "";
+
+      // Ask AI
+      const reply = await askAI(question, files);
+
+      // Render AI response (ChatGPT-style)
+      const aiMsg = document.createElement("div");
+      aiMsg.style.marginBottom = "12px";
+      aiLog.appendChild(aiMsg);
+
+      renderAIMessage(aiMsg, reply);
     }
   });
 
   // Clear chat
   document.getElementById("clearChat").onclick = () => {
-    document.getElementById("aiLog").textContent =
-      "🤖 AI ready. Ask about your code.";
+    aiLog.textContent = "🤖 AI ready. Ask about your code.";
   };
 
   // Resizable divider
   const divider = document.getElementById("divider");
   let dragging = false;
-  divider.onmousedown = () => dragging = true;
-  window.onmouseup = () => dragging = false;
+
+  divider.onmousedown = () => (dragging = true);
+  window.onmouseup = () => (dragging = false);
   window.onmousemove = e => {
     if (!dragging) return;
-    const p = e.clientX / window.innerWidth * 100;
+    const p = (e.clientX / window.innerWidth) * 100;
     document.getElementById("layout").style.gridTemplateColumns =
-      `${p}% 6px ${100-p}%`;
+      `${p}% 6px ${100 - p}%`;
   };
 }
 
