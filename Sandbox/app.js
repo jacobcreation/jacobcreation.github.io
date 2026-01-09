@@ -2,66 +2,49 @@ import { initEditor, saveCurrentFile, files } from "./editor.js";
 import { runSandbox } from "./sandbox.js";
 import { askAI } from "./ai.js";
 
-/* ========= HARD MARKDOWN NORMALIZER ========= */
-function normalizeMarkdown(text) {
-  // Fix broken openings
-  text = text
-    .replace(/```\s*\n\s*(html|css|js|javascript)\s*\n/gi, "```$1\n")
-    .replace(/``\s*(html|css|js|javascript)\n/gi, "```$1\n")
-    .replace(/`\s*(html|css|js|javascript)\n/gi, "```$1\n")
+/* ================= AI RENDER ================= */
 
-    // Normalize language names
-    .replace(/```javascript/gi, "```js")
-    .replace(/```HTML/gi, "```html")
-    .replace(/```CSS/gi, "```css")
-
-    // Remove duplicated fences
-    .replace(/```\s*```/g, "```");
-
-  // Auto-close unclosed fences
-  const fences = (text.match(/```/g) || []).length;
-  if (fences % 2 !== 0) {
-    text += "\n```";
-  }
-
-  return text;
-}
-
-/* ========= RENDER AI MESSAGE ========= */
 function renderAIMessage(container, text) {
   container.innerHTML = "";
 
-  const parts = text.split("```");
+  // Normalize line endings
+  text = text.replace(/\r\n/g, "\n");
 
-  for (let i = 0; i < parts.length; i++) {
+  // Auto-close unclosed fences
+  const fenceCount = (text.match(/```/g) || []).length;
+  if (fenceCount % 2 !== 0) {
+    text += "\n```";
+  }
+
+  const blocks = text.split("```");
+
+  for (let i = 0; i < blocks.length; i++) {
     // Normal text
     if (i % 2 === 0) {
-      if (parts[i].trim()) {
+      if (blocks[i].trim()) {
         const div = document.createElement("div");
-        div.textContent = parts[i];
+        div.textContent = blocks[i];
         div.style.marginBottom = "8px";
         container.appendChild(div);
       }
     }
     // Code block
     else {
-      const lines = parts[i].trimStart().split("\n");
-      lines.shift(); // remove language line
+      const lines = blocks[i].split("\n");
+
+      // Remove language line if present
+      if (/^(html|css|js|javascript)$/i.test(lines[0].trim())) {
+        lines.shift();
+      }
+
       const code = lines.join("\n");
 
       const pre = document.createElement("pre");
-      pre.style.position = "relative";
-
       const codeEl = document.createElement("code");
       codeEl.textContent = code;
-      pre.appendChild(codeEl);
 
       const btn = document.createElement("button");
       btn.textContent = "Copy";
-      btn.style.position = "absolute";
-      btn.style.top = "6px";
-      btn.style.right = "6px";
-      btn.style.fontSize = "12px";
 
       btn.onclick = () => {
         navigator.clipboard.writeText(code);
@@ -69,6 +52,7 @@ function renderAIMessage(container, text) {
         setTimeout(() => (btn.textContent = "Copy"), 1000);
       };
 
+      pre.appendChild(codeEl);
       pre.appendChild(btn);
       container.appendChild(pre);
     }
@@ -77,7 +61,8 @@ function renderAIMessage(container, text) {
   container.scrollTop = container.scrollHeight;
 }
 
-/* ========= INIT ========= */
+/* ================= INIT ================= */
+
 function init() {
   initEditor();
   runSandbox();
@@ -101,9 +86,7 @@ function init() {
       e.preventDefault();
       const s = code.selectionStart;
       code.value =
-        code.value.slice(0, s) +
-        "  " +
-        code.value.slice(code.selectionEnd);
+        code.value.slice(0, s) + "  " + code.value.slice(code.selectionEnd);
       code.selectionStart = code.selectionEnd = s + 2;
     }
   });
@@ -126,13 +109,12 @@ function init() {
       aiInput.value = "";
 
       const reply = await askAI(q, files);
-      const fixed = normalizeMarkdown(reply);
 
       const aiMsg = document.createElement("div");
       aiMsg.style.marginBottom = "12px";
       aiLog.appendChild(aiMsg);
 
-      renderAIMessage(aiMsg, fixed);
+      renderAIMessage(aiMsg, reply);
     }
   });
 
