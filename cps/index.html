@@ -24,25 +24,16 @@ table{width:100%;border-collapse:collapse;margin-top:10px}
 th,td{border:1px solid var(--line);padding:6px;text-align:center}
 th{background:#0c1424}
 .notice{margin-top:8px;padding:8px;background:#0c1424;border-radius:8px}
-
-@media print{
-body{background:#fff;color:#000}
-header,.no-print{display:none}
-table{page-break-inside:avoid}
-th{background:#eee;color:#000}
-}
 </style>
 </head>
 
 <body>
 
-<header class="no-print">
+<header>
 <h1>Chess Tournament Manager</h1>
 <div class="grid">
-<button class="ac" onclick="setMode('swiss')">Swiss</button>
-<button class="ac" onclick="setMode('rr')">Round Robin</button>
 <button class="ok" onclick="nextRound()">Next Round</button>
-<button class="ac" onclick="finalize()">Finalize</button>
+<button class="ac" onclick="finalizeRound()">Finalize Round</button>
 <button class="bad" onclick="undoRound()">Undo</button>
 </div>
 <div class="notice" id="status">Idle</div>
@@ -50,7 +41,6 @@ th{background:#eee;color:#000}
 
 <div class="container">
 
-<div class="no-print">
 <h3>Players</h3>
 <div class="grid">
 <input id="nameInput" placeholder="Name">
@@ -58,12 +48,11 @@ th{background:#eee;color:#000}
 <button class="ok" onclick="addPlayer()">Add</button>
 <button class="bad" onclick="clearAll()">Clear</button>
 </div>
-</div>
 
 <h3>Standings</h3>
 <table>
 <thead>
-<tr><th>#</th><th>Name</th><th>Score</th><th>Buchholz</th><th>Rating</th></tr>
+<tr><th>#</th><th>Name</th><th>Score</th><th>Buchholz</th></tr>
 </thead>
 <tbody id="standings"></tbody>
 </table>
@@ -71,7 +60,7 @@ th{background:#eee;color:#000}
 <h3>Pairings</h3>
 <table>
 <thead>
-<tr><th>Rd</th><th>Bd</th><th>White</th><th>Black</th><th>Result</th></tr>
+<tr><th>Board</th><th>White</th><th>Black</th><th>Result</th></tr>
 </thead>
 <tbody id="pairings"></tbody>
 </table>
@@ -90,26 +79,24 @@ const S = {
   players: [],
   round: 0,
   pairings: [],
-  finalized: true
+  roundOpen: false
 };
 
-const norm = n => n.trim().toLowerCase();
+const norm = s => s.trim().toLowerCase();
 
 /* PLAYERS */
 function addPlayer(){
   const n = nameInput.value.trim();
-  const r = Number(ratingInput.value)||0;
   if(!n) return;
   if(S.players.some(p=>p.key===norm(n))) return alert("Duplicate");
-
   S.players.push({
     id: uid++,
     name:n,
     key:norm(n),
-    rating:r,
+    rating:+ratingInput.value||0,
     score:0,
-    bh:0,
     opp:[],
+    bh:0,
     bye:false
   });
   nameInput.value="";
@@ -131,62 +118,74 @@ function render(){
   calcBH();
   standingsBody.innerHTML="";
   [...S.players]
-    .sort((a,b)=>b.score-a.score||b.bh-a.bh||b.rating-a.rating)
+    .sort((a,b)=>b.score-a.score||b.bh-a.bh)
     .forEach((p,i)=>{
       standingsBody.innerHTML+=
-      `<tr><td>${i+1}</td><td>${p.name}</td><td>${p.score}</td><td>${p.bh}</td><td>${p.rating}</td></tr>`;
+      `<tr><td>${i+1}</td><td>${p.name}</td><td>${p.score}</td><td>${p.bh}</td></tr>`;
     });
 }
 
-/* TOURNAMENT */
-function setMode(m){
-  statusBox.textContent="Mode: "+m;
-}
-
+/* ROUND LOGIC */
 function nextRound(){
-  if(!S.finalized) return alert("Finalize first");
+  if(S.roundOpen) return alert("Finalize current round first");
 
   history.push(JSON.stringify(S));
   S.round++;
-  S.finalized=false;
+  S.roundOpen=true;
   S.pairings=[];
   pairingsBody.innerHTML="";
+  statusBox.textContent="Round "+S.round;
 
-  let list=[...S.players].sort((a,b)=>b.score-a.score||b.rating-a.rating);
+  let list=[...S.players].sort((a,b)=>b.score-a.score);
   let used=new Set();
-  let board=1;
 
-  if(list.length%2===1){
+  if(list.length%2){
     const bye=list.find(p=>!p.bye);
     bye.bye=true;
     bye.score++;
     S.pairings.push({type:"bye",player:bye});
     pairingsBody.innerHTML+=
-      `<tr><td>${S.round}</td><td>—</td><td>${bye.name}</td><td>BYE</td><td>+1</td></tr>`;
+      `<tr><td>—</td><td>${bye.name}</td><td>BYE</td><td>+1</td></tr>`;
     used.add(bye.id);
   }
 
-  for(let p of list){
+  let board=1;
+  for(let i=0;i<list.length;i++){
+    let p=list[i];
     if(used.has(p.id)) continue;
-    const o=list.find(x=>!used.has(x.id)&&x.id!==p.id&&!p.opp.includes(x.id));
-    if(!o) continue;
+
+    let o=list.slice(i+1).find(x=>!used.has(x.id));
+    if(!o){
+      // emergency bye (never locks system)
+      p.score++;
+      pairingsBody.innerHTML+=
+        `<tr><td>—</td><td>${p.name}</td><td>BYE</td><td>+1</td></tr>`;
+      continue;
+    }
 
     used.add(p.id);used.add(o.id);
-    S.pairings.push({type:"game",board,white:p,black:o,result:"pending"});
+    S.pairings.push({type:"game",board,white:p,black:o,result:null});
     pairingsBody.innerHTML+=
-    `<tr><td>${S.round}</td><td>${board}</td><td>${p.name}</td><td>${o.name}</td>
-    <td>
-      <select onchange="setRes(${board},this.value)">
-        <option value="pending">Select</option>
-        <option value="1-0">1-0</option>
-        <option value="0-1">0-1</option>
-        <option value="0.5">½–½</option>
-      </select>
-    </td></tr>`;
+      `<tr>
+        <td>${board}</td>
+        <td>${p.name}</td>
+        <td>${o.name}</td>
+        <td>
+          <select onchange="setRes(${board},this.value)">
+            <option value="">Select</option>
+            <option value="1-0">1-0</option>
+            <option value="0-1">0-1</option>
+            <option value="0.5">½–½</option>
+          </select>
+        </td>
+      </tr>`;
     board++;
   }
 
-  if(S.pairings.every(p=>p.type==="bye")) finalize();
+  if(S.pairings.every(p=>p.type==="bye")){
+    S.roundOpen=false;
+    render();
+  }
 }
 
 function setRes(b,v){
@@ -194,17 +193,20 @@ function setRes(b,v){
   if(p) p.result=v;
 }
 
-function finalize(){
+function finalizeRound(){
+  if(!S.roundOpen) return;
+
   for(const p of S.pairings){
     if(p.type==="bye") continue;
-    if(p.result==="pending") return alert("Missing result");
+    if(!p.result) return alert("Missing result");
     p.white.opp.push(p.black.id);
     p.black.opp.push(p.white.id);
     if(p.result==="1-0") p.white.score++;
     if(p.result==="0-1") p.black.score++;
     if(p.result==="0.5"){p.white.score+=0.5;p.black.score+=0.5;}
   }
-  S.finalized=true;
+
+  S.roundOpen=false;
   render();
 }
 
