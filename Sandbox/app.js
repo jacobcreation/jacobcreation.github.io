@@ -2,16 +2,17 @@ import { initEditor, saveCurrentFile, files } from "./editor.js";
 import { runSandbox } from "./sandbox.js";
 import { askAI } from "./ai.js";
 
-/* ---------- FORCE PROPER CODE FENCES ---------- */
-function forceTripleBackticks(text) {
+/* ---------- FORCE & NORMALIZE MARKDOWN ---------- */
+function normalizeMarkdown(text) {
   return text
-    // ``html → ```html
-    .replace(/``\s*(html|css|js)\n/gi, "```$1\n")
-    // `html → ```html
-    .replace(/`\s*(html|css|js)\n/gi, "```$1\n")
-    // ```\nhtml → ```html
-    .replace(/```\s*\n\s*(html|css|js)\n/gi, "```$1\n")
-    // fix bad closing `
+    // Fix broken fences
+    .replace(/``\s*(html|css|js|javascript)\n/gi, "```$1\n")
+    .replace(/`\s*(html|css|js|javascript)\n/gi, "```$1\n")
+    .replace(/```\s*\n\s*(html|css|js|javascript)\n/gi, "```$1\n")
+    // Normalize language names
+    .replace(/```javascript/gi, "```js")
+    .replace(/```HTML/gi, "```html")
+    .replace(/```CSS/gi, "```css")
     .replace(/\n``?\s*$/g, "\n```");
 }
 
@@ -114,7 +115,7 @@ function init() {
       aiInput.value = "";
 
       const reply = await askAI(q, files);
-      const fixed = forceTripleBackticks(reply);
+      const fixed = normalizeMarkdown(reply);
 
       const aiMsg = document.createElement("div");
       aiMsg.style.marginBottom = "12px";
