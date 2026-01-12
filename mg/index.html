@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Describe → AI Meme (Preview + Download)</title>
+
+<style>
+  body {
+    background: #020617;
+    color: white;
+    font-family: Impact, Arial, sans-serif;
+    text-align: center;
+    padding: 30px;
+  }
+
+  textarea, button {
+    width: 90%;
+    max-width: 520px;
+    padding: 12px;
+    margin: 10px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: none;
+  }
+
+  button {
+    background: #22c55e;
+    cursor: pointer;
+  }
+
+  button.secondary {
+    background: #334155;
+    color: #e5e7eb;
+  }
+
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  #loader {
+    margin-top: 15px;
+    display: none;
+  }
+
+  #progressBar {
+    width: 100%;
+    max-width: 520px;
+    height: 10px;
+    background: #1e293b;
+    border-radius: 5px;
+    margin: 10px auto;
+    overflow: hidden;
+  }
+
+  #progress {
+    height: 100%;
+    width: 0%;
+    background: #22c55e;
+    transition: width 0.1s linear;
+  }
+
+  video {
+    margin-top: 20px;
+    max-width: 100%;
+    border: 2px solid #22c55e;
+    border-radius: 8px;
+    display: none;
+  }
+
+  canvas {
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<h1>😂 Describe → AI Meme Video</h1>
+
+<textarea id="desc" rows="3"
+  placeholder="Example: I studied all night but the exam was from another chapter"></textarea>
+
+<br>
+
+<button id="generateBtn" onclick="generateMeme()">🎬 Generate Meme</button>
+<button id="againBtn" class="secondary" onclick="resetApp()" style="display:none;">
+  🔁 Generate Again
+</button>
+
+<div id="loader">
+  <p>Generating meme…</p>
+  <div id="progressBar">
+    <div id="progress"></div>
+  </div>
+</div>
+
+<video id="preview" controls loop></video>
+
+<canvas id="canvas" width="720" height="720"></canvas>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const videoPreview = document.getElementById("preview");
+const loader = document.getElementById("loader");
+const progress = document.getElementById("progress");
+const generateBtn = document.getElementById("generateBtn");
+const againBtn = document.getElementById("againBtn");
+
+/* ===== AI CALL ===== */
+async function generateMeme() {
+  const description = document.getElementById("desc").value;
+  if (!description) {
+    alert("Describe the situation first!");
+    return;
+  }
+
+  generateBtn.disabled = true;
+  loader.style.display = "block";
+  progress.style.width = "0%";
+  videoPreview.style.display = "none";
+
+  const res = await fetch(
+    "https://meme-generator-ai.b4rjxr9lk.workers.dev",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ description })
+    }
+  );
+
+  const meme = await res.json();
+  renderAndPreview(meme.top, meme.bottom);
+}
+
+/* ===== CODEC DETECTION ===== */
+function getSupportedMimeType() {
+  const types = [
+    "video/webm;codecs=vp8",
+    "video/webm"
+  ];
+
+  for (const type of types) {
+    if (window.MediaRecorder && MediaRecorder.isTypeSupported(type)) {
+      return type;
+    }
+  }
+  return "";
+}
+
+/* ===== RENDER + PREVIEW ===== */
+function renderAndPreview(top, bottom) {
+  const mimeType = getSupportedMimeType();
+  if (!mimeType) {
+    alert("Your browser does not support video recording.");
+    resetApp();
+    return;
+  }
+
+  const stream = canvas.captureStream(30);
+  const recorder = new MediaRecorder(stream, { mimeType });
+
+  let chunks = [];
+  recorder.ondataavailable = e => chunks.push(e.data);
+
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: mimeType });
+    const url = URL.createObjectURL(blob);
+
+    videoPreview.src = url;
+    videoPreview.style.display = "block";
+    videoPreview.play();
+
+    loader.style.display = "none";
+    againBtn.style.display = "inline-block";
+
+    // Auto-download
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "meme.webm";
+    a.click();
+  };
+
+  recorder.start();
+
+  let frame = 0;
+  const totalFrames = 150;
+
+  const interval = setInterval(() => {
+    drawFrame(frame, top, bottom);
+
+    // progress bar update
+    progress.style.width = `${(frame / totalFrames) * 100}%`;
+
+    frame++;
+    if (frame >= totalFrames) {
+      clearInterval(interval);
+      recorder.stop();
+    }
+  }, 1000 / 30);
+}
+
+/* ===== DRAW FRAME ===== */
+function drawFrame(frame, top, bottom) {
+  ctx.fillStyle = "#020617";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.textAlign = "center";
+  ctx.strokeStyle = "black";
+  ctx.fillStyle = "white";
+  ctx.lineWidth = 6;
+
+  const zoom = 1 + frame * 0.002;
+
+  ctx.save();
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.scale(zoom, zoom);
+  ctx.translate(-canvas.width / 2, -canvas.height / 2);
+
+  ctx.font = "64px Impact";
+  ctx.strokeText(top, canvas.width / 2, 120);
+  ctx.fillText(top, canvas.width / 2, 120);
+
+  ctx.font = "56px Impact";
+  ctx.strokeText(bottom, canvas.width / 2, canvas.height - 100);
+  ctx.fillText(bottom, canvas.width / 2, canvas.height - 100);
+
+  ctx.restore();
+}
+
+/* ===== RESET ===== */
+function resetApp() {
+  generateBtn.disabled = false;
+  loader.style.display = "none";
+  progress.style.width = "0%";
+  videoPreview.style.display = "none";
+  againBtn.style.display = "none";
+}
+</script>
+
+</body>
+</html>

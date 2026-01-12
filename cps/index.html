@@ -1,272 +1,334 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Chess Tournament System</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body { margin:0; font-family:Arial,sans-serif; background:#0f172a; color:#e5e7eb; }
-    header { padding:20px; background:#111827; text-align:center; border-bottom:2px solid #1f2937; }
-    h1 { margin:0; }
-    .btn-bar { margin-top:12px; display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
-    button { padding:12px 18px; border-radius:10px; border:none; cursor:pointer; font-size:15px; transition:0.2s; }
-    .btn-primary { background:#22c55e; color:#fff; }
-    .btn-accent { background:#38bdf8; color:#fff; }
-    .btn-danger { background:#ef4444; color:#fff; }
-    button:hover { opacity:0.9; }
-    .container { max-width:1000px; margin:20px auto; padding:0 16px; }
-    table { width:100%; border-collapse:collapse; margin-top:12px; }
-    th,td { border:1px solid #1f2937; padding:8px; text-align:left; }
-    th { background:#0c1424; }
-    .notice { margin-top:10px; padding:10px; background:#0c1424; border-radius:8px; }
-    .muted { color:#9ca3af; }
-    select,input { background:#0c1424; color:#e5e7eb; border:1px solid #1f2937; border-radius:6px; padding:6px; }
-  </style>
+<meta charset="UTF-8">
+<title>Chess Tournament System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{margin:0;font-family:Arial;background:#0f172a;color:#e5e7eb}
+.hidden{display:none}
+header{padding:20px;background:#111827;text-align:center;border-bottom:2px solid #1f2937}
+button,select,input{padding:12px;border-radius:10px;border:none;font-size:15px}
+button{cursor:pointer}
+.primary{background:#22c55e;color:#fff}
+.accent{background:#38bdf8;color:#fff}
+.danger{background:#ef4444;color:#fff}
+
+.container{max-width:1100px;margin:20px auto;padding:0 16px}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+th,td{border:1px solid #1f2937;padding:8px;text-align:center}
+th{background:#0c1424}
+.notice{margin-top:10px;padding:10px;background:#0c1424;border-radius:8px}
+.controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.mode-buttons{display:flex;gap:30px;justify-content:center;margin-top:40px}
+.big-btn{font-size:22px;padding:30px 50px}
+.round{background:#020617;font-weight:bold}
+
+@media print{
+  button,select,input,.controls,.mode-buttons{display:none}
+  body{background:#fff;color:#000}
+  th{background:#eee;color:#000}
+}
+</style>
 </head>
+
 <body>
+
+<!-- MODE SELECT -->
+<div id="modeScreen">
   <header>
-    <h1>Chess Tournament System</h1>
-    <div class="btn-bar">
-      <button id="roundRobinBtn" class="btn-accent">Round Robin</button>
-      <button id="swissBtn" class="btn-primary">Swiss</button>
-      <button id="nextRoundBtn" class="btn-primary">Next Round (Swiss)</button>
-      <button id="finalizeBtn" class="btn-accent">Finalize Results</button>
-      <button id="clearPlayersBtn" class="btn-danger">Clear Players</button>
+    <h1 id="titlePreview">Chess Tournament</h1>
+    <input id="tournamentNameInput" placeholder="Tournament Name">
+    <div class="mode-buttons">
+      <button class="big-btn primary" onclick="startMode('swiss')">♟ Swiss</button>
+      <button class="big-btn accent" onclick="startMode('rr')">🔁 Round Robin</button>
     </div>
-    <div class="notice" id="status">Mode not selected</div>
   </header>
+</div>
 
-  <div class="container">
-    <!-- Player input -->
-    <div class="btn-bar" style="justify-content:flex-start; gap:8px;">
-      <input id="playerName" placeholder="Player name" />
-      <input id="playerRating" type="number" placeholder="Rating" />
-      <button id="addPlayerBtn" class="btn-primary">➕ Add Player</button>
-    </div>
+<!-- TOURNAMENT -->
+<div id="tournamentScreen" class="hidden">
 
-    <h2>Standings</h2>
-    <table>
-      <thead>
-        <tr><th>Rank</th><th>Name</th><th>Rating</th><th>Score</th></tr>
-      </thead>
-      <tbody id="playersTbody"></tbody>
-    </table>
+<header>
+  <h2 id="tournamentTitle"></h2>
 
-    <h2>Pairings</h2>
-    <table>
-      <thead>
-        <tr><th>Round</th><th>Board</th><th>White</th><th>Black</th><th>Result</th></tr>
-      </thead>
-      <tbody id="pairingsTbody"></tbody>
-    </table>
+  <div class="controls">
+    <input id="nameInput" placeholder="Player name">
+    <input id="ratingInput" type="number" placeholder="Rating">
 
-    <div class="notice muted">
-      Tips:
-      - In Swiss mode, click “Next Round” to generate pairings, select results, then “Finalize Results” to update the standings.
-      - If there’s an odd number of players, one player gets a bye worth 1 point (lowest-ranked without prior bye).
-    </div>
+    <button class="primary" onclick="addPlayer()">Add Player</button>
+
+    <input type="file" id="fileInput" accept=".csv,.txt">
+    <button class="accent" onclick="loadPlayers()">Upload Players</button>
+
+    <button class="primary" onclick="nextRound()">Next Round</button>
+    <button class="accent" onclick="finalizeRound()">Finalize</button>
+
+    <select id="exportType">
+      <option value="csv">Export CSV</option>
+      <option value="xls">Export Excel</option>
+      <option value="pdf">Export PDF</option>
+    </select>
+    <button class="accent" onclick="exportData()">Export</button>
+
+    <button class="danger" onclick="resetAll()">Reset</button>
   </div>
 
-  <script>
-    let tournamentMode = null;
-    const state = { players: [], round: 0, pairings: [], history: [] };
-    const uid = (() => { let i=1; return () => i++; })();
+  <div class="notice" id="status">Idle</div>
+</header>
 
-    const playersTbody = document.getElementById("playersTbody");
-    const pairingsTbody = document.getElementById("pairingsTbody");
-    const statusEl = document.getElementById("status");
+<div class="container">
 
-    function addPlayer(name, rating) {
-      if (!name) return;
-      state.players.push({ id: uid(), name, rating: Number(rating)||0, score:0, hadBye:false });
-      renderPlayers();
-    }
+  <h3>Standings</h3>
+  <table id="standingsTable">
+    <thead>
+      <tr><th>#</th><th>Name</th><th>Rating</th><th>Score</th></tr>
+    </thead>
+    <tbody id="standings"></tbody>
+  </table>
 
-    function renderPlayers() {
-      const sorted = state.players.slice().sort(
-        (a,b)=> (b.score - a.score) || (b.rating - a.rating) || a.name.localeCompare(b.name)
-      );
-      playersTbody.innerHTML = "";
-      sorted.forEach((p,i)=>{
-        const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${i+1}</td><td>${p.name}</td><td>${p.rating}</td><td>${p.score.toFixed(1)}</td>`;
-        playersTbody.appendChild(tr);
-      });
-    }
+  <h3>Pairings</h3>
+  <table>
+    <thead>
+      <tr><th>Board</th><th>White</th><th>Black</th><th>Result</th></tr>
+    </thead>
+    <tbody id="pairings"></tbody>
+  </table>
 
-    // Round Robin (simple all unique pairs listing)
-    function generateRoundRobin() {
-      pairingsTbody.innerHTML="";
-      let board=1;
-      for(let i=0;i<state.players.length;i++){
-        for(let j=i+1;j<state.players.length;j++){
-          const tr=document.createElement("tr");
-          tr.innerHTML=`<td>All</td><td>${board}</td><td>${state.players[i].name}</td><td>${state.players[j].name}</td><td>-</td>`;
-          pairingsTbody.appendChild(tr);
-          board++;
-        }
-      }
-      statusEl.textContent="Round Robin schedule generated";
-    }
+</div>
+</div>
 
-    // Swiss pairing (stable thisRound to avoid broken references)
-    function generateSwiss() {
-      if (state.players.length < 2) {
-        alert("Add at least 2 players to generate Swiss pairings.");
-        return;
-      }
+<script>
+/* ---------- GLOBAL ---------- */
+let MODE=null, pid=1, TOURNAMENT_NAME="Chess Tournament";
+const S={players:[],round:0,open:false,pairings:[]};
 
-      pairingsTbody.innerHTML="";
-      const thisRound = state.round + 1;
+/* ---------- DOM ---------- */
+const modeScreen=document.getElementById("modeScreen");
+const tournamentScreen=document.getElementById("tournamentScreen");
+const tournamentTitle=document.getElementById("tournamentTitle");
+const titlePreview=document.getElementById("titlePreview");
+const nameInput=document.getElementById("nameInput");
+const ratingInput=document.getElementById("ratingInput");
+const fileInput=document.getElementById("fileInput");
+const standings=document.getElementById("standings");
+const pairings=document.getElementById("pairings");
+const statusBox=document.getElementById("status");
 
-      const sorted = state.players.slice().sort(
-        (a,b)=> (b.score - a.score) || (b.rating - a.rating)
-      );
-      state.pairings = [];
-      let board = 1;
+/* ---------- MODE ---------- */
+document.getElementById("tournamentNameInput").oninput=e=>{
+  titlePreview.textContent=e.target.value||"Chess Tournament";
+};
 
-      // Bye if odd number: lowest-ranked without previous bye, else absolute lowest
-      if (sorted.length % 2 === 1) {
-        let byeIndex = -1;
-        for (let i = sorted.length - 1; i >= 0; i--) {
-          if (!sorted[i].hadBye) { byeIndex = i; break; }
-        }
-        if (byeIndex === -1) byeIndex = sorted.length - 1;
+function startMode(m){
+  MODE=m;
+  TOURNAMENT_NAME=document.getElementById("tournamentNameInput").value||"Chess Tournament";
+  tournamentTitle.textContent=
+    `${TOURNAMENT_NAME} (${m==="swiss"?"Swiss":"Round Robin"})`;
+  modeScreen.classList.add("hidden");
+  tournamentScreen.classList.remove("hidden");
+  statusBox.textContent="Add players";
+}
 
-        const byePlayer = sorted.splice(byeIndex, 1)[0];
-        byePlayer.hadBye = true;
+/* ---------- PLAYER CORE ---------- */
+function addPlayerCore(name,rating=0){
+  if(S.players.some(p=>p.name.toLowerCase()===name.toLowerCase())) return;
+  S.players.push({
+    id: pid++,
+    name,
+    rating:Number(rating)||0,
+    score:0,
+    bye:false
+  });
+}
 
-        state.pairings.push({ round: thisRound, board: board, white: byePlayer, black: null, result: "bye" });
-        const trBye = document.createElement("tr");
-        trBye.innerHTML = `<td>${thisRound}</td><td>${board}</td><td>${byePlayer.name}</td><td>(bye)</td><td>Bye (1 point)</td>`;
-        pairingsTbody.appendChild(trBye);
+/* ---------- ADD PLAYER ---------- */
+function addPlayer(){
+  const n=nameInput.value.trim();
+  if(!n) return;
+  addPlayerCore(n,ratingInput.value);
+  nameInput.value="";
+  ratingInput.value="";
+  render();
+}
+
+/* ---------- LOAD FROM FILE ---------- */
+function loadPlayers(){
+  const file=fileInput.files[0];
+  if(!file) return alert("Select a file first");
+
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const lines=reader.result.split(/\r?\n/);
+    lines.forEach(line=>{
+      line=line.trim();
+      if(!line) return;
+      if(line.toLowerCase().startsWith("name")) return;
+
+      const parts=line.split(",");
+      const name=parts[0]?.trim();
+      const rating=parts[1]?.trim()||0;
+      if(name) addPlayerCore(name,rating);
+    });
+    render();
+    statusBox.textContent="Players loaded from file";
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- RENDER ---------- */
+function render(){
+  standings.innerHTML="";
+  [...S.players]
+    .sort((a,b)=>b.score-a.score||b.rating-a.rating)
+    .forEach((p,i)=>{
+      standings.innerHTML+=
+        `<tr><td>${i+1}</td><td>${p.name}</td><td>${p.rating}</td><td>${p.score}</td></tr>`;
+    });
+}
+
+/* ---------- ROUND ROBIN ---------- */
+function generateRR(){
+  if(S.round>0) return alert("Round Robin already generated");
+  let players=[...S.players];
+  if(players.length%2) players.push({name:"BYE",bye:true});
+
+  const n=players.length;
+  const rounds=n-1;
+  let arr=players.slice(1);
+
+  for(let r=1;r<=rounds;r++){
+    pairings.innerHTML+=
+      `<tr class="round"><td colspan="4">ROUND ${r}</td></tr>`;
+    let row=[players[0],...arr];
+    let byeRow=null;
+    let board=1;
+
+    for(let i=0;i<n/2;i++){
+      const a=row[i], b=row[n-1-i];
+      if(a.bye||b.bye){
+        const p=a.bye?b:a;
+        if(!p.bye) p.score++;
+        byeRow=`<tr><td>—</td><td>${p.name}</td><td>BYE</td><td>+1</td></tr>`;
+      }else{
+        pairings.innerHTML+=
+          `<tr><td>${board}</td><td>${a.name}</td><td>${b.name}</td><td>-</td></tr>`;
         board++;
       }
-
-      // Pair top-down within sorted list
-      for (let i = 0; i < sorted.length; i += 2) {
-        const a = sorted[i], b = sorted[i+1];
-        if (!b) break;
-        const pr = { round: thisRound, board: board, white: a, black: b, result: "pending" };
-        state.pairings.push(pr);
-
-        const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${pr.round}</td><td>${pr.board}</td><td>${pr.white.name}</td><td>${pr.black.name}</td>
-          <td>
-            <select data-round="${thisRound}" data-board="${pr.board}">
-              <option value="pending">Enter result</option>
-              <option value="1-0">1-0</option>
-              <option value="0-1">0-1</option>
-              <option value="0.5-0.5">½–½</option>
-            </select>
-          </td>`;
-        pairingsTbody.appendChild(tr);
-        board++;
-      }
-
-      // Hook result selectors for this round (use thisRound to avoid mismatch)
-      document.querySelectorAll(`select[data-round="${thisRound}"]`).forEach(sel=>{
-        sel.addEventListener("change",()=>{
-          const boardNum = Number(sel.getAttribute("data-board"));
-          const pr = state.pairings.find(x=>x.board===boardNum && x.round===thisRound);
-          if (pr) pr.result = sel.value;
-        });
-      });
-
-      state.round = thisRound;
-      statusEl.textContent=`Swiss Round ${state.round} generated`;
-      renderPlayers(); // auto-refresh standings after pairing (sorted by current score)
     }
+    if(byeRow) pairings.innerHTML+=byeRow;
+    arr.unshift(arr.pop());
+  }
+  render();
+  statusBox.textContent="Round Robin schedule complete";
+}
 
-    // Finalize results (handles bye correctly and refreshes UI)
-    function finalizeResults() {
-      if (!state.pairings.length) {
-        alert("No pairings to finalize.");
-        return;
-      }
+/* ---------- SWISS ---------- */
+function nextSwiss(){
+  if(S.open) return alert("Finalize first");
+  S.round++; S.open=true; S.pairings=[];
+  pairings.innerHTML+=
+    `<tr class="round"><td colspan="4">ROUND ${S.round}</td></tr>`;
 
-      // Check: all non-bye games must have results
-      for (const pr of state.pairings) {
-        if (pr.black === null || pr.result === "bye") continue;
-        if (pr.result === "pending") {
-          alert("Please enter all results before finalizing.");
-          return;
-        }
-      }
+  let pool=[...S.players].sort((a,b)=>b.score-a.score||b.rating-a.rating);
+  let byePlayer=null;
+  if(pool.length%2){
+    byePlayer=pool.find(p=>!p.bye);
+    byePlayer.bye=true; byePlayer.score++;
+    pool=pool.filter(p=>p!==byePlayer);
+  }
 
-      // Apply results
-      for (const pr of state.pairings) {
-        if (pr.black === null || pr.result === "bye") {
-          pr.white.score += 1; // bye = 1 point
-          continue;
-        }
-        if (pr.result === "1-0") {
-          pr.white.score += 1;
-        } else if (pr.result === "0-1") {
-          pr.black.score += 1;
-        } else if (pr.result === "0.5-0.5") {
-          pr.white.score += 0.5;
-          pr.black.score += 0.5;
-        }
-      }
+  let board=1;
+  while(pool.length){
+    const a=pool.shift(), b=pool.shift();
+    const g={id:crypto.randomUUID(),a,b,result:null};
+    S.pairings.push(g);
+    pairings.innerHTML+=
+      `<tr>
+        <td>${board}</td>
+        <td>${a.name}</td>
+        <td>${b.name}</td>
+        <td>
+          <select data-id="${g.id}">
+            <option value="">Select</option>
+            <option value="1-0">1-0</option>
+            <option value="0-1">0-1</option>
+            <option value="0.5">½–½</option>
+          </select>
+        </td>
+      </tr>`;
+    board++;
+  }
 
-      // Save round history (ids only)
-      state.history.push({
-        round: state.round,
-        pairings: state.pairings.map(pr => ({
-          round: pr.round,
-          board: pr.board,
-          white: pr.white.id,
-          black: pr.black ? pr.black.id : null,
-          result: pr.result
-        }))
-      });
+  if(byePlayer){
+    pairings.innerHTML+=
+      `<tr><td>—</td><td>${byePlayer.name}</td><td>BYE</td><td>+1</td></tr>`;
+  }
 
-      // Clear current pairings and refresh UI
-      state.pairings = [];
-      pairingsTbody.innerHTML = "";
-      renderPlayers();
-      statusEl.textContent = `Round ${state.round} finalized! Standings updated.`;
-    }
+  document.querySelectorAll("select").forEach(sel=>{
+    sel.onchange=()=>{
+      const g=S.pairings.find(x=>x.id===sel.dataset.id);
+      if(g) g.result=sel.value;
+    };
+  });
 
-    // Buttons
-    document.getElementById("addPlayerBtn").addEventListener("click",()=>{
-      const name=document.getElementById("playerName").value.trim();
-      const rating=document.getElementById("playerRating").value.trim();
-      addPlayer(name,rating);
-      document.getElementById("playerName").value = "";
-      document.getElementById("playerRating").value = "";
-      document.getElementById("playerName").focus();
-    });
+  if(S.pairings.length===0){ S.open=false; render(); }
+  statusBox.textContent=`Round ${S.round} running`;
+}
 
-    document.getElementById("clearPlayersBtn").addEventListener("click",()=>{
-      state.players=[]; state.round=0; state.pairings=[]; state.history=[];
-      renderPlayers(); pairingsTbody.innerHTML="";
-      statusEl.textContent="Players cleared";
-    });
+function finalizeSwiss(){
+  if(!S.open) return;
+  if(S.pairings.some(g=>!g.result)) return alert("Missing results");
+  for(const g of S.pairings){
+    if(g.result==="1-0") g.a.score++;
+    if(g.result==="0-1") g.b.score++;
+    if(g.result==="0.5"){g.a.score+=0.5;g.b.score+=0.5;}
+  }
+  S.open=false;
+  render();
+  statusBox.textContent=`Round ${S.round} finalized`;
+}
 
-    document.getElementById("roundRobinBtn").addEventListener("click",()=>{
-      tournamentMode="roundrobin"; state.pairings=[]; statusEl.textContent="Round Robin mode selected";
-      generateRoundRobin();
-    });
+/* ---------- DISPATCH ---------- */
+function nextRound(){ MODE==="rr"?generateRR():nextSwiss(); }
+function finalizeRound(){ if(MODE==="swiss") finalizeSwiss(); }
 
-    document.getElementById("swissBtn").addEventListener("click",()=>{
-      tournamentMode="swiss"; state.round=0; state.pairings=[]; statusEl.textContent="Swiss mode selected";
-      generateSwiss();
-    });
+/* ---------- EXPORT ---------- */
+function exportData(){
+  const type=document.getElementById("exportType").value;
+  if(type==="pdf"){ window.print(); return; }
 
-    document.getElementById("nextRoundBtn").addEventListener("click",()=>{
-      if(tournamentMode==="swiss"){ generateSwiss(); }
-      else { alert("Next Round only works in Swiss mode."); }
-    });
+  if(type==="csv"){
+    let csv="Name,Rating,Score\n";
+    S.players.forEach(p=>csv+=`${p.name},${p.rating},${p.score}\n`);
+    download(csv,"text/csv",".csv");
+  }
 
-    document.getElementById("finalizeBtn").addEventListener("click",()=>{
-      if(tournamentMode==="swiss"){ finalizeResults(); }
-      else { alert("Finalize only works in Swiss mode."); }
-    });
+  if(type==="xls"){
+    const html=document.getElementById("standingsTable").outerHTML;
+    download(html,"application/vnd.ms-excel",".xls");
+  }
+}
 
-    // Initial render
-    renderPlayers();
-  </script>
+function download(content,type,ext){
+  const blob=new Blob([content],{type});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=TOURNAMENT_NAME.replace(/\s+/g,"_")+ext;
+  a.click();
+}
+
+/* ---------- RESET ---------- */
+function resetAll(){
+  MODE=null; pid=1;
+  S.players=[]; S.round=0; S.open=false; S.pairings=[];
+  standings.innerHTML=""; pairings.innerHTML="";
+  tournamentScreen.classList.add("hidden");
+  modeScreen.classList.remove("hidden");
+  statusBox.textContent="Idle";
+}
+</script>
+
 </body>
 </html>
