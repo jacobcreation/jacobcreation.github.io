@@ -1,198 +1,275 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>Chess Pairing System | JacobCreation</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-/* ===== JacobCreation Base Style ===== */
-body {
-  margin: 0;
-  font-family: "Segoe UI", system-ui, sans-serif;
-  background: #eef6ff;
-  color: #1f2937;
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Segoe UI,system-ui,sans-serif;
+  background:#eef6ff;
+  color:#1f2937;
+}
+.hidden{display:none}
+
+/* HEADER */
+.site-header{
+  background:linear-gradient(90deg,#1e7adf,#155fa0);
+  color:#fff;
+  padding:14px 20px;
+  font-size:20px;
+  font-weight:600;
 }
 
-/* ===== Header (MATCHES SITE) ===== */
-.site-header {
-  background: linear-gradient(90deg, #1e7adf, #155fa0);
-  color: white;
-  padding: 14px 24px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 20px;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+/* LAYOUT */
+.wrapper{max-width:1200px;margin:20px auto;padding:0 14px}
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  margin-bottom:20px;
 }
 
-.site-header span {
-  font-size: 22px;
+/* CONTROLS */
+.controls{display:flex;flex-wrap:wrap;gap:10px}
+button,input,select{
+  padding:12px 14px;
+  border-radius:10px;
+  border:none;
+  font-size:15px;
+}
+button{cursor:pointer;background:#1e7adf;color:#fff}
+button.secondary{background:#e5eefc;color:#1e7adf}
+button.danger{background:#ef4444}
+
+/* TABLES */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:600px}
+th,td{padding:10px;text-align:center;white-space:nowrap}
+th{background:#f1f5fb}
+tr:not(:last-child) td{border-bottom:1px solid #e5e7eb}
+.round{background:#f0f7ff;font-weight:600}
+
+/* MOBILE */
+@media(max-width:700px){
+  .controls{flex-direction:column}
+  button,input,select{width:100%;font-size:16px}
 }
 
-/* ===== Page Wrapper ===== */
-.wrapper {
-  max-width: 1200px;
-  margin: 30px auto;
-  padding: 0 16px;
-}
-
-/* ===== Card Style ===== */
-.card {
-  background: white;
-  border-radius: 14px;
-  padding: 20px;
-  box-shadow: 0 10px 25px rgba(0,0,0,.08);
-  margin-bottom: 24px;
-}
-
-/* ===== Buttons ===== */
-button, select, input {
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: none;
-  font-size: 15px;
-}
-
-button {
-  cursor: pointer;
-  background: #1e7adf;
-  color: white;
-  font-weight: 500;
-}
-
-button.secondary {
-  background: #e5eefc;
-  color: #1e7adf;
-}
-
-button.danger {
-  background: #ef4444;
-}
-
-/* ===== Tables ===== */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 12px;
-}
-
-th, td {
-  padding: 10px;
-  text-align: center;
-}
-
-th {
-  background: #f1f5fb;
-  font-weight: 600;
-}
-
-tr:not(:last-child) td {
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.round {
-  background: #f0f7ff;
-  font-weight: 600;
-}
-
-/* ===== Inputs Row ===== */
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+/* ===== PRINT: SWISS MANAGER STYLE ===== */
+@media print{
+  body{background:#fff}
+  .site-header,.controls,.card:not(.print-round){display:none}
+  .print-round{
+    display:block;
+    box-shadow:none;
+    border-radius:0;
+    padding:0;
+  }
+  h2{text-align:center;margin-bottom:10px}
+  table{min-width:auto}
+  th{background:#fff;border-bottom:2px solid #000}
+  th,td{
+    border:1px solid #000;
+    font-size:14px;
+    padding:8px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<!-- ✅ CORRECT HEADER (NO HERO TEXT HERE) -->
-<div class="site-header">
-  ⭐ <span>JacobCreation</span>
+<div class="site-header">⭐ JacobCreation</div>
+
+<!-- MODE SELECT -->
+<div id="modeScreen" class="wrapper">
+  <div class="card">
+    <h2>Tournament Setup</h2>
+    <input id="tournamentName" placeholder="Tournament Name">
+    <div class="controls">
+      <button onclick="start('swiss')">Swiss</button>
+      <button class="secondary" onclick="start('rr')">Round Robin</button>
+    </div>
+  </div>
 </div>
 
-<div class="wrapper">
+<!-- TOURNAMENT -->
+<div id="tournamentScreen" class="wrapper hidden">
 
-  <!-- Tournament Setup -->
   <div class="card">
-    <h2>♟ Chess Pairing System</h2>
+    <h2 id="title"></h2>
     <div class="controls">
-      <input placeholder="Tournament Name" />
-      <select>
-        <option>Swiss</option>
-        <option>Round Robin</option>
-      </select>
-      <button>Start Tournament</button>
+      <input id="pName" placeholder="Player name">
+      <input id="pRating" type="number" placeholder="Rating">
+      <button onclick="addPlayer()">Add</button>
+      <input type="file" id="fileInput" accept=".csv,.txt">
+      <button class="secondary" onclick="loadFile()">Upload</button>
+      <button onclick="nextRound()">Next Round</button>
+      <button class="secondary" onclick="finalize()">Finalize</button>
+      <button class="secondary" onclick="undo()">Undo</button>
+
+      <!-- 🖨️ NEW PRINT BUTTON -->
+      <button class="secondary" onclick="printCurrentRound()">🖨️ Print Current Round</button>
+
+      <button class="danger" onclick="resetAll()">Reset</button>
     </div>
   </div>
 
-  <!-- Players -->
-  <div class="card">
-    <h3>Players</h3>
-    <div class="controls">
-      <input placeholder="Player name" />
-      <input type="number" placeholder="Rating" />
-      <button>Add</button>
-      <input type="file" />
-      <button class="secondary">Upload</button>
-    </div>
-  </div>
-
-  <!-- Standings -->
+  <!-- STANDINGS -->
   <div class="card">
     <h3>Standings</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Name</th>
-          <th>Rating</th>
-          <th>Score</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>1</td><td>Jacob</td><td>1500</td><td>2.0</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Name</th><th>Rating</th><th>Score</th><th>Remove</th></tr>
+        </thead>
+        <tbody id="standings"></tbody>
+      </table>
+    </div>
   </div>
 
-  <!-- Pairings -->
-  <div class="card">
-    <h3>Pairings</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Board</th>
-          <th>White</th>
-          <th>Black</th>
-          <th>Result</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="round"><td colspan="4">Round 1</td></tr>
-        <tr>
-          <td>1</td><td>Alice</td><td>Bob</td>
-          <td>
-            <select>
-              <option>—</option>
-              <option>1-0</option>
-              <option>0-1</option>
-              <option>½-½</option>
-            </select>
-          </td>
-        </tr>
-        <tr>
-          <td>—</td><td>Jacob</td><td>BYE</td><td>+1</td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- PAIRINGS (CURRENT ROUND MARKED FOR PRINT) -->
+  <div class="card print-round" id="printArea">
+    <h2 id="printTitle"></h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Board</th><th>White</th><th>Black</th></tr>
+        </thead>
+        <tbody id="pairings"></tbody>
+      </table>
+    </div>
   </div>
 
 </div>
+
+<script>
+let MODE=null,ROUND=0,OPEN=false;
+let players=[],pairings=[],history=[];
+let TOURNAMENT="Tournament";
+
+/* START */
+function start(m){
+  MODE=m;
+  TOURNAMENT=tournamentName.value||"Tournament";
+  title.textContent=`${TOURNAMENT} (${m==="swiss"?"Swiss":"Round Robin"})`;
+  modeScreen.classList.add("hidden");
+  tournamentScreen.classList.remove("hidden");
+}
+
+/* PLAYERS */
+function addPlayerCore(n,r){
+  if(players.some(p=>p.name.toLowerCase()===n.toLowerCase()))return;
+  players.push({id:crypto.randomUUID(),name:n,rating:+r||0,score:0,opp:[],bye:false});
+}
+function addPlayer(){
+  if(!pName.value.trim())return;
+  addPlayerCore(pName.value,pRating.value);
+  pName.value="";pRating.value="";
+  render();
+}
+function removePlayer(id){
+  if(ROUND>0)return alert("Cannot remove after start");
+  players=players.filter(p=>p.id!==id);
+  render();
+}
+function loadFile(){
+  const f=fileInput.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>r.result.split(/\r?\n/).forEach(l=>{
+    const [n,ra]=l.split(",");
+    if(n && !n.toLowerCase().startsWith("name"))addPlayerCore(n.trim(),ra);
+  }),render();
+  r.readAsText(f);
+}
+
+/* RENDER */
+function render(){
+  standings.innerHTML="";
+  [...players].sort((a,b)=>b.score-a.score||b.rating-a.rating)
+  .forEach((p,i)=>{
+    standings.innerHTML+=`
+    <tr>
+      <td>${i+1}</td><td>${p.name}</td><td>${p.rating}</td>
+      <td>${p.score}</td>
+      <td><button class="danger" onclick="removePlayer('${p.id}')">🗑</button></td>
+    </tr>`;
+  });
+}
+
+/* SWISS */
+function nextSwiss(){
+  if(OPEN)return alert("Finalize first");
+  history.push(JSON.stringify({players,ROUND}));
+  ROUND++;OPEN=true;pairings=[];
+  pairingsEl.innerHTML="";
+  printTitle.textContent=`${TOURNAMENT} — Round ${ROUND}`;
+
+  let pool=[...players].sort((a,b)=>b.score-a.score||b.rating-a.rating);
+  let bye=null;
+  if(pool.length%2){
+    bye=pool.find(p=>!p.bye);
+    bye.bye=true; bye.score++;
+    pool=pool.filter(p=>p!==bye);
+  }
+
+  let board=1;
+  while(pool.length){
+    let a=pool.shift();
+    let b=pool.find(x=>!a.opp.includes(x.id))||pool[0];
+    pool=pool.filter(x=>x!==b);
+    pairings.push({a,b,res:null});
+    pairingsEl.innerHTML+=`
+      <tr><td>${board}</td><td>${a.name}</td><td>${b.name}</td></tr>`;
+    board++;
+  }
+  if(bye){
+    pairingsEl.innerHTML+=`
+      <tr><td>—</td><td>${bye.name}</td><td>BYE</td></tr>`;
+  }
+}
+
+/* FINALIZE */
+function finalize(){
+  if(pairings.some(p=>!p.res))return;
+  pairings.forEach(p=>{
+    p.a.opp.push(p.b.id); p.b.opp.push(p.a.id);
+    if(p.res==="1-0")p.a.score++;
+    if(p.res==="0-1")p.b.score++;
+    if(p.res==="0.5"){p.a.score+=.5;p.b.score+=.5;}
+  });
+  OPEN=false; render();
+}
+
+/* DISPATCH */
+function nextRound(){ MODE==="rr"?alert("Print-only for RR"):nextSwiss(); }
+
+/* PRINT */
+function printCurrentRound(){
+  if(!ROUND)return alert("No round yet");
+  window.print();
+}
+
+/* UNDO / RESET */
+function undo(){
+  if(!history.length)return;
+  const h=JSON.parse(history.pop());
+  players=h.players; ROUND=h.ROUND; render();
+}
+function resetAll(){location.reload()}
+
+/* DOM */
+const standings=document.getElementById("standings");
+const pairingsEl=document.getElementById("pairings");
+const printTitle=document.getElementById("printTitle");
+const modeScreen=document.getElementById("modeScreen");
+const tournamentScreen=document.getElementById("tournamentScreen");
+</script>
 
 </body>
 </html>
