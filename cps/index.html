@@ -1,563 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Chess Tournament System</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<<<<<<< HEAD
+<meta charset="UTF-8" />
+<title>Chess Pairing System | JacobCreation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
-body{margin:0;font-family:Arial;background:#0f172a;color:#e5e7eb}
-.hidden{display:none}
-header{padding:20px;background:#111827;text-align:center;border-bottom:2px solid #1f2937}
-button,select,input{padding:12px;border-radius:10px;border:none;font-size:15px}
-button{cursor:pointer}
-.primary{background:#22c55e;color:#fff}
-.accent{background:#38bdf8;color:#fff}
-.danger{background:#ef4444;color:#fff}
-
-.container{max-width:1100px;margin:20px auto;padding:0 16px}
-table{width:100%;border-collapse:collapse;margin-top:12px}
-th,td{border:1px solid #1f2937;padding:8px;text-align:center}
-th{background:#0c1424}
-.notice{margin-top:10px;padding:10px;background:#0c1424;border-radius:8px}
-.controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-.mode-buttons{display:flex;gap:30px;justify-content:center;margin-top:40px}
-.big-btn{font-size:22px;padding:30px 50px}
-.round{background:#020617;font-weight:bold}
-
-@media print{
-  button,select,input,.controls,.mode-buttons{display:none}
-  body{background:#fff;color:#000}
-  th{background:#eee;color:#000}
+/* ===== JacobCreation Base Style ===== */
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: #eef6ff;
+  color: #1f2937;
 }
-=======
-<style>
-body{margin:0;font-family:Arial;background:#0f172a;color:#e5e7eb}
-header{padding:20px;background:#111827;text-align:center;border-bottom:2px solid #1f2937}
-button{padding:10px 16px;border-radius:10px;border:none;cursor:pointer}
-.btn-primary{background:#22c55e;color:#fff}
-.btn-accent{background:#38bdf8;color:#fff}
-.btn-danger{background:#ef4444;color:#fff}
-.container{max-width:1000px;margin:20px auto;padding:0 16px}
-table{width:100%;border-collapse:collapse;margin-top:12px}
-th,td{border:1px solid #1f2937;padding:8px}
-th{background:#0c1424}
-.notice{margin-top:10px;padding:10px;background:#0c1424;border-radius:8px}
-.btn-bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
->>>>>>> 5c69288118e383ce53f89a8fa6367d63832becca
+
+/* ===== Header (MATCHES SITE) ===== */
+.site-header {
+  background: linear-gradient(90deg, #1e7adf, #155fa0);
+  color: white;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+
+.site-header span {
+  font-size: 22px;
+}
+
+/* ===== Page Wrapper ===== */
+.wrapper {
+  max-width: 1200px;
+  margin: 30px auto;
+  padding: 0 16px;
+}
+
+/* ===== Card Style ===== */
+.card {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.08);
+  margin-bottom: 24px;
+}
+
+/* ===== Buttons ===== */
+button, select, input {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  font-size: 15px;
+}
+
+button {
+  cursor: pointer;
+  background: #1e7adf;
+  color: white;
+  font-weight: 500;
+}
+
+button.secondary {
+  background: #e5eefc;
+  color: #1e7adf;
+}
+
+button.danger {
+  background: #ef4444;
+}
+
+/* ===== Tables ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+th, td {
+  padding: 10px;
+  text-align: center;
+}
+
+th {
+  background: #f1f5fb;
+  font-weight: 600;
+}
+
+tr:not(:last-child) td {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.round {
+  background: #f0f7ff;
+  font-weight: 600;
+}
+
+/* ===== Inputs Row ===== */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 </style>
 </head>
 
 <body>
-<<<<<<< HEAD
 
-<!-- MODE SELECT -->
-<div id="modeScreen">
-  <header>
-    <h1 id="titlePreview">Chess Tournament</h1>
-    <input id="tournamentNameInput" placeholder="Tournament Name">
-    <div class="mode-buttons">
-      <button class="big-btn primary" onclick="startMode('swiss')">♟ Swiss</button>
-      <button class="big-btn accent" onclick="startMode('rr')">🔁 Round Robin</button>
-    </div>
-  </header>
+<!-- ✅ CORRECT HEADER (NO HERO TEXT HERE) -->
+<div class="site-header">
+  ⭐ <span>JacobCreation</span>
 </div>
 
-<!-- TOURNAMENT -->
-<div id="tournamentScreen" class="hidden">
+<div class="wrapper">
 
-<header>
-  <h2 id="tournamentTitle"></h2>
-
-  <div class="controls">
-    <input id="nameInput" placeholder="Player name">
-    <input id="ratingInput" type="number" placeholder="Rating">
-
-    <button class="primary" onclick="addPlayer()">Add Player</button>
-
-    <input type="file" id="fileInput" accept=".csv,.txt">
-    <button class="accent" onclick="loadPlayers()">Upload Players</button>
-
-    <button class="primary" onclick="nextRound()">Next Round</button>
-    <button class="accent" onclick="finalizeRound()">Finalize</button>
-
-    <select id="exportType">
-      <option value="csv">Export CSV</option>
-      <option value="xls">Export Excel</option>
-      <option value="pdf">Export PDF</option>
-    </select>
-    <button class="accent" onclick="exportData()">Export</button>
-
-    <button class="danger" onclick="resetAll()">Reset</button>
+  <!-- Tournament Setup -->
+  <div class="card">
+    <h2>♟ Chess Pairing System</h2>
+    <div class="controls">
+      <input placeholder="Tournament Name" />
+      <select>
+        <option>Swiss</option>
+        <option>Round Robin</option>
+      </select>
+      <button>Start Tournament</button>
+    </div>
   </div>
 
-  <div class="notice" id="status">Idle</div>
-</header>
+  <!-- Players -->
+  <div class="card">
+    <h3>Players</h3>
+    <div class="controls">
+      <input placeholder="Player name" />
+      <input type="number" placeholder="Rating" />
+      <button>Add</button>
+      <input type="file" />
+      <button class="secondary">Upload</button>
+    </div>
+  </div>
 
-<div class="container">
+  <!-- Standings -->
+  <div class="card">
+    <h3>Standings</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Rating</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td><td>Jacob</td><td>1500</td><td>2.0</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-  <h3>Standings</h3>
-  <table id="standingsTable">
-    <thead>
-      <tr><th>#</th><th>Name</th><th>Rating</th><th>Score</th></tr>
-    </thead>
-    <tbody id="standings"></tbody>
-  </table>
-
-  <h3>Pairings</h3>
-  <table>
-    <thead>
-      <tr><th>Board</th><th>White</th><th>Black</th><th>Result</th></tr>
-    </thead>
-    <tbody id="pairings"></tbody>
-  </table>
-
-</div>
-</div>
-
-<script>
-/* ---------- GLOBAL ---------- */
-let MODE=null, pid=1, TOURNAMENT_NAME="Chess Tournament";
-const S={players:[],round:0,open:false,pairings:[]};
-
-/* ---------- DOM ---------- */
-const modeScreen=document.getElementById("modeScreen");
-const tournamentScreen=document.getElementById("tournamentScreen");
-const tournamentTitle=document.getElementById("tournamentTitle");
-const titlePreview=document.getElementById("titlePreview");
-const nameInput=document.getElementById("nameInput");
-const ratingInput=document.getElementById("ratingInput");
-const fileInput=document.getElementById("fileInput");
-const standings=document.getElementById("standings");
-const pairings=document.getElementById("pairings");
-const statusBox=document.getElementById("status");
-
-/* ---------- MODE ---------- */
-document.getElementById("tournamentNameInput").oninput=e=>{
-  titlePreview.textContent=e.target.value||"Chess Tournament";
-};
-
-function startMode(m){
-  MODE=m;
-  TOURNAMENT_NAME=document.getElementById("tournamentNameInput").value||"Chess Tournament";
-  tournamentTitle.textContent=
-    `${TOURNAMENT_NAME} (${m==="swiss"?"Swiss":"Round Robin"})`;
-  modeScreen.classList.add("hidden");
-  tournamentScreen.classList.remove("hidden");
-  statusBox.textContent="Add players";
-}
-
-/* ---------- PLAYER CORE ---------- */
-function addPlayerCore(name,rating=0){
-  if(S.players.some(p=>p.name.toLowerCase()===name.toLowerCase())) return;
-  S.players.push({
-    id: pid++,
-    name,
-    rating:Number(rating)||0,
-    score:0,
-    bye:false
-  });
-}
-
-/* ---------- ADD PLAYER ---------- */
-function addPlayer(){
-  const n=nameInput.value.trim();
-  if(!n) return;
-  addPlayerCore(n,ratingInput.value);
-  nameInput.value="";
-  ratingInput.value="";
-  render();
-}
-
-/* ---------- LOAD FROM FILE ---------- */
-function loadPlayers(){
-  const file=fileInput.files[0];
-  if(!file) return alert("Select a file first");
-
-  const reader=new FileReader();
-  reader.onload=()=>{
-    const lines=reader.result.split(/\r?\n/);
-    lines.forEach(line=>{
-      line=line.trim();
-      if(!line) return;
-      if(line.toLowerCase().startsWith("name")) return;
-
-      const parts=line.split(",");
-      const name=parts[0]?.trim();
-      const rating=parts[1]?.trim()||0;
-      if(name) addPlayerCore(name,rating);
-    });
-    render();
-    statusBox.textContent="Players loaded from file";
-  };
-  reader.readAsText(file);
-}
-
-/* ---------- RENDER ---------- */
-function render(){
-  standings.innerHTML="";
-  [...S.players]
-    .sort((a,b)=>b.score-a.score||b.rating-a.rating)
-    .forEach((p,i)=>{
-      standings.innerHTML+=
-        `<tr><td>${i+1}</td><td>${p.name}</td><td>${p.rating}</td><td>${p.score}</td></tr>`;
-    });
-}
-
-/* ---------- ROUND ROBIN ---------- */
-function generateRR(){
-  if(S.round>0) return alert("Round Robin already generated");
-  let players=[...S.players];
-  if(players.length%2) players.push({name:"BYE",bye:true});
-
-  const n=players.length;
-  const rounds=n-1;
-  let arr=players.slice(1);
-
-  for(let r=1;r<=rounds;r++){
-    pairings.innerHTML+=
-      `<tr class="round"><td colspan="4">ROUND ${r}</td></tr>`;
-    let row=[players[0],...arr];
-    let byeRow=null;
-    let board=1;
-
-    for(let i=0;i<n/2;i++){
-      const a=row[i], b=row[n-1-i];
-      if(a.bye||b.bye){
-        const p=a.bye?b:a;
-        if(!p.bye) p.score++;
-        byeRow=`<tr><td>—</td><td>${p.name}</td><td>BYE</td><td>+1</td></tr>`;
-      }else{
-        pairings.innerHTML+=
-          `<tr><td>${board}</td><td>${a.name}</td><td>${b.name}</td><td>-</td></tr>`;
-        board++;
-      }
-    }
-    if(byeRow) pairings.innerHTML+=byeRow;
-    arr.unshift(arr.pop());
-  }
-  render();
-  statusBox.textContent="Round Robin schedule complete";
-}
-
-/* ---------- SWISS ---------- */
-function nextSwiss(){
-  if(S.open) return alert("Finalize first");
-  S.round++; S.open=true; S.pairings=[];
-  pairings.innerHTML+=
-    `<tr class="round"><td colspan="4">ROUND ${S.round}</td></tr>`;
-
-  let pool=[...S.players].sort((a,b)=>b.score-a.score||b.rating-a.rating);
-  let byePlayer=null;
-  if(pool.length%2){
-    byePlayer=pool.find(p=>!p.bye);
-    byePlayer.bye=true; byePlayer.score++;
-    pool=pool.filter(p=>p!==byePlayer);
-  }
-
-  let board=1;
-  while(pool.length){
-    const a=pool.shift(), b=pool.shift();
-    const g={id:crypto.randomUUID(),a,b,result:null};
-    S.pairings.push(g);
-    pairings.innerHTML+=
-      `<tr>
-        <td>${board}</td>
-        <td>${a.name}</td>
-        <td>${b.name}</td>
-        <td>
-          <select data-id="${g.id}">
-            <option value="">Select</option>
-            <option value="1-0">1-0</option>
-            <option value="0-1">0-1</option>
-            <option value="0.5">½–½</option>
-          </select>
-        </td>
-      </tr>`;
-    board++;
-  }
-
-  if(byePlayer){
-    pairings.innerHTML+=
-      `<tr><td>—</td><td>${byePlayer.name}</td><td>BYE</td><td>+1</td></tr>`;
-  }
-
-  document.querySelectorAll("select").forEach(sel=>{
-    sel.onchange=()=>{
-      const g=S.pairings.find(x=>x.id===sel.dataset.id);
-      if(g) g.result=sel.value;
-    };
-  });
-
-  if(S.pairings.length===0){ S.open=false; render(); }
-  statusBox.textContent=`Round ${S.round} running`;
-}
-
-function finalizeSwiss(){
-  if(!S.open) return;
-  if(S.pairings.some(g=>!g.result)) return alert("Missing results");
-  for(const g of S.pairings){
-    if(g.result==="1-0") g.a.score++;
-    if(g.result==="0-1") g.b.score++;
-    if(g.result==="0.5"){g.a.score+=0.5;g.b.score+=0.5;}
-  }
-  S.open=false;
-  render();
-  statusBox.textContent=`Round ${S.round} finalized`;
-}
-
-/* ---------- DISPATCH ---------- */
-function nextRound(){ MODE==="rr"?generateRR():nextSwiss(); }
-function finalizeRound(){ if(MODE==="swiss") finalizeSwiss(); }
-
-/* ---------- EXPORT ---------- */
-function exportData(){
-  const type=document.getElementById("exportType").value;
-  if(type==="pdf"){ window.print(); return; }
-
-  if(type==="csv"){
-    let csv="Name,Rating,Score\n";
-    S.players.forEach(p=>csv+=`${p.name},${p.rating},${p.score}\n`);
-    download(csv,"text/csv",".csv");
-  }
-
-  if(type==="xls"){
-    const html=document.getElementById("standingsTable").outerHTML;
-    download(html,"application/vnd.ms-excel",".xls");
-  }
-}
-
-function download(content,type,ext){
-  const blob=new Blob([content],{type});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=TOURNAMENT_NAME.replace(/\s+/g,"_")+ext;
-  a.click();
-}
-
-/* ---------- RESET ---------- */
-function resetAll(){
-  MODE=null; pid=1;
-  S.players=[]; S.round=0; S.open=false; S.pairings=[];
-  standings.innerHTML=""; pairings.innerHTML="";
-  tournamentScreen.classList.add("hidden");
-  modeScreen.classList.remove("hidden");
-  statusBox.textContent="Idle";
-}
-=======
-
-<header>
-<h1>Chess Tournament System</h1>
-<div class="btn-bar">
-<button id="swissBtn" class="btn-primary">Swiss Mode</button>
-<button id="nextBtn" class="btn-primary">Next Swiss Round</button>
-<button id="finalizeBtn" class="btn-accent">Finalize Round</button>
-</div>
-<div class="notice" id="status">Idle</div>
-</header>
-
-<div class="container">
-
-<input id="playerName" placeholder="Player name">
-<input id="playerRating" type="number" placeholder="Rating">
-<button id="addBtn" class="btn-primary">Add Player</button>
-<button id="clearBtn" class="btn-danger">Clear</button>
-
-<h2>Standings</h2>
-<table>
-<thead><tr><th>#</th><th>Name</th><th>Rating</th><th>Score</th></tr></thead>
-<tbody id="playersTbody"></tbody>
-</table>
-
-<h2>Pairings</h2>
-<table>
-<thead><tr><th>Round</th><th>Board</th><th>White</th><th>Black</th><th>Result</th></tr></thead>
-<tbody id="pairingsTbody"></tbody>
-</table>
+  <!-- Pairings -->
+  <div class="card">
+    <h3>Pairings</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Board</th>
+          <th>White</th>
+          <th>Black</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="round"><td colspan="4">Round 1</td></tr>
+        <tr>
+          <td>1</td><td>Alice</td><td>Bob</td>
+          <td>
+            <select>
+              <option>—</option>
+              <option>1-0</option>
+              <option>0-1</option>
+              <option>½-½</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>—</td><td>Jacob</td><td>BYE</td><td>+1</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
 </div>
-
-<script>
-let nextId=1;
-let mode=null;
-
-const state={
-players:[],
-round:0,
-pairings:[],
-roundOpen:false
-};
-
-const playersTbody=document.getElementById("playersTbody");
-const pairingsTbody=document.getElementById("pairingsTbody");
-const statusEl=document.getElementById("status");
-
-/* ---------- PLAYERS ---------- */
-function addPlayer(name,rating){
-state.players.push({
-id:nextId++,
-name,
-rating:+rating||0,
-score:0,
-opponents:[]
-});
-renderPlayers();
-}
-
-function renderPlayers(){
-playersTbody.innerHTML="";
-[...state.players]
-.sort((a,b)=>b.score-a.score||b.rating-a.rating)
-.forEach((p,i)=>{
-playersTbody.innerHTML+=
-`<tr><td>${i+1}</td><td>${p.name}</td><td>${p.rating}</td><td>${p.score}</td></tr>`;
-});
-}
-
-/* ---------- SWISS ---------- */
-function nextSwissRound(){
-if(state.roundOpen) return alert("Finalize current round first");
-
-state.round++;
-state.roundOpen=true;
-state.pairings=[];
-pairingsTbody.innerHTML="";
-
-let pool=[...state.players].sort((a,b)=>b.score-a.score||b.rating-a.rating);
-let used=new Set();
-let board=1;
-
-// BYE
-if(pool.length%2){
-const bye=pool.find(p=>!p.hadBye);
-bye.hadBye=true;
-bye.score+=1;
-pairingsTbody.innerHTML+=
-`<tr><td>${state.round}</td><td>—</td><td>${bye.name}</td><td>BYE</td><td>+1</td></tr>`;
-used.add(bye.id);
-}
-
-// PAIRING
-for(let i=0;i<pool.length;i++){
-const p=pool[i];
-if(used.has(p.id)) continue;
-
-let o=pool.find(x=>!used.has(x.id)&&x.id!==p.id&&!p.opponents.includes(x.id));
-if(!o){
-o=pool.find(x=>!used.has(x.id)&&x.id!==p.id);
-}
-if(!o) continue;
-
-used.add(p.id);
-used.add(o.id);
-
-const pairing={
-id:crypto.randomUUID(),
-round:state.round,
-board,
-white:p,
-black:o,
-result:null,
-scored:false
-};
-
-state.pairings.push(pairing);
-
-pairingsTbody.innerHTML+=
-`<tr>
-<td>${state.round}</td>
-<td>${board}</td>
-<td>${p.name}</td>
-<td>${o.name}</td>
-<td>
-<select data-id="${pairing.id}">
-<option value="">Select</option>
-<option value="1-0">1-0</option>
-<option value="0-1">0-1</option>
-<option value="0.5">½–½</option>
-</select>
-</td>
-</tr>`;
-
-board++;
-}
-
-// RESULT HANDLERS
-document.querySelectorAll("select[data-id]").forEach(sel=>{
-sel.onchange=()=>{
-const id=sel.dataset.id;
-const pairing=state.pairings.find(p=>p.id===id);
-if(pairing) pairing.result=sel.value;
-};
-});
-
-statusEl.textContent=`Swiss Round ${state.round}`;
-}
-
-/* ---------- FINALIZE ---------- */
-function finalizeSwiss(){
-if(!state.roundOpen) return;
-
-for(const p of state.pairings){
-if(!p.result) return alert("Missing result");
-if(p.scored) continue;
-
-p.scored=true;
-p.white.opponents.push(p.black.id);
-p.black.opponents.push(p.white.id);
-
-if(p.result==="1-0") p.white.score+=1;
-if(p.result==="0-1") p.black.score+=1;
-if(p.result==="0.5"){
-p.white.score+=0.5;
-p.black.score+=0.5;
-}
-}
-
-state.roundOpen=false;
-renderPlayers();
-statusEl.textContent="Round finalized";
-}
-
-/* ---------- UI ---------- */
-addBtn.onclick=()=>{
-const n=playerName.value.trim();
-if(n) addPlayer(n,playerRating.value);
-playerName.value="";
-playerRating.value="";
-};
-
-clearBtn.onclick=()=>{
-state.players=[];
-state.round=0;
-state.roundOpen=false;
-state.pairings=[];
-pairingsTbody.innerHTML="";
-renderPlayers();
-statusEl.textContent="Cleared";
-};
-
-swissBtn.onclick=()=>{
-mode="swiss";
-state.round=0;
-state.roundOpen=false;
-state.pairings=[];
-pairingsTbody.innerHTML="";
-statusEl.textContent="Swiss mode ready";
-};
-
-nextBtn.onclick=()=>{
-if(mode!=="swiss") alert("Swiss mode only");
-else nextSwissRound();
-};
-
-finalizeBtn.onclick=()=>{
-if(mode!=="swiss") alert("Swiss mode only");
-else finalizeSwiss();
-};
->>>>>>> 5c69288118e383ce53f89a8fa6367d63832becca
-</script>
 
 </body>
 </html>
