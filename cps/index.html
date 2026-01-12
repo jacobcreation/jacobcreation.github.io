@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Chess Pairing System | JacobCreation</title>
+<title>Chess Tournament System | JacobCreation</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -71,16 +71,9 @@ th,td{
   text-align:center;
   white-space:nowrap;
 }
-th{
-  background:#f2f6fb;
-}
-tr:not(:last-child) td{
-  border-bottom:1px solid #e5e7eb;
-}
-.round{
-  background:#eef5ff;
-  font-weight:600;
-}
+th{background:#f2f6fb}
+tr:not(:last-child) td{border-bottom:1px solid #e5e7eb}
+.round{background:#eef5ff;font-weight:600}
 
 /* Mobile */
 @media(max-width:720px){
@@ -88,7 +81,7 @@ tr:not(:last-child) td{
   button,input,select{width:100%;font-size:16px}
 }
 
-/* Print */
+/* Print – Swiss Manager style */
 @media print{
   body{background:#fff}
   .site-header,.controls,.card:not(.print-round){display:none}
@@ -135,13 +128,17 @@ tr:not(:last-child) td{
       <button class="secondary" onclick="finalize()">Finalize</button>
       <button class="secondary" onclick="undo()">Undo</button>
       <button class="secondary" onclick="printCurrentRound()">🖨 Print Current Round</button>
+
+      <!-- 🆕 TRF EXPORT -->
+      <button class="secondary" onclick="exportTRF()">📤 Export Chess-Results (TRF)</button>
+
       <button class="danger" onclick="resetAll()">Reset</button>
     </div>
   </div>
 
   <!-- Standings -->
   <div class="card">
-    <h3 id="standingsTitle">Standings</h3>
+    <h3>Standings</h3>
     <div class="table-wrap">
       <table>
         <thead>
@@ -192,7 +189,7 @@ function addPlayer(){
   if(players.some(p=>p.name.toLowerCase()===pName.value.toLowerCase())) return;
   players.push({
     id:crypto.randomUUID(),
-    name:pName.value,
+    name:pName.value.trim(),
     rating:+pRating.value||0,
     score:0,
     opp:[],
@@ -214,12 +211,12 @@ function loadFile(){
   const r=new FileReader();
   r.onload=()=>{
     r.result.split(/\r?\n/).forEach(l=>{
-      const [n,rt]=l.split(",");
+      const [n,rating]=l.split(",");
       if(n && !players.some(p=>p.name.toLowerCase()===n.toLowerCase())){
         players.push({
           id:crypto.randomUUID(),
           name:n.trim(),
-          rating:+rt||0,
+          rating:+rating||0,
           score:0,
           opp:[],
           bye:false
@@ -233,13 +230,6 @@ function loadFile(){
 
 /* Render */
 function render(){
-
-  // ✅ Standings title update
-  const stTitle=document.getElementById("standingsTitle");
-  stTitle.textContent = ROUND>0
-    ? `Standings after Round ${ROUND}`
-    : "Standings";
-
   standings.innerHTML="";
   [...players].sort((a,b)=>b.score-a.score||b.rating-a.rating)
   .forEach((p,i)=>{
@@ -269,18 +259,15 @@ function nextRound(){
 
   if(pool.length%2){
     bye=pool.find(p=>!p.bye);
-    if(bye){
-      bye.bye=true;
-      bye.score++;
-      pool=pool.filter(p=>p!==bye);
-    }
+    bye.bye=true;
+    bye.score++;
+    pool=pool.filter(p=>p!==bye);
   }
 
   let board=1;
   while(pool.length){
     let a=pool.shift();
     let b=pool.find(x=>!a.opp.includes(x.id))||pool[0];
-    if(!b) break;
     pool=pool.filter(x=>x!==b);
 
     pairings.push({a,b,res:""});
@@ -322,7 +309,7 @@ function finalize(){
     p.b.opp.push(p.a.id);
     if(p.res==="1-0") p.a.score++;
     if(p.res==="0-1") p.b.score++;
-    if(p.res==="0.5"){ p.a.score+=0.5; p.b.score+=0.5; }
+    if(p.res==="0.5"){p.a.score+=0.5;p.b.score+=0.5;}
   });
 
   document.querySelectorAll(".result-col select").forEach(s=>s.disabled=true);
@@ -338,8 +325,6 @@ function undo(){
   ROUND=h.ROUND;
   OPEN=false;
   render();
-  pairingsEl.innerHTML="";
-  roundTitle.textContent=ROUND?`${TOURNAMENT} — Round ${ROUND}`:"";
 }
 
 /* Print */
@@ -348,23 +333,40 @@ function printCurrentRound(){
   window.print();
 }
 
+/* 🆕 TRF EXPORT */
+function exportTRF(){
+  if(!players.length) return alert("No players");
+
+  let trf="";
+  trf+=`012 ${TOURNAMENT}\n`;
+  trf+=`022 Swiss\n`;
+  trf+=`062 ${ROUND}\n`;
+
+  players.forEach((p,i)=>{
+    trf+=`001 ${i+1} ${p.name} ${p.rating}\n`;
+  });
+
+  pairings.forEach((p,i)=>{
+    if(p.res){
+      trf+=`101 ${p.a.name} ${p.b.name} ${p.res}\n`;
+    }
+  });
+
+  const blob=new Blob([trf],{type:"text/plain"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=TOURNAMENT.replace(/\s+/g,"_")+".trf";
+  a.click();
+}
+
 /* Reset */
 function resetAll(){
-  if(confirm("Are you sure you want to reset the tournament?")){
-    location.reload();
-  }
+  location.reload();
 }
 
 /* DOM */
 const standings=document.getElementById("standings");
 const pairingsEl=document.getElementById("pairings");
-const modeScreen=document.getElementById("modeScreen");
-const tournamentScreen=document.getElementById("tournamentScreen");
-const roundTitle=document.getElementById("roundTitle");
-const title=document.getElementById("title");
-const pName=document.getElementById("pName");
-const pRating=document.getElementById("pRating");
-const fileInput=document.getElementById("fileInput");
 </script>
 
 </body>

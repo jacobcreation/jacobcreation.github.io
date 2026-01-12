@@ -77,48 +77,56 @@
     }
 
     main {
-      padding: 50px 20px;
+      padding: 40px 20px;
       text-align: center;
       max-width: 1000px;
       flex: 1;
     }
 
     h1 {
-      font-size: 3em;
+      font-size: 2.5em;
       margin-bottom: 0.4em;
       color: var(--blue-dark);
     }
 
     p {
-      font-size: 1.2em;
-      margin-bottom: 2.5em;
+      font-size: 1.1em;
+      margin-bottom: 2em;
       line-height: 1.6;
     }
 
-    .links {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 25px;
+    .links h2 {
+      margin-top: 30px;
+      font-size: 1.4em;
+      color: var(--blue-dark);
+      text-align: left;
     }
 
-    .links a {
-      min-height: 80px;
+    .link-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .link-group a {
+      min-height: 60px;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 18px;
-      font-size: 1.1em;
+      padding: 12px;
+      font-size: 1em;
       text-decoration: none;
       color: var(--text);
       background: var(--card-bg);
-      border-radius: 12px;
+      border-radius: 10px;
       box-shadow: var(--shadow);
       transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
     }
 
-    .links a:hover,
-    .links a:focus {
+    .link-group a:hover,
+    .link-group a:focus {
       transform: translateY(-4px);
       box-shadow: 0 6px 16px rgba(0,0,0,0.2);
       background: var(--accent);
@@ -150,35 +158,56 @@
     <h1>Welcome to JacobCreation!</h1>
     <p>Hi! I'm Jacob, and I'm 11 years old. Welcome to my website where you can check out some of the fun projects I've made! From games like Chess and Snake to cool tools like a Chatbot and more, there's something for everyone to enjoy.</p>
 
-    <!-- ✅ All project links restored -->
-    <nav class="links" aria-label="Project Links">
-      <a href="https://jacobcreation.github.io/chess/chess.html">♟ Chess</a>
-      <a href="https://jacobcreation.github.io/chatbot/">💬 Chatbot</a>
-      <a href="https://jacobcreation.github.io/flappybird/flappybird.html">🐦 Flappy Bird</a>
-      <a href="https://jacobcreation.github.io/shootthemonster/shootmonster.html">👾 Shoot The Monster</a>
-      <a href="https://jacobcreation.github.io/snake/snake.html">🐍 Snake</a>
-      <a href="https://jacobcreation.github.io/Sandbox/">🧪 Sandbox</a>
-      <a href="https://jacobcreation.github.io/pvz">🌻 Plants Vs Zombies</a>
-      <a href="https://jacobcreation.github.io/Tetris">🟦 Tetris</a>
-      <a href="https://jacobcreation.github.io/bb">🧩 Block Blast</a>
-      <a href="https://jacobcreation.github.io/Minecraft">⛏ 2D Minecraft</a>
-      <a href="https://jacobcreation.github.io/Wordscapes">🔤 Wordscapes</a>
-      <a href="https://jacobcreation.github.io/Salary calculator">💰 Salary Calculator</a>
-      <a href="https://jacobcreation.github.io/calculator">🧮 Calculator</a>
-      <a href="https://jacobcreation.github.io/solitaire">🃏 Solitaire</a>
-      <a href="https://jacobcreation.github.io/minesweeper">💣 Minesweeper</a>
-      <a href="https://jacobcreation.github.io/cc">🚗 Car Chase</a>
-      <a href="https://jacobcreation.github.io/ab">🐦 Angry Birds</a>
-      <a href="https://jacobcreation.github.io/as">👾 Asteroids</a>
-      <a href="https://jacobcreation.github.io/pm">🟡 Pac-Man</a>
-      <a href="https://jacobcreation.github.io/p">🎨 Paint</a>
-      <a href="https://jacobcreation.github.io/rcs">🔄 Rubik's Cube Solver</a>
-      <a href="https://jacobcreation.github.io/riddles">🧠 Riddles</a>
-      <a href="https://jacobcreation.github.io/piano">🎹 Piano</a>
-      <a href="https://jacobcreation.github.io/sss">🪐 Solar System Simulator</a>
-      <a href="https://jacobcreation.github.io/notdoc">👩‍⚕️ DocReminder</a>
-      <a href="https://jacobcreation.github.io/cps">🤝 Chess Pairing System</a>
-    </nav>
+    <!-- ✅ Grouped project links -->
+    <section class="links" aria-label="Project Links">
+
+      <h2>♟ Classic & Strategy</h2>
+      <div class="link-group">
+        <a href="https://jacobcreation.github.io/chess/chess.html">Chess</a>
+        <a href="https://jacobcreation.github.io/solitaire">Solitaire</a>
+        <a href="https://jacobcreation.github.io/minesweeper">Minesweeper</a>
+        <a href="https://jacobcreation.github.io/cps">Chess Pairing System</a>
+      </div>
+
+      <h2>🎮 Arcade & Enjoyment</h2>
+      <div class="link-group">
+        <a href="https://jacobcreation.github.io/flappybird/flappybird.html">Flappy Bird</a>
+        <a href="https://jacobcreation.github.io/snake/snake.html">Snake</a>
+        <a href="https://jacobcreation.github.io/shootthemonster/shootmonster.html">Shoot The Monster</a>
+        <a href="https://jacobcreation.github.io/ab">Angry Birds</a>
+        <a href="https://jacobcreation.github.io/as">Asteroids</a>
+        <a href="https://jacobcreation.github.io/pm">Pac-Man</a>
+        <a href="https://jacobcreation.github.io/cc">Car Chase</a>
+      </div>
+
+      <h2>🧩 Puzzle & Logic</h2>
+      <div class="link-group">
+        <a href="https://jacobcreation.github.io/Tetris">Tetris</a>
+        <a href="https://jacobcreation.github.io/bb">Block Blast</a>
+        <a href="https://jacobcreation.github.io/rcs">Rubik's Cube Solver</a>
+        <a href="https://jacobcreation.github.io/riddles">Riddles</a>
+        <a href="https://jacobcreation.github.io/Wordscapes">Wordscapes</a>
+      </div>
+
+      <h2>🌍 Creative & Exploration</h2>
+      <div class="link-group">
+        <a href="https://jacobcreation.github.io/Minecraft">2D Minecraft</a>
+        <a href="https://jacobcreation.github.io/Sandbox/">Sandbox</a>
+        <a href="https://jacobcreation.github.io/p">Paint</a>
+        <a href="https://jacobcreation.github.io/piano">Piano</a>
+        <a href="https://jacobcreation.github.io/sss">Solar System Simulator</a>
+      </div>
+
+      <h2>🛠 Tools & Utilities</h2>
+      <div class="link-group">
+        <a href="https://jacobcreation.github.io/chatbot/">Chatbot</a>
+        <a href="https://jacobcreation.github.io/calculator">Calculator</a>
+        <a href="https://jacobcreation.github.io/Salary calculator">Salary Calculator</a>
+        <a href="https://jacobcreation.github.io/notdoc">DocReminder</a>
+		<a href="https://jacobcreation.github.io/bbss">DocReminder</a>
+      </div>
+
+    </section>
   </main>
 
   <footer>
