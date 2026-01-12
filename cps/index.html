@@ -88,7 +88,7 @@ tr:not(:last-child) td{
   button,input,select{width:100%;font-size:16px}
 }
 
-/* Print (Swiss Manager style) */
+/* Print */
 @media print{
   body{background:#fff}
   .site-header,.controls,.card:not(.print-round){display:none}
@@ -141,7 +141,7 @@ tr:not(:last-child) td{
 
   <!-- Standings -->
   <div class="card">
-    <h3>Standings</h3>
+    <h3 id="standingsTitle">Standings</h3>
     <div class="table-wrap">
       <table>
         <thead>
@@ -233,6 +233,13 @@ function loadFile(){
 
 /* Render */
 function render(){
+
+  // ✅ Standings title update
+  const stTitle=document.getElementById("standingsTitle");
+  stTitle.textContent = ROUND>0
+    ? `Standings after Round ${ROUND}`
+    : "Standings";
+
   standings.innerHTML="";
   [...players].sort((a,b)=>b.score-a.score||b.rating-a.rating)
   .forEach((p,i)=>{
@@ -273,7 +280,7 @@ function nextRound(){
   while(pool.length){
     let a=pool.shift();
     let b=pool.find(x=>!a.opp.includes(x.id))||pool[0];
-    if(!b){ break; }
+    if(!b) break;
     pool=pool.filter(x=>x!==b);
 
     pairings.push({a,b,res:""});
@@ -331,10 +338,8 @@ function undo(){
   ROUND=h.ROUND;
   OPEN=false;
   render();
-
-  // Rebuild current round UI if it existed
   pairingsEl.innerHTML="";
-  roundTitle.textContent=ROUND ? `${TOURNAMENT} — Round ${ROUND}` : "";
+  roundTitle.textContent=ROUND?`${TOURNAMENT} — Round ${ROUND}`:"";
 }
 
 /* Print */
@@ -345,7 +350,7 @@ function printCurrentRound(){
 
 /* Reset */
 function resetAll(){
-  if(confirm("Are you sure you want to reset the tournament? This will remove all players and pairings.")){
+  if(confirm("Are you sure you want to reset the tournament?")){
     location.reload();
   }
 }
