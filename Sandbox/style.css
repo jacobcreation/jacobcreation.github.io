@@ -2,6 +2,7 @@
   --bg:#0f1220;
   --panel:#161a2e;
   --text:#e7eaf6;
+  --code:#0b1024;
 }
 
 * { box-sizing: border-box }
@@ -16,6 +17,7 @@ body {
   flex-direction: column;
 }
 
+/* HEADER */
 header {
   display: flex;
   align-items: center;
@@ -37,26 +39,25 @@ header button {
   background: rgba(110,231,255,.3);
 }
 
+/* LAYOUT */
 main {
   flex: 1;
   display: grid;
   grid-template-columns: minmax(320px,1fr) 6px minmax(320px,1fr);
 }
 
-/* RESIZE DIVIDER */
 #divider {
   cursor: col-resize;
   background: rgba(255,255,255,.08);
 }
 
-/* EDITOR COLUMN */
+/* EDITOR */
 #editor {
   display: grid;
   grid-template-rows: 1fr 140px;
   border-right: 1px solid rgba(255,255,255,.1);
 }
 
-/* CODE */
 textarea {
   width: 100%;
   height: 100%;
@@ -80,10 +81,45 @@ textarea {
   flex: 1;
   padding: 10px;
   overflow-y: auto;
-  white-space: pre-wrap;
+  font-size: 13px;
+  white-space: normal;
+}
+
+/* CODE BLOCKS */
+#aiLog pre {
+  position: relative;
+  background: var(--code);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 10px 0;
+  overflow: visible;
+}
+
+#aiLog code {
+  display: block;
+  white-space: pre;
+  font-family: ui-monospace, monospace;
   font-size: 13px;
 }
 
+/* COPY BUTTON — GUARANTEED VISIBLE */
+#aiLog pre button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 999999;
+
+  background: #ff4757;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* AI INPUT */
 #aiInput {
   border: none;
   padding: 8px;
