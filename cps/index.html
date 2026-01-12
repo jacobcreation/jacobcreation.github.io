@@ -214,12 +214,12 @@ function loadFile(){
   const r=new FileReader();
   r.onload=()=>{
     r.result.split(/\r?\n/).forEach(l=>{
-      const [n,r]=l.split(",");
+      const [n,rt]=l.split(",");
       if(n && !players.some(p=>p.name.toLowerCase()===n.toLowerCase())){
         players.push({
           id:crypto.randomUUID(),
           name:n.trim(),
-          rating:+r||0,
+          rating:+rt||0,
           score:0,
           opp:[],
           bye:false
@@ -262,15 +262,18 @@ function nextRound(){
 
   if(pool.length%2){
     bye=pool.find(p=>!p.bye);
-    bye.bye=true;
-    bye.score++;
-    pool=pool.filter(p=>p!==bye);
+    if(bye){
+      bye.bye=true;
+      bye.score++;
+      pool=pool.filter(p=>p!==bye);
+    }
   }
 
   let board=1;
   while(pool.length){
     let a=pool.shift();
     let b=pool.find(x=>!a.opp.includes(x.id))||pool[0];
+    if(!b){ break; }
     pool=pool.filter(x=>x!==b);
 
     pairings.push({a,b,res:""});
@@ -312,7 +315,7 @@ function finalize(){
     p.b.opp.push(p.a.id);
     if(p.res==="1-0") p.a.score++;
     if(p.res==="0-1") p.b.score++;
-    if(p.res==="0.5"){p.a.score+=0.5;p.b.score+=0.5;}
+    if(p.res==="0.5"){ p.a.score+=0.5; p.b.score+=0.5; }
   });
 
   document.querySelectorAll(".result-col select").forEach(s=>s.disabled=true);
@@ -328,6 +331,10 @@ function undo(){
   ROUND=h.ROUND;
   OPEN=false;
   render();
+
+  // Rebuild current round UI if it existed
+  pairingsEl.innerHTML="";
+  roundTitle.textContent=ROUND ? `${TOURNAMENT} — Round ${ROUND}` : "";
 }
 
 /* Print */
@@ -338,12 +345,21 @@ function printCurrentRound(){
 
 /* Reset */
 function resetAll(){
-  location.reload();
+  if(confirm("Are you sure you want to reset the tournament? This will remove all players and pairings.")){
+    location.reload();
+  }
 }
 
 /* DOM */
 const standings=document.getElementById("standings");
 const pairingsEl=document.getElementById("pairings");
+const modeScreen=document.getElementById("modeScreen");
+const tournamentScreen=document.getElementById("tournamentScreen");
+const roundTitle=document.getElementById("roundTitle");
+const title=document.getElementById("title");
+const pName=document.getElementById("pName");
+const pRating=document.getElementById("pRating");
+const fileInput=document.getElementById("fileInput");
 </script>
 
 </body>
