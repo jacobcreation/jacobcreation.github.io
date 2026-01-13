@@ -2,35 +2,34 @@ import { initEditor, saveCurrentFile, files } from "./editor.js";
 import { runSandbox } from "./sandbox.js";
 import { askAI } from "./ai.js";
 
-/* ================= AI RENDER ================= */
-
+/* ========= RENDER AI MESSAGE ========= */
 function renderAIMessage(container, text) {
   container.innerHTML = "";
 
   // Normalize line endings
   text = text.replace(/\r\n/g, "\n");
 
-  // Auto-close unclosed fences
+  // Auto-close unclosed code fences
   const fenceCount = (text.match(/```/g) || []).length;
   if (fenceCount % 2 !== 0) {
     text += "\n```";
   }
 
-  const blocks = text.split("```");
+  const parts = text.split("```");
 
-  for (let i = 0; i < blocks.length; i++) {
+  for (let i = 0; i < parts.length; i++) {
     // Normal text
     if (i % 2 === 0) {
-      if (blocks[i].trim()) {
+      if (parts[i].trim()) {
         const div = document.createElement("div");
-        div.textContent = blocks[i];
+        div.textContent = parts[i];
         div.style.marginBottom = "8px";
         container.appendChild(div);
       }
     }
     // Code block
     else {
-      const lines = blocks[i].split("\n");
+      let lines = parts[i].split("\n");
 
       // Remove language line if present
       if (/^(html|css|js|javascript)$/i.test(lines[0].trim())) {
@@ -39,30 +38,18 @@ function renderAIMessage(container, text) {
 
       const code = lines.join("\n");
 
-      const pre = document.createElement("pre");
       const codeEl = document.createElement("code");
+      codeEl.className = "ai-code";
       codeEl.textContent = code;
 
-      const btn = document.createElement("button");
-      btn.textContent = "Copy";
-
-      btn.onclick = () => {
-        navigator.clipboard.writeText(code);
-        btn.textContent = "Copied!";
-        setTimeout(() => (btn.textContent = "Copy"), 1000);
-      };
-
-      pre.appendChild(codeEl);
-      pre.appendChild(btn);
-      container.appendChild(pre);
+      container.appendChild(codeEl);
     }
   }
 
   container.scrollTop = container.scrollHeight;
 }
 
-/* ================= INIT ================= */
-
+/* ========= INIT ========= */
 function init() {
   initEditor();
   runSandbox();
