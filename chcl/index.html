@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<<<<<<< HEAD
 <title>Chess Clock</title>
 
 <style>
@@ -92,6 +93,61 @@ html,body{
   font-size:.8rem;
   color:var(--muted);
 }
+=======
+<title>Ultimate Mobile Chess Clock</title>
+
+<style>
+:root {
+  --bg:#0f1216;
+  --a:#1e3a8a;
+  --b:#b91c1c;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --accent:#10b981;
+  --warn:#f59e0b;
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;height:100%;background:var(--bg);color:var(--text);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif
+}
+.app{
+  max-width:600px;margin:auto;height:100dvh;
+  display:grid;grid-template-rows:1fr auto 1fr
+}
+.panel{
+  display:grid;place-items:center;
+  user-select:none;
+  touch-action:manipulation;
+}
+.panel.active{filter:brightness(1.1)}
+.up{background:var(--a)}
+.down{background:var(--b)}
+.time{
+  font-size:clamp(2.8rem,8vw,4.4rem);
+  font-weight:700;
+  font-variant-numeric:tabular-nums
+}
+.blink{animation:blink 1s steps(2,start) infinite}
+@keyframes blink{to{visibility:hidden}}
+.controls{
+  padding:12px;
+  display:grid;gap:10px;
+  grid-template-columns:repeat(3,1fr);
+  background:#0b0e12;
+}
+.controls button,input,select{
+  padding:12px;border-radius:10px;
+  background:#11161d;color:var(--text);
+  border:1px solid #1f2937
+}
+.primary{background:var(--accent);border:none;color:#062b23;font-weight:700}
+.warn{background:var(--warn);border:none;color:#1f1400;font-weight:700}
+.row{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.name{font-size:.9rem;color:rgba(255,255,255,.85)}
+.status{font-size:.85rem;color:var(--muted)}
+.footer{text-align:center;font-size:.8rem;color:var(--muted)}
+>>>>>>> a8dec9291a90b34eadab1b96c0c478b43e53b9cc
 </style>
 </head>
 
@@ -99,15 +155,24 @@ html,body{
 <div class="app">
 
   <!-- PLAYER A -->
+<<<<<<< HEAD
   <div class="panel active" id="panelA">
     <div>
       <div class="name">Player 1</div>
       <div class="time" id="timeA">05:00</div>
+=======
+  <div class="panel up" id="panelA">
+    <div>
+      <input class="name" id="nameA" value="Player A">
+      <div class="time" id="timeA">05:00</div>
+      <div class="status" id="statusA"></div>
+>>>>>>> a8dec9291a90b34eadab1b96c0c478b43e53b9cc
     </div>
   </div>
 
   <!-- CONTROLS -->
   <div class="controls">
+<<<<<<< HEAD
     <button class="primary" id="start">Start</button>
     <button id="pause">Pause</button>
     <button class="warn" id="reset">Reset</button>
@@ -217,6 +282,134 @@ panelB.onclick=()=>tap("B");
 $("start").onclick=start;
 $("pause").onclick=pause;
 $("reset").onclick=reset;
+=======
+    <button id="start" class="primary">Start</button>
+    <button id="pause">Pause</button>
+    <button id="reset" class="warn">Reset</button>
+
+    <div class="row">
+      <input id="base" type="number" value="5" min="1"> 
+      <input id="inc" type="number" value="0" min="0">
+    </div>
+
+    <div class="row">
+      <select id="mode">
+        <option value="fischer">Fischer</option>
+        <option value="bronstein">Bronstein</option>
+      </select>
+      <button id="swap">Swap Sides</button>
+    </div>
+
+    <div class="row footer" id="moves">Moves: 0</div>
+  </div>
+
+  <!-- PLAYER B -->
+  <div class="panel down" id="panelB">
+    <div>
+      <input class="name" id="nameB" value="Player B">
+      <div class="time" id="timeB">05:00</div>
+      <div class="status" id="statusB"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let base,inc,mode;
+let aTime,bTime,active=null,ticking=false,last;
+let moves=0,delayUsed=0;
+
+const $=id=>document.getElementById(id);
+
+function fmt(s){
+  s=Math.max(0,s);
+  return String(Math.floor(s/60)).padStart(2,'0')+":"+String(Math.floor(s%60)).padStart(2,'0');
+}
+
+function render(){
+  timeA.textContent=fmt(aTime);
+  timeB.textContent=fmt(bTime);
+  timeA.classList.toggle("blink",aTime<=10&&aTime>0);
+  timeB.classList.toggle("blink",bTime<=10&&bTime>0);
+  panelA.classList.toggle("active",active==="A");
+  panelB.classList.toggle("active",active==="B");
+  statusA.textContent=active==="A"?"Your move":"";
+  statusB.textContent=active==="B"?"Your move":"";
+  movesEl.textContent="Moves: "+moves;
+}
+
+function tick(t){
+  if(!ticking)return;
+  requestAnimationFrame(tick);
+  let d=(t-last)/1000;
+  if(d<0.15)return;
+  if(active==="A")aTime-=d;
+  if(active==="B")bTime-=d;
+  last=t;
+  if(aTime<=0||bTime<=0){ticking=false}
+  render();
+}
+
+function start(){
+  if(ticking)return;
+  base=+baseInput.value*60;
+  inc=+incInput.value;
+  mode=modeSel.value;
+  if(!active)active="A";
+  ticking=true;
+  last=performance.now();
+  tick(last);
+}
+
+function pause(){ticking=false}
+
+function reset(){
+  ticking=false;
+  aTime=bTime=+baseInput.value*60;
+  active=null;
+  moves=0;
+  render();
+}
+
+function switchTurn(){
+  if(!ticking)return;
+  if(active==="A"){
+    if(mode==="fischer")aTime+=inc;
+    active="B";
+  }else{
+    if(mode==="fischer")bTime+=inc;
+    active="A";
+  }
+  moves++;
+  last=performance.now();
+  navigator.vibrate?.(20);
+  render();
+}
+
+function swap(){
+  [aTime,bTime]=[bTime,aTime];
+  [nameA.value,nameB.value]=[nameB.value,nameA.value];
+  render();
+}
+
+/* INIT */
+const timeA=$("timeA"),timeB=$("timeB");
+const panelA=$("panelA"),panelB=$("panelB");
+const statusA=$("statusA"),statusB=$("statusB");
+const baseInput=$("base"),incInput=$("inc");
+const modeSel=$("mode"),movesEl=$("moves");
+
+aTime=bTime=300;
+render();
+
+/* EVENTS */
+panelA.onclick=()=>active==="A"&&switchTurn();
+panelB.onclick=()=>active==="B"&&switchTurn();
+$("start").onclick=start;
+$("pause").onclick=pause;
+$("reset").onclick=reset;
+$("swap").onclick=swap;
+>>>>>>> a8dec9291a90b34eadab1b96c0c478b43e53b9cc
 </script>
 </body>
 </html>
