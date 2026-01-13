@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Mobile Chess Clock</title>
+  <style>
+    :root {
+      --bg: #0f1216;
+      --panel1: #1e3a8a; /* blue */
+      --panel2: #b91c1c; /* red */
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #10b981; /* green */
+      --warn: #f59e0b;  /* amber */
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    .app {
+      display: grid; grid-template-rows: 1fr auto 1fr;
+      height: 100dvh; max-width: 600px; margin: 0 auto;
+    }
+    .panel {
+      display: grid; place-items: center;
+      user-select: none;
+      touch-action: manipulation;
+      transition: transform 120ms ease;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .panel.up { background: var(--panel1); }
+    .panel.down { background: var(--panel2); }
+    .panel.active { transform: scale(0.98); }
+    .content {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .name {
+      font-size: 0.95rem; letter-spacing: 0.02em; color: rgba(255,255,255,0.85);
+    }
+    .time {
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(2.6rem, 8vw, 4.2rem);
+      font-weight: 700;
+    }
+    .status {
+      font-size: 0.9rem; color: var(--muted);
+    }
+
+    .controls {
+      display: grid; gap: 10px; padding: 12px;
+      grid-template-columns: 1fr 1fr 1fr; align-items: center;
+      background: #0b0e12; border-top: 1px solid #11161d; border-bottom: 1px solid #11161d;
+    }
+    .controls button, .controls select, .controls input {
+      width: 100%; border: 1px solid #1f2937; border-radius: 10px; background: #11161d;
+      color: var(--text); padding: 12px; font-size: 0.95rem;
+    }
+    .controls button.primary { background: var(--accent); color: #062b23; border: none; font-weight: 700; }
+    .controls button.warn { background: var(--warn); color: #1f1400; border: none; font-weight: 700; }
+    .row {
+      grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+
+    .blink { animation: blink 1s steps(2, start) infinite; }
+    @keyframes blink { to { visibility: hidden; } }
+
+    .footer {
+      position: fixed; bottom: env(safe-area-inset-bottom); left: 0; right: 0;
+      text-align: center; font-size: 0.8rem; color: var(--muted); padding: 4px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <!-- Player A (top) -->
+    <div class="panel up" id="panelA" aria-label="Player A time" role="button">
+      <div class="content">
+        <div class="name">Player A</div>
+        <div class="time" id="timeA">05:00</div>
+        <div class="status" id="statusA">Tap to end turn</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button id="startBtn" class="primary">Start</button>
+      <button id="pauseBtn">Pause</button>
+      <button id="resetBtn" class="warn">Reset</button>
+
+      <div class="row">
+        <div>
+          <label for="base" style="display:block;margin-bottom:6px;color:var(--muted);font-size:0.85rem;">Base (min)</label>
+          <input id="base" type="number" min="1" max="180" step="1" value="5" />
+        </div>
+        <div>
+          <label for="inc" style="display:block;margin-bottom:6px;color:var(--muted);font-size:0.85rem;">Increment (sec)</label>
+          <input id="inc" type="number" min="0" max="60" step="1" value="0" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Player B (bottom) -->
+    <div class="panel down" id="panelB" aria-label="Player B time" role="button">
+      <div class="content">
+        <div class="name">Player B</div>
+        <div class="time" id="timeB">05:00</div>
+        <div class="status" id="statusB">Tap to end turn</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">Tap the active player's side to switch turns</div>
+
+  <script>
+    const panelA = document.getElementById('panelA');
+    const panelB = document.getElementById('panelB');
+    const timeAEl = document.getElementById('timeA');
+    const timeBEl = document.getElementById('timeB');
+    const statusAEl = document.getElementById('statusA');
+    const statusBEl = document.getElementById('statusB');
+
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const baseInput = document.getElementById('base');
+    const incInput = document.getElementById('inc');
+
+    let baseSeconds = 5 * 60;
+    let increment = 0;
+    let aTime = baseSeconds;
+    let bTime = baseSeconds;
+    let active = null; // 'A' or 'B'
+    let ticking = false;
+    let rafId = null;
+    let lastTick = null;
+
+    function formatTime(s) {
+      if (s < 0) s = 0;
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+    }
+
+    function render() {
+      timeAEl.textContent = formatTime(aTime);
+      timeBEl.textContent = formatTime(bTime);
+
+      // low-time blink under 10 seconds
+      timeAEl.classList.toggle('blink', aTime <= 10 && aTime > 0);
+      timeBEl.classList.toggle('blink', bTime <= 10 && bTime > 0);
+
+      statusAEl.textContent = active === 'A' && ticking ? 'Your move…' : 'Tap to end turn';
+      statusBEl.textContent = active === 'B' && ticking ? 'Your move…' : 'Tap to end turn';
+
+      panelA.classList.toggle('active', active === 'A' && ticking);
+      panelB.classList.toggle('active', active === 'B' && ticking);
+
+      // ended state
+      if (aTime <= 0) statusAEl.textContent = 'Flag fell';
+      if (bTime <= 0) statusBEl.textContent = 'Flag fell';
+    }
+
+    function start() {
+      if (ticking) return;
+      baseSeconds = Math.max(1, parseInt(baseInput.value || '5', 10)) * 60;
+      increment = Math.max(0, parseInt(incInput.value || '0', 10));
+      if (aTime === baseSeconds && bTime === baseSeconds && !active) {
+        active = 'A'; // Player A starts by default
+      }
+      ticking = true;
+      lastTick = performance.now();
+      loop();
+      render();
+    }
+
+    function pause() {
+      ticking = false;
+      cancelAnimationFrame(rafId);
+      rafId = null;
+      render();
+    }
+
+    function reset() {
+      pause();
+      aTime = Math.max(1, parseInt(baseInput.value || '5', 10)) * 60;
+      bTime = Math.max(1, parseInt(baseInput.value || '5', 10)) * 60;
+      active = null;
+      render();
+    }
+
+    function switchTurn(toSide) {
+      if (!ticking) return;
+      if (aTime <= 0 || bTime <= 0) return;
+
+      // give increment to the player who just moved
+      if (active === 'A') aTime += increment;
+      else if (active === 'B') bTime += increment;
+
+      // switch
+      active = toSide;
+      lastTick = performance.now();
+      render();
+    }
+
+    function loop(now) {
+      if (!ticking) return;
+      rafId = requestAnimationFrame(loop);
+      const t = now || performance.now();
+      const delta = (t - lastTick) / 1000; // seconds
+      if (delta >= 0.2) { // update ~5 times/sec for battery friendliness
+        if (active === 'A') aTime -= delta;
+        else if (active === 'B') bTime -= delta;
+        lastTick = t;
+        // stop if flag falls
+        if (aTime <= 0 || bTime <= 0) {
+          aTime = Math.max(0, aTime);
+          bTime = Math.max(0, bTime);
+          pause();
+        }
+        render();
+      }
+    }
+
+    // Tap handlers
+    panelA.addEventListener('click', () => {
+      if (active === 'A') switchTurn('B');
+    });
+    panelB.addEventListener('click', () => {
+      if (active === 'B') switchTurn('A');
+    });
+
+    // Buttons
+    startBtn.addEventListener('click', start);
+    pauseBtn.addEventListener('click', pause);
+    resetBtn.addEventListener('click', reset);
+
+    // Initialize
+    aTime = baseSeconds;
+    bTime = baseSeconds;
+    render();
+
+    // Prevent double-tap zoom on iOS
+    let lastTouch = 0;
+    document.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      if (now - lastTouch <= 300) e.preventDefault();
+      lastTouch = now;
+    }, { passive: false });
+  </script>
+</body>
+</html>
