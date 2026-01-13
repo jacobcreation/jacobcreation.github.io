@@ -83,22 +83,40 @@ textarea {
   padding: 10px;
   overflow-y: auto;
   font-size: 13px;
-  white-space: normal;
 }
 
-/* 🔥 AI CODE BLOCK (NO BUTTONS, JUST CODE) */
-.ai-code {
-  display: block;
+/* 🔥 CODE WRAPPER */
+.ai-code-wrap {
   background: var(--code);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 12px;
   margin: 10px 0;
+  padding: 8px;
+}
 
-  font-family: ui-monospace, monospace;
-  font-size: 13px;
+/* COPY BUTTON (INSIDE BLOCK) */
+.ai-copy-btn {
+  background: #1f2937;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 4px;
+  font-size: 11px;
+  padding: 3px 8px;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+
+.ai-copy-btn:hover {
+  background: #374151;
+}
+
+/* CODE */
+.ai-code {
+  display: block;
   white-space: pre;
   overflow-x: auto;
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
   color: #e7eaf6;
 }
 
