@@ -2,7 +2,7 @@ import { initEditor, saveCurrentFile, files } from "./editor.js";
 import { runSandbox } from "./sandbox.js";
 import { askAI } from "./ai.js";
 
-/* ================= RENDER HELPERS ================= */
+/* ================= CHAT RENDER ================= */
 
 function renderText(container, text, role = "ai") {
   const div = document.createElement("div");
@@ -35,7 +35,7 @@ function renderCode(container, codeText) {
 
 function renderAIResponse(container, text) {
   if (typeof text !== "string") {
-    renderText(container, "⚠️ AI returned no text.");
+    renderText(container, "⚠️ AI returned no response.");
     return;
   }
 
@@ -50,7 +50,7 @@ function renderAIResponse(container, text) {
   for (let i = 0; i < parts.length; i++) {
     if (i % 2 === 0) {
       if (parts[i].trim()) {
-        renderText(container, parts[i].trim());
+        renderText(container, parts[i].trim(), "ai");
       }
     } else {
       let lines = parts[i].split("\n");
@@ -72,11 +72,13 @@ function init() {
   const aiInput = document.getElementById("aiInput");
   const consoleEl = document.getElementById("console");
 
+  /* RUN */
   document.getElementById("run").onclick = () => {
     saveCurrentFile();
     runSandbox();
   };
 
+  /* CTRL / CMD + ENTER */
   document.addEventListener("keydown", e => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       e.preventDefault();
@@ -85,6 +87,7 @@ function init() {
     }
   });
 
+  /* TAB HANDLING */
   const codeArea = document.getElementById("code");
   codeArea.addEventListener("keydown", e => {
     if (e.key === "Tab") {
@@ -96,6 +99,7 @@ function init() {
     }
   });
 
+  /* CHAT INPUT */
   aiInput.addEventListener("keydown", async e => {
     if (e.key !== "Enter") return;
 
@@ -105,26 +109,49 @@ function init() {
     aiInput.value = "";
 
     renderText(aiLog, "🧑 " + question, "user");
-
     aiLog.scrollTop = aiLog.scrollHeight;
 
-    // IMPORTANT: askAI must return FULL STRING
     const reply = await askAI(question, files);
 
     renderAIResponse(aiLog, reply);
     aiLog.scrollTop = aiLog.scrollHeight;
   });
 
+  /* CLEAR CHAT */
   document.getElementById("clearChat").onclick = () => {
     aiLog.innerHTML = "🤖 AI ready. Ask about your code.";
   };
 
-  // Console ONLY listens to iframe
+  /* ================= SAFE CONSOLE ================= */
   window.addEventListener("message", e => {
-    if (typeof e.data === "string") {
-      consoleEl.textContent += e.data + "\n";
-      consoleEl.scrollTop = consoleEl.scrollHeight;
+    const data = e.data;
+
+    const line = document.createElement("div");
+
+    if (!data || typeof data !== "object") {
+      line.className = "console-log";
+      line.textContent = String(data);
+    } else {
+      const { type = "log", args = [] } = data;
+      line.className = "console-" + type;
+
+      line.textContent = args
+        .map(arg => {
+          if (arg instanceof Error) return arg.message;
+          if (typeof arg === "object") {
+            try {
+              return JSON.stringify(arg, null, 2);
+            } catch {
+              return String(arg);
+            }
+          }
+          return String(arg);
+        })
+        .join(" ");
     }
+
+    consoleEl.appendChild(line);
+    consoleEl.scrollTop = consoleEl.scrollHeight;
   });
 }
 
