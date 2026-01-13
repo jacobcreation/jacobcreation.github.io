@@ -2,80 +2,80 @@ import { initEditor, saveCurrentFile, files } from "./editor.js";
 import { runSandbox } from "./sandbox.js";
 import { askAI } from "./ai.js";
 
-/* ========= RENDER AI MESSAGE ========= */
-function renderAIMessage(container, text) {
-  container.innerHTML = "";
+/* ================= CHAT RENDERING ================= */
 
-  // Normalize line endings
+function renderTextMessage(container, text, role) {
+  const div = document.createElement("div");
+  div.className = role === "user" ? "chat-user" : "chat-ai";
+  div.textContent = text;
+  container.appendChild(div);
+}
+
+function renderCodeBlock(container, codeText) {
+  const wrap = document.createElement("div");
+  wrap.className = "ai-code-wrap";
+
+  const btn = document.createElement("button");
+  btn.className = "ai-copy-btn";
+  btn.textContent = "Copy";
+  btn.onclick = () => {
+    navigator.clipboard.writeText(codeText);
+    btn.textContent = "Copied!";
+    setTimeout(() => (btn.textContent = "Copy"), 1000);
+  };
+
+  const code = document.createElement("code");
+  code.className = "ai-code";
+  code.textContent = codeText;
+
+  wrap.appendChild(btn);
+  wrap.appendChild(code);
+  container.appendChild(wrap);
+}
+
+function renderAIResponse(container, text) {
+  // normalize
   text = text.replace(/\r\n/g, "\n");
 
-  // Auto-close unclosed fences
-  const fenceCount = (text.match(/```/g) || []).length;
-  if (fenceCount % 2 !== 0) {
+  // auto-close fences
+  if ((text.match(/```/g) || []).length % 2 !== 0) {
     text += "\n```";
   }
 
   const parts = text.split("```");
 
   for (let i = 0; i < parts.length; i++) {
-    // Normal text
     if (i % 2 === 0) {
       if (parts[i].trim()) {
-        const div = document.createElement("div");
-        div.textContent = parts[i];
-        div.style.marginBottom = "8px";
-        container.appendChild(div);
+        renderTextMessage(container, parts[i].trim(), "ai");
       }
-    }
-    // Code block
-    else {
+    } else {
       let lines = parts[i].split("\n");
-
-      // Remove language line if present
       if (/^(html|css|js|javascript)$/i.test(lines[0].trim())) {
         lines.shift();
       }
-
-      const codeText = lines.join("\n");
-
-      // Wrapper
-      const wrap = document.createElement("div");
-      wrap.className = "ai-code-wrap";
-
-      // Copy button
-      const btn = document.createElement("button");
-      btn.className = "ai-copy-btn";
-      btn.textContent = "Copy";
-      btn.onclick = () => {
-        navigator.clipboard.writeText(codeText);
-        btn.textContent = "Copied!";
-        setTimeout(() => (btn.textContent = "Copy"), 1000);
-      };
-
-      // Code element
-      const code = document.createElement("code");
-      code.className = "ai-code";
-      code.textContent = codeText;
-
-      wrap.appendChild(btn);
-      wrap.appendChild(code);
-      container.appendChild(wrap);
+      renderCodeBlock(container, lines.join("\n"));
     }
   }
-
-  container.scrollTop = container.scrollHeight;
 }
 
-/* ========= INIT ========= */
+/* ================= INIT ================= */
+
 function init() {
   initEditor();
   runSandbox();
 
+  const aiLog = document.getElementById("aiLog");
+  const aiInput = document.getElementById("aiInput");
+  const consoleEl = document.getElementById("console");
+
+  /* RUN */
   document.getElementById("run").onclick = () => {
     saveCurrentFile();
     runSandbox();
   };
 
+  /* CTRL + ENTER */
   document.addEventListener("keydown", e => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       e.preventDefault();
@@ -84,6 +84,7 @@ function init() {
     }
   });
 
+  /* TAB HANDLING */
   const code = document.getElementById("code");
   code.addEventListener("keydown", e => {
     if (e.key === "Tab") {
@@ -95,36 +96,37 @@ function init() {
     }
   });
 
-  const aiInput = document.getElementById("aiInput");
-  const aiLog = document.getElementById("aiLog");
-
+  /* CHAT INPUT */
   aiInput.addEventListener("keydown", async e => {
-    if (e.key === "Enter") {
-      saveCurrentFile();
+    if (e.key !== "Enter") return;
 
-      const q = aiInput.value.trim();
-      if (!q) return;
+    const question = aiInput.value.trim();
+    if (!question) return;
 
-      const user = document.createElement("div");
-      user.textContent = "🧑 " + q;
-      user.style.marginBottom = "6px";
-      aiLog.appendChild(user);
+    aiInput.value = "";
 
-      aiInput.value = "";
+    // render user ONCE
+    renderTextMessage(aiLog, "🧑 " + question, "user");
+    aiLog.scrollTop = aiLog.scrollHeight;
 
-      const reply = await askAI(q, files);
+    // ask AI
+    const reply = await askAI(question, files);
 
-      const aiMsg = document.createElement("div");
-      aiMsg.style.marginBottom = "12px";
-      aiLog.appendChild(aiMsg);
-
-      renderAIMessage(aiMsg, reply);
-    }
+    renderAIResponse(aiLog, reply);
+    aiLog.scrollTop = aiLog.scrollHeight;
   });
 
+  /* CLEAR CHAT */
   document.getElementById("clearChat").onclick = () => {
-    aiLog.textContent = "🤖 AI ready. Ask about your code.";
+    aiLog.innerHTML = "🤖 AI ready. Ask about your code.";
   };
+
+  /* CONSOLE — iframe ONLY */
+  window.addEventListener("message", e => {
+    if (typeof e.data !== "string") return;
+    consoleEl.textContent += e.data + "\n";
+    consoleEl.scrollTop = consoleEl.scrollHeight;
+  });
 }
 
 init();
