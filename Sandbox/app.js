@@ -9,7 +9,7 @@ function renderAIMessage(container, text) {
   // Normalize line endings
   text = text.replace(/\r\n/g, "\n");
 
-  // Auto-close unclosed code fences
+  // Auto-close unclosed fences
   const fenceCount = (text.match(/```/g) || []).length;
   if (fenceCount % 2 !== 0) {
     text += "\n```";
@@ -36,13 +36,30 @@ function renderAIMessage(container, text) {
         lines.shift();
       }
 
-      const code = lines.join("\n");
+      const codeText = lines.join("\n");
 
-      const codeEl = document.createElement("code");
-      codeEl.className = "ai-code";
-      codeEl.textContent = code;
+      // Wrapper
+      const wrap = document.createElement("div");
+      wrap.className = "ai-code-wrap";
 
-      container.appendChild(codeEl);
+      // Copy button
+      const btn = document.createElement("button");
+      btn.className = "ai-copy-btn";
+      btn.textContent = "Copy";
+      btn.onclick = () => {
+        navigator.clipboard.writeText(codeText);
+        btn.textContent = "Copied!";
+        setTimeout(() => (btn.textContent = "Copy"), 1000);
+      };
+
+      // Code element
+      const code = document.createElement("code");
+      code.className = "ai-code";
+      code.textContent = codeText;
+
+      wrap.appendChild(btn);
+      wrap.appendChild(code);
+      container.appendChild(wrap);
     }
   }
 
