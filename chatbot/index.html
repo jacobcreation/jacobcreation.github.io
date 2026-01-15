@@ -748,15 +748,31 @@
 
       const controls = document.createElement('div');
       controls.innerHTML = `
-    <div class="control-row">
-      <label class="pill">Difficulty:
+    <div class="control-row" style="display:flex; gap:8px; flex-wrap:wrap;">
+      <label class="pill">Diff:
         <select id="chessDiff" class="pill">
           <option value="1">800</option>
           <option value="2" selected>1200</option>
           <option value="3">1600</option>
+          <option value="4">2000</option>
         </select>
       </label>
-      <button class="primary" id="chessNew">New game</button>
+      <label class="pill">Time:
+        <select id="chessTime" class="pill">
+          <option value="0" selected>None</option>
+          <option value="60">1 min</option>
+          <option value="180">3 min</option>
+          <option value="300">5 min</option>
+          <option value="600">10 min</option>
+        </select>
+      </label>
+    </div>
+    <div style="display:flex; justify-content:space-between; margin-top:8px; font-weight:bold; color:#104e8b;">
+      <span id="whiteTimer">White: --:--</span>
+      <span id="blackTimer">Black: --:--</span>
+    </div>
+    <div style="margin-top:8px;">
+        <button class="primary" id="chessNew">New game</button>
     </div>
     <div class="pill" id="chessStatus" style="margin-top:10px; display:inline-block;">White to move</div>
   `;
@@ -781,9 +797,78 @@
       let selected = null;
       let lastMove = null;
       let depth = 2;
+      let timeControl = 0; // seconds, 0 = no time
+      let whiteTime = 0;
+      let blackTime = 0;
+      let timerInterval = null;
+      let gameOver = false;
+
       const status = controls.querySelector('#chessStatus');
+      const whiteTimerEl = controls.querySelector('#whiteTimer');
+      const blackTimerEl = controls.querySelector('#blackTimer');
+
       controls.querySelector('#chessDiff').addEventListener('change', e => { depth = parseInt(e.target.value, 10); });
-      controls.querySelector('#chessNew').addEventListener('click', () => { board = START.map(r => r.slice()); whiteToMove = true; selected = null; lastMove = null; render(); status.textContent = 'White to move'; });
+      controls.querySelector('#chessTime').addEventListener('change', e => {
+        timeControl = parseInt(e.target.value, 10);
+        resetGame();
+      });
+      controls.querySelector('#chessNew').addEventListener('click', resetGame);
+
+      function resetGame() {
+        board = START.map(r => r.slice());
+        whiteToMove = true;
+        selected = null;
+        lastMove = null;
+        gameOver = false;
+
+        // Reset timers
+        if (timeControl > 0) {
+          whiteTime = timeControl;
+          blackTime = timeControl;
+          updateTimerDisplay();
+          startTimer();
+        } else {
+          whiteTime = 0; blackTime = 0;
+          clearInterval(timerInterval);
+          whiteTimerEl.textContent = "White: --:--";
+          blackTimerEl.textContent = "Black: --:--";
+        }
+
+        render();
+        status.textContent = 'White to move';
+      }
+
+      function updateTimerDisplay() {
+        if (timeControl === 0) return;
+        const fmt = t => {
+          const m = Math.floor(t / 60);
+          const s = t % 60;
+          return `${m}:${s < 10 ? '0' : ''}${s}`;
+        };
+        whiteTimerEl.textContent = `White: ${fmt(whiteTime)}`;
+        blackTimerEl.textContent = `Black: ${fmt(blackTime)}`;
+      }
+
+      function startTimer() {
+        clearInterval(timerInterval);
+        if (timeControl === 0 || gameOver) return;
+        timerInterval = setInterval(() => {
+          if (whiteToMove) {
+            whiteTime--;
+            if (whiteTime <= 0) endGame("Time's up! Black wins!");
+          } else {
+            blackTime--;
+            if (blackTime <= 0) endGame("Time's up! White wins!");
+          }
+          updateTimerDisplay();
+        }, 1000);
+      }
+
+      function endGame(msg) {
+        gameOver = true;
+        clearInterval(timerInterval);
+        status.textContent = msg;
+      }
 
       function render() {
         boardEl.innerHTML = '';
@@ -807,6 +892,7 @@
       const inBounds = (r, c) => r >= 0 && r < 8 && c >= 0 && c < 8;
 
       function onCell(r, c) {
+        if (gameOver) return;
         const p = board[r][c];
         if (!whiteToMove) return;
         if (selected) {
@@ -816,6 +902,7 @@
             doMove({ sr: selected.r, sc: selected.c, tr: r, tc: c });
             whiteToMove = false; selected = null; render();
             status.textContent = 'Black thinking...';
+            // Wait a bit for UI to update then AI moves
             setTimeout(aiMove, 80);
           } else {
             selected = (p && isWhite(p)) ? { r, c } : null;
@@ -979,11 +1066,12 @@
         return best;
       }
       function aiMove() {
+        if (gameOver) return;
         const best = minimax(depth, -Infinity, Infinity, false); // Black
-        if (!best.move) { status.textContent = isInCheck(false) ? 'White wins!' : 'Draw.'; return; }
+        if (!best.move) { endGame(isInCheck(false) ? 'White wins!' : 'Draw.'); return; }
         apply(best.move);
         whiteToMove = true; render();
-        if (generateMoves(true).length === 0) { status.textContent = isInCheck(true) ? 'Black wins!' : 'Draw.'; }
+        if (generateMoves(true).length === 0) { endGame(isInCheck(true) ? 'Black wins!' : 'Draw.'); }
         else { status.textContent = 'White to move'; }
       }
       render();
