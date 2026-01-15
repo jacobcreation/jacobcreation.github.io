@@ -509,6 +509,14 @@
     const chatForm = document.getElementById('chatForm');
     const chatText = document.getElementById('chatText');
 
+    /* Mobile Detection */
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+      console.log("Mobile device detected");
+      document.body.classList.add('mobile-detected');
+      // Optional: Could show a message or adjust UI further
+    }
+
     function addBubble(text, who = 'bot') {
       const div = document.createElement('div');
       div.className = `bubble ${who}`;
@@ -620,50 +628,27 @@
 
     /* Snake */
     function renderSnake() {
-      const canvas = document.createElement('canvas');
-      canvas.width = 400; canvas.height = 400; gameArea.appendChild(canvas);
-      const ctx = canvas.getContext('2d');
-      let grid = 20, size = 20;
-      let snake = [{ x: 10, y: 10 }], dx = 1, dy = 0;
-      let food = { x: 5, y: 5 };
-      const onKey = (e) => {
-        if (e.key === 'ArrowUp' && dy === 0) { dx = 0; dy = -1; e.preventDefault(); }
-        if (e.key === 'ArrowDown' && dy === 0) { dx = 0; dy = 1; e.preventDefault(); }
-        if (e.key === 'ArrowLeft' && dx === 0) { dx = -1; dy = 0; e.preventDefault(); }
-        if (e.key === 'ArrowRight' && dx === 0) { dx = 1; dy = 0; e.preventDefault(); }
-      };
-      window.addEventListener('keydown', onKey);
-      const timer = setInterval(loop, 140);
+      // Clear game area (handled by showGame mostly, but good to be sure if we add logic later)
+      // embed Scratch project
+      const iframe = document.createElement('iframe');
+      // User provided https://scratch.mit.edu/projects/1234815493/editor
+      // We convert to embed URL: https://scratch.mit.edu/projects/1234815493/embed
+      iframe.src = 'https://scratch.mit.edu/projects/1234815493/embed';
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+      iframe.style.border = 'none';
+      iframe.allowFullscreen = true;
 
-      // Cleanup event listener when switching games? 
-      // For simplicity we just leave it, but in a real SPA we should clean up.
-      // The user script didn't clean up, so I won't over-engineer.
+      // Wrapper to ensure it fits well
+      const wrapper = document.createElement('div');
+      wrapper.style.width = '100%';
+      wrapper.style.height = '100%';
+      wrapper.style.display = 'flex';
+      wrapper.style.justifyContent = 'center';
+      wrapper.style.alignItems = 'center';
 
-      function loop() {
-        // Basic check if canvas is still in DOM to stop loop
-        if (!document.body.contains(canvas)) { clearInterval(timer); window.removeEventListener('keydown', onKey); return; }
-
-        const head = { x: snake[0].x + dx, y: snake[0].y + dy };
-        snake.unshift(head);
-        if (head.x === food.x && head.y === food.y) {
-          food.x = Math.floor(Math.random() * grid); food.y = Math.floor(Math.random() * grid);
-        } else snake.pop();
-        if (head.x < 0 || head.y < 0 || head.x >= grid || head.y >= grid || collide()) {
-          snake = [{ x: 10, y: 10 }]; dx = 1; dy = 0;
-        }
-        draw();
-      }
-      function collide() {
-        for (let i = 1; i < snake.length; i++) if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true;
-        return false;
-      }
-      function draw() {
-        ctx.clearRect(0, 0, 400, 400);
-        // Colors updated to Blue Theme
-        ctx.fillStyle = '#104e8b'; ctx.fillRect(food.x * size, food.y * size, size, size); // Dark Blue Food
-        ctx.fillStyle = '#1e90ff'; // Blue Snake
-        snake.forEach(s => ctx.fillRect(s.x * size, s.y * size, size, size));
-      }
+      wrapper.appendChild(iframe);
+      gameArea.appendChild(wrapper);
     }
 
     /* Pong */
@@ -673,11 +658,32 @@
       const ctx = canvas.getContext('2d');
       let paddle = { x: 10, y: 120, w: 10, h: 80 }, ball = { x: 240, y: 160, vx: 3, vy: 2, r: 6 };
 
+      /* Canvas Responsive Scaling */
+      canvas.style.width = '100%';
+      canvas.style.maxWidth = '480px';
+      canvas.style.height = 'auto'; // Maintain aspect ratio
+      canvas.style.touchAction = 'none'; // Prevent scrolling
+
       const moveHandler = e => {
         const rect = canvas.getBoundingClientRect();
-        paddle.y = Math.min(canvas.height - paddle.h, Math.max(0, e.clientY - rect.top - paddle.h / 2));
+        // Calculate scale factor (canvas internal height / display height)
+        const scaleY = canvas.height / rect.height;
+
+        let clientY;
+        if (e.touches && e.touches.length > 0) {
+          clientY = e.touches[0].clientY;
+          e.preventDefault();
+        } else {
+          clientY = e.clientY;
+        }
+
+        // Map display coordinate to canvas coordinate
+        const relativeY = (clientY - rect.top) * scaleY;
+        paddle.y = Math.min(canvas.height - paddle.h, Math.max(0, relativeY - paddle.h / 2));
       };
+
       canvas.addEventListener('mousemove', moveHandler);
+      canvas.addEventListener('touchmove', moveHandler, { passive: false });
 
       function loop() {
         if (!document.body.contains(canvas)) return; // Stop if gone
@@ -704,76 +710,23 @@
 
     /* Tetris */
     function renderTetris() {
-      const canvas = document.createElement('canvas');
-      canvas.width = 240; canvas.height = 400; gameArea.appendChild(canvas);
-      const ctx = canvas.getContext('2d');
-      const COLS = 10, ROWS = 20, SIZE = 20;
-      // Updated Colors for Blue Theme
-      const colors = ['#1e90ff', '#104e8b', '#00bfff', '#87cefa', '#4682b4', '#5f9ea0'];
-      const SHAPES = {
-        I: [[1, 1, 1, 1]], O: [[1, 1], [1, 1]], T: [[0, 1, 0], [1, 1, 1]],
-        S: [[0, 1, 1], [1, 1, 0]], Z: [[1, 1, 0], [0, 1, 1]],
-        J: [[1, 0, 0], [1, 1, 1]], L: [[0, 0, 1], [1, 1, 1]]
-      };
-      let board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
-      let piece = newPiece();
-      let dropCounter = 0, dropInterval = 500, lastTime = 0;
+      const iframe = document.createElement('iframe');
+      // Updated to Scratch project embed
+      iframe.src = 'https://scratch.mit.edu/projects/313865242/embed';
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+      iframe.style.border = 'none';
+      iframe.allowFullscreen = true;
 
-      const keyHandler = e => {
-        if (!document.body.contains(canvas)) return;
-        if (e.key === 'ArrowLeft') { piece.x--; if (collide()) piece.x++; e.preventDefault(); }
-        if (e.key === 'ArrowRight') { piece.x++; if (collide()) piece.x--; e.preventDefault(); }
-        if (e.key === 'ArrowUp') { rotate(); if (collide()) { rotate(); rotate(); rotate(); } e.preventDefault(); }
-        if (e.key === 'ArrowDown') { drop(); e.preventDefault(); }
-      };
-      window.addEventListener('keydown', keyHandler);
+      const wrapper = document.createElement('div');
+      wrapper.style.width = '100%';
+      wrapper.style.height = '100%';
+      wrapper.style.display = 'flex';
+      wrapper.style.justifyContent = 'center';
+      wrapper.style.alignItems = 'center';
 
-      function newPiece() {
-        const types = Object.keys(SHAPES);
-        const t = types[Math.floor(Math.random() * types.length)];
-        return { shape: SHAPES[t].map(r => r.slice()), x: 3, y: 0, color: colors[Math.floor(Math.random() * colors.length)] };
-      }
-      function collide() {
-        for (let y = 0; y < piece.shape.length; y++) {
-          for (let x = 0; x < piece.shape[y].length; x++) {
-            if (piece.shape[y][x] && (piece.y + y >= ROWS || piece.x + x < 0 || piece.x + x >= COLS || board[piece.y + y][piece.x + x])) return true;
-          }
-        }
-        return false;
-      }
-      function merge() {
-        piece.shape.forEach((row, dy) => row.forEach((val, dx) => { if (val) board[piece.y + dy][piece.x + dx] = piece.color; }));
-      }
-      function rotate() {
-        const s = piece.shape;
-        piece.shape = s[0].map((_, i) => s.map(row => row[i]).reverse());
-      }
-      function sweep() {
-        for (let y = ROWS - 1; y >= 0; y--) {
-          if (board[y].every(v => v)) {
-            board.splice(y, 1);
-            board.unshift(Array(COLS).fill(0));
-            y++;
-          }
-        }
-      }
-      function drop() {
-        piece.y++;
-        if (collide()) { piece.y--; merge(); sweep(); piece = newPiece(); }
-        dropCounter = 0;
-      }
-      function update(time = 0) {
-        if (!document.body.contains(canvas)) { window.removeEventListener('keydown', keyHandler); return; }
-        const dt = time - lastTime; lastTime = time;
-        dropCounter += dt; if (dropCounter > dropInterval) drop();
-        draw(); requestAnimationFrame(update);
-      }
-      function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        board.forEach((row, y) => row.forEach((val, x) => { if (val) { ctx.fillStyle = val; ctx.fillRect(x * SIZE, y * SIZE, SIZE, SIZE); } }));
-        piece.shape.forEach((row, dy) => row.forEach((val, dx) => { if (val) { ctx.fillStyle = piece.color; ctx.fillRect((piece.x + dx) * SIZE, (piece.y + dy) * SIZE, SIZE, SIZE); } }));
-      }
-      update();
+      wrapper.appendChild(iframe);
+      gameArea.appendChild(wrapper);
     }
 
     /* Chess (320x320 board, controls stacked) */
