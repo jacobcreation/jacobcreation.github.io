@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Chess Pairing System | JacobCreation</title>
+<title>Chess Tournament System | JacobCreation</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -35,52 +35,27 @@ body{
 }
 
 /* Controls */
-.controls{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-}
+.controls{display:flex;flex-wrap:wrap;gap:10px}
 button,input,select{
   padding:10px 14px;
   border-radius:10px;
   border:none;
   font-size:15px;
 }
-button{
-  cursor:pointer;
-  background:#1e73c9;
-  color:#fff;
-}
-button.secondary{
-  background:#e6f0ff;
-  color:#1e73c9;
-}
-button.danger{
-  background:#ef4444;
-}
+button{cursor:pointer;background:#1e73c9;color:#fff}
+button.secondary{background:#e6f0ff;color:#1e73c9}
+button.danger{background:#ef4444}
 
 /* Tables */
 .table-wrap{overflow-x:auto}
-table{
-  width:100%;
-  border-collapse:collapse;
-  min-width:650px;
-}
+table{width:100%;border-collapse:collapse;min-width:900px}
 th,td{
   padding:10px;
   text-align:center;
   white-space:nowrap;
 }
-th{
-  background:#f2f6fb;
-}
-tr:not(:last-child) td{
-  border-bottom:1px solid #e5e7eb;
-}
-.round{
-  background:#eef5ff;
-  font-weight:600;
-}
+th{background:#f2f6fb}
+tr:not(:last-child) td{border-bottom:1px solid #e5e7eb}
 
 /* Mobile */
 @media(max-width:720px){
@@ -88,7 +63,7 @@ tr:not(:last-child) td{
   button,input,select{width:100%;font-size:16px}
 }
 
-/* Print (Swiss Manager style) */
+/* Print */
 @media print{
   body{background:#fff}
   .site-header,.controls,.card:not(.print-round){display:none}
@@ -127,14 +102,13 @@ tr:not(:last-child) td{
       <input id="pName" placeholder="Player name">
       <input id="pRating" type="number" placeholder="Rating">
       <button onclick="addPlayer()">Add</button>
-
       <input type="file" id="fileInput" accept=".csv,.txt">
       <button class="secondary" onclick="loadFile()">Upload</button>
-
       <button onclick="nextRound()">Next Round</button>
       <button class="secondary" onclick="finalize()">Finalize</button>
       <button class="secondary" onclick="undo()">Undo</button>
       <button class="secondary" onclick="printCurrentRound()">🖨 Print Current Round</button>
+      <button class="secondary" onclick="exportTRF()">📤 Export Chess-Results (TRF)</button>
       <button class="danger" onclick="resetAll()">Reset</button>
     </div>
   </div>
@@ -146,7 +120,8 @@ tr:not(:last-child) td{
       <table>
         <thead>
           <tr>
-            <th>#</th><th>Name</th><th>Rating</th><th>Score</th><th>Remove</th>
+            <th>#</th><th>Name</th><th>Rating</th><th>Score</th>
+            <th>BH</th><th>BH-1</th><th>SB</th><th>Remove</th>
           </tr>
         </thead>
         <tbody id="standings"></tbody>
@@ -192,11 +167,13 @@ function addPlayer(){
   if(players.some(p=>p.name.toLowerCase()===pName.value.toLowerCase())) return;
   players.push({
     id:crypto.randomUUID(),
-    name:pName.value,
+    name:pName.value.trim(),
     rating:+pRating.value||0,
     score:0,
-    opp:[],
-    bye:false
+    opp:[],        // opponent IDs
+    results:[],    // 1, 0.5, 0
+    bye:false,
+    bh:0, bh1:0, sb:0
   });
   pName.value="";pRating.value="";
   render();
@@ -214,37 +191,23 @@ function loadFile(){
   const r=new FileReader();
   r.onload=()=>{
     r.result.split(/\r?\n/).forEach(l=>{
-      const [n,r]=l.split(",");
+      const [n,rating]=l.split(",");
       if(n && !players.some(p=>p.name.toLowerCase()===n.toLowerCase())){
         players.push({
           id:crypto.randomUUID(),
           name:n.trim(),
-          rating:+r||0,
+          rating:+rating||0,
           score:0,
           opp:[],
-          bye:false
+          results:[],
+          bye:false,
+          bh:0, bh1:0, sb:0
         });
       }
     });
     render();
   };
   r.readAsText(f);
-}
-
-/* Render */
-function render(){
-  standings.innerHTML="";
-  [...players].sort((a,b)=>b.score-a.score||b.rating-a.rating)
-  .forEach((p,i)=>{
-    standings.innerHTML+=`
-    <tr>
-      <td>${i+1}</td>
-      <td>${p.name}</td>
-      <td>${p.rating}</td>
-      <td>${p.score}</td>
-      <td><button class="danger" onclick="removePlayer('${p.id}')">🗑</button></td>
-    </tr>`;
-  });
 }
 
 /* Swiss */
@@ -264,6 +227,8 @@ function nextRound(){
     bye=pool.find(p=>!p.bye);
     bye.bye=true;
     bye.score++;
+    bye.opp.push(null);
+    bye.results.push(1);
     pool=pool.filter(p=>p!==bye);
   }
 
@@ -294,9 +259,7 @@ function nextRound(){
   if(bye){
     pairingsEl.innerHTML+=`
     <tr>
-      <td>—</td>
-      <td>${bye.name}</td>
-      <td>BYE</td>
+      <td>—</td><td>${bye.name}</td><td>BYE</td>
       <td class="result-col">+1</td>
     </tr>`;
   }
@@ -308,16 +271,70 @@ function finalize(){
   if(pairings.some(p=>!p.res)) return alert("Missing results");
 
   pairings.forEach(p=>{
-    p.a.opp.push(p.b.id);
-    p.b.opp.push(p.a.id);
-    if(p.res==="1-0") p.a.score++;
-    if(p.res==="0-1") p.b.score++;
-    if(p.res==="0.5"){p.a.score+=0.5;p.b.score+=0.5;}
+    const w=p.a, b=p.b;
+    w.opp.push(b.id);
+    b.opp.push(w.id);
+
+    if(p.res==="1-0"){
+      w.score++; w.results.push(1); b.results.push(0);
+    }
+    if(p.res==="0-1"){
+      b.score++; b.results.push(1); w.results.push(0);
+    }
+    if(p.res==="0.5"){
+      w.score+=0.5; b.score+=0.5;
+      w.results.push(0.5); b.results.push(0.5);
+    }
   });
 
+  calculateTieBreaks();
   document.querySelectorAll(".result-col select").forEach(s=>s.disabled=true);
   OPEN=false;
   render();
+}
+
+/* Tie-breaks */
+function calculateTieBreaks(){
+  players.forEach(p=>{
+    let oppScores=[], sb=0;
+
+    p.opp.forEach((oid,i)=>{
+      const o=players.find(x=>x.id===oid);
+      const os=o?o.score:0;
+      oppScores.push(os);
+      sb += os * p.results[i];
+    });
+
+    p.bh = oppScores.reduce((a,b)=>a+b,0);
+    p.bh1 = oppScores.length
+      ? p.bh - Math.min(...oppScores)
+      : 0;
+    p.sb = sb;
+  });
+}
+
+/* Render */
+function render(){
+  standings.innerHTML="";
+  [...players].sort((a,b)=>
+    b.score-a.score ||
+    b.bh-a.bh ||
+    b.bh1-a.bh1 ||
+    b.sb-a.sb ||
+    b.rating-a.rating
+  ).forEach((p,i)=>{
+    standings.innerHTML+=`
+    <tr>
+      <td>${i+1}</td>
+      <td>${p.name}</td>
+      <td>${p.rating}</td>
+      <td>${p.score}</td>
+      <td>${p.bh.toFixed(2)}</td>
+      <td>${p.bh1.toFixed(2)}</td>
+      <td>${p.sb.toFixed(2)}</td>
+      <td><button class="danger" onclick="removePlayer('${p.id}')">🗑</button></td>
+    </tr>`;
+  });
 }
 
 /* Undo */
@@ -327,6 +344,7 @@ function undo(){
   players=h.players;
   ROUND=h.ROUND;
   OPEN=false;
+  calculateTieBreaks();
   render();
 }
 
@@ -336,10 +354,20 @@ function printCurrentRound(){
   window.print();
 }
 
-/* Reset */
-function resetAll(){
-  location.reload();
+/* TRF */
+function exportTRF(){
+  let trf=`012 ${TOURNAMENT}\n022 Swiss\n062 ${ROUND}\n`;
+  players.forEach((p,i)=>{
+    trf+=`001 ${i+1} ${p.name} ${p.rating}\n`;
+  });
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([trf],{type:"text/plain"}));
+  a.download=TOURNAMENT.replace(/\s+/g,"_")+".trf";
+  a.click();
 }
+
+/* Reset */
+function resetAll(){location.reload()}
 
 /* DOM */
 const standings=document.getElementById("standings");
