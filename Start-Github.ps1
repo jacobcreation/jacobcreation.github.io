@@ -1,3 +1,4 @@
+cd "D:\Jacobs stuff\jacob's github\jacobcreation.github.io"
 # Path to a file that stores the last pull date
 $lastPullFile = "$PSScriptRoot\.lastpull"
 
@@ -7,7 +8,8 @@ $today = (Get-Date).ToString("yyyy-MM-dd")
 # Check if we already pulled today
 if (Test-Path $lastPullFile) {
     $lastPull = Get-Content $lastPullFile
-} else {
+}
+else {
     $lastPull = ""
 }
 
@@ -15,7 +17,8 @@ if ($lastPull -ne $today) {
     Write-Host "Running git pull..."
     git pull
     $today | Out-File $lastPullFile -Force
-} else {
+}
+else {
     Write-Host "Already pulled today ($today). Skipping."
 }
 
