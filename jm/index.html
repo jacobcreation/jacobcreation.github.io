@@ -4,9 +4,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Live Map • Leaflet + OSM</title>
+  <title>JacobMaps</title>
 
-  <!-- Leaflet CSS -->
+  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
   <style>
@@ -29,18 +29,12 @@
       padding: 0.75rem 1rem;
       background: #111827;
       border-bottom: 1px solid #1f2937;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
     }
 
     header h1 {
       margin: 0;
       font-size: 1rem;
       letter-spacing: 0.02em;
-      white-space: nowrap;
     }
 
     #map {
@@ -59,11 +53,7 @@
       padding: 0.7rem 0.85rem;
       font-size: 0.85rem;
       backdrop-filter: blur(6px);
-      min-width: 250px;
-    }
-
-    .status strong {
-      color: #fff;
+      min-width: 340px;
     }
 
     .btn {
@@ -83,8 +73,11 @@
       background: #111827;
     }
 
-    .leaflet-container {
-      background: #0b0f1a;
+    .mini {
+      opacity: 0.85;
+      font-size: 0.8rem;
+      margin-top: 0.35rem;
+      line-height: 1.25rem;
     }
 
     .hidden {
@@ -107,100 +100,88 @@
       outline: none;
       font-size: 0.85rem;
     }
-
-    .mini {
-      opacity: 0.85;
-      font-size: 0.8rem;
-      margin-top: 0.35rem;
-      line-height: 1.25rem;
-    }
-
-    .warn {
-      color: #fbbf24;
-      font-weight: 600;
-    }
   </style>
 </head>
 
 <body>
   <div id="app">
     <header>
-      <h1>Live Map • Leaflet + OpenStreetMap</h1>
+      <h1>JacobMaps 🗺️ (Highway Preference)</h1>
     </header>
 
     <div id="map"></div>
 
-    <!-- Status overlay -->
-    <div class="status" id="status">
+    <div class="status">
       <div><strong>Status:</strong> <span id="statusText">Initializing…</span></div>
-
       <div id="coords" class="mini hidden"></div>
-      <div id="extra" class="mini hidden"></div>
+      <div id="destText" class="mini">Destination: <b>none</b></div>
+      <div id="routeText" class="mini hidden"></div>
 
       <div class="searchRow">
-        <input id="searchInput" placeholder="Search place (needs OpenCage key)" />
-        <button class="btn" id="searchBtn" title="Search location">Search</button>
+        <input id="searchInput" placeholder="Search destination (OpenCage optional)" />
+        <button class="btn" id="searchBtn">Search</button>
       </div>
 
       <div style="margin-top:0.5rem;">
-        <button class="btn" id="recenterBtn" title="Recenter on your latest position">Recenter</button>
-        <button class="btn" id="toggleTilesBtn" title="Toggle light/dark map">Dark Map</button>
-        <button class="btn" id="clearPinsBtn" title="Remove dropped pins">Clear Pins</button>
+        <button class="btn" id="recenterBtn">Recenter</button>
+        <button class="btn" id="normalBtn">Normal Route</button>
+        <button class="btn" id="highwayBtn">Highway Pref</button>
+        <button class="btn" id="clearBtn">Clear</button>
       </div>
 
-      <div class="mini" id="hintText">
-        Tip: click on the map to drop a pin 📍
-      </div>
+      <div class="mini">Tip: click map OR search to set destination 📍</div>
     </div>
   </div>
 
-  <!-- Leaflet JS (NOT defer now, we will load it safely) -->
+  <!-- Leaflet -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
   <script>
-    // -----------------------------
-    // Tiny bot blocking (user-agent)
-    // -----------------------------
-    // NOTE: This is NOT real security, just a small filter.
-    const ua = (navigator.userAgent || "").toLowerCase();
-    const botPatterns = [
-      "bot", "spider", "crawl", "slurp", "bingpreview", "facebookexternalhit",
-      "embedly", "quora link preview", "skypeuripreview", "whatsapp", "telegrambot",
-      "discordbot", "twitterbot", "linkedinbot", "pinterest", "redditbot", "crawler"
-    ];
-    const isBot = botPatterns.some(p => ua.includes(p));
+    // ============================
+    // CONFIG
+    // ============================
 
+    // ✅ Your Cloudflare Worker URL (GraphHopper key hidden inside Worker)
+    const WORKER_ROUTE_URL = "https://protect.b4rjxr9lk.workers.dev/route";
+
+    // OpenCage (OPTIONAL) for search
+    const OPENCAGE_API_KEY = "3ff7094f176242cf915d8decfdda6766";
+
+    // ============================
+    // GLOBALS
+    // ============================
+    let map = null;
+    let userMarker = null;
+    let lastPosition = null;
+
+    let destination = null;
+    let destinationMarker = null;
+
+    let routeLine = null;
+
+    // ============================
+    // ELEMENTS
+    // ============================
     const statusTextEl = document.getElementById("statusText");
     const coordsEl = document.getElementById("coords");
-    const extraEl = document.getElementById("extra");
+    const destTextEl = document.getElementById("destText");
+    const routeTextEl = document.getElementById("routeText");
 
     const recenterBtn = document.getElementById("recenterBtn");
-    const toggleTilesBtn = document.getElementById("toggleTilesBtn");
-    const clearPinsBtn = document.getElementById("clearPinsBtn");
+    const normalBtn = document.getElementById("normalBtn");
+    const highwayBtn = document.getElementById("highwayBtn");
+    const clearBtn = document.getElementById("clearBtn");
 
     const searchInput = document.getElementById("searchInput");
     const searchBtn = document.getElementById("searchBtn");
 
-    if (isBot) {
-      statusTextEl.textContent = "Blocked: suspected automated agent.";
-      document.getElementById("map").innerHTML = "";
-      document.getElementById("hintText").innerHTML = "<span class='warn'>Bots blocked</span>";
-    } else {
-      safeStart();
-    }
+    window.addEventListener("load", () => initMap());
 
-    // -----------------------------
-    // OpenCage (geocoding search)
-    // -----------------------------
-    // Put your OpenCage key here:
-    const OPENCAGE_API_KEY = "3ff7094f176242cf915d8decfdda6766";
-
-
+    // ============================
+    // OPENCAGE SEARCH (OPTIONAL)
+    // ============================
     async function geocodeAddress(address) {
-      if (!OPENCAGE_API_KEY || OPENCAGE_API_KEY.includes("YOUR_OPENCAGE_API_KEY_HERE")) {
-        statusTextEl.textContent = "Search needs OpenCage API key.";
-        return null;
-      }
+      if (!OPENCAGE_API_KEY) return null;
 
       const url = new URL("https://api.opencagedata.com/geocode/v1/json");
       url.searchParams.set("q", address);
@@ -213,7 +194,6 @@
 
       const data = await res.json();
       const result = data?.results?.[0];
-
       if (!result?.geometry) return null;
 
       return {
@@ -223,102 +203,175 @@
       };
     }
 
-    // -----------------------------
-    // Map + live geolocation
-    // -----------------------------
-    let map;
-    let userMarker;
-    let accuracyCircle;
-    let lastPosition = null;
+    function setDestination(lat, lng, label = null) {
+      destination = L.latLng(lat, lng);
 
-    let lightTiles, darkTiles;
-    let usingDark = false;
+      destTextEl.innerHTML = label
+        ? `Destination: <b>${label}</b>`
+        : `Destination: <b>${destination.lat.toFixed(5)}, ${destination.lng.toFixed(5)}</b>`;
 
-    const droppedPins = [];
-
-    function safeStart() {
-      // Make sure Leaflet exists
-      if (typeof L === "undefined") {
-        statusTextEl.textContent = "Leaflet failed to load 😬";
-        return;
+      if (!destinationMarker) {
+        destinationMarker = L.marker(destination).addTo(map);
+      } else {
+        destinationMarker.setLatLng(destination);
       }
-      initMap();
+
+      destinationMarker.bindPopup(label ? `📍 ${label}` : "Destination 📍").openPopup();
     }
 
+    // ============================
+    // Decode polyline (GraphHopper encoded points)
+    // ============================
+    function decodePolyline(str, precision = 5) {
+      let index = 0, lat = 0, lng = 0;
+      const coordinates = [];
+      const factor = Math.pow(10, precision);
+
+      while (index < str.length) {
+        let b, shift = 0, result = 0;
+        do {
+          b = str.charCodeAt(index++) - 63;
+          result |= (b & 0x1f) << shift;
+          shift += 5;
+        } while (b >= 0x20);
+        const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+        lat += dlat;
+
+        shift = 0;
+        result = 0;
+        do {
+          b = str.charCodeAt(index++) - 63;
+          result |= (b & 0x1f) << shift;
+          shift += 5;
+        } while (b >= 0x20);
+        const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+        lng += dlng;
+
+        coordinates.push([lat / factor, lng / factor]);
+      }
+
+      return coordinates;
+    }
+
+    function drawRoute(coords) {
+      if (routeLine) {
+        map.removeLayer(routeLine);
+        routeLine = null;
+      }
+
+      routeLine = L.polyline(coords, {
+        weight: 7,
+        opacity: 0.85
+      }).addTo(map);
+
+      map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
+    }
+
+    async function getRouteFromWorker(start, dest, mode) {
+      const url = new URL(WORKER_ROUTE_URL);
+      url.searchParams.set("p1", `${start.lat},${start.lng}`);
+      url.searchParams.set("p2", `${dest.lat},${dest.lng}`);
+      url.searchParams.set("mode", mode);
+
+      const res = await fetch(url.toString());
+      if (!res.ok) throw new Error("Worker failed");
+      return await res.json();
+    }
+
+    async function route(mode = "normal") {
+      if (!lastPosition) {
+        statusTextEl.textContent = "No GPS yet 😬 allow location permission";
+        return;
+      }
+      if (!destination) {
+        statusTextEl.textContent = "Pick a destination first 📍";
+        return;
+      }
+
+      const start = L.latLng(lastPosition.coords.latitude, lastPosition.coords.longitude);
+      const dest = destination;
+
+      statusTextEl.textContent = "Routing…";
+      routeTextEl.classList.add("hidden");
+
+      try {
+        const result = await getRouteFromWorker(start, dest, mode);
+        const paths = result?.data?.paths || [];
+        const chosenIndex = result?.chosenIndex ?? 0;
+
+        if (!paths.length) {
+          statusTextEl.textContent = "No route found 😢";
+          return;
+        }
+
+        const chosen = paths[chosenIndex] || paths[0];
+        const coords = decodePolyline(chosen.points, 5);
+
+        drawRoute(coords);
+
+        const km = (chosen.distance / 1000).toFixed(1);
+        const mins = Math.round(chosen.time / 60000);
+
+        statusTextEl.textContent = mode === "highway"
+          ? "Highway preferred route ✅"
+          : "Normal route ✅";
+
+        routeTextEl.classList.remove("hidden");
+        routeTextEl.textContent = `Distance: ${km} km • ETA: ${mins} min`;
+
+      } catch (err) {
+        console.error(err);
+        statusTextEl.textContent = "Routing failed 😬";
+      }
+    }
+
+    // ============================
+    // INIT MAP
+    // ============================
     function initMap() {
       statusTextEl.textContent = "Loading map…";
 
-      map = L.map("map", {
-        zoomControl: true,
-        attributionControl: true
-      }).setView([0, 0], 2);
+      map = L.map("map").setView([0, 0], 2);
 
-      // Light tiles (default)
-      lightTiles = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
         attribution: "&copy; OpenStreetMap contributors"
-      });
+      }).addTo(map);
 
-      // Dark tiles (CartoDB Dark Matter)
-      darkTiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-        maxZoom: 19,
-        attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
-      });
+      userMarker = L.marker([0, 0]).bindPopup("You are here 😄");
 
-      lightTiles.addTo(map);
-
-      // Marker + circle (created once)
-      userMarker = L.marker([0, 0], { draggable: false });
-      userMarker.bindPopup("You are here 😄");
-
-      accuracyCircle = L.circle([0, 0], {
-        radius: 0,
-        color: "#60a5fa",
-        fillColor: "#60a5fa",
-        fillOpacity: 0.15,
-        weight: 2
-      });
-
-      // Click map to drop pins
       map.on("click", (e) => {
-        const pin = L.marker(e.latlng).addTo(map);
-        pin.bindPopup(`📍 Pin<br>Lat: ${e.latlng.lat.toFixed(6)}<br>Lng: ${e.latlng.lng.toFixed(6)}`);
-        droppedPins.push(pin);
+        setDestination(e.latlng.lat, e.latlng.lng);
+        statusTextEl.textContent = "Destination set 📍";
       });
 
-      // Buttons
       recenterBtn.addEventListener("click", () => {
         if (!lastPosition) return;
-        const { latitude, longitude } = lastPosition.coords;
-        map.setView([latitude, longitude], Math.max(map.getZoom(), 16), { animate: true });
+        map.setView(
+          [lastPosition.coords.latitude, lastPosition.coords.longitude],
+          Math.max(map.getZoom(), 16),
+          { animate: true }
+        );
       });
 
-      toggleTilesBtn.addEventListener("click", () => {
-        usingDark = !usingDark;
-        if (usingDark) {
-          map.removeLayer(lightTiles);
-          darkTiles.addTo(map);
-          toggleTilesBtn.textContent = "Light Map";
-        } else {
-          map.removeLayer(darkTiles);
-          lightTiles.addTo(map);
-          toggleTilesBtn.textContent = "Dark Map";
+      normalBtn.addEventListener("click", () => route("normal"));
+      highwayBtn.addEventListener("click", () => route("highway"));
+
+      clearBtn.addEventListener("click", () => {
+        if (routeLine) {
+          map.removeLayer(routeLine);
+          routeLine = null;
         }
+        statusTextEl.textContent = "Cleared.";
+        routeTextEl.classList.add("hidden");
       });
 
-      clearPinsBtn.addEventListener("click", () => {
-        while (droppedPins.length) {
-          const pin = droppedPins.pop();
-          map.removeLayer(pin);
-        }
-      });
-
-      // Search button
       searchBtn.addEventListener("click", async () => {
         const q = (searchInput.value || "").trim();
         if (!q) return;
 
         statusTextEl.textContent = "Searching…";
+
         try {
           const result = await geocodeAddress(q);
           if (!result) {
@@ -326,88 +379,59 @@
             return;
           }
 
-          const { lat, lng, label } = result;
-          map.setView([lat, lng], 15, { animate: true });
+          setDestination(result.lat, result.lng, result.label);
+          map.setView([result.lat, result.lng], 15, { animate: true });
 
-          const pin = L.marker([lat, lng]).addTo(map);
-          pin.bindPopup(`🔎 ${label}`).openPopup();
-          droppedPins.push(pin);
-
-          statusTextEl.textContent = "Search complete ✅";
+          statusTextEl.textContent = "Destination found ✅";
         } catch (err) {
-          statusTextEl.textContent = "Search failed 😬";
           console.error(err);
+          statusTextEl.textContent = "Search failed 😬";
         }
       });
 
-      // Enter key triggers search
       searchInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") searchBtn.click();
       });
 
-      // Geolocation watch
       if (!("geolocation" in navigator)) {
-        statusTextEl.textContent = "Geolocation not supported by your browser.";
+        statusTextEl.textContent = "Geolocation not supported.";
         return;
       }
 
       statusTextEl.textContent = "Waiting for location permission…";
 
       navigator.geolocation.watchPosition(
-        onPosition,
-        onPositionError,
+        (pos) => {
+          lastPosition = pos;
+          const { latitude, longitude, accuracy } = pos.coords;
+
+          if (!userMarker._map) {
+            userMarker.addTo(map);
+            map.setView([latitude, longitude], 16);
+          }
+
+          userMarker.setLatLng([latitude, longitude]);
+
+          coordsEl.classList.remove("hidden");
+          coordsEl.textContent =
+            `Lat: ${latitude.toFixed(6)} • Lng: ${longitude.toFixed(6)} • ±${Math.round(accuracy)}m`;
+
+          statusTextEl.textContent = "GPS live ✅";
+        },
+        (err) => {
+          const messages = {
+            1: "Permission denied. Please allow location access.",
+            2: "Position unavailable. Try moving to an open area.",
+            3: "Timeout getting position. Try again."
+          };
+          statusTextEl.textContent = messages[err.code] || ("Geolocation error: " + err.message);
+        },
         {
           enableHighAccuracy: true,
           maximumAge: 5000,
           timeout: 20000
         }
       );
-    }
-
-    function onPosition(pos) {
-      lastPosition = pos;
-      const { latitude, longitude, accuracy, speed, heading } = pos.coords;
-
-      // Add marker/circle to map if first time
-      if (!userMarker._map) {
-        userMarker.addTo(map);
-        accuracyCircle.addTo(map);
-
-        // First fix: zoom in once
-        map.setView([latitude, longitude], 16);
-      }
-
-      // Update marker and circle
-      userMarker.setLatLng([latitude, longitude]);
-      accuracyCircle.setLatLng([latitude, longitude]).setRadius(accuracy);
-
-      // Update status
-      statusTextEl.textContent = "Live position updating ✅";
-      coordsEl.classList.remove("hidden");
-      coordsEl.textContent =
-        `Lat: ${latitude.toFixed(6)} • Lng: ${longitude.toFixed(6)} • ±${Math.round(accuracy)}m`;
-
-      // Extra info (speed/heading may be null)
-      extraEl.classList.remove("hidden");
-
-      const speedKmh = (typeof speed === "number" && speed !== null)
-        ? (speed * 3.6).toFixed(1)
-        : "N/A";
-
-      const headingDeg = (typeof heading === "number" && heading !== null)
-        ? heading.toFixed(0) + "°"
-        : "N/A";
-
-      extraEl.textContent = `Speed: ${speedKmh} km/h • Heading: ${headingDeg}`;
-    }
-
-    function onPositionError(err) {
-      const messages = {
-        1: "Permission denied. Please allow location access.",
-        2: "Position unavailable. Try moving to an open area.",
-        3: "Timeout getting position. Please try again."
-      };
-      statusTextEl.textContent = messages[err.code] || ("Geolocation error: " + err.message);
     }
   </script>
 </body>
