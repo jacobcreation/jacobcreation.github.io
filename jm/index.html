@@ -106,7 +106,7 @@
 <body>
   <div id="app">
     <header>
-      <h1>JacobMaps 🗺️ (Highway Preference)</h1>
+      <h1>JacobMaps 🗺️ (PH Search + Near Me Bias + Highway Pref)</h1>
     </header>
 
     <div id="map"></div>
@@ -118,7 +118,7 @@
       <div id="routeText" class="mini hidden"></div>
 
       <div class="searchRow">
-        <input id="searchInput" placeholder="Search destination (OpenCage optional)" />
+        <input id="searchInput" placeholder="Search destination (Philippines only 🇵🇭)" />
         <button class="btn" id="searchBtn">Search</button>
       </div>
 
@@ -178,7 +178,7 @@
     window.addEventListener("load", () => initMap());
 
     // ============================
-    // OPENCAGE SEARCH (OPTIONAL)
+    // OPENCAGE SEARCH (PH ONLY + NEAR ME)
     // ============================
     async function geocodeAddress(address) {
       if (!OPENCAGE_API_KEY) return null;
@@ -188,6 +188,16 @@
       url.searchParams.set("key", OPENCAGE_API_KEY);
       url.searchParams.set("limit", "1");
       url.searchParams.set("no_annotations", "1");
+
+      // ✅ Philippines only
+      url.searchParams.set("countrycode", "ph");
+
+      // ✅ Prefer results near your GPS location
+      // If you have GPS already, bias the search around you
+      if (lastPosition?.coords) {
+        const { latitude, longitude } = lastPosition.coords;
+        url.searchParams.set("proximity", `${latitude},${longitude}`);
+      }
 
       const res = await fetch(url.toString());
       if (!res.ok) throw new Error("Geocoding failed: " + res.status);
