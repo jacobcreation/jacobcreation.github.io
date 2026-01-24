@@ -13,8 +13,9 @@
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="icon" href="/favicon.png" type="image/png" />
 
-  <!-- Google Font -->
+  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
 
   <style>
     :root {
@@ -79,15 +80,33 @@
       white-space: nowrap;
     }
 
+    /* Badge */
     .logo-badge {
       width: 38px;
       height: 38px;
       display: grid;
       place-items: center;
       border-radius: 12px;
-      background: linear-gradient(135deg, rgba(78, 161, 255, 0.95), rgba(45, 107, 255, 0.95));
-      box-shadow: 0 10px 24px rgba(45, 107, 255, 0.35);
+      background: linear-gradient(135deg, #1e90ff, #ff2d2d);
+      box-shadow: 0 10px 24px rgba(30, 144, 255, 0.25);
       border: 1px solid rgba(255, 255, 255, 0.20);
+      font-weight: 900;
+      color: white;
+    }
+
+    /* Text Logo (Blue + Red gradient) */
+    .logo-text {
+      font-family: "Orbitron", sans-serif;
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, #1e90ff, #ff2d2d);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow:
+        0 0 14px rgba(30, 144, 255, 0.35),
+        0 0 14px rgba(255, 45, 45, 0.25);
     }
 
     nav {
@@ -332,20 +351,6 @@
       outline: none;
     }
 
-    .tag {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      font-size: 0.72rem;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      background: rgba(78, 161, 255, 0.18);
-      color: rgba(234, 242, 255, 0.92);
-      font-weight: 800;
-      letter-spacing: 0.3px;
-    }
-
     footer {
       border-top: 1px solid rgba(255, 255, 255, 0.10);
       background: rgba(10, 16, 32, 0.55);
@@ -377,8 +382,8 @@
   <header>
     <div class="header-container">
       <div class="logo">
-        <span class="logo-badge">🌟</span>
-        <span>JacobCreation</span>
+        <span class="logo-badge">J</span>
+        <span class="logo-text">JacobCreation</span>
       </div>
 
       <nav>
