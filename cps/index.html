@@ -446,6 +446,14 @@
     /* DOM */
     const standings = document.getElementById("standings");
     const pairingsEl = document.getElementById("pairings");
+
+    /* Prevent Navigation */
+    window.addEventListener('beforeunload', function (e) {
+      if (players.length > 0 || ROUND > 0) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
   </script>
 
   <script src="../global-header.js"></script>
