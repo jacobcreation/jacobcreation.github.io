@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>JacobMaps</title>
 
-  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
   <style>
@@ -42,24 +41,25 @@
       width: 100%;
     }
 
-    .status {
+    .panel {
       position: absolute;
       z-index: 1000;
       top: 0.75rem;
       right: 0.75rem;
       background: rgba(17, 24, 39, 0.88);
       border: 1px solid #1f2937;
-      border-radius: 10px;
-      padding: 0.7rem 0.85rem;
+      border-radius: 12px;
+      padding: 0.75rem 0.9rem;
       font-size: 0.85rem;
       backdrop-filter: blur(6px);
-      min-width: 340px;
+      min-width: 360px;
+      max-width: 440px;
     }
 
     .btn {
       display: inline-block;
       padding: 0.45rem 0.7rem;
-      border-radius: 8px;
+      border-radius: 10px;
       border: 1px solid #374151;
       background: #0f172a;
       color: #e6edf3;
@@ -67,14 +67,25 @@
       font-size: 0.85rem;
       margin-right: 0.35rem;
       margin-top: 0.35rem;
+      transition: transform 0.12s ease, background 0.12s ease;
     }
 
     .btn:hover {
       background: #111827;
+      transform: translateY(-1px);
+    }
+
+    .btnDanger {
+      border-color: #7f1d1d;
+      background: #2a0f12;
+    }
+
+    .btnDanger:hover {
+      background: #3a1217;
     }
 
     .mini {
-      opacity: 0.85;
+      opacity: 0.9;
       font-size: 0.8rem;
       margin-top: 0.35rem;
       line-height: 1.25rem;
@@ -87,18 +98,51 @@
     .searchRow {
       display: flex;
       gap: 0.5rem;
-      margin-top: 0.5rem;
+      margin-top: 0.55rem;
     }
 
     .searchRow input {
       flex: 1;
-      padding: 0.45rem 0.6rem;
-      border-radius: 8px;
+      padding: 0.5rem 0.6rem;
+      border-radius: 10px;
       border: 1px solid #374151;
       background: #0b1224;
       color: #e6edf3;
       outline: none;
       font-size: 0.85rem;
+    }
+
+    .rowWrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.35rem;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border: 1px solid #374151;
+      border-radius: 999px;
+      background: #0b1224;
+      font-size: 0.8rem;
+      margin-top: 6px;
+      margin-right: 6px;
+    }
+
+    .chip button {
+      border: none;
+      background: transparent;
+      color: #e6edf3;
+      cursor: pointer;
+      opacity: 0.85;
+      font-size: 0.9rem;
+    }
+
+    .chip button:hover {
+      opacity: 1;
     }
   </style>
 </head>
@@ -106,14 +150,15 @@
 <body>
   <div id="app">
     <header>
-      <h1>JacobMaps 🗺️ (PH Search + Near Me Bias + Highway Pref)</h1>
+      <h1>JacobMaps 🗺️ (PH Search + Checkpoints + Highway)</h1>
     </header>
 
     <div id="map"></div>
 
-    <div class="status">
+    <div class="panel">
       <div><strong>Status:</strong> <span id="statusText">Initializing…</span></div>
       <div id="coords" class="mini hidden"></div>
+
       <div id="destText" class="mini">Destination: <b>none</b></div>
       <div id="routeText" class="mini hidden"></div>
 
@@ -122,29 +167,36 @@
         <button class="btn" id="searchBtn">Search</button>
       </div>
 
-      <div style="margin-top:0.5rem;">
+      <div class="rowWrap">
         <button class="btn" id="recenterBtn">Recenter</button>
-        <button class="btn" id="normalBtn">Normal Route</button>
+        <button class="btn" id="normalBtn">Normal</button>
         <button class="btn" id="highwayBtn">Highway Pref</button>
-        <button class="btn" id="clearBtn">Clear</button>
+        <button class="btn" id="forceBtn">Force Highway</button>
+        <button class="btn" id="addCheckpointBtn">Add Checkpoint</button>
+        <button class="btn btnDanger" id="clearCheckpointBtn">Clear Checkpoints</button>
+        <button class="btn btnDanger" id="clearBtn">Clear Route</button>
       </div>
 
-      <div class="mini">Tip: click map OR search to set destination 📍</div>
+      <div class="mini">
+        Tip: Click map to set destination 📍<br />
+        Add Checkpoint: click it, then click map to add a checkpoint ⭐<br />
+        Force Highway uses checkpoints if you added them.
+      </div>
+
+      <div class="mini" id="checkpointListWrap">
+        <b>Checkpoints:</b>
+        <div id="checkpointList"></div>
+      </div>
     </div>
   </div>
 
-  <!-- Leaflet -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
   <script>
     // ============================
     // CONFIG
     // ============================
-
-    // ✅ Your Cloudflare Worker URL (GraphHopper key hidden inside Worker)
     const WORKER_ROUTE_URL = "https://protect.b4rjxr9lk.workers.dev/route";
-
-    // OpenCage (OPTIONAL) for search
     const OPENCAGE_API_KEY = "3ff7094f176242cf915d8decfdda6766";
 
     // ============================
@@ -159,6 +211,11 @@
 
     let routeLine = null;
 
+    // checkpoint system
+    let addingCheckpoint = false;
+    let checkpoints = [];
+    let checkpointMarkers = [];
+
     // ============================
     // ELEMENTS
     // ============================
@@ -170,7 +227,12 @@
     const recenterBtn = document.getElementById("recenterBtn");
     const normalBtn = document.getElementById("normalBtn");
     const highwayBtn = document.getElementById("highwayBtn");
+    const forceBtn = document.getElementById("forceBtn");
     const clearBtn = document.getElementById("clearBtn");
+
+    const addCheckpointBtn = document.getElementById("addCheckpointBtn");
+    const clearCheckpointBtn = document.getElementById("clearCheckpointBtn");
+    const checkpointList = document.getElementById("checkpointList");
 
     const searchInput = document.getElementById("searchInput");
     const searchBtn = document.getElementById("searchBtn");
@@ -189,11 +251,10 @@
       url.searchParams.set("limit", "1");
       url.searchParams.set("no_annotations", "1");
 
-      // ✅ Philippines only
+      // 🇵🇭 Philippines only
       url.searchParams.set("countrycode", "ph");
 
-      // ✅ Prefer results near your GPS location
-      // If you have GPS already, bias the search around you
+      // 📍 Prefer results near your GPS
       if (lastPosition?.coords) {
         const { latitude, longitude } = lastPosition.coords;
         url.searchParams.set("proximity", `${latitude},${longitude}`);
@@ -213,6 +274,9 @@
       };
     }
 
+    // ============================
+    // DESTINATION
+    // ============================
     function setDestination(lat, lng, label = null) {
       destination = L.latLng(lat, lng);
 
@@ -230,7 +294,62 @@
     }
 
     // ============================
-    // Decode polyline (GraphHopper encoded points)
+    // CHECKPOINTS
+    // ============================
+    function renderCheckpointList() {
+      checkpointList.innerHTML = "";
+
+      if (checkpoints.length === 0) {
+        checkpointList.innerHTML = "<div class='mini' style='opacity:0.8;'>none</div>";
+        return;
+      }
+
+      checkpoints.forEach((cp, i) => {
+        const chip = document.createElement("div");
+        chip.className = "chip";
+        chip.innerHTML = `
+          <span>#${i + 1} ${cp.lat.toFixed(5)}, ${cp.lng.toFixed(5)}</span>
+          <button title="Remove">✖</button>
+        `;
+        chip.querySelector("button").addEventListener("click", () => {
+          removeCheckpoint(i);
+        });
+        checkpointList.appendChild(chip);
+      });
+    }
+
+    function addCheckpoint(lat, lng) {
+      const cp = L.latLng(lat, lng);
+      checkpoints.push(cp);
+
+      const m = L.marker(cp).addTo(map).bindPopup(`Checkpoint #${checkpoints.length} ⭐`);
+      checkpointMarkers.push(m);
+
+      renderCheckpointList();
+    }
+
+    function removeCheckpoint(index) {
+      checkpoints.splice(index, 1);
+
+      // remove marker
+      const marker = checkpointMarkers.splice(index, 1)[0];
+      if (marker) map.removeLayer(marker);
+
+      // re-label popups
+      checkpointMarkers.forEach((m, i) => m.bindPopup(`Checkpoint #${i + 1} ⭐`));
+
+      renderCheckpointList();
+    }
+
+    function clearCheckpoints() {
+      checkpoints = [];
+      checkpointMarkers.forEach(m => map.removeLayer(m));
+      checkpointMarkers = [];
+      renderCheckpointList();
+    }
+
+    // ============================
+    // POLYLINE DECODER
     // ============================
     function decodePolyline(str, precision = 5) {
       let index = 0, lat = 0, lng = 0;
@@ -269,25 +388,58 @@
         routeLine = null;
       }
 
-      routeLine = L.polyline(coords, {
-        weight: 7,
-        opacity: 0.85
-      }).addTo(map);
-
+      routeLine = L.polyline(coords, { weight: 7, opacity: 0.85 }).addTo(map);
       map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
     }
 
-    async function getRouteFromWorker(start, dest, mode) {
+    function showRouteStats(path, label) {
+      const km = (path.distance / 1000).toFixed(1);
+      const mins = Math.round(path.time / 60000);
+
+      statusTextEl.textContent = label;
+      routeTextEl.classList.remove("hidden");
+      routeTextEl.textContent = `Distance: ${km} km • ETA: ${mins} min`;
+    }
+
+    // ============================
+    // WORKER HELPERS
+    // ============================
+    async function getRouteFromWorkerByP1P2(start, dest, mode) {
       const url = new URL(WORKER_ROUTE_URL);
       url.searchParams.set("p1", `${start.lat},${start.lng}`);
       url.searchParams.set("p2", `${dest.lat},${dest.lng}`);
       url.searchParams.set("mode", mode);
 
       const res = await fetch(url.toString());
-      if (!res.ok) throw new Error("Worker failed");
-      return await res.json();
+      const json = await res.json();
+
+      if (!res.ok || json.ok === false) {
+        console.log("Worker error response:", json);
+        throw new Error(json.error || "Worker failed");
+      }
+
+      return json;
     }
 
+    async function getRouteFromWorkerByPoints(pointsString, mode) {
+      const url = new URL(WORKER_ROUTE_URL);
+      url.searchParams.set("points", pointsString);
+      url.searchParams.set("mode", mode);
+
+      const res = await fetch(url.toString());
+      const json = await res.json();
+
+      if (!res.ok || json.ok === false) {
+        console.log("Worker error response:", json);
+        throw new Error(json.error || "Worker failed");
+      }
+
+      return json;
+    }
+
+    // ============================
+    // ROUTING
+    // ============================
     async function route(mode = "normal") {
       if (!lastPosition) {
         statusTextEl.textContent = "No GPS yet 😬 allow location permission";
@@ -305,7 +457,7 @@
       routeTextEl.classList.add("hidden");
 
       try {
-        const result = await getRouteFromWorker(start, dest, mode);
+        const result = await getRouteFromWorkerByP1P2(start, dest, mode);
         const paths = result?.data?.paths || [];
         const chosenIndex = result?.chosenIndex ?? 0;
 
@@ -319,19 +471,76 @@
 
         drawRoute(coords);
 
-        const km = (chosen.distance / 1000).toFixed(1);
-        const mins = Math.round(chosen.time / 60000);
-
-        statusTextEl.textContent = mode === "highway"
-          ? "Highway preferred route ✅"
-          : "Normal route ✅";
-
-        routeTextEl.classList.remove("hidden");
-        routeTextEl.textContent = `Distance: ${km} km • ETA: ${mins} min`;
+        if (mode === "highway") showRouteStats(chosen, "Highway preferred route ✅");
+        else showRouteStats(chosen, "Normal route ✅");
 
       } catch (err) {
         console.error(err);
         statusTextEl.textContent = "Routing failed 😬";
+      }
+    }
+
+    async function forceHighwayRoute() {
+      if (!lastPosition) {
+        statusTextEl.textContent = "No GPS yet 😬";
+        return;
+      }
+      if (!destination) {
+        statusTextEl.textContent = "Pick a destination first 📍";
+        return;
+      }
+
+      statusTextEl.textContent = "Forcing highway route…";
+      routeTextEl.classList.add("hidden");
+
+      const start = `${lastPosition.coords.latitude},${lastPosition.coords.longitude}`;
+      const dest = `${destination.lat},${destination.lng}`;
+
+      // If user added checkpoints, use them!
+      if (checkpoints.length > 0) {
+        const cpStrings = checkpoints.map(c => `${c.lat},${c.lng}`);
+        const pointsString = [start, ...cpStrings, dest].join("|");
+
+        try {
+          const json = await getRouteFromWorkerByPoints(pointsString, "forced");
+          const path = json?.data?.paths?.[0];
+          if (!path) {
+            statusTextEl.textContent = "No forced route found 😢";
+            return;
+          }
+
+          drawRoute(decodePolyline(path.points, 5));
+          showRouteStats(path, "Forced route (checkpoints) ✅");
+          return;
+
+        } catch (err) {
+          console.error(err);
+          statusTextEl.textContent = "Forced route failed 😬";
+          return;
+        }
+      }
+
+      // Otherwise use a universal "highway checkpoint"
+      // This makes it work for ANY destination without breaking
+      const universalCheckpoint = "8.5950,124.4560"; // Laguindingan area (main highway direction)
+
+      const pointsString = [start, universalCheckpoint, dest].join("|");
+
+      try {
+        const json = await getRouteFromWorkerByPoints(pointsString, "forced");
+        const path = json?.data?.paths?.[0];
+
+        if (!path) {
+          statusTextEl.textContent = "No forced route found 😢";
+          return;
+        }
+
+        drawRoute(decodePolyline(path.points, 5));
+        showRouteStats(path, "Forced highway route ✅");
+
+      } catch (err) {
+        console.error(err);
+        statusTextEl.textContent = "Forced route failed 😬";
       }
     }
 
@@ -350,11 +559,19 @@
 
       userMarker = L.marker([0, 0]).bindPopup("You are here 😄");
 
+      // Click map: destination OR checkpoint mode
       map.on("click", (e) => {
+        if (addingCheckpoint) {
+          addCheckpoint(e.latlng.lat, e.latlng.lng);
+          statusTextEl.textContent = "Checkpoint added ⭐ (click again to add more)";
+          return;
+        }
+
         setDestination(e.latlng.lat, e.latlng.lng);
         statusTextEl.textContent = "Destination set 📍";
       });
 
+      // Buttons
       recenterBtn.addEventListener("click", () => {
         if (!lastPosition) return;
         map.setView(
@@ -366,16 +583,30 @@
 
       normalBtn.addEventListener("click", () => route("normal"));
       highwayBtn.addEventListener("click", () => route("highway"));
+      forceBtn.addEventListener("click", () => forceHighwayRoute());
+
+      addCheckpointBtn.addEventListener("click", () => {
+        addingCheckpoint = !addingCheckpoint;
+        statusTextEl.textContent = addingCheckpoint
+          ? "Checkpoint mode ON ⭐ click map to add"
+          : "Checkpoint mode OFF";
+      });
+
+      clearCheckpointBtn.addEventListener("click", () => {
+        clearCheckpoints();
+        statusTextEl.textContent = "Checkpoints cleared.";
+      });
 
       clearBtn.addEventListener("click", () => {
         if (routeLine) {
           map.removeLayer(routeLine);
           routeLine = null;
         }
-        statusTextEl.textContent = "Cleared.";
+        statusTextEl.textContent = "Route cleared.";
         routeTextEl.classList.add("hidden");
       });
 
+      // Search
       searchBtn.addEventListener("click", async () => {
         const q = (searchInput.value || "").trim();
         if (!q) return;
@@ -403,6 +634,7 @@
         if (e.key === "Enter") searchBtn.click();
       });
 
+      // GPS
       if (!("geolocation" in navigator)) {
         statusTextEl.textContent = "Geolocation not supported.";
         return;
@@ -442,6 +674,8 @@
           timeout: 20000
         }
       );
+
+      renderCheckpointList();
     }
   </script>
 </body>

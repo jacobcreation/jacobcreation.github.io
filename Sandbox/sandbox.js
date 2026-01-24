@@ -3,74 +3,51 @@ import { files } from "./editor.js";
 export function runSandbox() {
   const frame = document.getElementById("frame");
   const consoleEl = document.getElementById("console");
-
-  // Clear sandbox console
   consoleEl.textContent = "";
 
-  const userJS = (files.js || "")
-    .replace(/<\/script>/gi, "<\\/script>");
+  const userJS = (files.js || "").replace(/<\/script>/gi, "<\\/script>");
 
   frame.srcdoc = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <style>
-    ${files.css || ""}
-  </style>
+  <style>${files.css || ""}</style>
 </head>
 <body>
-
 ${files.html || ""}
 
 <script>
 (function () {
+  function send(type, args) {
+    parent.postMessage({ type, args }, "*");
+  }
 
-  /* ========= CONSOLE BRIDGE ========= */
-  ["log", "warn", "error"].forEach(type => {
-    console[type] = (...args) => {
-      parent.postMessage({ type, args }, "*");
-    };
-  });
+  console.log = (...a) => send("log", a);
+  console.warn = (...a) => send("warn", a);
+  console.error = (...a) => send("error", a);
 
-  /* ========= GLOBAL ERROR CAPTURE ========= */
-  window.onerror = function (message, source, lineno, colno) {
-    parent.postMessage(
-      {
-        type: "error",
-        args: [message, source ? \`(\${lineno}:\${colno})\` : ""]
-      },
-      "*"
-    );
+  window.onerror = function (msg, src, line, col) {
+    send("error", [msg + " (" + line + ":" + col + ")"]);
     return true;
   };
 
-  window.onunhandledrejection = function (event) {
-    parent.postMessage(
-      {
-        type: "error",
-        args: [
-          event.reason instanceof Error
-            ? event.reason.message
-            : String(event.reason)
-        ]
-      },
-      "*"
-    );
+  window.onunhandledrejection = function (e) {
+    send("error", [
+      e.reason instanceof Error ? e.reason.message : String(e.reason)
+    ]);
     return true;
   };
 
-  /* ========= USER CODE EXECUTION ========= */
   try {
-    const run = new Function(\`
+    const fn = new Function(\`
       "use strict";
       ${userJS}
     \`);
-    run();
+    fn();
   } catch (e) {
-    console.error(e);
+    send("error", [e.message]);
   }
-
 })();
 <\/script>
 
