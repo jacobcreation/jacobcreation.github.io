@@ -1,245 +1,385 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Salary Calculator (2025 Official + Prototype Style)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: "Segoe UI", Arial, sans-serif; background:#f0f7ff; margin:0; }
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #f0f7ff;
+      margin: 0;
+    }
+
     .container {
       width: 100%;
       max-width: 1400px;
       margin: 0 auto;
-      background:#fff;
-      padding:40px;
-      border-radius:0;
-      box-shadow:0 6px 20px rgba(0,0,0,0.1);
+      background: #fff;
+      padding: 40px;
+      border-radius: 0;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
     }
-    h2 { text-align:center; color:#2d8cff; margin-bottom:25px; font-size:2rem; }
-    .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(250px,1fr)); gap:16px; }
-    label { font-weight:bold; display:block; margin-top:6px; }
-    input { width:100%; padding:12px; margin-top:4px; border:1px solid #ccd; border-radius:12px; background:#f9fbff; font-size:1rem; }
-    .btns { display:flex; flex-wrap:wrap; gap:12px; margin-top:20px; }
-    button { padding:12px 16px; background:#2d8cff; color:#fff; border:none; border-radius:12px; cursor:pointer; font-weight:bold; }
-    button.secondary { background:#7aa8ff; }
-    button.chip { background:#eef5ff; color:#1d5ed8; border:1px solid #cfe0ff; }
-    button:hover { filter:brightness(0.95); }
-    .tiles { display:flex; flex-wrap:wrap; gap:16px; margin-top:25px; }
-    .tile { flex:1 1 300px; background:#f9fbff; border-radius:20px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
-    .tile h3 { margin:0 0 8px; font-size:1rem; color:#334; }
-    .tile .big { font-size:1.6rem; font-weight:bold; color:#2d8cff; }
-    .breakdown { margin-top:30px; background:#fdfdfd; border-radius:20px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.08); font-size:1rem; }
-    .breakdown h3 { margin-top:0; color:#2d8cff; font-size:1.2rem; }
-    .breakdown p { margin:8px 0; }
-    .hidden { display:none; }
+
+    h2 {
+      text-align: center;
+      color: #2d8cff;
+      margin-bottom: 25px;
+      font-size: 2rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 4px;
+      border: 1px solid #ccd;
+      border-radius: 12px;
+      background: #f9fbff;
+      font-size: 1rem;
+    }
+
+    .btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 12px 16px;
+      background: #2d8cff;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button.secondary {
+      background: #7aa8ff;
+    }
+
+    button.chip {
+      background: #eef5ff;
+      color: #1d5ed8;
+      border: 1px solid #cfe0ff;
+    }
+
+    button:hover {
+      filter: brightness(0.95);
+    }
+
+    .tiles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 25px;
+    }
+
+    .tile {
+      flex: 1 1 300px;
+      background: #f9fbff;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .tile h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+      color: #334;
+    }
+
+    .tile .big {
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: #2d8cff;
+    }
+
+    .breakdown {
+      margin-top: 30px;
+      background: #fdfdfd;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      font-size: 1rem;
+    }
+
+    .breakdown h3 {
+      margin-top: 0;
+      color: #2d8cff;
+      font-size: 1.2rem;
+    }
+
+    .breakdown p {
+      margin: 8px 0;
+    }
+
+    .hidden {
+      display: none;
+    }
+
     /* Confetti */
-    .confetti { position:fixed; top:-10px; width:8px; height:14px; background:#ffd54f; opacity:0.9; border-radius:2px; animation:fall 2.2s linear forwards; }
+    .confetti {
+      position: fixed;
+      top: -10px;
+      width: 8px;
+      height: 14px;
+      background: #ffd54f;
+      opacity: 0.9;
+      border-radius: 2px;
+      animation: fall 2.2s linear forwards;
+    }
+
     @keyframes fall {
-      0% { transform:translateY(-20px) rotate(0deg); }
-      100% { transform:translateY(110vh) rotate(720deg); opacity:0.2; }
+      0% {
+        transform: translateY(-20px) rotate(0deg);
+      }
+
+      100% {
+        transform: translateY(110vh) rotate(720deg);
+        opacity: 0.2;
+      }
     }
   </style>
 </head>
+
 <body>
-<div class="container">
-  <h2>₱ Salary Calculator (2025 Official + Prototype Style)</h2>
+  <div class="container">
+    <h2>₱ Salary Calculator (2025 Official + Prototype Style)</h2>
 
-  <form id="salaryForm">
-    <div class="grid">
-      <div><label for="hourly">Hourly rate (₱)</label><input type="number" id="hourly" placeholder="e.g. 120"></div>
-      <div><label for="regularHours">Regular hours/week</label><input type="number" id="regularHours" placeholder="e.g. 40"></div>
-      <div><label for="overtimeHours">Overtime hours/week</label><input type="number" id="overtimeHours" placeholder="e.g. 5"></div>
-      <div><label for="otMultiplier">OT multiplier</label><input type="number" id="otMultiplier" value="1.25"></div>
-      <div><label for="holidayHours">Holiday hours/week</label><input type="number" id="holidayHours" value="0"></div>
-      <div><label for="holidayRate">Holiday rate multiplier</label><input type="number" id="holidayRate" value="2.0"></div>
-      <div><label for="nightHours">Night hours/week</label><input type="number" id="nightHours" value="0"></div>
-      <div><label for="nightPercent">Night diff %</label><input type="number" id="nightPercent" value="0.10"></div>
-      <div><label for="allowance">Monthly allowances (₱)</label><input type="number" id="allowance" value="0"></div>
-      <div><label for="bonus">Monthly bonuses (₱)</label><input type="number" id="bonus" value="0"></div>
-    </div>
+    <form id="salaryForm">
+      <div class="grid">
+        <div><label for="hourly">Hourly rate (₱)</label><input type="number" id="hourly" placeholder="e.g. 120"></div>
+        <div><label for="regularHours">Regular hours/week</label><input type="number" id="regularHours"
+            placeholder="e.g. 40"></div>
+        <div><label for="overtimeHours">Overtime hours/week</label><input type="number" id="overtimeHours"
+            placeholder="e.g. 5"></div>
+        <div><label for="otMultiplier">OT multiplier</label><input type="number" id="otMultiplier" value="1.25"></div>
+        <div><label for="holidayHours">Holiday hours/week</label><input type="number" id="holidayHours" value="0"></div>
+        <div><label for="holidayRate">Holiday rate multiplier</label><input type="number" id="holidayRate" value="2.0">
+        </div>
+        <div><label for="nightHours">Night hours/week</label><input type="number" id="nightHours" value="0"></div>
+        <div><label for="nightPercent">Night diff %</label><input type="number" id="nightPercent" value="0.10"></div>
+        <div><label for="allowance">Monthly allowances (₱)</label><input type="number" id="allowance" value="0"></div>
+        <div><label for="bonus">Monthly bonuses (₱)</label><input type="number" id="bonus" value="0"></div>
+      </div>
 
-    <div class="btns">
-      <button type="submit">Calculate</button>
-      <button type="button" class="secondary" id="resetBtn">Reset</button>
+      <div class="btns">
+        <button type="submit">Calculate</button>
+        <button type="button" class="secondary" id="resetBtn">Reset</button>
 
-      <button type="button" class="chip" id="preset40h">Standard 40h week</button>
-      <button type="button" class="chip" id="addOT">+5 OT hours</button>
-      <button type="button" class="chip" id="holidayMode">Holiday mode</button>
-      <button type="button" class="chip" id="nightShift">Night shift</button>
-      <button type="button" class="chip" id="surpriseBonus">Surprise bonus 🎉</button>
-      <button type="button" class="chip" id="toggleBreakdown">Toggle breakdown</button>
-      <button type="button" class="chip" id="viewWeekly">View: Weekly</button>
-      <button type="button" class="chip" id="viewMonthly">View: Monthly</button>
-      <button type="button" class="chip" id="viewAnnual">View: Annual</button>
-      <button type="button" class="chip" id="printBtn">Print</button>
-    </div>
-  </form>
+        <button type="button" class="chip" id="preset40h">Standard 40h week</button>
+        <button type="button" class="chip" id="addOT">+5 OT hours</button>
+        <button type="button" class="chip" id="holidayMode">Holiday mode</button>
+        <button type="button" class="chip" id="nightShift">Night shift</button>
+        <button type="button" class="chip" id="surpriseBonus">Surprise bonus 🎉</button>
+        <button type="button" class="chip" id="toggleBreakdown">Toggle breakdown</button>
+        <button type="button" class="chip" id="viewWeekly">View: Weekly</button>
+        <button type="button" class="chip" id="viewMonthly">View: Monthly</button>
+        <button type="button" class="chip" id="viewAnnual">View: Annual</button>
+        <button type="button" class="chip" id="printBtn">Print</button>
+      </div>
+    </form>
 
-  <div id="output" class="hidden">
-    <div class="tiles">
-      <div class="tile" id="tileWeeklyGross"><h3>Weekly gross</h3><div class="big" id="weeklyGross"></div></div>
-      <div class="tile" id="tileMonthlyGross"><h3>Monthly gross</h3><div class="big" id="monthlyGross"></div></div>
-      <div class="tile" id="tileAnnualGross"><h3>Annual gross</h3><div class="big" id="annualGross"></div></div>
-      <div class="tile" id="tileWeeklyNet"><h3>Weekly net</h3><div class="big" id="weeklyNet"></div></div>
-      <div class="tile" id="tileMonthlyNet"><h3>Monthly net</h3><div class="big" id="monthlyNet"></div></div>
-      <div class="tile" id="tileAnnualNet"><h3>Annual net (incl. 13th)</h3><div class="big" id="annualNet"></div></div>
-    </div>
+    <div id="output" class="hidden">
+      <div class="tiles">
+        <div class="tile" id="tileWeeklyGross">
+          <h3>Weekly gross</h3>
+          <div class="big" id="weeklyGross"></div>
+        </div>
+        <div class="tile" id="tileMonthlyGross">
+          <h3>Monthly gross</h3>
+          <div class="big" id="monthlyGross"></div>
+        </div>
+        <div class="tile" id="tileAnnualGross">
+          <h3>Annual gross</h3>
+          <div class="big" id="annualGross"></div>
+        </div>
+        <div class="tile" id="tileWeeklyNet">
+          <h3>Weekly net</h3>
+          <div class="big" id="weeklyNet"></div>
+        </div>
+        <div class="tile" id="tileMonthlyNet">
+          <h3>Monthly net</h3>
+          <div class="big" id="monthlyNet"></div>
+        </div>
+        <div class="tile" id="tileAnnualNet">
+          <h3>Annual net (incl. 13th)</h3>
+          <div class="big" id="annualNet"></div>
+        </div>
+      </div>
 
-    <div class="breakdown" id="breakdown">
-      <h3>Breakdown</h3>
-      <p id="details"></p>
+      <div class="breakdown" id="breakdown">
+        <h3>Breakdown</h3>
+        <p id="details"></p>
+      </div>
     </div>
   </div>
-</div>
 
-<script>
-  // Helpers
-  function formatPHP(amount){ return "₱" + (isNaN(amount)?0:amount).toFixed(2); }
-  function confettiBurst(){
-    for(let i=0;i<24;i++){
-      const c=document.createElement("div");
-      c.className="confetti";
-      const colors=["#ffd54f","#4fc3f7","#ff8a80","#b388ff","#69f0ae","#ffcc80"];
-      c.style.background=colors[Math.floor(Math.random()*colors.length)];
-      c.style.left=Math.random()*100+"vw";
-      c.style.transform="translateY(-20px) rotate("+Math.random()*360+"deg)";
-      document.body.appendChild(c);
-      setTimeout(()=>c.remove(),2200);
+  <script>
+    // Helpers
+    function formatPHP(amount) { return "₱" + (isNaN(amount) ? 0 : amount).toFixed(2); }
+    function confettiBurst() {
+      for (let i = 0; i < 24; i++) {
+        const c = document.createElement("div");
+        c.className = "confetti";
+        const colors = ["#ffd54f", "#4fc3f7", "#ff8a80", "#b388ff", "#69f0ae", "#ffcc80"];
+        c.style.background = colors[Math.floor(Math.random() * colors.length)];
+        c.style.left = Math.random() * 100 + "vw";
+        c.style.transform = "translateY(-20px) rotate(" + Math.random() * 360 + "deg)";
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 2200);
+      }
     }
-  }
 
-  const weeksPerMonth=4.333;
+    const weeksPerMonth = 4.333;
 
-  // Calculate
-  document.getElementById("salaryForm").addEventListener("submit",function(e){
-    e.preventDefault();
+    // Calculate
+    document.getElementById("salaryForm").addEventListener("submit", function (e) {
+      e.preventDefault();
 
-    const rate = parseFloat(document.getElementById("hourly").value)||0;
-    const regH = parseFloat(document.getElementById("regularHours").value)||0;
-    const otH = parseFloat(document.getElementById("overtimeHours").value)||0;
-    const otM = parseFloat(document.getElementById("otMultiplier").value)||1.25;
-    const holidayH = parseFloat(document.getElementById("holidayHours").value)||0;
-    const holidayRate = parseFloat(document.getElementById("holidayRate").value)||2.0;
-    const nightH = parseFloat(document.getElementById("nightHours").value)||0;
-    const nightPct = parseFloat(document.getElementById("nightPercent").value)||0.10;
-    const allowance = parseFloat(document.getElementById("allowance").value)||0;
-    const bonus = parseFloat(document.getElementById("bonus").value)||0;
+      const rate = parseFloat(document.getElementById("hourly").value) || 0;
+      const regH = parseFloat(document.getElementById("regularHours").value) || 0;
+      const otH = parseFloat(document.getElementById("overtimeHours").value) || 0;
+      const otM = parseFloat(document.getElementById("otMultiplier").value) || 1.25;
+      const holidayH = parseFloat(document.getElementById("holidayHours").value) || 0;
+      const holidayRate = parseFloat(document.getElementById("holidayRate").value) || 2.0;
+      const nightH = parseFloat(document.getElementById("nightHours").value) || 0;
+      const nightPct = parseFloat(document.getElementById("nightPercent").value) || 0.10;
+      const allowance = parseFloat(document.getElementById("allowance").value) || 0;
+      const bonus = parseFloat(document.getElementById("bonus").value) || 0;
 
-    // Weekly components
-    const regularWeekly=rate*regH;
-    const overtimeWeekly=rate*otH*otM;
-    const holidayWeekly=rate*holidayH*holidayRate;
-    const nightWeekly=rate*nightH*nightPct;
-    const weeklyGross=regularWeekly+overtimeWeekly+holidayWeekly+nightWeekly;
+      // Weekly components
+      const regularWeekly = rate * regH;
+      const overtimeWeekly = rate * otH * otM;
+      const holidayWeekly = rate * holidayH * holidayRate;
+      const nightWeekly = rate * nightH * nightPct;
+      const weeklyGross = regularWeekly + overtimeWeekly + holidayWeekly + nightWeekly;
 
-    const monthlyGross=weeklyGross*weeksPerMonth+allowance+bonus;
-    const annualGross=monthlyGross*12;
+      const monthlyGross = weeklyGross * weeksPerMonth + allowance + bonus;
+      const annualGross = monthlyGross * 12;
 
-    // Official deductions (based on monthly basic from regular hours)
-    const monthlyBasic = regularWeekly*weeksPerMonth;
-    const msc=Math.min(Math.max(monthlyBasic,5000),35000);
-    const sss=msc*0.075;
-    const phBase=Math.min(Math.max(monthlyBasic,10000),100000);
-    const philhealth=phBase*0.05/2;
-    const pagibig=Math.min(monthlyBasic*0.02,200);
+      // Official deductions (based on monthly basic from regular hours)
+      const monthlyBasic = regularWeekly * weeksPerMonth;
+      const msc = Math.min(Math.max(monthlyBasic, 5000), 35000);
+      const sss = msc * 0.075;
+      const phBase = Math.min(Math.max(monthlyBasic, 10000), 100000);
+      const philhealth = phBase * 0.05 / 2;
+      const pagibig = Math.min(monthlyBasic * 0.02, 200);
 
-    const taxable=monthlyGross-(sss+philhealth+pagibig);
-    let tax=0;
-    if(taxable<=20833)tax=0;
-    else if(taxable<=33333)tax=(taxable-20833)*0.20;
-    else if(taxable<=66667)tax=2500+(taxable-33333)*0.25;
-    else if(taxable<=166667)tax=10833+(taxable-66667)*0.30;
-    else if(taxable<=666667)tax=40833+(taxable-166667)*0.32;
-    else tax=200833+(taxable-666667)*0.35;
+      const taxable = monthlyGross - (sss + philhealth + pagibig);
+      let tax = 0;
+      if (taxable <= 20833) tax = 0;
+      else if (taxable <= 33333) tax = (taxable - 20833) * 0.20;
+      else if (taxable <= 66667) tax = 2500 + (taxable - 33333) * 0.25;
+      else if (taxable <= 166667) tax = 10833 + (taxable - 66667) * 0.30;
+      else if (taxable <= 666667) tax = 40833 + (taxable - 166667) * 0.32;
+      else tax = 200833 + (taxable - 666667) * 0.35;
 
-    const monthlyNet=monthlyGross-(sss+philhealth+pagibig+tax);
-    const weeklyNet=monthlyNet/weeksPerMonth;
-    const thirteenth=monthlyBasic; // basic only
-    const annualNet=monthlyNet*12+thirteenth;
+      const monthlyNet = monthlyGross - (sss + philhealth + pagibig + tax);
+      const weeklyNet = monthlyNet / weeksPerMonth;
+      const thirteenth = monthlyBasic; // basic only
+      const annualNet = monthlyNet * 12 + thirteenth;
 
-    // Show results
-    document.getElementById("output").classList.remove("hidden");
-    document.getElementById("weeklyGross").textContent=formatPHP(weeklyGross);
-    document.getElementById("monthlyGross").textContent=formatPHP(monthlyGross);
-    document.getElementById("annualGross").textContent=formatPHP(annualGross);
-    document.getElementById("weeklyNet").textContent=formatPHP(weeklyNet);
-    document.getElementById("monthlyNet").textContent=formatPHP(monthlyNet);
-    document.getElementById("annualNet").textContent=formatPHP(annualNet);
+      // Show results
+      document.getElementById("output").classList.remove("hidden");
+      document.getElementById("weeklyGross").textContent = formatPHP(weeklyGross);
+      document.getElementById("monthlyGross").textContent = formatPHP(monthlyGross);
+      document.getElementById("annualGross").textContent = formatPHP(annualGross);
+      document.getElementById("weeklyNet").textContent = formatPHP(weeklyNet);
+      document.getElementById("monthlyNet").textContent = formatPHP(monthlyNet);
+      document.getElementById("annualNet").textContent = formatPHP(annualNet);
 
-    document.getElementById("details").innerHTML =
-      "Regular weekly: " + formatPHP(regularWeekly) + "<br>" +
-      "Overtime weekly: " + formatPHP(overtimeWeekly) + "<br>" +
-      "Holiday weekly: " + formatPHP(holidayWeekly) + "<br>" +
-      "Night diff weekly: " + formatPHP(nightWeekly) + "<br>" +
-      "Allowances: " + formatPHP(allowance) + "<br>" +
-      "Bonuses: " + formatPHP(bonus) + "<br>" +
-      "SSS (EE): " + formatPHP(sss) + "<br>" +
-      "PhilHealth (EE): " + formatPHP(philhealth) + "<br>" +
-      "Pag‑IBIG (EE): " + formatPHP(pagibig) + "<br>" +
-      "Tax (withholding): " + formatPHP(tax) + "<br>" +
-      "Net monthly: " + formatPHP(monthlyNet) + "<br>" +
-      "13th month (basic only): " + formatPHP(thirteenth) + "<br>" +
-      "Annual net (incl. 13th): " + formatPHP(annualNet);
+      document.getElementById("details").innerHTML =
+        "Regular weekly: " + formatPHP(regularWeekly) + "<br>" +
+        "Overtime weekly: " + formatPHP(overtimeWeekly) + "<br>" +
+        "Holiday weekly: " + formatPHP(holidayWeekly) + "<br>" +
+        "Night diff weekly: " + formatPHP(nightWeekly) + "<br>" +
+        "Allowances: " + formatPHP(allowance) + "<br>" +
+        "Bonuses: " + formatPHP(bonus) + "<br>" +
+        "SSS (EE): " + formatPHP(sss) + "<br>" +
+        "PhilHealth (EE): " + formatPHP(philhealth) + "<br>" +
+        "Pag‑IBIG (EE): " + formatPHP(pagibig) + "<br>" +
+        "Tax (withholding): " + formatPHP(tax) + "<br>" +
+        "Net monthly: " + formatPHP(monthlyNet) + "<br>" +
+        "13th month (basic only): " + formatPHP(thirteenth) + "<br>" +
+        "Annual net (incl. 13th): " + formatPHP(annualNet);
 
-    confettiBurst();
-  });
+      confettiBurst();
+    });
 
-  // Reset button
-  document.getElementById("resetBtn").addEventListener("click", function(){
-    document.getElementById("salaryForm").reset();
-    document.getElementById("output").classList.add("hidden");
-  });
+    // Reset button
+    document.getElementById("resetBtn").addEventListener("click", function () {
+      document.getElementById("salaryForm").reset();
+      document.getElementById("output").classList.add("hidden");
+    });
 
-  // Presets
-  document.getElementById("preset40h").addEventListener("click", ()=>{
-    document.getElementById("hourly").value=120;
-    document.getElementById("regularHours").value=40;
-  });
-  document.getElementById("addOT").addEventListener("click", ()=>{
-    const el=document.getElementById("overtimeHours");
-    el.value = (parseFloat(el.value)||0) + 5;
-  });
-  document.getElementById("holidayMode").addEventListener("click", ()=>{
-    document.getElementById("holidayHours").value=8;
-    document.getElementById("holidayRate").value=2.0;
-  });
-  document.getElementById("nightShift").addEventListener("click", ()=>{
-    document.getElementById("nightHours").value=8;
-    document.getElementById("nightPercent").value=0.10;
-  });
-  document.getElementById("surpriseBonus").addEventListener("click", ()=>{
-    document.getElementById("bonus").value = Math.floor(Math.random()*5000) + 500; // ₱500–₱5500
-    confettiBurst();
-  });
+    // Presets
+    document.getElementById("preset40h").addEventListener("click", () => {
+      document.getElementById("hourly").value = 120;
+      document.getElementById("regularHours").value = 40;
+    });
+    document.getElementById("addOT").addEventListener("click", () => {
+      const el = document.getElementById("overtimeHours");
+      el.value = (parseFloat(el.value) || 0) + 5;
+    });
+    document.getElementById("holidayMode").addEventListener("click", () => {
+      document.getElementById("holidayHours").value = 8;
+      document.getElementById("holidayRate").value = 2.0;
+    });
+    document.getElementById("nightShift").addEventListener("click", () => {
+      document.getElementById("nightHours").value = 8;
+      document.getElementById("nightPercent").value = 0.10;
+    });
+    document.getElementById("surpriseBonus").addEventListener("click", () => {
+      document.getElementById("bonus").value = Math.floor(Math.random() * 5000) + 500; // ₱500–₱5500
+      confettiBurst();
+    });
 
-  // Breakdown toggle
-  document.getElementById("toggleBreakdown").addEventListener("click", ()=>{
-    document.getElementById("breakdown").classList.toggle("hidden");
-  });
+    // Breakdown toggle
+    document.getElementById("toggleBreakdown").addEventListener("click", () => {
+      document.getElementById("breakdown").classList.toggle("hidden");
+    });
 
-  // View toggles (hide/show tiles)
-  function showView(view){
-    const ids = {
-      weekly: ["tileWeeklyGross","tileWeeklyNet"],
-      monthly:["tileMonthlyGross","tileMonthlyNet"],
-      annual: ["tileAnnualGross","tileAnnualNet"]
-    };
-    const all = ["tileWeeklyGross","tileWeeklyNet","tileMonthlyGross","tileMonthlyNet","tileAnnualGross","tileAnnualNet"];
-    all.forEach(id=>document.getElementById(id).style.display="none");
-    ids[view].forEach(id=>document.getElementById(id).style.display="block");
-  }
-  document.getElementById("viewWeekly").addEventListener("click", ()=>showView("weekly"));
-  document.getElementById("viewMonthly").addEventListener("click", ()=>showView("monthly"));
-  document.getElementById("viewAnnual").addEventListener("click", ()=>showView("annual"));
-  // Default: show all
-  showView("weekly");
-  document.getElementById("tileMonthlyGross").style.display="block";
-  document.getElementById("tileMonthlyNet").style.display="block";
-  document.getElementById("tileAnnualGross").style.display="block";
-  document.getElementById("tileAnnualNet").style.display="block";
+    // View toggles (hide/show tiles)
+    function showView(view) {
+      const ids = {
+        weekly: ["tileWeeklyGross", "tileWeeklyNet"],
+        monthly: ["tileMonthlyGross", "tileMonthlyNet"],
+        annual: ["tileAnnualGross", "tileAnnualNet"]
+      };
+      const all = ["tileWeeklyGross", "tileWeeklyNet", "tileMonthlyGross", "tileMonthlyNet", "tileAnnualGross", "tileAnnualNet"];
+      all.forEach(id => document.getElementById(id).style.display = "none");
+      ids[view].forEach(id => document.getElementById(id).style.display = "block");
+    }
+    document.getElementById("viewWeekly").addEventListener("click", () => showView("weekly"));
+    document.getElementById("viewMonthly").addEventListener("click", () => showView("monthly"));
+    document.getElementById("viewAnnual").addEventListener("click", () => showView("annual"));
+    // Default: show all
+    showView("weekly");
+    document.getElementById("tileMonthlyGross").style.display = "block";
+    document.getElementById("tileMonthlyNet").style.display = "block";
+    document.getElementById("tileAnnualGross").style.display = "block";
+    document.getElementById("tileAnnualNet").style.display = "block";
 
-  // Print
-  document.getElementById("printBtn").addEventListener("click", ()=>window.print());
-</script>
+    // Print
+    document.getElementById("printBtn").addEventListener("click", () => window.print());
+  </script>
+  <script src="../global-header.js"></script>
 </body>
+
 </html>

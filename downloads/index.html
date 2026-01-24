@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,32 +14,38 @@
       margin: 40px auto;
       padding: 20px;
     }
+
     h1 {
       text-align: center;
       color: #0b74de;
       margin-bottom: 30px;
     }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
       gap: 16px;
     }
+
     .card {
       background: #fff;
       border-radius: 10px;
       padding: 16px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       text-align: center;
     }
+
     .card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
     }
+
     .card .icon {
       font-size: 40px;
       color: #0b74de;
     }
+
     .card a {
       text-decoration: none;
       color: #0b74de;
@@ -51,12 +58,14 @@
       background: #f0f8ff;
       transition: background 0.2s ease, color 0.2s ease;
     }
+
     .card a:hover {
       background: #0b74de;
       color: #fff;
     }
   </style>
 </head>
+
 <body>
   <h1>📂 Downloads</h1>
   <div id="fileGrid" class="grid">
@@ -95,5 +104,7 @@
         console.error(err);
       });
   </script>
+  <script src="../global-header.js"></script>
 </body>
+
 </html>

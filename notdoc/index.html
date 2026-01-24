@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Reminder App (Debug Mode)</title>
@@ -11,6 +12,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging-compat.js"></script>
 </head>
+
 <body>
   <h1>⏰ Reminder App (Debug Mode)</h1>
   <p>Click the button below to enable notifications.</p>
@@ -55,26 +57,28 @@
           messaging.getToken({
             vapidKey: "BNxQFLXg4YGiJsePlujYNT9pXVdRgrKaqLrczlRuJ8k5raLeh5E11GiEVjpSYDCBo7m6Y2RbRkjUZd62yXYhW4E"
           })
-          .then(token => {
-            alert("✅ Token received!");
-            console.log("📨 FCM Token:", token);
-            fetch("/save-token", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ token })
+            .then(token => {
+              alert("✅ Token received!");
+              console.log("📨 FCM Token:", token);
+              fetch("/save-token", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token })
+              })
+                .then(() => console.log("✅ Token sent to server"))
+                .catch(err => console.error("❌ Error sending token:", err));
             })
-            .then(() => console.log("✅ Token sent to server"))
-            .catch(err => console.error("❌ Error sending token:", err));
-          })
-          .catch(err => {
-            console.error("❌ Token error:", err);
-            alert("❌ Token error! See console.");
-          });
+            .catch(err => {
+              console.error("❌ Token error:", err);
+              alert("❌ Token error! See console.");
+            });
         } else {
           alert("⚠️ Notifications blocked or dismissed.");
         }
       });
     }
   </script>
+  <script src="../global-header.js"></script>
 </body>
+
 </html>
