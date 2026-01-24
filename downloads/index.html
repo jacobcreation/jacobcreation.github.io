@@ -4,73 +4,135 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Downloads</title>
+  <title>Downloads | JacobCreation</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
+    :root {
+      --bg1: #0b1020;
+      --bg2: #0a1633;
+      --card: rgba(255, 255, 255, 0.08);
+      --card-hover: rgba(255, 255, 255, 0.12);
+      --border: rgba(255, 255, 255, 0.14);
+      --text: #eaf2ff;
+      --muted: rgba(234, 242, 255, 0.75);
+      --blue: #4ea1ff;
+      --shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: "Segoe UI", Roboto, Arial, sans-serif;
-      background: #f4f6f9;
-      color: #333;
-      max-width: 900px;
-      margin: 40px auto;
+      margin: 0;
+      font-family: "Poppins", system-ui, -apple-system, sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(78, 161, 255, 0.30), transparent 55%),
+        radial-gradient(900px 600px at 90% 15%, rgba(45, 107, 255, 0.22), transparent 55%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      display: flex;
+      flex-direction: column;
+    }
+
+    main {
+      max-width: 1000px;
+      margin: 80px auto 40px;
+      /* Top margin for fixed header */
       padding: 20px;
+      width: 100%;
+      flex: 1;
     }
 
     h1 {
       text-align: center;
-      color: #0b74de;
-      margin-bottom: 30px;
+      margin-bottom: 40px;
+      font-size: 2.5rem;
+      background: linear-gradient(135deg, #fff 0%, #4ea1ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 10px 30px rgba(78, 161, 255, 0.3);
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 20px;
     }
 
     .card {
-      background: #fff;
-      border-radius: 10px;
-      padding: 16px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
       text-align: center;
+      transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      height: 100%;
     }
 
     .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+      transform: translateY(-5px);
+      background: var(--card-hover);
+      box-shadow: var(--shadow);
+      border-color: rgba(255, 255, 255, 0.25);
     }
 
     .card .icon {
-      font-size: 40px;
-      color: #0b74de;
+      font-size: 48px;
+      margin-bottom: 15px;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
     }
 
-    .card a {
+    .card-title {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+
+    .btn-download {
       text-decoration: none;
-      color: #0b74de;
-      font-weight: bold;
-      display: inline-block;
-      margin-top: 10px;
-      padding: 8px 14px;
-      border: 1px solid #0b74de;
-      border-radius: 6px;
-      background: #f0f8ff;
-      transition: background 0.2s ease, color 0.2s ease;
+      color: #071122;
+      background: linear-gradient(135deg, #4ea1ff, #2d6bff);
+      font-weight: 700;
+      padding: 10px 24px;
+      border-radius: 999px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .card a:hover {
-      background: #0b74de;
-      color: #fff;
+    .btn-download:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(78, 161, 255, 0.5);
+    }
+
+    .loading-text {
+      text-align: center;
+      font-size: 1.2rem;
+      color: var(--muted);
     }
   </style>
 </head>
 
 <body>
-  <h1>📂 Downloads</h1>
-  <div id="fileGrid" class="grid">
-    <p>Loading files.json…</p>
-  </div>
+  <main>
+    <h1>📂 Offline Downloads</h1>
+    <div id="fileGrid" class="grid">
+      <p class="loading-text">Loading available games…</p>
+    </div>
+  </main>
 
   <script>
     fetch('./files.json')
@@ -82,28 +144,26 @@
           const card = document.createElement('div');
           card.className = 'card';
 
-          // icon
-          const icon = document.createElement('div');
-          icon.className = 'icon';
-          icon.textContent = "📄";
+          const filename = file.split("/").pop().replace(".html", "");
 
-          // link
-          const link = document.createElement('a');
-          link.href = file;
-          link.textContent = file.split("/").pop().replace(".html", ""); // ✅ show only filename, no path, no extension
-          link.setAttribute('download', '');
+          card.innerHTML = `
+            <div class="icon">📄</div>
+            <div class="card-title">${filename}</div>
+            <a href="${file}" class="btn-download" download>
+              Download
+            </a>
+          `;
 
-          card.appendChild(icon);
-          card.appendChild(link);
           grid.appendChild(card);
         });
       })
       .catch(err => {
         document.getElementById('fileGrid').innerHTML =
-          "<p style='color:red;'>⚠️ Could not load files.json</p>";
+          "<p style='color:#ff6b6b; text-align:center;'>⚠️ Could not load files.json</p>";
         console.error(err);
       });
   </script>
+
   <script src="../global-header.js"></script>
 </body>
 
