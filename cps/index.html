@@ -222,9 +222,54 @@
   </div>
 
   <script>
+    const STORAGE_KEY = "cps_data_v1";
     let MODE = null, ROUND = 0, OPEN = false;
     let players = [], pairings = [], history = [];
     let TOURNAMENT = "Tournament";
+
+    /* Persistence */
+    function saveData() {
+      const data = { players, pairings, history, MODE, ROUND, OPEN, TOURNAMENT };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadData() {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (!data) return;
+
+      players = data.players;
+      pairings = data.pairings;
+      history = data.history;
+      MODE = data.MODE;
+      ROUND = data.ROUND;
+      OPEN = data.OPEN;
+      TOURNAMENT = data.TOURNAMENT;
+
+      // Fix object references in pairings
+      pairings.forEach(p => {
+        p.a = players.find(x => x.id === p.a.id);
+        p.b = players.find(x => x.id === p.b.id);
+      });
+
+      // Restore UI
+      if (MODE) {
+        modeScreen.classList.add("hidden");
+        tournamentScreen.classList.remove("hidden");
+        title.textContent = `${TOURNAMENT} (${MODE === "swiss" ? "Swiss" : "Round Robin"})`;
+      }
+      if (ROUND > 0) {
+        roundTitle.textContent = `${TOURNAMENT} — Round ${ROUND}`;
+      }
+
+      render();
+      if (OPEN || ROUND > 0) renderPairings();
+      if (!OPEN && ROUND > 0) document.querySelectorAll(".result-col select").forEach(s => s.disabled = true);
+    }
+
+    function updateResult(i, val) {
+      pairings[i].res = val;
+      saveData();
+    }
 
     /* Start */
     function start(m) {
@@ -233,6 +278,7 @@
       title.textContent = `${TOURNAMENT} (${m === "swiss" ? "Swiss" : "Round Robin"})`;
       modeScreen.classList.add("hidden");
       tournamentScreen.classList.remove("hidden");
+      saveData();
     }
 
     /* Players */
@@ -251,12 +297,14 @@
       });
       pName.value = ""; pRating.value = "";
       render();
+      saveData();
     }
 
     function removePlayer(id) {
       if (ROUND > 0) return alert("Cannot remove after start");
       players = players.filter(p => p.id !== id);
       render();
+      saveData();
     }
 
     function loadFile() {
@@ -280,6 +328,7 @@
           }
         });
         render();
+        saveData();
       };
       r.readAsText(f);
     }
@@ -291,7 +340,6 @@
 
       history.push(JSON.stringify({ players, ROUND }));
       ROUND++; OPEN = true; pairings = [];
-      pairingsEl.innerHTML = "";
       roundTitle.textContent = `${TOURNAMENT} — Round ${ROUND}`;
 
       let pool = [...players].sort((a, b) => b.score - a.score || b.rating - a.rating);
@@ -299,43 +347,55 @@
 
       if (pool.length % 2) {
         bye = pool.find(p => !p.bye);
-        bye.bye = true;
-        bye.score++;
-        bye.opp.push(null);
-        bye.results.push(1);
-        pool = pool.filter(p => p !== bye);
+        if (bye) {
+          bye.bye = true;
+          bye.score++;
+          bye.opp.push(null);
+          bye.results.push(1);
+          pool = pool.filter(p => p !== bye);
+        }
       }
 
-      let board = 1;
       while (pool.length) {
         let a = pool.shift();
         let b = pool.find(x => !a.opp.includes(x.id)) || pool[0];
         pool = pool.filter(x => x !== b);
-
         pairings.push({ a, b, res: "" });
-        pairingsEl.innerHTML += `
-    <tr>
-      <td>${board}</td>
-      <td>${a.name}</td>
-      <td>${b.name}</td>
-      <td class="result-col">
-        <select onchange="pairings[${pairings.length - 1}].res=this.value">
-          <option value="">—</option>
-          <option value="1-0">1-0</option>
-          <option value="0-1">0-1</option>
-          <option value="0.5">½–½</option>
-        </select>
-      </td>
-    </tr>`;
-        board++;
       }
 
-      if (bye) {
+      renderPairings();
+      saveData();
+    }
+
+    function renderPairings() {
+      pairingsEl.innerHTML = "";
+      let board = 1;
+
+      pairings.forEach((p, i) => {
+        const val = p.res;
         pairingsEl.innerHTML += `
-    <tr>
-      <td>—</td><td>${bye.name}</td><td>BYE</td>
-      <td class="result-col">+1</td>
-    </tr>`;
+        <tr>
+          <td>${board++}</td>
+          <td>${p.a.name}</td>
+          <td>${p.b.name}</td>
+          <td class="result-col">
+            <select onchange="updateResult(${i}, this.value)">
+              <option value="" ${val === "" ? "selected" : ""}>—</option>
+              <option value="1-0" ${val === "1-0" ? "selected" : ""}>1-0</option>
+              <option value="0-1" ${val === "0-1" ? "selected" : ""}>0-1</option>
+              <option value="0.5" ${val === "0.5" ? "selected" : ""}>½–½</option>
+            </select>
+          </td>
+        </tr>`;
+      });
+
+      const byePlayer = players.find(p => !pairings.some(m => m.a.id === p.id || m.b.id === p.id));
+      if (byePlayer) {
+        pairingsEl.innerHTML += `
+        <tr>
+          <td>—</td><td>${byePlayer.name}</td><td>BYE</td>
+          <td class="result-col">+1</td>
+        </tr>`;
       }
     }
 
@@ -365,6 +425,7 @@
       document.querySelectorAll(".result-col select").forEach(s => s.disabled = true);
       OPEN = false;
       render();
+      saveData();
     }
 
     /* Tie-breaks */
@@ -420,6 +481,7 @@
       OPEN = false;
       calculateTieBreaks();
       render();
+      saveData();
     }
 
     /* Print */
@@ -441,19 +503,19 @@
     }
 
     /* Reset */
-    function resetAll() { location.reload() }
+    function resetAll() {
+      if (confirm("Are you sure? This will delete all tournament data.")) {
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+      }
+    }
 
     /* DOM */
     const standings = document.getElementById("standings");
     const pairingsEl = document.getElementById("pairings");
 
     /* Prevent Navigation */
-    window.addEventListener('beforeunload', function (e) {
-      if (players.length > 0 || ROUND > 0) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    });
+    loadData();
   </script>
 
   <script src="../global-header.js"></script>

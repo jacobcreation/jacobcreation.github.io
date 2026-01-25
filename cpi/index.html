@@ -3,71 +3,1263 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>Chess PGN Importer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="./styles.css" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>JacobAnalysis</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #111a33;
+      --text: #e9eeff;
+      --muted: #aab6e8;
+      --line: rgba(255, 255, 255, .10);
+      --btn: #2a3b7a;
+      --btn2: #1e2c5c;
+      --good: #38d39f;
+      --bad: #ff6b6b;
+
+      --sqLight: #f0d9b5;
+      --sqDark: #b58863;
+
+      --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+      --r: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background:
+        radial-gradient(1200px 700px at 20% -10%, #1c2c6a 0%, transparent 60%),
+        radial-gradient(1000px 600px at 90% 0%, #3b1c6a 0%, transparent 55%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(10, 15, 30, .65);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 240px;
+    }
+
+    .logo {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #2d6bff, #8a2dff);
+      box-shadow: var(--shadow);
+      font-size: 20px;
+    }
+
+    .title {
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, var(--btn), var(--btn2));
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 650;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .25);
+      transition: .12s transform, .12s opacity;
+      user-select: none;
+      font-size: 14px;
+    }
+
+    .btn:active {
+      transform: scale(.98);
+    }
+
+    .btn.light {
+      background: rgba(255, 255, 255, .06);
+    }
+
+    .btn.danger {
+      background: rgba(255, 107, 107, .12);
+      border-color: rgba(255, 107, 107, .25);
+    }
+
+    .btn.secondary {
+      background: rgba(56, 211, 159, .12);
+      border-color: rgba(56, 211, 159, .25);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 360px minmax(320px, 520px) 1fr;
+      gap: 14px;
+      padding: 14px;
+      align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: rgba(17, 26, 51, .75);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      padding: 12px;
+    }
+
+    .card-title {
+      font-weight: 800;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(0, 0, 0, .25);
+      color: var(--text);
+      padding: 10px;
+      outline: none;
+      resize: vertical;
+      min-height: 140px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    select {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(0, 0, 0, .25);
+      color: var(--text);
+      padding: 10px;
+      outline: none;
+      font-size: 13px;
+      min-height: 210px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* ===== BOARD (PERFECT SQUARES) ===== */
+    .board-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .board {
+      width: min(520px, 92vw);
+      height: min(520px, 92vw);
+      border-radius: 22px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+
+      background: rgba(0, 0, 0, .2);
+      user-select: none;
+      position: relative;
+    }
+
+    .sq {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .sq.light {
+      background: var(--sqLight);
+    }
+
+    .sq.dark {
+      background: var(--sqDark);
+    }
+
+    .sq.last {
+      box-shadow: inset 0 0 0 999px rgba(255, 235, 59, .28);
+    }
+
+    .sq.sel {
+      box-shadow: inset 0 0 0 999px rgba(0, 255, 255, .18);
+    }
+
+    .sq.hint {
+      box-shadow: inset 0 0 0 999px rgba(56, 211, 159, .20);
+    }
+
+    .piece {
+      width: 78%;
+      height: 78%;
+      pointer-events: none;
+      filter: drop-shadow(0 3px 2px rgba(0, 0, 0, .25));
+    }
+
+    .sq .coord {
+      position: absolute;
+      left: 6px;
+      bottom: 4px;
+      font-size: 10px;
+      color: rgba(0, 0, 0, .55);
+      font-weight: 800;
+      pointer-events: none;
+    }
+
+    .sq.dark .coord {
+      color: rgba(255, 255, 255, .70);
+    }
+
+    .board-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .meta {
+      width: min(520px, 92vw);
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      background: rgba(17, 26, 51, .55);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 10px 12px;
+    }
+
+    /* Right side panels */
+    .right-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .moves {
+      height: 430px;
+      max-height: 55vh;
+      overflow: auto;
+      padding-right: 6px;
+    }
+
+    @media (max-width: 1100px) {
+      .moves {
+        height: auto;
+        max-height: none;
+      }
+    }
+
+    .move-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .mv {
+      border: 1px solid var(--line);
+      background: rgba(0, 0, 0, .18);
+      border-radius: 14px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text);
+      transition: .12s transform;
+    }
+
+    .mv:active {
+      transform: scale(.98);
+    }
+
+    .mv.active {
+      border-color: rgba(56, 211, 159, .45);
+      background: rgba(56, 211, 159, .12);
+    }
+
+    .tagline {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .small-note {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+      opacity: .9;
+    }
+
+    .kbd {
+      display: inline-block;
+      padding: 2px 6px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, .2);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .engine-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .engine-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      background: rgba(0, 0, 0, .18);
+      padding: 8px 10px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .10);
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+
+    .bar>div {
+      height: 100%;
+      width: 50%;
+      background: rgba(56, 211, 159, .75);
+      transition: width .2s ease;
+    }
+
+    .pv {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(0, 0, 0, .18);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 60px;
+    }
+
+    input[type="range"] {
+      width: 160px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+    }
+  </style>
 </head>
 
 <body>
-  <header class="header">
-    <h1>♟️ Chess PGN importer</h1>
-    <p class="sub">Load PGN, pick a game, and step through moves.</p>
+  <header>
+    <div class="brand">
+      <div class="logo">♟️</div>
+      <div>
+        <div class="title">JacobAnalysis</div>
+        <div class="sub">Import PGN • browse games • click-to-move • engine</div>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <label class="btn light">
+        <input type="file" id="pgnFile" accept=".pgn,text/plain" hidden />
+        📁 Load PGN
+      </label>
+      <button class="btn secondary" id="demoBtn">Demo PGN</button>
+      <button class="btn danger" id="clearBtn">Clear</button>
+    </div>
   </header>
 
-  <main class="container">
-    <section class="loader">
-      <div class="input-row">
-        <label class="btn">
-          <input type="file" id="pgnFile" accept=".pgn,text/plain" hidden />
-          📁 Load PGN file
-        </label>
-        <button id="demoBtn" class="btn btn-secondary">Try demo PGN</button>
-        <button id="clearBtn" class="btn btn-light">Clear</button>
+  <main class="layout">
+    <section class="left">
+      <div class="card">
+        <div class="card-title">
+          <span>PGN</span>
+          <span class="status" id="status">Ready</span>
+        </div>
+
+        <textarea id="pgnText" placeholder="Paste PGN here... (Lichess study PGN OK)"></textarea>
+
+        <div class="row">
+          <button class="btn" id="importBtn">Import</button>
+          <button class="btn light" id="downloadBtn">⬇️ Download</button>
+        </div>
+
+        <div class="small-note">
+          Shortcuts:
+          <span class="kbd">←</span> prev,
+          <span class="kbd">→</span> next,
+          <span class="kbd">Space</span> play/pause,
+          <span class="kbd">F</span> flip,
+          <span class="kbd">E</span> analyze
+        </div>
+
+        <div class="small-note">
+          Click-to-move:
+          click a piece ➜ click a destination square (legal moves only)
+        </div>
       </div>
 
-      <textarea id="pgnText" placeholder="Paste PGN here…" rows="6"></textarea>
-
-      <div class="input-row">
-        <button id="importBtn" class="btn">Import PGN</button>
-        <span id="status" class="status"></span>
+      <div class="card">
+        <div class="card-title">
+          <span>Games</span>
+          <span class="tagline" id="gameInfo">0 games</span>
+        </div>
+        <select id="gameSelect" size="10"></select>
       </div>
     </section>
 
-    <section class="games">
-      <h2>Games</h2>
-      <select id="gameSelect" size="6"></select>
+    <section class="center">
+      <div class="card board-wrap">
+        <div class="board" id="board" aria-label="Chess board"></div>
+
+        <div class="board-buttons">
+          <button class="btn light" id="flipBtn">⇅ Flip</button>
+          <button class="btn light" id="resetBtn">⟲ Reset</button>
+          <button class="btn light" id="prevBtn">⟵ Prev</button>
+          <button class="btn light" id="nextBtn">Next ⟶</button>
+          <button class="btn secondary" id="playBtn">▶ Play</button>
+        </div>
+
+        <div class="meta">
+          <div><b>Move:</b> <span id="plyInfo">0 / 0</span></div>
+          <div><b>Turn:</b> <span id="turnInfo">—</span></div>
+          <div><b>Result:</b> <span id="resultInfo">—</span></div>
+        </div>
+      </div>
     </section>
 
-    <section class="board-area">
-      <div class="board" id="board" aria-label="Chess board"></div>
+    <section class="right">
+      <div class="right-stack">
+        <div class="card moves">
+          <div class="card-title">
+            <span>Moves</span>
+            <span class="tagline" id="openingInfo">Click a move to jump</span>
+          </div>
+          <div id="moveGrid" class="move-grid"></div>
+        </div>
 
-      <div class="controls">
-        <button id="resetBtn" class="btn btn-light">⟲ Reset</button>
-        <button id="prevBtn" class="btn btn-light">⟵ Prev</button>
-        <button id="nextBtn" class="btn btn-light">Next ⟶</button>
-        <button id="playBtn" class="btn btn-secondary">▶ Play</button>
-        <button id="downloadBtn" class="btn btn-secondary">⬇️ Download PGN</button>
-      </div>
+        <div class="card engine-box">
+          <div class="card-title">
+            <span>Engine</span>
+            <span class="tagline" id="engineStatus">Idle</span>
+          </div>
 
-      <div class="meta">
-        <div><strong>Move:</strong> <span id="plyInfo">0 / 0</span></div>
-        <div><strong>Turn:</strong> <span id="turnInfo">White</span></div>
-        <div><strong>Result:</strong> <span id="resultInfo">—</span></div>
-      </div>
+          <div class="engine-row">
+            <div class="pill">Eval: <span id="evalText">—</span></div>
+            <div class="pill">Depth: <span id="depthText">—</span></div>
+          </div>
 
-      <div class="moves">
-        <h3>Moves</h3>
-        <div id="moveList" class="move-list"></div>
+          <div class="bar" title="Eval bar (rough)">
+            <div id="evalBar"></div>
+          </div>
+
+          <div class="engine-row">
+            <button class="btn secondary" id="analyzeBtn">🧠 Analyze</button>
+            <button class="btn light" id="stopBtn">⏹ Stop</button>
+          </div>
+
+          <div class="engine-row">
+            <div class="muted">Skill</div>
+            <input id="skillRange" type="range" min="0" max="20" value="10" />
+            <div class="pill"><span id="skillText">10</span>/20</div>
+          </div>
+
+          <div class="engine-row">
+            <div class="muted">Think (ms)</div>
+            <input id="timeRange" type="range" min="50" max="2000" value="400" step="50" />
+            <div class="pill"><span id="timeText">400</span></div>
+          </div>
+
+          <div class="pv" id="pvBox">PV: —</div>
+          <div class="muted">Tip: press <b>E</b> to analyze current position.</div>
+        </div>
       </div>
     </section>
   </main>
 
-  <footer class="footer">
-    <small>Made for simple, robust PGN viewing. No external libs.</small>
-  </footer>
+  <script type="module">
+    import { Chess } from "https://cdn.jsdelivr.net/npm/chess.js@1.4.0/+esm";
 
-  <script src="./app.js"></script>
-  <script src="../global-header.js"></script>
+    // =========================
+    // Pieces
+    // =========================
+    const PIECE_SVG_BASE = "https://lichess1.org/assets/piece/cburnett/";
+    function pieceSvgUrl(piece) {
+      const color = piece.color === "w" ? "w" : "b";
+      const typeMap = { p: "P", n: "N", b: "B", r: "R", q: "Q", k: "K" };
+      return `${PIECE_SVG_BASE}${color}${typeMap[piece.type]}.svg`;
+    }
+
+    const files = "abcdefgh";
+
+    // =========================
+    // DOM
+    // =========================
+    const boardEl = document.getElementById("board");
+    const pgnTextEl = document.getElementById("pgnText");
+    const statusEl = document.getElementById("status");
+    const pgnFileEl = document.getElementById("pgnFile");
+    const importBtn = document.getElementById("importBtn");
+    const demoBtn = document.getElementById("demoBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const gameSelect = document.getElementById("gameSelect");
+    const gameInfo = document.getElementById("gameInfo");
+
+    const moveGrid = document.getElementById("moveGrid");
+    const openingInfo = document.getElementById("openingInfo");
+
+    const plyInfo = document.getElementById("plyInfo");
+    const turnInfo = document.getElementById("turnInfo");
+    const resultInfo = document.getElementById("resultInfo");
+
+    const resetBtn = document.getElementById("resetBtn");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const playBtn = document.getElementById("playBtn");
+    const flipBtn = document.getElementById("flipBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    // Engine DOM
+    const engineStatus = document.getElementById("engineStatus");
+    const evalText = document.getElementById("evalText");
+    const depthText = document.getElementById("depthText");
+    const evalBar = document.getElementById("evalBar");
+    const pvBox = document.getElementById("pvBox");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const skillRange = document.getElementById("skillRange");
+    const skillText = document.getElementById("skillText");
+    const timeRange = document.getElementById("timeRange");
+    const timeText = document.getElementById("timeText");
+
+    // =========================
+    // State
+    // =========================
+    const START_FEN = new Chess().fen();
+    let orientation = "w";
+
+    let games = [];
+    let currentGameIndex = -1;
+
+    let base = new Chess();
+    let moveList = [];
+    let ply = 0;
+
+    let playing = false;
+    let playTimer = null;
+
+    let lastMoveSquares = null;
+
+    // click-to-move state
+    let selectedSquare = null;
+    let legalTargets = new Set();
+
+    // =========================
+    // Status helpers
+    // =========================
+    function setStatus(msg, good = true) {
+      statusEl.textContent = msg;
+      statusEl.style.color = good ? "var(--good)" : "var(--bad)";
+      setTimeout(() => { statusEl.style.color = "var(--muted)"; }, 900);
+    }
+
+    // =========================
+    // Lichess PGN cleaner
+    // =========================
+    function cleanLichessPGN(pgn) {
+      return (pgn || "")
+        .replace(/\r\n/g, "\n")
+        // remove lichess annotations inside comments
+        .replace(/\[\%csl[^\]]*\]/g, "")
+        .replace(/\[\%cal[^\]]*\]/g, "")
+        .replace(/\[\%[a-zA-Z]+[^\]]*\]/g, "")
+        // remove weird single-letter comments like { t }
+        .replace(/\{\s*[a-zA-Z]\s*\}/g, "")
+        // cleanup empty comments
+        .replace(/\{\s*\}/g, "")
+        .replace(/[ \t]+\n/g, "\n")
+        .trim();
+    }
+
+    // =========================
+    // Multi-game PGN splitter
+    // =========================
+    function splitMultiPGN(text) {
+      const cleaned = (text || "").replace(/\r\n/g, "\n").trim();
+      if (!cleaned) return [];
+      // split on blank line + [Event ...]
+      const parts = cleaned.split(/\n\s*\n(?=\[Event\s)/g);
+      return parts.map(p => p.trim()).filter(Boolean);
+    }
+
+    function safeHeader(chess) {
+      try { return chess.header(); } catch { return {}; }
+    }
+
+    function gameLabel(headers, idx) {
+      const W = headers.White || "White";
+      const B = headers.Black || "Black";
+      const R = headers.Result || "*";
+      const D = headers.Date && headers.Date !== "????.??.??" ? headers.Date : "";
+      const E = headers.Event && headers.Event !== "?" ? headers.Event : "";
+      return [`#${idx + 1}`, `${W} vs ${B}`, R !== "*" ? R : "", D, E].filter(Boolean).join(" • ");
+    }
+
+    // =========================
+    // Board rendering
+    // =========================
+    function squaresForOrientation() {
+      const squares = [];
+      for (let r = 8; r >= 1; r--) {
+        for (let f = 0; f < 8; f++) squares.push(files[f] + r);
+      }
+      return orientation === "w" ? squares : squares.reverse();
+    }
+
+    function squareColor(square) {
+      const file = files.indexOf(square[0]);
+      const rank = parseInt(square[1], 10) - 1;
+      return ((file + rank) % 2 === 0) ? "dark" : "light";
+    }
+
+    function stopPlay() {
+      playing = false;
+      playBtn.textContent = "▶ Play";
+      if (playTimer) clearInterval(playTimer);
+      playTimer = null;
+    }
+
+    function startPlay() {
+      if (!moveList.length) return;
+      playing = true;
+      playBtn.textContent = "⏸ Pause";
+      if (playTimer) clearInterval(playTimer);
+      playTimer = setInterval(() => {
+        if (ply >= moveList.length) { stopPlay(); return; }
+        goToPly(ply + 1);
+      }, 520);
+    }
+
+    function updateMeta() {
+      plyInfo.textContent = `${ply} / ${moveList.length}`;
+      turnInfo.textContent = base.turn() === "w" ? "White" : "Black";
+      const headers = (currentGameIndex >= 0 && games[currentGameIndex]) ? games[currentGameIndex].headers : {};
+      resultInfo.textContent = headers.Result || "—";
+    }
+
+    function clearSelection() {
+      selectedSquare = null;
+      legalTargets = new Set();
+    }
+
+    function computeLegalTargets(fromSq) {
+      const moves = base.moves({ verbose: true, square: fromSq });
+      const set = new Set();
+      for (const m of moves) set.add(m.to);
+      return set;
+    }
+
+    function renderBoard() {
+      boardEl.innerHTML = "";
+
+      const boardArr = base.board(); // a8..h1
+      const map = new Map();
+      for (let r = 0; r < 8; r++) {
+        for (let f = 0; f < 8; f++) {
+          const sq = files[f] + (8 - r);
+          map.set(sq, boardArr[r][f]);
+        }
+      }
+
+      const squares = squaresForOrientation();
+
+      for (const sq of squares) {
+        const div = document.createElement("div");
+        div.className = `sq ${squareColor(sq)}`;
+        div.dataset.square = sq;
+
+        if (lastMoveSquares && (sq === lastMoveSquares.from || sq === lastMoveSquares.to)) {
+          div.classList.add("last");
+        }
+
+        if (selectedSquare === sq) {
+          div.classList.add("sel");
+        }
+
+        if (legalTargets.has(sq)) {
+          div.classList.add("hint");
+        }
+
+        const piece = map.get(sq);
+        if (piece) {
+          const img = document.createElement("img");
+          img.className = "piece";
+          img.alt = piece.color + piece.type;
+          img.draggable = false;
+          img.src = pieceSvgUrl(piece);
+          div.appendChild(img);
+        }
+
+        const coord = document.createElement("div");
+        coord.className = "coord";
+        const showFile = (orientation === "w" ? sq[1] === "1" : sq[1] === "8");
+        const showRank = (orientation === "w" ? sq[0] === "a" : sq[0] === "h");
+        coord.textContent = (showFile ? sq[0] : "") + (showRank ? sq[1] : "");
+        div.appendChild(coord);
+
+        div.addEventListener("click", () => {
+          stopPlay();
+
+          const clickedPiece = base.get(sq);
+
+          // if no selection yet
+          if (!selectedSquare) {
+            if (!clickedPiece) return;
+
+            // only allow selecting side to move
+            if (clickedPiece.color !== base.turn()) return;
+
+            selectedSquare = sq;
+            legalTargets = computeLegalTargets(sq);
+            renderBoard();
+            return;
+          }
+
+          // if selection exists
+          const from = selectedSquare;
+          const to = sq;
+
+          // click same square to unselect
+          if (from === to) {
+            clearSelection();
+            renderBoard();
+            return;
+          }
+
+          // if clicked another own piece -> switch selection
+          if (clickedPiece && clickedPiece.color === base.turn()) {
+            selectedSquare = sq;
+            legalTargets = computeLegalTargets(sq);
+            renderBoard();
+            return;
+          }
+
+          // try to make move
+          if (!legalTargets.has(to)) {
+            setStatus("Illegal move", false);
+            clearSelection();
+            renderBoard();
+            return;
+          }
+
+          // promotion: auto queen
+          let promotion = undefined;
+          const moving = base.get(from);
+          if (moving && moving.type === "p") {
+            const rankTo = to[1];
+            if (rankTo === "8" || rankTo === "1") promotion = "q";
+          }
+
+          const made = base.move({ from, to, promotion });
+          if (!made) {
+            setStatus("Move failed", false);
+            clearSelection();
+            renderBoard();
+            return;
+          }
+
+          moveList = base.history({ verbose: true });
+          ply = moveList.length;
+          lastMoveSquares = { from, to };
+          clearSelection();
+
+          renderBoard();
+          renderMoves();
+          updateMeta();
+
+          // optional: auto analyze after user move
+          // analyzeCurrentPosition();
+        });
+
+        boardEl.appendChild(div);
+      }
+    }
+
+    function renderMoves() {
+      moveGrid.innerHTML = "";
+
+      if (!moveList.length) {
+        openingInfo.textContent = "No moves yet";
+        return;
+      }
+
+      openingInfo.textContent = "Click a move to jump";
+
+      for (let i = 0; i < moveList.length; i++) {
+        const m = moveList[i];
+        const btn = document.createElement("button");
+        btn.className = "mv";
+        btn.type = "button";
+
+        const moveNo = Math.floor(i / 2) + 1;
+        const prefix = (i % 2 === 0) ? `${moveNo}.` : `${moveNo}...`;
+        btn.textContent = `${prefix} ${m.san}`;
+
+        if (i + 1 === ply) btn.classList.add("active");
+
+        btn.addEventListener("click", () => {
+          stopPlay();
+          clearSelection();
+          goToPly(i + 1);
+        });
+
+        moveGrid.appendChild(btn);
+      }
+    }
+
+    function rebuildPositionToPly(targetPly) {
+      base.reset();
+      lastMoveSquares = null;
+
+      // restore custom FEN if present
+      if (currentGameIndex >= 0) {
+        const fen = games[currentGameIndex]?.startFen;
+        if (fen && fen !== START_FEN) {
+          try { base.load(fen, { skipValidation: true }); } catch { }
+        }
+      }
+
+      for (let i = 0; i < targetPly; i++) {
+        const m = moveList[i];
+        base.move({ from: m.from, to: m.to, promotion: m.promotion });
+        lastMoveSquares = { from: m.from, to: m.to };
+      }
+    }
+
+    function goToPly(targetPly) {
+      ply = Math.max(0, Math.min(moveList.length, targetPly));
+      rebuildPositionToPly(ply);
+      clearSelection();
+      renderBoard();
+      renderMoves();
+      updateMeta();
+    }
+
+    function loadGame(index) {
+      stopPlay();
+      clearSelection();
+
+      currentGameIndex = index;
+      const raw = games[index]?.pgn || "";
+      const pgn = cleanLichessPGN(raw);
+
+      const tmp = new Chess();
+      try {
+        tmp.loadPgn(pgn, { strict: false });
+      } catch (err) {
+        console.error(err);
+        setStatus("Bad PGN (can't load)", false);
+        return;
+      }
+
+      const headers = safeHeader(tmp);
+
+      let startFen = START_FEN;
+      if (headers.FEN) startFen = headers.FEN;
+
+      moveList = tmp.history({ verbose: true });
+
+      base = new Chess();
+      if (startFen && startFen !== START_FEN) {
+        try { base.load(startFen, { skipValidation: true }); } catch { }
+      }
+
+      games[index].headers = headers;
+      games[index].startFen = startFen;
+
+      ply = 0;
+      lastMoveSquares = null;
+
+      setStatus("Game loaded", true);
+      updateMeta();
+      renderBoard();
+      renderMoves();
+    }
+
+    function importPGNText(text) {
+      stopPlay();
+      clearSelection();
+
+      const cleanedAll = cleanLichessPGN(text);
+      const chunks = splitMultiPGN(cleanedAll);
+      if (!chunks.length) {
+        setStatus("No PGN found", false);
+        return;
+      }
+
+      games = [];
+      gameSelect.innerHTML = "";
+
+      for (let i = 0; i < chunks.length; i++) {
+        const pgn = cleanLichessPGN(chunks[i]);
+
+        const g = new Chess();
+        try {
+          g.loadPgn(pgn, { strict: false });
+        } catch {
+          continue;
+        }
+
+        const headers = safeHeader(g);
+        const opt = document.createElement("option");
+        opt.value = String(games.length);
+        opt.textContent = gameLabel(headers, games.length);
+
+        games.push({ pgn, headers, startFen: headers.FEN || START_FEN });
+        gameSelect.appendChild(opt);
+      }
+
+      gameInfo.textContent = `${games.length} game${games.length === 1 ? "" : "s"}`;
+
+      if (!games.length) {
+        setStatus("All games failed to parse", false);
+        return;
+      }
+
+      gameSelect.selectedIndex = 0;
+      loadGame(0);
+      setStatus(`Imported ${games.length} game(s)`, true);
+    }
+
+    // =========================
+    // Engine (Stockfish)
+    // =========================
+    let engine = null;
+    let engineReady = false;
+    let lastEvalCp = null;
+
+    function setEngineStatus(msg, good = true) {
+      engineStatus.textContent = msg;
+      engineStatus.style.color = good ? "var(--good)" : "var(--muted)";
+    }
+
+    function setEvalBarFromCp(cp) {
+      // clamp [-800..+800] to 0..100
+      const clamp = Math.max(-800, Math.min(800, cp));
+      const pct = 50 + (clamp / 800) * 50;
+      evalBar.style.width = `${pct}%`;
+    }
+
+    function resetEngineUI() {
+      evalText.textContent = "—";
+      depthText.textContent = "—";
+      pvBox.textContent = "PV: —";
+      evalBar.style.width = "50%";
+      lastEvalCp = null;
+    }
+
+    function startEngine() {
+      // file:// will usually fail, localhost is OK
+      if (location.protocol === "file:") {
+        setEngineStatus("Engine blocked on file://", false);
+        return;
+      }
+
+      try {
+        // CDN worker (this is the part that can fail on some setups)
+        // If this fails for you, you must host stockfish.js locally.
+        engine = new Worker("https://cdn.jsdelivr.net/npm/stockfish@16.1.0/src/stockfish.js");
+      } catch (e) {
+        console.error(e);
+        setEngineStatus("Worker failed", false);
+        return;
+      }
+
+      engineReady = false;
+      setEngineStatus("Starting…", true);
+      resetEngineUI();
+
+      engine.onmessage = (ev) => {
+        const line = (typeof ev.data === "string") ? ev.data : "";
+        // console.log("SF:", line);
+
+        if (line === "uciok") {
+          engineReady = true;
+          setEngineStatus("Ready", true);
+          return;
+        }
+
+        // depth info
+        // example: "info depth 16 seldepth 24 score cp 34 pv e2e4 e7e5 ..."
+        if (line.startsWith("info ")) {
+          const depthMatch = line.match(/\bdepth\s+(\d+)/);
+          if (depthMatch) depthText.textContent = depthMatch[1];
+
+          const pvMatch = line.match(/\bpv\s+(.+)$/);
+          if (pvMatch) pvBox.textContent = "PV: " + pvMatch[1];
+
+          const mateMatch = line.match(/\bscore\s+mate\s+(-?\d+)/);
+          const cpMatch = line.match(/\bscore\s+cp\s+(-?\d+)/);
+
+          if (mateMatch) {
+            const mate = parseInt(mateMatch[1], 10);
+            evalText.textContent = (mate > 0) ? `#${mate}` : `#${mate}`;
+            // mate -> slam bar
+            evalBar.style.width = mate > 0 ? "100%" : "0%";
+          } else if (cpMatch) {
+            const cp = parseInt(cpMatch[1], 10);
+            lastEvalCp = cp;
+            // show in pawns
+            evalText.textContent = (cp / 100).toFixed(2);
+            setEvalBarFromCp(cp);
+          }
+        }
+
+        // best move
+        if (line.startsWith("bestmove ")) {
+          setEngineStatus("Idle", true);
+        }
+      };
+
+      engine.onerror = (e) => {
+        console.error("Engine error:", e);
+        setEngineStatus("Engine error", false);
+      };
+
+      // init UCI
+      engine.postMessage("uci");
+      // set some options
+      setSkill(parseInt(skillRange.value, 10));
+    }
+
+    function setSkill(skill) {
+      skillText.textContent = String(skill);
+      if (!engine) return;
+      engine.postMessage(`setoption name Skill Level value ${skill}`);
+    }
+
+    function stopEngineSearch() {
+      if (!engine) return;
+      engine.postMessage("stop");
+      setEngineStatus("Stopped", true);
+    }
+
+    function analyzeCurrentPosition() {
+      if (!engine) {
+        setEngineStatus("No engine", false);
+        return;
+      }
+      if (!engineReady) {
+        setEngineStatus("Not ready", false);
+        return;
+      }
+
+      const ms = parseInt(timeRange.value, 10);
+      timeText.textContent = String(ms);
+
+      setEngineStatus("Analyzing…", true);
+
+      // send position
+      const fen = base.fen();
+      engine.postMessage(`position fen ${fen}`);
+
+      // go
+      engine.postMessage(`go movetime ${ms}`);
+    }
+
+    // =========================
+    // Events
+    // =========================
+    importBtn.addEventListener("click", () => importPGNText(pgnTextEl.value));
+
+    demoBtn.addEventListener("click", () => {
+      pgnTextEl.value =
+        `[Event "Demo"]
+[Site "Localhost"]
+[Date "2026.01.25"]
+[Round "1"]
+[White "Jacob"]
+[Black "Stockfish"]
+[Result "1-0"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6
+6. Be3 e5 7. Nb3 Be6 8. f3 Be7 9. Qd2 O-O 10. O-O-O Nbd7
+11. g4 b5 12. g5 b4 13. Ne2 Ne8 14. Ng3 a5 15. Kb1 a4 16. Nc1 b3 1-0`;
+      setStatus("Demo loaded. Click Import.", true);
+    });
+
+    clearBtn.addEventListener("click", () => {
+      stopPlay();
+      pgnTextEl.value = "";
+      games = [];
+      moveList = [];
+      ply = 0;
+      currentGameIndex = -1;
+      gameSelect.innerHTML = "";
+      gameInfo.textContent = "0 games";
+      base = new Chess();
+      lastMoveSquares = null;
+      clearSelection();
+      renderBoard();
+      renderMoves();
+      updateMeta();
+      resetEngineUI();
+      setStatus("Cleared", true);
+    });
+
+    pgnFileEl.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      pgnTextEl.value = text;
+      setStatus("File loaded. Click Import.", true);
+    });
+
+    gameSelect.addEventListener("change", () => {
+      const idx = gameSelect.selectedIndex;
+      if (idx >= 0) loadGame(idx);
+    });
+
+    resetBtn.addEventListener("click", () => { stopPlay(); clearSelection(); goToPly(0); });
+    prevBtn.addEventListener("click", () => { stopPlay(); clearSelection(); goToPly(ply - 1); });
+    nextBtn.addEventListener("click", () => { stopPlay(); clearSelection(); goToPly(ply + 1); });
+
+    playBtn.addEventListener("click", () => {
+      if (!moveList.length) return;
+      if (playing) stopPlay();
+      else startPlay();
+    });
+
+    flipBtn.addEventListener("click", () => {
+      orientation = (orientation === "w") ? "b" : "w";
+      renderBoard();
+    });
+
+    downloadBtn.addEventListener("click", () => {
+      const text = pgnTextEl.value.trim();
+      if (!text) { setStatus("Nothing to download", false); return; }
+      const blob = new Blob([text], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "games.pgn";
+      a.click();
+      URL.revokeObjectURL(url);
+      setStatus("Downloaded", true);
+    });
+
+    analyzeBtn.addEventListener("click", () => analyzeCurrentPosition());
+    stopBtn.addEventListener("click", () => stopEngineSearch());
+
+    skillRange.addEventListener("input", () => setSkill(parseInt(skillRange.value, 10)));
+    timeRange.addEventListener("input", () => timeText.textContent = String(timeRange.value));
+
+    window.addEventListener("keydown", (e) => {
+      if (e.target && (e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT")) return;
+
+      if (e.key === "ArrowLeft") { stopPlay(); clearSelection(); goToPly(ply - 1); }
+      if (e.key === "ArrowRight") { stopPlay(); clearSelection(); goToPly(ply + 1); }
+      if (e.key === " ") {
+        e.preventDefault();
+        if (playing) stopPlay();
+        else startPlay();
+      }
+      if (e.key.toLowerCase() === "f") {
+        orientation = (orientation === "w") ? "b" : "w";
+        renderBoard();
+      }
+      if (e.key.toLowerCase() === "e") {
+        analyzeCurrentPosition();
+      }
+      if (e.key === "Escape") {
+        clearSelection();
+        renderBoard();
+      }
+    });
+
+    // =========================
+    // Init
+    // =========================
+    renderBoard();
+    renderMoves();
+    updateMeta();
+
+    // Start engine automatically (localhost only)
+    startEngine();
+  </script>
 </body>
 
 </html>
