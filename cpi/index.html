@@ -4,1261 +4,844 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>JacobAnalysis</title>
+  <title>JacobAnalysis — PGN + Analysis</title>
   <style>
     :root {
-      --bg: #0b1020;
-      --panel: #111a33;
-      --text: #e9eeff;
-      --muted: #aab6e8;
-      --line: rgba(255, 255, 255, .10);
-      --btn: #2a3b7a;
-      --btn2: #1e2c5c;
-      --good: #38d39f;
-      --bad: #ff6b6b;
-
-      --sqLight: #f0d9b5;
-      --sqDark: #b58863;
-
-      --shadow: 0 10px 30px rgba(0, 0, 0, .35);
-      --r: 18px;
+      --bg: #0b0f14;
+      --panel: #111824;
+      --panel2: #0f1520;
+      --text: #e9eef7;
+      --muted: #9fb0c7;
+      --accent: #7dd3fc;
+      --btn: #1a2433;
+      --btn2: #243247;
+      --border: #223049;
+      --light: #e9edff;
+      --dark: #2f3b57;
+      --hi: #fbbf24;
+      --bad: #fb7185;
+      --ok: #34d399;
     }
 
     * {
-      box-sizing: border-box;
+      box-sizing: border-box
     }
 
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background:
-        radial-gradient(1200px 700px at 20% -10%, #1c2c6a 0%, transparent 60%),
-        radial-gradient(1000px 600px at 90% 0%, #3b1c6a 0%, transparent 55%),
-        var(--bg);
+      font-family: system-ui, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1000px 600px at 30% 0%, #111a28, var(--bg));
       color: var(--text);
-      min-height: 100vh;
     }
 
     header {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 18px;
-      border-bottom: 1px solid var(--line);
-      background: rgba(10, 15, 30, .65);
-      backdrop-filter: blur(10px);
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10, 14, 20, .6);
+      backdrop-filter: blur(8px);
       position: sticky;
       top: 0;
-      z-index: 5;
+      z-index: 10;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 240px;
+    header h1 {
+      margin: 0;
+      font-size: 18px
     }
 
-    .logo {
-      width: 40px;
-      height: 40px;
-      display: grid;
-      place-items: center;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #2d6bff, #8a2dff);
-      box-shadow: var(--shadow);
-      font-size: 20px;
-    }
-
-    .title {
-      font-weight: 800;
-      letter-spacing: .2px;
-    }
-
-    .sub {
+    header p {
+      margin: 6px 0 0;
       color: var(--muted);
-      font-size: 12px;
+      font-size: 13px
     }
 
-    .top-actions {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .btn {
-      border: 1px solid var(--line);
-      background: linear-gradient(180deg, var(--btn), var(--btn2));
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: 14px;
-      cursor: pointer;
-      font-weight: 650;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, .25);
-      transition: .12s transform, .12s opacity;
-      user-select: none;
-      font-size: 14px;
-    }
-
-    .btn:active {
-      transform: scale(.98);
-    }
-
-    .btn.light {
-      background: rgba(255, 255, 255, .06);
-    }
-
-    .btn.danger {
-      background: rgba(255, 107, 107, .12);
-      border-color: rgba(255, 107, 107, .25);
-    }
-
-    .btn.secondary {
-      background: rgba(56, 211, 159, .12);
-      border-color: rgba(56, 211, 159, .25);
-    }
-
-    .layout {
+    .wrap {
       display: grid;
-      grid-template-columns: 360px minmax(320px, 520px) 1fr;
+      grid-template-columns: 420px 1fr;
       gap: 14px;
       padding: 14px;
-      align-items: start;
-    }
-
-    @media (max-width: 1100px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
+      max-width: 1300px;
+      margin: 0 auto;
     }
 
     .card {
-      background: rgba(17, 26, 51, .75);
-      border: 1px solid var(--line);
-      border-radius: var(--r);
-      box-shadow: var(--shadow);
-      padding: 12px;
-    }
-
-    .card-title {
-      font-weight: 800;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    textarea {
-      width: 100%;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: rgba(0, 0, 0, .25);
-      color: var(--text);
-      padding: 10px;
-      outline: none;
-      resize: vertical;
-      min-height: 140px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 12px;
-      line-height: 1.35;
-    }
-
-    select {
-      width: 100%;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: rgba(0, 0, 0, .25);
-      color: var(--text);
-      padding: 10px;
-      outline: none;
-      font-size: 13px;
-      min-height: 210px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, .03), rgba(255, 255, 255, .01));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
     }
 
     .row {
       display: flex;
       gap: 10px;
-      align-items: center;
-      margin-top: 10px;
       flex-wrap: wrap;
+      align-items: center
+    }
+
+    button,
+    .btn {
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--btn);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    button:hover {
+      background: var(--btn2)
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      resize: vertical;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      color: var(--text);
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 12px;
+      outline: none;
+    }
+
+    input[type="file"] {
+      display: none
     }
 
     .status {
       color: var(--muted);
-      font-size: 13px;
+      font-size: 12px
     }
 
-    /* ===== BOARD (PERFECT SQUARES) ===== */
-    .board-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      align-items: center;
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    /* Board */
+    .boardBox {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .boardWrap {
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
     }
 
     .board {
-      width: min(520px, 92vw);
-      height: min(520px, 92vw);
-      border-radius: 22px;
-      overflow: hidden;
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow);
-
+      width: 100%;
+      aspect-ratio: 1/1;
       display: grid;
       grid-template-columns: repeat(8, 1fr);
-      grid-template-rows: repeat(8, 1fr);
-
-      background: rgba(0, 0, 0, .2);
-      user-select: none;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #0b1220;
       position: relative;
+      user-select: none;
     }
 
     .sq {
-      width: 100%;
-      height: 100%;
-      display: grid;
-      place-items: center;
-      cursor: pointer;
       position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .sq.light {
-      background: var(--sqLight);
+      background: var(--light)
     }
 
     .sq.dark {
-      background: var(--sqDark);
+      background: var(--dark)
+    }
+
+    .sq.hl {
+      outline: 3px solid rgba(125, 211, 252, .7);
+      outline-offset: -3px
     }
 
     .sq.last {
-      box-shadow: inset 0 0 0 999px rgba(255, 235, 59, .28);
-    }
-
-    .sq.sel {
-      box-shadow: inset 0 0 0 999px rgba(0, 255, 255, .18);
-    }
-
-    .sq.hint {
-      box-shadow: inset 0 0 0 999px rgba(56, 211, 159, .20);
-    }
-
-    .piece {
-      width: 78%;
-      height: 78%;
-      pointer-events: none;
-      filter: drop-shadow(0 3px 2px rgba(0, 0, 0, .25));
+      box-shadow: inset 0 0 0 4px rgba(251, 191, 36, .7)
     }
 
     .sq .coord {
       position: absolute;
-      left: 6px;
-      bottom: 4px;
       font-size: 10px;
-      color: rgba(0, 0, 0, .55);
-      font-weight: 800;
+      color: rgba(0, 0, 0, .45);
+      bottom: 3px;
+      right: 4px;
+      font-weight: 700;
       pointer-events: none;
     }
 
-    .sq.dark .coord {
-      color: rgba(255, 255, 255, .70);
+    .piece {
+      width: 88%;
+      height: 88%;
+      pointer-events: none;
+      filter: drop-shadow(0 6px 6px rgba(0, 0, 0, .25));
     }
 
-    .board-buttons {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .meta {
-      width: min(520px, 92vw);
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      color: var(--muted);
-      font-size: 13px;
-      background: rgba(17, 26, 51, .55);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 10px 12px;
-    }
-
-    /* Right side panels */
-    .right-stack {
+    .side {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 10px;
     }
 
     .moves {
-      height: 430px;
-      max-height: 55vh;
+      max-height: 430px;
       overflow: auto;
-      padding-right: 6px;
-    }
-
-    @media (max-width: 1100px) {
-      .moves {
-        height: auto;
-        max-height: none;
-      }
-    }
-
-    .move-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .mv {
-      border: 1px solid var(--line);
-      background: rgba(0, 0, 0, .18);
-      border-radius: 14px;
-      padding: 8px 10px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 13px;
-      color: var(--text);
-      transition: .12s transform;
-    }
-
-    .mv:active {
-      transform: scale(.98);
-    }
-
-    .mv.active {
-      border-color: rgba(56, 211, 159, .45);
-      background: rgba(56, 211, 159, .12);
-    }
-
-    .tagline {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 8px;
-    }
-
-    .small-note {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 6px;
-      opacity: .9;
-    }
-
-    .kbd {
-      display: inline-block;
-      padding: 2px 6px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(0, 0, 0, .2);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 12px;
-      color: var(--text);
-    }
-
-    .engine-box {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .engine-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .pill {
-      border: 1px solid var(--line);
-      background: rgba(0, 0, 0, .18);
-      padding: 8px 10px;
-      border-radius: 14px;
-      font-weight: 700;
-      font-size: 13px;
-      color: var(--text);
-    }
-
-    .bar {
-      height: 10px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, .10);
-      overflow: hidden;
-      border: 1px solid var(--line);
-    }
-
-    .bar>div {
-      height: 100%;
-      width: 50%;
-      background: rgba(56, 211, 159, .75);
-      transition: width .2s ease;
-    }
-
-    .pv {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 12px;
-      color: var(--muted);
-      background: rgba(0, 0, 0, .18);
-      border: 1px solid var(--line);
-      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, .15);
+      border-radius: 12px;
       padding: 10px;
-      white-space: pre-wrap;
-      word-break: break-word;
-      min-height: 60px;
+      font-size: 13px;
+      line-height: 1.5;
     }
 
-    input[type="range"] {
-      width: 160px;
+    .moveBtn {
+      display: inline-block;
+      margin: 2px 6px 2px 0;
+      padding: 4px 8px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid rgba(255, 255, 255, .10);
+      cursor: pointer;
+      user-select: none;
     }
 
-    .muted {
+    .moveBtn.active {
+      border-color: rgba(125, 211, 252, .9);
+      background: rgba(125, 211, 252, .12);
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 6px 10px;
+      font-size: 13px;
       color: var(--muted);
+    }
+
+    .kv b {
+      color: var(--text);
+      font-weight: 700
+    }
+
+    .eval {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(0, 0, 0, .15);
+      font-family: ui-monospace, Consolas, monospace;
       font-size: 12px;
+      color: var(--muted);
+      white-space: pre-wrap;
+      min-height: 84px;
+    }
+
+    .tiny {
+      font-size: 12px;
+      color: var(--muted)
     }
   </style>
 </head>
 
 <body>
   <header>
-    <div class="brand">
-      <div class="logo">♟️</div>
-      <div>
-        <div class="title">JacobAnalysis</div>
-        <div class="sub">Import PGN • browse games • click-to-move • engine</div>
-      </div>
-    </div>
-
-    <div class="top-actions">
-      <label class="btn light">
-        <input type="file" id="pgnFile" accept=".pgn,text/plain" hidden />
-        📁 Load PGN
-      </label>
-      <button class="btn secondary" id="demoBtn">Demo PGN</button>
-      <button class="btn danger" id="clearBtn">Clear</button>
-    </div>
+    <h1>♟️ JacobAnalysis — PGN Import + Analysis</h1>
+    <p>Works on GitHub Pages using local Stockfish (no CDN). Pieces are loaded from <code>/pieces</code>.</p>
   </header>
 
-  <main class="layout">
-    <section class="left">
-      <div class="card">
-        <div class="card-title">
-          <span>PGN</span>
-          <span class="status" id="status">Ready</span>
+  <div class="wrap">
+    <div class="card">
+      <div class="grid">
+        <div class="row">
+          <label class="btn">
+            <input id="pgnFile" type="file" accept=".pgn,text/plain" />
+            📁 Load PGN file
+          </label>
+          <button id="demoBtn">Try demo</button>
+          <button id="clearBtn">Clear</button>
         </div>
 
-        <textarea id="pgnText" placeholder="Paste PGN here... (Lichess study PGN OK)"></textarea>
+        <textarea id="pgnText" placeholder="Paste PGN here..."></textarea>
 
         <div class="row">
-          <button class="btn" id="importBtn">Import</button>
-          <button class="btn light" id="downloadBtn">⬇️ Download</button>
+          <button id="importBtn">Import PGN</button>
+          <span id="status" class="status">Ready.</span>
         </div>
 
-        <div class="small-note">
-          Shortcuts:
-          <span class="kbd">←</span> prev,
-          <span class="kbd">→</span> next,
-          <span class="kbd">Space</span> play/pause,
-          <span class="kbd">F</span> flip,
-          <span class="kbd">E</span> analyze
+        <div class="row">
+          <button id="resetBtn">⟲ Reset</button>
+          <button id="prevBtn">⟵ Prev</button>
+          <button id="nextBtn">Next ⟶</button>
+          <button id="playBtn">▶ Play</button>
         </div>
 
-        <div class="small-note">
-          Click-to-move:
-          click a piece ➜ click a destination square (legal moves only)
+        <div class="row">
+          <button id="startEngineBtn">⚡ Start Engine</button>
+          <button id="analyzeBtn">🔍 Analyze</button>
+        </div>
+
+        <div class="kv">
+          <div>Move</div><b id="plyInfo">0 / 0</b>
+          <div>Turn</div><b id="turnInfo">—</b>
+          <div>FEN</div><b id="fenInfo">—</b>
+        </div>
+
+        <div class="eval" id="evalBox">Engine: not started.</div>
+        <div class="tiny">Tip: Put these files in <b>/cpi/</b>: index.html, stockfish.js, stockfish-17.1-asm-341ff22.js,
+          and /pieces/*.svg</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="boardBox">
+        <div class="boardWrap">
+          <div id="board" class="board" aria-label="Chess board"></div>
+        </div>
+
+        <div class="side">
+          <div class="moves" id="moveList">Moves will appear here…</div>
         </div>
       </div>
-
-      <div class="card">
-        <div class="card-title">
-          <span>Games</span>
-          <span class="tagline" id="gameInfo">0 games</span>
-        </div>
-        <select id="gameSelect" size="10"></select>
-      </div>
-    </section>
-
-    <section class="center">
-      <div class="card board-wrap">
-        <div class="board" id="board" aria-label="Chess board"></div>
-
-        <div class="board-buttons">
-          <button class="btn light" id="flipBtn">⇅ Flip</button>
-          <button class="btn light" id="resetBtn">⟲ Reset</button>
-          <button class="btn light" id="prevBtn">⟵ Prev</button>
-          <button class="btn light" id="nextBtn">Next ⟶</button>
-          <button class="btn secondary" id="playBtn">▶ Play</button>
-        </div>
-
-        <div class="meta">
-          <div><b>Move:</b> <span id="plyInfo">0 / 0</span></div>
-          <div><b>Turn:</b> <span id="turnInfo">—</span></div>
-          <div><b>Result:</b> <span id="resultInfo">—</span></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="right">
-      <div class="right-stack">
-        <div class="card moves">
-          <div class="card-title">
-            <span>Moves</span>
-            <span class="tagline" id="openingInfo">Click a move to jump</span>
-          </div>
-          <div id="moveGrid" class="move-grid"></div>
-        </div>
-
-        <div class="card engine-box">
-          <div class="card-title">
-            <span>Engine</span>
-            <span class="tagline" id="engineStatus">Idle</span>
-          </div>
-
-          <div class="engine-row">
-            <div class="pill">Eval: <span id="evalText">—</span></div>
-            <div class="pill">Depth: <span id="depthText">—</span></div>
-          </div>
-
-          <div class="bar" title="Eval bar (rough)">
-            <div id="evalBar"></div>
-          </div>
-
-          <div class="engine-row">
-            <button class="btn secondary" id="analyzeBtn">🧠 Analyze</button>
-            <button class="btn light" id="stopBtn">⏹ Stop</button>
-          </div>
-
-          <div class="engine-row">
-            <div class="muted">Skill</div>
-            <input id="skillRange" type="range" min="0" max="20" value="10" />
-            <div class="pill"><span id="skillText">10</span>/20</div>
-          </div>
-
-          <div class="engine-row">
-            <div class="muted">Think (ms)</div>
-            <input id="timeRange" type="range" min="50" max="2000" value="400" step="50" />
-            <div class="pill"><span id="timeText">400</span></div>
-          </div>
-
-          <div class="pv" id="pvBox">PV: —</div>
-          <div class="muted">Tip: press <b>E</b> to analyze current position.</div>
-        </div>
-      </div>
-    </section>
-  </main>
+    </div>
+  </div>
 
   <script type="module">
-    import { Chess } from "https://cdn.jsdelivr.net/npm/chess.js@1.4.0/+esm";
+    /* =========================
+       Minimal chess logic (no external libs)
+       Supports: load PGN moves (SAN-ish), step through moves, display pieces.
+       Engine uses FEN from current position.
+       ========================= */
 
-    // =========================
-    // Pieces
-    // =========================
-    const PIECE_SVG_BASE = "https://lichess1.org/assets/piece/cburnett/";
-    function pieceSvgUrl(piece) {
-      const color = piece.color === "w" ? "w" : "b";
-      const typeMap = { p: "P", n: "N", b: "B", r: "R", q: "Q", k: "K" };
-      return `${PIECE_SVG_BASE}${color}${typeMap[piece.type]}.svg`;
+    /* ---- Board + pieces ---- */
+    const boardEl = document.getElementById("board");
+    const moveListEl = document.getElementById("moveList");
+    const statusEl = document.getElementById("status");
+    const plyInfoEl = document.getElementById("plyInfo");
+    const turnInfoEl = document.getElementById("turnInfo");
+    const fenInfoEl = document.getElementById("fenInfo");
+    const evalBoxEl = document.getElementById("evalBox");
+
+    const PIECE_FILES = {
+      wK: "wK.svg", wQ: "wQ.svg", wR: "wR.svg", wB: "wB.svg", wN: "wN.svg", wP: "wP.svg",
+      bK: "bK.svg", bQ: "bQ.svg", bR: "bR.svg", bB: "bB.svg", bN: "bN.svg", bP: "bP.svg",
+    };
+
+    function pieceImg(code) {
+      const img = document.createElement("img");
+      img.className = "piece";
+      img.alt = code;
+      img.src = new URL(`./pieces/${PIECE_FILES[code]}`, import.meta.url).toString();
+      return img;
     }
 
     const files = "abcdefgh";
+    function sqName(r, c) { return files[c] + (8 - r); } // r 0=rank8
+    function inBounds(r, c) { return r >= 0 && r < 8 && c >= 0 && c < 8; }
 
-    // =========================
-    // DOM
-    // =========================
-    const boardEl = document.getElementById("board");
-    const pgnTextEl = document.getElementById("pgnText");
-    const statusEl = document.getElementById("status");
-    const pgnFileEl = document.getElementById("pgnFile");
-    const importBtn = document.getElementById("importBtn");
-    const demoBtn = document.getElementById("demoBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const gameSelect = document.getElementById("gameSelect");
-    const gameInfo = document.getElementById("gameInfo");
+    function makeEmptyBoard() {
+      const b = Array.from({ length: 8 }, () => Array(8).fill(null));
+      return b;
+    }
 
-    const moveGrid = document.getElementById("moveGrid");
-    const openingInfo = document.getElementById("openingInfo");
+    function setupStartPos() {
+      const b = makeEmptyBoard();
+      const backW = ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"];
+      const backB = ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"];
+      for (let c = 0; c < 8; c++) {
+        b[7][c] = backW[c];
+        b[6][c] = "wP";
+        b[1][c] = "bP";
+        b[0][c] = backB[c];
+      }
+      return b;
+    }
 
-    const plyInfo = document.getElementById("plyInfo");
-    const turnInfo = document.getElementById("turnInfo");
-    const resultInfo = document.getElementById("resultInfo");
-
-    const resetBtn = document.getElementById("resetBtn");
-    const prevBtn = document.getElementById("prevBtn");
-    const nextBtn = document.getElementById("nextBtn");
-    const playBtn = document.getElementById("playBtn");
-    const flipBtn = document.getElementById("flipBtn");
-    const downloadBtn = document.getElementById("downloadBtn");
-
-    // Engine DOM
-    const engineStatus = document.getElementById("engineStatus");
-    const evalText = document.getElementById("evalText");
-    const depthText = document.getElementById("depthText");
-    const evalBar = document.getElementById("evalBar");
-    const pvBox = document.getElementById("pvBox");
-    const analyzeBtn = document.getElementById("analyzeBtn");
-    const stopBtn = document.getElementById("stopBtn");
-    const skillRange = document.getElementById("skillRange");
-    const skillText = document.getElementById("skillText");
-    const timeRange = document.getElementById("timeRange");
-    const timeText = document.getElementById("timeText");
-
-    // =========================
-    // State
-    // =========================
-    const START_FEN = new Chess().fen();
-    let orientation = "w";
-
-    let games = [];
-    let currentGameIndex = -1;
-
-    let base = new Chess();
-    let moveList = [];
+    let board = setupStartPos();
+    let turn = "w"; // w/b
+    let history = []; // {san, fen}
     let ply = 0;
-
     let playing = false;
     let playTimer = null;
-
     let lastMoveSquares = null;
 
-    // click-to-move state
-    let selectedSquare = null;
-    let legalTargets = new Set();
-
-    // =========================
-    // Status helpers
-    // =========================
-    function setStatus(msg, good = true) {
-      statusEl.textContent = msg;
-      statusEl.style.color = good ? "var(--good)" : "var(--bad)";
-      setTimeout(() => { statusEl.style.color = "var(--muted)"; }, 900);
-    }
-
-    // =========================
-    // Lichess PGN cleaner
-    // =========================
-    function cleanLichessPGN(pgn) {
-      return (pgn || "")
-        .replace(/\r\n/g, "\n")
-        // remove lichess annotations inside comments
-        .replace(/\[\%csl[^\]]*\]/g, "")
-        .replace(/\[\%cal[^\]]*\]/g, "")
-        .replace(/\[\%[a-zA-Z]+[^\]]*\]/g, "")
-        // remove weird single-letter comments like { t }
-        .replace(/\{\s*[a-zA-Z]\s*\}/g, "")
-        // cleanup empty comments
-        .replace(/\{\s*\}/g, "")
-        .replace(/[ \t]+\n/g, "\n")
-        .trim();
-    }
-
-    // =========================
-    // Multi-game PGN splitter
-    // =========================
-    function splitMultiPGN(text) {
-      const cleaned = (text || "").replace(/\r\n/g, "\n").trim();
-      if (!cleaned) return [];
-      // split on blank line + [Event ...]
-      const parts = cleaned.split(/\n\s*\n(?=\[Event\s)/g);
-      return parts.map(p => p.trim()).filter(Boolean);
-    }
-
-    function safeHeader(chess) {
-      try { return chess.header(); } catch { return {}; }
-    }
-
-    function gameLabel(headers, idx) {
-      const W = headers.White || "White";
-      const B = headers.Black || "Black";
-      const R = headers.Result || "*";
-      const D = headers.Date && headers.Date !== "????.??.??" ? headers.Date : "";
-      const E = headers.Event && headers.Event !== "?" ? headers.Event : "";
-      return [`#${idx + 1}`, `${W} vs ${B}`, R !== "*" ? R : "", D, E].filter(Boolean).join(" • ");
-    }
-
-    // =========================
-    // Board rendering
-    // =========================
-    function squaresForOrientation() {
-      const squares = [];
-      for (let r = 8; r >= 1; r--) {
-        for (let f = 0; f < 8; f++) squares.push(files[f] + r);
-      }
-      return orientation === "w" ? squares : squares.reverse();
-    }
-
-    function squareColor(square) {
-      const file = files.indexOf(square[0]);
-      const rank = parseInt(square[1], 10) - 1;
-      return ((file + rank) % 2 === 0) ? "dark" : "light";
-    }
-
-    function stopPlay() {
-      playing = false;
-      playBtn.textContent = "▶ Play";
-      if (playTimer) clearInterval(playTimer);
-      playTimer = null;
-    }
-
-    function startPlay() {
-      if (!moveList.length) return;
-      playing = true;
-      playBtn.textContent = "⏸ Pause";
-      if (playTimer) clearInterval(playTimer);
-      playTimer = setInterval(() => {
-        if (ply >= moveList.length) { stopPlay(); return; }
-        goToPly(ply + 1);
-      }, 520);
-    }
-
-    function updateMeta() {
-      plyInfo.textContent = `${ply} / ${moveList.length}`;
-      turnInfo.textContent = base.turn() === "w" ? "White" : "Black";
-      const headers = (currentGameIndex >= 0 && games[currentGameIndex]) ? games[currentGameIndex].headers : {};
-      resultInfo.textContent = headers.Result || "—";
-    }
-
-    function clearSelection() {
-      selectedSquare = null;
-      legalTargets = new Set();
-    }
-
-    function computeLegalTargets(fromSq) {
-      const moves = base.moves({ verbose: true, square: fromSq });
-      const set = new Set();
-      for (const m of moves) set.add(m.to);
-      return set;
-    }
-
+    /* ---- Render board ---- */
     function renderBoard() {
       boardEl.innerHTML = "";
-
-      const boardArr = base.board(); // a8..h1
-      const map = new Map();
       for (let r = 0; r < 8; r++) {
-        for (let f = 0; f < 8; f++) {
-          const sq = files[f] + (8 - r);
-          map.set(sq, boardArr[r][f]);
+        for (let c = 0; c < 8; c++) {
+          const sq = document.createElement("div");
+          sq.className = "sq " + ((r + c) % 2 === 0 ? "light" : "dark");
+          sq.dataset.r = r;
+          sq.dataset.c = c;
+
+          const name = sqName(r, c);
+          const coord = document.createElement("div");
+          coord.className = "coord";
+          if (r === 7 || c === 0) coord.textContent = (r === 7 ? files[c] : "") + (c === 0 ? (8 - r) : "");
+          sq.appendChild(coord);
+
+          if (lastMoveSquares && (name === lastMoveSquares.from || name === lastMoveSquares.to)) {
+            sq.classList.add("last");
+          }
+
+          const piece = board[r][c];
+          if (piece) {
+            sq.appendChild(pieceImg(piece));
+          }
+          boardEl.appendChild(sq);
         }
       }
+    }
 
-      const squares = squaresForOrientation();
-
-      for (const sq of squares) {
-        const div = document.createElement("div");
-        div.className = `sq ${squareColor(sq)}`;
-        div.dataset.square = sq;
-
-        if (lastMoveSquares && (sq === lastMoveSquares.from || sq === lastMoveSquares.to)) {
-          div.classList.add("last");
+    /* ---- FEN ---- */
+    function fenFromBoard() {
+      let rows = [];
+      for (let r = 0; r < 8; r++) {
+        let row = "";
+        let empty = 0;
+        for (let c = 0; c < 8; c++) {
+          const p = board[r][c];
+          if (!p) { empty++; continue; }
+          if (empty) { row += empty; empty = 0; }
+          const color = p[0];
+          const type = p[1].toLowerCase();
+          row += (color === "w") ? type.toUpperCase() : type;
         }
-
-        if (selectedSquare === sq) {
-          div.classList.add("sel");
-        }
-
-        if (legalTargets.has(sq)) {
-          div.classList.add("hint");
-        }
-
-        const piece = map.get(sq);
-        if (piece) {
-          const img = document.createElement("img");
-          img.className = "piece";
-          img.alt = piece.color + piece.type;
-          img.draggable = false;
-          img.src = pieceSvgUrl(piece);
-          div.appendChild(img);
-        }
-
-        const coord = document.createElement("div");
-        coord.className = "coord";
-        const showFile = (orientation === "w" ? sq[1] === "1" : sq[1] === "8");
-        const showRank = (orientation === "w" ? sq[0] === "a" : sq[0] === "h");
-        coord.textContent = (showFile ? sq[0] : "") + (showRank ? sq[1] : "");
-        div.appendChild(coord);
-
-        div.addEventListener("click", () => {
-          stopPlay();
-
-          const clickedPiece = base.get(sq);
-
-          // if no selection yet
-          if (!selectedSquare) {
-            if (!clickedPiece) return;
-
-            // only allow selecting side to move
-            if (clickedPiece.color !== base.turn()) return;
-
-            selectedSquare = sq;
-            legalTargets = computeLegalTargets(sq);
-            renderBoard();
-            return;
-          }
-
-          // if selection exists
-          const from = selectedSquare;
-          const to = sq;
-
-          // click same square to unselect
-          if (from === to) {
-            clearSelection();
-            renderBoard();
-            return;
-          }
-
-          // if clicked another own piece -> switch selection
-          if (clickedPiece && clickedPiece.color === base.turn()) {
-            selectedSquare = sq;
-            legalTargets = computeLegalTargets(sq);
-            renderBoard();
-            return;
-          }
-
-          // try to make move
-          if (!legalTargets.has(to)) {
-            setStatus("Illegal move", false);
-            clearSelection();
-            renderBoard();
-            return;
-          }
-
-          // promotion: auto queen
-          let promotion = undefined;
-          const moving = base.get(from);
-          if (moving && moving.type === "p") {
-            const rankTo = to[1];
-            if (rankTo === "8" || rankTo === "1") promotion = "q";
-          }
-
-          const made = base.move({ from, to, promotion });
-          if (!made) {
-            setStatus("Move failed", false);
-            clearSelection();
-            renderBoard();
-            return;
-          }
-
-          moveList = base.history({ verbose: true });
-          ply = moveList.length;
-          lastMoveSquares = { from, to };
-          clearSelection();
-
-          renderBoard();
-          renderMoves();
-          updateMeta();
-
-          // optional: auto analyze after user move
-          // analyzeCurrentPosition();
-        });
-
-        boardEl.appendChild(div);
+        if (empty) row += empty;
+        rows.push(row);
       }
+      // we ignore castling/ep/halfmove for engine analysis simplicity
+      return rows.join("/") + " " + (turn === "w" ? "w" : "b") + " - - 0 1";
+    }
+
+    /* ---- PGN parsing (simple) ---- */
+    function cleanPgn(text) {
+      // remove headers
+      text = text.replace(/\[[^\]]*\]\s*\n/g, "");
+      // remove comments {...}
+      text = text.replace(/\{[^}]*\}/g, " ");
+      // remove NAGs $5
+      text = text.replace(/\$\d+/g, " ");
+      // remove variations (...)
+      while (/\([^()]*\)/.test(text)) text = text.replace(/\([^()]*\)/g, " ");
+      // remove move numbers "12." or "12..."
+      text = text.replace(/\d+\.(\.\.)?/g, " ");
+      // collapse whitespace
+      text = text.replace(/\s+/g, " ").trim();
+      // remove result markers
+      text = text.replace(/(1-0|0-1|1\/2-1\/2|\*)/g, " ").trim();
+      return text;
+    }
+
+    function splitMoves(pgnText) {
+      const cleaned = cleanPgn(pgnText);
+      if (!cleaned) return [];
+      return cleaned.split(" ").filter(Boolean);
+    }
+
+    /* ---- Move application (very simplified SAN) ---- */
+    /* This is not a full chess rules engine, but good enough for normal PGNs.
+       Supports: pawn moves, captures, piece moves, castling, promotions, checks ignored.
+    */
+    function findPieces(type, color) {
+      const out = [];
+      for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+        const p = board[r][c];
+        if (p && p[0] === color && p[1] === type) out.push({ r, c });
+      }
+      return out;
+    }
+
+    function algebraToRC(sq) {
+      const f = sq[0];
+      const rank = parseInt(sq[1], 10);
+      const c = files.indexOf(f);
+      const r = 8 - rank;
+      return { r, c };
+    }
+
+    function rcToAlgebra(r, c) {
+      return files[c] + (8 - r);
+    }
+
+    function isEnemy(r, c, color) {
+      const p = board[r][c];
+      return p && p[0] !== color;
+    }
+
+    function isEmpty(r, c) {
+      return board[r][c] == null;
+    }
+
+    function pathClear(fr, fc, tr, tc) {
+      const dr = Math.sign(tr - fr);
+      const dc = Math.sign(tc - fc);
+      let r = fr + dr, c = fc + dc;
+      while (r !== tr || c !== tc) {
+        if (!isEmpty(r, c)) return false;
+        r += dr; c += dc;
+      }
+      return true;
+    }
+
+    function canMovePiece(type, color, fr, fc, tr, tc, capture) {
+      const dr = tr - fr;
+      const dc = tc - fc;
+
+      if (type === "N") {
+        const ok = (Math.abs(dr) === 2 && Math.abs(dc) === 1) || (Math.abs(dr) === 1 && Math.abs(dc) === 2);
+        return ok && (!board[tr][tc] || isEnemy(tr, tc, color));
+      }
+      if (type === "B") {
+        if (Math.abs(dr) !== Math.abs(dc)) return false;
+        if (!pathClear(fr, fc, tr, tc)) return false;
+        return (!board[tr][tc] || isEnemy(tr, tc, color));
+      }
+      if (type === "R") {
+        if (!(dr === 0 || dc === 0)) return false;
+        if (!pathClear(fr, fc, tr, tc)) return false;
+        return (!board[tr][tc] || isEnemy(tr, tc, color));
+      }
+      if (type === "Q") {
+        if (!(dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc))) return false;
+        if (!pathClear(fr, fc, tr, tc)) return false;
+        return (!board[tr][tc] || isEnemy(tr, tc, color));
+      }
+      if (type === "K") {
+        if (Math.max(Math.abs(dr), Math.abs(dc)) !== 1) return false;
+        return (!board[tr][tc] || isEnemy(tr, tc, color));
+      }
+      return false;
+    }
+
+    function applySan(san) {
+      san = san.replace(/[+#?!]+/g, ""); // ignore check/mate/annotations
+
+      // Castling
+      if (san === "O-O" || san === "0-0") {
+        if (turn === "w") {
+          // e1->g1, h1->f1
+          board[7][6] = "wK"; board[7][4] = null;
+          board[7][5] = "wR"; board[7][7] = null;
+          lastMoveSquares = { from: "e1", to: "g1" };
+        } else {
+          board[0][6] = "bK"; board[0][4] = null;
+          board[0][5] = "bR"; board[0][7] = null;
+          lastMoveSquares = { from: "e8", to: "g8" };
+        }
+        turn = (turn === "w") ? "b" : "w";
+        return true;
+      }
+      if (san === "O-O-O" || san === "0-0-0") {
+        if (turn === "w") {
+          board[7][2] = "wK"; board[7][4] = null;
+          board[7][3] = "wR"; board[7][0] = null;
+          lastMoveSquares = { from: "e1", to: "c1" };
+        } else {
+          board[0][2] = "bK"; board[0][4] = null;
+          board[0][3] = "bR"; board[0][0] = null;
+          lastMoveSquares = { from: "e8", to: "c8" };
+        }
+        turn = (turn === "w") ? "b" : "w";
+        return true;
+      }
+
+      // Promotion like e8=Q or exd8=Q
+      let promo = null;
+      const promoMatch = san.match(/=([QRBN])/);
+      if (promoMatch) {
+        promo = promoMatch[1];
+        san = san.replace(/=([QRBN])/, "");
+      }
+
+      const capture = san.includes("x");
+      san = san.replace("x", "");
+
+      // Destination square is last 2 chars like e4
+      const dest = san.slice(-2);
+      if (!/^[a-h][1-8]$/.test(dest)) return false;
+      const { r: tr, c: tc } = algebraToRC(dest);
+
+      // Piece type
+      let type = "P";
+      const first = san[0];
+      if ("KQRBN".includes(first)) {
+        type = first;
+        san = san.slice(1);
+      }
+
+      // Disambiguation (optional file/rank)
+      let disFile = null, disRank = null;
+      const dis = san.slice(0, san.length - 2);
+      if (dis.length === 1) {
+        if (/[a-h]/.test(dis)) disFile = dis;
+        if (/[1-8]/.test(dis)) disRank = dis;
+      } else if (dis.length === 2) {
+        if (/[a-h]/.test(dis[0])) disFile = dis[0];
+        if (/[1-8]/.test(dis[1])) disRank = dis[1];
+      }
+
+      const color = turn;
+      const code = color + type;
+
+      // Pawn move
+      if (type === "P") {
+        const dir = (color === "w") ? -1 : 1;
+        // If disFile exists, it's pawn capture from that file
+        if (disFile) {
+          const fc = files.indexOf(disFile);
+          const fr = tr - dir;
+          if (inBounds(fr, fc)) {
+            const fromPiece = board[fr][fc];
+            if (fromPiece === color + "P") {
+              // capture or normal
+              board[tr][tc] = color + "P";
+              board[fr][fc] = null;
+              if (promo) board[tr][tc] = color + promo;
+              lastMoveSquares = { from: rcToAlgebra(fr, fc), to: dest };
+              turn = (turn === "w") ? "b" : "w";
+              return true;
+            }
+          }
+          return false;
+        }
+
+        // normal pawn advance 1 or 2
+        const fr1 = tr - dir;
+        if (inBounds(fr1, tc) && board[fr1][tc] === color + "P" && isEmpty(tr, tc)) {
+          board[tr][tc] = color + "P"; board[fr1][tc] = null;
+          if (promo) board[tr][tc] = color + promo;
+          lastMoveSquares = { from: rcToAlgebra(fr1, tc), to: dest };
+          turn = (turn === "w") ? "b" : "w";
+          return true;
+        }
+        const fr2 = tr - 2 * dir;
+        const startRank = (color === "w") ? 6 : 1;
+        if (inBounds(fr2, tc) && tr === startRank + 2 * dir && board[fr2][tc] === color + "P" && isEmpty(fr1, tc) && isEmpty(tr, tc)) {
+          board[tr][tc] = color + "P"; board[fr2][tc] = null;
+          lastMoveSquares = { from: rcToAlgebra(fr2, tc), to: dest };
+          turn = (turn === "w") ? "b" : "w";
+          return true;
+        }
+
+        // pawn capture without disFile (rare)
+        return false;
+      }
+
+      // Piece move
+      const candidates = findPieces(type, color);
+      let from = null;
+      for (const p of candidates) {
+        if (disFile && files[p.c] !== disFile) continue;
+        if (disRank && (8 - p.r).toString() !== disRank) continue;
+        if (!canMovePiece(type, color, p.r, p.c, tr, tc, capture)) continue;
+        from = p;
+        break;
+      }
+      if (!from) return false;
+
+      board[tr][tc] = color + type;
+      board[from.r][from.c] = null;
+      lastMoveSquares = { from: rcToAlgebra(from.r, from.c), to: dest };
+      turn = (turn === "w") ? "b" : "w";
+      return true;
+    }
+
+    /* ---- History rebuild ---- */
+    function resetAll() {
+      board = setupStartPos();
+      turn = "w";
+      history = [];
+      ply = 0;
+      lastMoveSquares = null;
+      renderBoard();
+      renderMoves();
+      updateInfo();
+    }
+
+    function buildHistoryFromMoves(moves) {
+      resetAll();
+      const temp = [];
+      for (const san of moves) {
+        const ok = applySan(san);
+        if (!ok) {
+          console.warn("Failed move:", san);
+          statusEl.textContent = "Some moves failed to parse: " + san;
+          break;
+        }
+        temp.push({ san, fen: fenFromBoard() });
+      }
+      history = temp;
+      ply = history.length;
+      // show end position
+      renderBoard();
+      renderMoves();
+      updateInfo();
+      statusEl.textContent = `Imported ${history.length} moves.`;
+    }
+
+    function gotoPly(n) {
+      // rebuild from scratch (simple + safe)
+      const moves = history.map(x => x.san);
+      resetAll();
+      for (let i = 0; i < n; i++) applySan(moves[i]);
+      ply = n;
+      renderBoard();
+      renderMoves();
+      updateInfo();
+    }
+
+    function updateInfo() {
+      plyInfoEl.textContent = `${ply} / ${history.length}`;
+      turnInfoEl.textContent = (turn === "w" ? "White" : "Black");
+      fenInfoEl.textContent = fenFromBoard();
     }
 
     function renderMoves() {
-      moveGrid.innerHTML = "";
-
-      if (!moveList.length) {
-        openingInfo.textContent = "No moves yet";
+      moveListEl.innerHTML = "";
+      if (history.length === 0) {
+        moveListEl.textContent = "Moves will appear here…";
         return;
       }
-
-      openingInfo.textContent = "Click a move to jump";
-
-      for (let i = 0; i < moveList.length; i++) {
-        const m = moveList[i];
-        const btn = document.createElement("button");
-        btn.className = "mv";
-        btn.type = "button";
-
-        const moveNo = Math.floor(i / 2) + 1;
-        const prefix = (i % 2 === 0) ? `${moveNo}.` : `${moveNo}...`;
-        btn.textContent = `${prefix} ${m.san}`;
-
-        if (i + 1 === ply) btn.classList.add("active");
-
-        btn.addEventListener("click", () => {
-          stopPlay();
-          clearSelection();
-          goToPly(i + 1);
-        });
-
-        moveGrid.appendChild(btn);
+      for (let i = 0; i < history.length; i++) {
+        const b = document.createElement("span");
+        b.className = "moveBtn" + (i === ply - 1 ? " active" : "");
+        b.textContent = history[i].san;
+        b.onclick = () => gotoPly(i + 1);
+        moveListEl.appendChild(b);
       }
     }
 
-    function rebuildPositionToPly(targetPly) {
-      base.reset();
-      lastMoveSquares = null;
-
-      // restore custom FEN if present
-      if (currentGameIndex >= 0) {
-        const fen = games[currentGameIndex]?.startFen;
-        if (fen && fen !== START_FEN) {
-          try { base.load(fen, { skipValidation: true }); } catch { }
-        }
-      }
-
-      for (let i = 0; i < targetPly; i++) {
-        const m = moveList[i];
-        base.move({ from: m.from, to: m.to, promotion: m.promotion });
-        lastMoveSquares = { from: m.from, to: m.to };
-      }
-    }
-
-    function goToPly(targetPly) {
-      ply = Math.max(0, Math.min(moveList.length, targetPly));
-      rebuildPositionToPly(ply);
-      clearSelection();
-      renderBoard();
-      renderMoves();
-      updateMeta();
-    }
-
-    function loadGame(index) {
-      stopPlay();
-      clearSelection();
-
-      currentGameIndex = index;
-      const raw = games[index]?.pgn || "";
-      const pgn = cleanLichessPGN(raw);
-
-      const tmp = new Chess();
-      try {
-        tmp.loadPgn(pgn, { strict: false });
-      } catch (err) {
-        console.error(err);
-        setStatus("Bad PGN (can't load)", false);
-        return;
-      }
-
-      const headers = safeHeader(tmp);
-
-      let startFen = START_FEN;
-      if (headers.FEN) startFen = headers.FEN;
-
-      moveList = tmp.history({ verbose: true });
-
-      base = new Chess();
-      if (startFen && startFen !== START_FEN) {
-        try { base.load(startFen, { skipValidation: true }); } catch { }
-      }
-
-      games[index].headers = headers;
-      games[index].startFen = startFen;
-
-      ply = 0;
-      lastMoveSquares = null;
-
-      setStatus("Game loaded", true);
-      updateMeta();
-      renderBoard();
-      renderMoves();
-    }
-
-    function importPGNText(text) {
-      stopPlay();
-      clearSelection();
-
-      const cleanedAll = cleanLichessPGN(text);
-      const chunks = splitMultiPGN(cleanedAll);
-      if (!chunks.length) {
-        setStatus("No PGN found", false);
-        return;
-      }
-
-      games = [];
-      gameSelect.innerHTML = "";
-
-      for (let i = 0; i < chunks.length; i++) {
-        const pgn = cleanLichessPGN(chunks[i]);
-
-        const g = new Chess();
-        try {
-          g.loadPgn(pgn, { strict: false });
-        } catch {
-          continue;
-        }
-
-        const headers = safeHeader(g);
-        const opt = document.createElement("option");
-        opt.value = String(games.length);
-        opt.textContent = gameLabel(headers, games.length);
-
-        games.push({ pgn, headers, startFen: headers.FEN || START_FEN });
-        gameSelect.appendChild(opt);
-      }
-
-      gameInfo.textContent = `${games.length} game${games.length === 1 ? "" : "s"}`;
-
-      if (!games.length) {
-        setStatus("All games failed to parse", false);
-        return;
-      }
-
-      gameSelect.selectedIndex = 0;
-      loadGame(0);
-      setStatus(`Imported ${games.length} game(s)`, true);
-    }
-
-    // =========================
-    // Engine (Stockfish)
-    // =========================
-    let engine = null;
-    let engineReady = false;
-    let lastEvalCp = null;
-
-    function setEngineStatus(msg, good = true) {
-      engineStatus.textContent = msg;
-      engineStatus.style.color = good ? "var(--good)" : "var(--muted)";
-    }
-
-    function setEvalBarFromCp(cp) {
-      // clamp [-800..+800] to 0..100
-      const clamp = Math.max(-800, Math.min(800, cp));
-      const pct = 50 + (clamp / 800) * 50;
-      evalBar.style.width = `${pct}%`;
-    }
-
-    function resetEngineUI() {
-      evalText.textContent = "—";
-      depthText.textContent = "—";
-      pvBox.textContent = "PV: —";
-      evalBar.style.width = "50%";
-      lastEvalCp = null;
-    }
-
-    function startEngine() {
-      // file:// will usually fail, localhost is OK
-      if (location.protocol === "file:") {
-        setEngineStatus("Engine blocked on file://", false);
-        return;
-      }
-
-      try {
-        // CDN worker (this is the part that can fail on some setups)
-        // If this fails for you, you must host stockfish.js locally.
-        engine = new Worker("https://cdn.jsdelivr.net/npm/stockfish@16.1.0/src/stockfish.js");
-      } catch (e) {
-        console.error(e);
-        setEngineStatus("Worker failed", false);
-        return;
-      }
-
-      engineReady = false;
-      setEngineStatus("Starting…", true);
-      resetEngineUI();
-
-      engine.onmessage = (ev) => {
-        const line = (typeof ev.data === "string") ? ev.data : "";
-        // console.log("SF:", line);
-
-        if (line === "uciok") {
-          engineReady = true;
-          setEngineStatus("Ready", true);
-          return;
-        }
-
-        // depth info
-        // example: "info depth 16 seldepth 24 score cp 34 pv e2e4 e7e5 ..."
-        if (line.startsWith("info ")) {
-          const depthMatch = line.match(/\bdepth\s+(\d+)/);
-          if (depthMatch) depthText.textContent = depthMatch[1];
-
-          const pvMatch = line.match(/\bpv\s+(.+)$/);
-          if (pvMatch) pvBox.textContent = "PV: " + pvMatch[1];
-
-          const mateMatch = line.match(/\bscore\s+mate\s+(-?\d+)/);
-          const cpMatch = line.match(/\bscore\s+cp\s+(-?\d+)/);
-
-          if (mateMatch) {
-            const mate = parseInt(mateMatch[1], 10);
-            evalText.textContent = (mate > 0) ? `#${mate}` : `#${mate}`;
-            // mate -> slam bar
-            evalBar.style.width = mate > 0 ? "100%" : "0%";
-          } else if (cpMatch) {
-            const cp = parseInt(cpMatch[1], 10);
-            lastEvalCp = cp;
-            // show in pawns
-            evalText.textContent = (cp / 100).toFixed(2);
-            setEvalBarFromCp(cp);
-          }
-        }
-
-        // best move
-        if (line.startsWith("bestmove ")) {
-          setEngineStatus("Idle", true);
-        }
-      };
-
-      engine.onerror = (e) => {
-        console.error("Engine error:", e);
-        setEngineStatus("Engine error", false);
-      };
-
-      // init UCI
-      engine.postMessage("uci");
-      // set some options
-      setSkill(parseInt(skillRange.value, 10));
-    }
-
-    function setSkill(skill) {
-      skillText.textContent = String(skill);
-      if (!engine) return;
-      engine.postMessage(`setoption name Skill Level value ${skill}`);
-    }
-
-    function stopEngineSearch() {
-      if (!engine) return;
-      engine.postMessage("stop");
-      setEngineStatus("Stopped", true);
-    }
-
-    function analyzeCurrentPosition() {
-      if (!engine) {
-        setEngineStatus("No engine", false);
-        return;
-      }
-      if (!engineReady) {
-        setEngineStatus("Not ready", false);
-        return;
-      }
-
-      const ms = parseInt(timeRange.value, 10);
-      timeText.textContent = String(ms);
-
-      setEngineStatus("Analyzing…", true);
-
-      // send position
-      const fen = base.fen();
-      engine.postMessage(`position fen ${fen}`);
-
-      // go
-      engine.postMessage(`go movetime ${ms}`);
-    }
-
-    // =========================
-    // Events
-    // =========================
-    importBtn.addEventListener("click", () => importPGNText(pgnTextEl.value));
-
-    demoBtn.addEventListener("click", () => {
-      pgnTextEl.value =
-        `[Event "Demo"]
-[Site "Localhost"]
-[Date "2026.01.25"]
-[Round "1"]
-[White "Jacob"]
-[Black "Stockfish"]
-[Result "1-0"]
-
-1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6
-6. Be3 e5 7. Nb3 Be6 8. f3 Be7 9. Qd2 O-O 10. O-O-O Nbd7
-11. g4 b5 12. g5 b4 13. Ne2 Ne8 14. Ng3 a5 15. Kb1 a4 16. Nc1 b3 1-0`;
-      setStatus("Demo loaded. Click Import.", true);
-    });
-
-    clearBtn.addEventListener("click", () => {
-      stopPlay();
-      pgnTextEl.value = "";
-      games = [];
-      moveList = [];
-      ply = 0;
-      currentGameIndex = -1;
-      gameSelect.innerHTML = "";
-      gameInfo.textContent = "0 games";
-      base = new Chess();
-      lastMoveSquares = null;
-      clearSelection();
-      renderBoard();
-      renderMoves();
-      updateMeta();
-      resetEngineUI();
-      setStatus("Cleared", true);
-    });
-
-    pgnFileEl.addEventListener("change", async (e) => {
+    /* ---- UI events ---- */
+    document.getElementById("pgnFile").addEventListener("change", async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
       const text = await file.text();
-      pgnTextEl.value = text;
-      setStatus("File loaded. Click Import.", true);
+      document.getElementById("pgnText").value = text;
+      statusEl.textContent = "PGN loaded. Click Import.";
     });
 
-    gameSelect.addEventListener("change", () => {
-      const idx = gameSelect.selectedIndex;
-      if (idx >= 0) loadGame(idx);
-    });
+    document.getElementById("demoBtn").onclick = () => {
+      document.getElementById("pgnText").value =
+        `[Event "Demo"]
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Be2 e5 7. Nb3 Be7 8. O-O O-O *`;
+      statusEl.textContent = "Demo loaded. Click Import.";
+    };
 
-    resetBtn.addEventListener("click", () => { stopPlay(); clearSelection(); goToPly(0); });
-    prevBtn.addEventListener("click", () => { stopPlay(); clearSelection(); goToPly(ply - 1); });
-    nextBtn.addEventListener("click", () => { stopPlay(); clearSelection(); goToPly(ply + 1); });
+    document.getElementById("clearBtn").onclick = () => {
+      document.getElementById("pgnText").value = "";
+      statusEl.textContent = "Cleared.";
+      resetAll();
+    };
 
-    playBtn.addEventListener("click", () => {
-      if (!moveList.length) return;
-      if (playing) stopPlay();
-      else startPlay();
-    });
-
-    flipBtn.addEventListener("click", () => {
-      orientation = (orientation === "w") ? "b" : "w";
-      renderBoard();
-    });
-
-    downloadBtn.addEventListener("click", () => {
-      const text = pgnTextEl.value.trim();
-      if (!text) { setStatus("Nothing to download", false); return; }
-      const blob = new Blob([text], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "games.pgn";
-      a.click();
-      URL.revokeObjectURL(url);
-      setStatus("Downloaded", true);
-    });
-
-    analyzeBtn.addEventListener("click", () => analyzeCurrentPosition());
-    stopBtn.addEventListener("click", () => stopEngineSearch());
-
-    skillRange.addEventListener("input", () => setSkill(parseInt(skillRange.value, 10)));
-    timeRange.addEventListener("input", () => timeText.textContent = String(timeRange.value));
-
-    window.addEventListener("keydown", (e) => {
-      if (e.target && (e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT")) return;
-
-      if (e.key === "ArrowLeft") { stopPlay(); clearSelection(); goToPly(ply - 1); }
-      if (e.key === "ArrowRight") { stopPlay(); clearSelection(); goToPly(ply + 1); }
-      if (e.key === " ") {
-        e.preventDefault();
-        if (playing) stopPlay();
-        else startPlay();
+    document.getElementById("importBtn").onclick = () => {
+      const text = document.getElementById("pgnText").value.trim();
+      const moves = splitMoves(text);
+      if (moves.length === 0) {
+        statusEl.textContent = "No moves found.";
+        return;
       }
-      if (e.key.toLowerCase() === "f") {
-        orientation = (orientation === "w") ? "b" : "w";
-        renderBoard();
-      }
-      if (e.key.toLowerCase() === "e") {
-        analyzeCurrentPosition();
-      }
-      if (e.key === "Escape") {
-        clearSelection();
-        renderBoard();
-      }
-    });
+      statusEl.textContent = "Importing...";
+      buildHistoryFromMoves(moves);
+    };
 
-    // =========================
-    // Init
-    // =========================
-    renderBoard();
-    renderMoves();
-    updateMeta();
+    document.getElementById("resetBtn").onclick = () => gotoPly(0);
+    document.getElementById("prevBtn").onclick = () => gotoPly(Math.max(0, ply - 1));
+    document.getElementById("nextBtn").onclick = () => gotoPly(Math.min(history.length, ply + 1));
 
-    // Start engine automatically (localhost only)
-    startEngine();
+    document.getElementById("playBtn").onclick = () => {
+      playing = !playing;
+      const btn = document.getElementById("playBtn");
+      btn.textContent = playing ? "⏸ Pause" : "▶ Play";
+      if (playing) {
+        playTimer = setInterval(() => {
+          if (ply >= history.length) { playing = false; btn.textContent = "▶ Play"; clearInterval(playTimer); return; }
+          gotoPly(ply + 1);
+        }, 450);
+      } else {
+        clearInterval(playTimer);
+      }
+    };
+
+    /* ---- Stockfish (LOCAL) ---- */
+    let engine = null;
+    let engineReady = false;
+
+    function startEngine() {
+      if (engine) return;
+      evalBoxEl.textContent = "Starting engine…";
+
+      engineReady = false;
+
+      // IMPORTANT: local worker file only
+      engine = new Worker("./stockfish.js");
+
+      engine.onmessage = (e) => {
+        const line = (e.data || "").toString();
+        if (!line) return;
+
+        // show info lines
+        if (line.startsWith("info ") && line.includes("score")) {
+          evalBoxEl.textContent = line;
+        }
+
+        if (line.includes("uciok")) {
+          engine.postMessage("isready");
+        }
+        if (line.includes("readyok")) {
+          engineReady = true;
+          evalBoxEl.textContent = "Engine ready ✅";
+        }
+        if (line.startsWith("bestmove")) {
+          evalBoxEl.textContent = line;
+        }
+      };
+
+      engine.onerror = (err) => {
+        console.error("Engine error:", err);
+        evalBoxEl.textContent = "Engine error ❌ (check console)";
+      };
+
+      engine.postMessage("uci");
+    }
+
+    function analyze(depth = 14) {
+      if (!engine) startEngine();
+
+      const wait = setInterval(() => {
+        if (!engineReady) return;
+        clearInterval(wait);
+
+        const fen = fenFromBoard();
+        evalBoxEl.textContent = "Analyzing…";
+
+        engine.postMessage("ucinewgame");
+        engine.postMessage("isready");
+        engine.postMessage("position fen " + fen);
+        engine.postMessage("go depth " + depth);
+      }, 50);
+    }
+
+    document.getElementById("startEngineBtn").onclick = startEngine;
+    document.getElementById("analyzeBtn").onclick = () => analyze(14);
+
+    /* init */
+    resetAll();
+    statusEl.textContent = "Ready. Import a PGN.";
   </script>
 </body>
 
