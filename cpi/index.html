@@ -788,7 +788,7 @@
       engineReady = false;
 
       // IMPORTANT: local worker file only
-      engine = new Worker("./stockfish.js");
+      engine = new Worker("./stockfish-17.1-asm-341ff22.js");
 
       engine.onmessage = (e) => {
         const line = (e.data || "").toString();
