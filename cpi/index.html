@@ -321,12 +321,10 @@
 
   <script type="module">
     /* =========================
-       Minimal chess logic (no external libs)
-       Supports: load PGN moves (SAN-ish), step through moves, display pieces.
-       Engine uses FEN from current position.
+       JacobAnalysis — PGN + Board + Stockfish
+       GitHub Pages safe: NO CDN, local worker
        ========================= */
 
-    /* ---- Board + pieces ---- */
     const boardEl = document.getElementById("board");
     const moveListEl = document.getElementById("moveList");
     const statusEl = document.getElementById("status");
@@ -349,12 +347,11 @@
     }
 
     const files = "abcdefgh";
-    function sqName(r, c) { return files[c] + (8 - r); } // r 0=rank8
+    function sqName(r, c) { return files[c] + (8 - r); }
     function inBounds(r, c) { return r >= 0 && r < 8 && c >= 0 && c < 8; }
 
     function makeEmptyBoard() {
-      const b = Array.from({ length: 8 }, () => Array(8).fill(null));
-      return b;
+      return Array.from({ length: 8 }, () => Array(8).fill(null));
     }
 
     function setupStartPos() {
@@ -371,14 +368,13 @@
     }
 
     let board = setupStartPos();
-    let turn = "w"; // w/b
+    let turn = "w";
     let history = []; // {san, fen}
     let ply = 0;
     let playing = false;
     let playTimer = null;
     let lastMoveSquares = null;
 
-    /* ---- Render board ---- */
     function renderBoard() {
       boardEl.innerHTML = "";
       for (let r = 0; r < 8; r++) {
@@ -389,10 +385,6 @@
           sq.dataset.c = c;
 
           const name = sqName(r, c);
-          const coord = document.createElement("div");
-          coord.className = "coord";
-          if (r === 7 || c === 0) coord.textContent = (r === 7 ? files[c] : "") + (c === 0 ? (8 - r) : "");
-          sq.appendChild(coord);
 
           if (lastMoveSquares && (name === lastMoveSquares.from || name === lastMoveSquares.to)) {
             sq.classList.add("last");
@@ -407,7 +399,6 @@
       }
     }
 
-    /* ---- FEN ---- */
     function fenFromBoard() {
       let rows = [];
       for (let r = 0; r < 8; r++) {
@@ -424,25 +415,17 @@
         if (empty) row += empty;
         rows.push(row);
       }
-      // we ignore castling/ep/halfmove for engine analysis simplicity
       return rows.join("/") + " " + (turn === "w" ? "w" : "b") + " - - 0 1";
     }
 
-    /* ---- PGN parsing (simple) ---- */
+    /* -------- PGN parsing (simple) -------- */
     function cleanPgn(text) {
-      // remove headers
       text = text.replace(/\[[^\]]*\]\s*\n/g, "");
-      // remove comments {...}
       text = text.replace(/\{[^}]*\}/g, " ");
-      // remove NAGs $5
       text = text.replace(/\$\d+/g, " ");
-      // remove variations (...)
       while (/\([^()]*\)/.test(text)) text = text.replace(/\([^()]*\)/g, " ");
-      // remove move numbers "12." or "12..."
       text = text.replace(/\d+\.(\.\.)?/g, " ");
-      // collapse whitespace
       text = text.replace(/\s+/g, " ").trim();
-      // remove result markers
       text = text.replace(/(1-0|0-1|1\/2-1\/2|\*)/g, " ").trim();
       return text;
     }
@@ -453,10 +436,7 @@
       return cleaned.split(" ").filter(Boolean);
     }
 
-    /* ---- Move application (very simplified SAN) ---- */
-    /* This is not a full chess rules engine, but good enough for normal PGNs.
-       Supports: pawn moves, captures, piece moves, castling, promotions, checks ignored.
-    */
+    /* -------- Apply SAN (basic) -------- */
     function findPieces(type, color) {
       const out = [];
       for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
@@ -498,7 +478,7 @@
       return true;
     }
 
-    function canMovePiece(type, color, fr, fc, tr, tc, capture) {
+    function canMovePiece(type, color, fr, fc, tr, tc) {
       const dr = tr - fr;
       const dc = tc - fc;
 
@@ -529,12 +509,11 @@
     }
 
     function applySan(san) {
-      san = san.replace(/[+#?!]+/g, ""); // ignore check/mate/annotations
+      san = san.replace(/[+#?!]+/g, "");
 
       // Castling
       if (san === "O-O" || san === "0-0") {
         if (turn === "w") {
-          // e1->g1, h1->f1
           board[7][6] = "wK"; board[7][4] = null;
           board[7][5] = "wR"; board[7][7] = null;
           lastMoveSquares = { from: "e1", to: "g1" };
@@ -560,7 +539,7 @@
         return true;
       }
 
-      // Promotion like e8=Q or exd8=Q
+      // Promotion
       let promo = null;
       const promoMatch = san.match(/=([QRBN])/);
       if (promoMatch) {
@@ -571,12 +550,10 @@
       const capture = san.includes("x");
       san = san.replace("x", "");
 
-      // Destination square is last 2 chars like e4
       const dest = san.slice(-2);
       if (!/^[a-h][1-8]$/.test(dest)) return false;
       const { r: tr, c: tc } = algebraToRC(dest);
 
-      // Piece type
       let type = "P";
       const first = san[0];
       if ("KQRBN".includes(first)) {
@@ -584,7 +561,6 @@
         san = san.slice(1);
       }
 
-      // Disambiguation (optional file/rank)
       let disFile = null, disRank = null;
       const dis = san.slice(0, san.length - 2);
       if (dis.length === 1) {
@@ -596,31 +572,28 @@
       }
 
       const color = turn;
-      const code = color + type;
 
-      // Pawn move
+      // Pawn
       if (type === "P") {
         const dir = (color === "w") ? -1 : 1;
-        // If disFile exists, it's pawn capture from that file
+
+        // pawn capture like exd5
         if (disFile) {
           const fc = files.indexOf(disFile);
           const fr = tr - dir;
-          if (inBounds(fr, fc)) {
-            const fromPiece = board[fr][fc];
-            if (fromPiece === color + "P") {
-              // capture or normal
-              board[tr][tc] = color + "P";
-              board[fr][fc] = null;
-              if (promo) board[tr][tc] = color + promo;
-              lastMoveSquares = { from: rcToAlgebra(fr, fc), to: dest };
-              turn = (turn === "w") ? "b" : "w";
-              return true;
-            }
+          if (inBounds(fr, fc) && board[fr][fc] === color + "P") {
+            if (!capture && board[tr][tc] !== null) return false;
+            board[tr][tc] = color + "P";
+            board[fr][fc] = null;
+            if (promo) board[tr][tc] = color + promo;
+            lastMoveSquares = { from: rcToAlgebra(fr, fc), to: dest };
+            turn = (turn === "w") ? "b" : "w";
+            return true;
           }
           return false;
         }
 
-        // normal pawn advance 1 or 2
+        // pawn push 1
         const fr1 = tr - dir;
         if (inBounds(fr1, tc) && board[fr1][tc] === color + "P" && isEmpty(tr, tc)) {
           board[tr][tc] = color + "P"; board[fr1][tc] = null;
@@ -629,26 +602,27 @@
           turn = (turn === "w") ? "b" : "w";
           return true;
         }
+
+        // pawn push 2
         const fr2 = tr - 2 * dir;
         const startRank = (color === "w") ? 6 : 1;
-        if (inBounds(fr2, tc) && tr === startRank + 2 * dir && board[fr2][tc] === color + "P" && isEmpty(fr1, tc) && isEmpty(tr, tc)) {
+        if (inBounds(fr2, tc) && fr2 === startRank && isEmpty(fr1, tc) && isEmpty(tr, tc) && board[fr2][tc] === color + "P") {
           board[tr][tc] = color + "P"; board[fr2][tc] = null;
           lastMoveSquares = { from: rcToAlgebra(fr2, tc), to: dest };
           turn = (turn === "w") ? "b" : "w";
           return true;
         }
 
-        // pawn capture without disFile (rare)
         return false;
       }
 
-      // Piece move
+      // Pieces
       const candidates = findPieces(type, color);
       let from = null;
       for (const p of candidates) {
         if (disFile && files[p.c] !== disFile) continue;
         if (disRank && (8 - p.r).toString() !== disRank) continue;
-        if (!canMovePiece(type, color, p.r, p.c, tr, tc, capture)) continue;
+        if (!canMovePiece(type, color, p.r, p.c, tr, tc)) continue;
         from = p;
         break;
       }
@@ -661,7 +635,7 @@
       return true;
     }
 
-    /* ---- History rebuild ---- */
+    /* -------- History -------- */
     function resetAll() {
       board = setupStartPos();
       turn = "w";
@@ -680,14 +654,13 @@
         const ok = applySan(san);
         if (!ok) {
           console.warn("Failed move:", san);
-          statusEl.textContent = "Some moves failed to parse: " + san;
+          statusEl.textContent = "Some moves failed to parse at: " + san;
           break;
         }
         temp.push({ san, fen: fenFromBoard() });
       }
       history = temp;
       ply = history.length;
-      // show end position
       renderBoard();
       renderMoves();
       updateInfo();
@@ -695,9 +668,10 @@
     }
 
     function gotoPly(n) {
-      // rebuild from scratch (simple + safe)
       const moves = history.map(x => x.san);
-      resetAll();
+      board = setupStartPos();
+      turn = "w";
+      lastMoveSquares = null;
       for (let i = 0; i < n; i++) applySan(moves[i]);
       ply = n;
       renderBoard();
@@ -726,7 +700,7 @@
       }
     }
 
-    /* ---- UI events ---- */
+    /* -------- UI -------- */
     document.getElementById("pgnFile").addEventListener("change", async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -769,7 +743,12 @@
       btn.textContent = playing ? "⏸ Pause" : "▶ Play";
       if (playing) {
         playTimer = setInterval(() => {
-          if (ply >= history.length) { playing = false; btn.textContent = "▶ Play"; clearInterval(playTimer); return; }
+          if (ply >= history.length) {
+            playing = false;
+            btn.textContent = "▶ Play";
+            clearInterval(playTimer);
+            return;
+          }
           gotoPly(ply + 1);
         }, 450);
       } else {
@@ -777,27 +756,24 @@
       }
     };
 
-    /* ---- Stockfish (LOCAL) ---- */
+    /* =========================
+       Stockfish Engine (local)
+       ========================= */
     let engine = null;
     let engineReady = false;
 
     function startEngine() {
       if (engine) return;
-      evalBoxEl.textContent = "Starting engine…";
 
+      evalBoxEl.textContent = "Starting engine…";
       engineReady = false;
 
-      // IMPORTANT: local worker file only
-      engine = new Worker("./stockfish-17.1-asm-341ff22.js");
+      // IMPORTANT: module worker fixes GitHub Pages crash
+      engine = new Worker("./stockfish-17.1-asm-341ff22.js", { type: "module" });
 
       engine.onmessage = (e) => {
         const line = (e.data || "").toString();
         if (!line) return;
-
-        // show info lines
-        if (line.startsWith("info ") && line.includes("score")) {
-          evalBoxEl.textContent = line;
-        }
 
         if (line.includes("uciok")) {
           engine.postMessage("isready");
@@ -806,14 +782,17 @@
           engineReady = true;
           evalBoxEl.textContent = "Engine ready ✅";
         }
+        if (line.startsWith("info ") && line.includes("score")) {
+          evalBoxEl.textContent = line;
+        }
         if (line.startsWith("bestmove")) {
           evalBoxEl.textContent = line;
         }
       };
 
-      engine.onerror = (err) => {
-        console.error("Engine error:", err);
-        evalBoxEl.textContent = "Engine error ❌ (check console)";
+      engine.onerror = (e) => {
+        console.log("ENGINE WORKER ERROR:", e);
+        evalBoxEl.textContent = "Engine error ❌ (open console)";
       };
 
       engine.postMessage("uci");
@@ -842,7 +821,9 @@
     /* init */
     resetAll();
     statusEl.textContent = "Ready. Import a PGN.";
+    console.log("JacobAnalysis loaded ✅");
   </script>
+
 </body>
 
 </html>
