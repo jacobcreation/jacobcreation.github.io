@@ -435,6 +435,21 @@
       background: rgba(0, 0, 0, 0.22);
       color: rgba(255, 255, 255, 0.85);
     }
+
+    .board {
+      position: relative;
+      width: 480px;
+      height: 480px;
+      background: url("./pieces/board.svg") no-repeat center / cover;
+    }
+
+    .piece {
+      position: absolute;
+      width: 12.5%;
+      height: 12.5%;
+      pointer-events: none;
+      user-select: none;
+    }
   </style>
 </head>
 
@@ -576,692 +591,193 @@
   <script type="module">
     import { Chess } from "./chess.esm.js";
 
-    // =========================
-    // DOM
-    // =========================
-    const pgnFile = document.getElementById("pgnFile");
-    const pgnText = document.getElementById("pgnText");
-    const importBtn = document.getElementById("importBtn");
-    const demoBtn = document.getElementById("demoBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const statusEl = document.getElementById("status");
-    const gameSelect = document.getElementById("gameSelect");
-
-    const squareLayer = document.getElementById("squareLayer");
-    const moveListEl = document.getElementById("moveList");
-
-    const resetBtn = document.getElementById("resetBtn");
-    const prevBtn = document.getElementById("prevBtn");
-    const nextBtn = document.getElementById("nextBtn");
-    const playBtn = document.getElementById("playBtn");
-    const downloadBtn = document.getElementById("downloadBtn");
-
-    const plyInfo = document.getElementById("plyInfo");
-    const turnInfo = document.getElementById("turnInfo");
-    const fenInfo = document.getElementById("fenInfo");
-
-    const analyzeBtn = document.getElementById("analyzeBtn");
-    const stopBtn = document.getElementById("stopBtn");
-
-    const engineBadge = document.getElementById("engineBadge");
-    const evalText = document.getElementById("evalText");
-    const evalBar = document.getElementById("evalBar");
-    const pvLines = document.getElementById("pvLines");
-    const depthText = document.getElementById("depthText");
-    const nodesText = document.getElementById("nodesText");
-
-    // =========================
-    // Chess / state
-    // =========================
-    const chess = new Chess();
-    let loadedGames = [];
-    let currentGameIndex = -1;
-
-    // move navigation
-    let mainlineMovesSAN = [];
-    let plyIndex = 0; // 0 = start position, 1 = after first ply
-
-    // autoplay
-    let playing = false;
-    let playTimer = null;
-
-    // UI last move highlight
-    let lastMove = null; // {from, to}
-
-    // Drag state
-    let dragFrom = null;
-
-    // =========================
-    // Helpers
-    // =========================
-    const FILES = "abcdefgh";
-    const RANKS = "87654321";
-    const SQUARES = [];
-    for (let r = 0; r < 8; r++) {
-      for (let f = 0; f < 8; f++) {
-        SQUARES.push(FILES[f] + RANKS[r]);
-      }
-    }
-
-    const pieceToSvg = (p) => {
-      // chess.js gives { type: 'p','n','b','r','q','k', color: 'w'/'b' }
-      if (!p) return "";
-      const color = p.color === "w" ? "w" : "b";
-      const map = { p: "P", n: "N", b: "B", r: "R", q: "Q", k: "K" };
-      return `./pieces/${color}${map[p.type]}.svg`;
-    };
+    /* ======================
+       SAFE DOM HELPERS
+    ====================== */
+    const $ = id => document.getElementById(id);
 
     function setStatus(msg) {
-      statusEl.textContent = msg;
+      const el = $("status");
+      if (el) el.textContent = msg;
     }
 
-    function safeText(el, txt) {
-      el.textContent = txt;
+    /* ======================
+       STATE
+    ====================== */
+    let chess = new Chess();
+    let moves = [];
+    let moveIndex = 0;
+
+    /* ======================
+       BOARD RENDERING
+    ====================== */
+    const board = $("board");
+
+    function clearBoard() {
+      board.querySelectorAll(".piece").forEach(p => p.remove());
     }
 
-    function stopPlay() {
-      playing = false;
-      if (playTimer) clearInterval(playTimer);
-      playTimer = null;
-      playBtn.textContent = "▶ Play";
+    function renderBoardFromFEN(fen) {
+      clearBoard();
+      const rows = fen.split(" ")[0].split("/");
+
+      rows.forEach((row, r) => {
+        let file = 0;
+        for (const c of row) {
+          if (isNaN(c)) {
+            const color = c === c.toUpperCase() ? "w" : "b";
+            const piece = c.toUpperCase();
+            placePiece(color + piece, file, r);
+            file++;
+          } else {
+            file += Number(c);
+          }
+        }
+      });
     }
 
-    // =========================
-    // Board rendering
-    // =========================
-    function buildBoardSquares() {
-      squareLayer.innerHTML = "";
-      for (const sq of SQUARES) {
-        const d = document.createElement("div");
-        d.className = "sq";
-        d.dataset.square = sq;
-        squareLayer.appendChild(d);
+    function placePiece(code, file, rank) {
+      const img = document.createElement("img");
+      img.src = `./pieces/${code}.svg`;
+      img.className = "piece";
+      img.style.left = `${file * 12.5}%`;
+      img.style.top = `${rank * 12.5}%`;
+      img.draggable = false;
+      board.appendChild(img);
+    }
+
+    /* ======================
+       PGN CLEANER (STRICT + SAFE)
+    ====================== */
+    function cleanPGN(pgn) {
+      // Remove headers & comments
+      let body = pgn
+        .replace(/\[[^\]]*\]/g, "")
+        .replace(/\{[^}]*\}/g, "")
+        .replace(/\$\d+/g, "")
+        .trim();
+
+      // Remove ANY result tokens inside the moves
+      body = body.replace(/\b(1-0|0-1|1\/2-1\/2|\*)\b/g, "").trim();
+
+      // Append ONE valid result at the end
+      body += " *";
+
+      // chess.js requires headers + blank line
+      return `[Event "?"]\n\n${body}`;
+    }
+
+    /* ======================
+       IMPORT PGN
+    ====================== */
+    function importPGN(raw) {
+      chess.reset();
+
+      const cleaned = cleanPGN(raw);
+      const ok = chess.loadPgn(cleaned, { sloppy: true });
+
+      if (!ok) {
+        console.error("PGN rejected:", cleaned);
+        setStatus("❌ PGN rejected");
+        return;
       }
+
+      moves = chess.history({ verbose: true });
+      moveIndex = 0;
+      chess.reset();
+
+      renderBoardFromFEN(chess.fen());
+      renderMoveList();
+      updateMeta();
+
+      setStatus("PGN loaded ✅");
     }
 
-    function clearSquareMarks() {
-      for (const el of squareLayer.children) {
-        el.classList.remove("highlight");
-        el.classList.remove("lastmove");
-      }
+    /* ======================
+       MOVE NAVIGATION
+    ====================== */
+    function nextMove() {
+      if (moveIndex >= moves.length) return;
+      chess.move(moves[moveIndex]);
+      moveIndex++;
+      renderBoardFromFEN(chess.fen());
+      updateMeta();
     }
 
-    function markLastMove(from, to) {
-      clearSquareMarks();
-      if (!from || !to) return;
-      const fromEl = squareLayer.querySelector(`[data-square="${from}"]`);
-      const toEl = squareLayer.querySelector(`[data-square="${to}"]`);
-      if (fromEl) fromEl.classList.add("lastmove");
-      if (toEl) toEl.classList.add("lastmove");
+    function prevMove() {
+      if (moveIndex === 0) return;
+      chess.undo();
+      moveIndex--;
+      renderBoardFromFEN(chess.fen());
+      updateMeta();
     }
 
-    function renderPieces() {
-      // remove old pieces
-      for (const el of squareLayer.children) {
-        el.innerHTML = "";
+    function resetGame() {
+      chess.reset();
+      moveIndex = 0;
+      renderBoardFromFEN(chess.fen());
+      updateMeta();
+    }
+
+    /* ======================
+       UI
+    ====================== */
+    function renderMoveList() {
+      const list = $("moveList");
+      if (!list) return;
+      list.innerHTML = "";
+      moves.forEach((m, i) => {
+        const span = document.createElement("span");
+        span.textContent = m.san + " ";
+        span.onclick = () => jumpTo(i + 1);
+        list.appendChild(span);
+      });
+    }
+
+    function jumpTo(n) {
+      chess.reset();
+      moveIndex = 0;
+      for (let i = 0; i < n; i++) {
+        chess.move(moves[i]);
+        moveIndex++;
       }
-
-      // place pieces
-      for (const sq of SQUARES) {
-        const piece = chess.get(sq);
-        if (!piece) continue;
-
-        const sqEl = squareLayer.querySelector(`[data-square="${sq}"]`);
-        const pEl = document.createElement("div");
-        pEl.className = "piece";
-        pEl.style.backgroundImage = `url("${pieceToSvg(piece)}")`;
-        pEl.draggable = false;
-        pEl.dataset.square = sq;
-
-        // pointer events
-        pEl.addEventListener("pointerdown", (ev) => onPiecePointerDown(ev, sq));
-        sqEl.appendChild(pEl);
-      }
-
-      markLastMove(lastMove?.from, lastMove?.to);
+      renderBoardFromFEN(chess.fen());
+      updateMeta();
     }
 
     function updateMeta() {
-      safeText(plyInfo, `${plyIndex} / ${mainlineMovesSAN.length}`);
-      safeText(turnInfo, chess.turn() === "w" ? "White" : "Black");
-      safeText(fenInfo, chess.fen());
+      $("plyInfo") && ($("plyInfo").textContent = `${moveIndex} / ${moves.length}`);
+      $("turnInfo") && ($("turnInfo").textContent = chess.turn() === "w" ? "White" : "Black");
+      $("fenInfo") && ($("fenInfo").textContent = chess.fen());
     }
 
-    function renderMoveList() {
-      if (!mainlineMovesSAN.length) {
-        moveListEl.innerHTML = `<span class="tiny">Moves will appear here…</span>`;
-        return;
-      }
-
-      moveListEl.innerHTML = "";
-      for (let i = 0; i < mainlineMovesSAN.length; i++) {
-        const san = mainlineMovesSAN[i];
-        const pill = document.createElement("span");
-        pill.className = "move-pill";
-        if (i + 1 === plyIndex) pill.classList.add("active");
-
-        // show "1. e4" formatting
-        const moveNo = Math.floor(i / 2) + 1;
-        const prefix = (i % 2 === 0) ? `${moveNo}. ` : "";
-        pill.textContent = prefix + san;
-
-        pill.addEventListener("click", () => {
-          stopPlay();
-          goToPly(i + 1);
-        });
-
-        moveListEl.appendChild(pill);
-      }
-    }
-
-    function rebuildPositionFromMainline(targetPly) {
-      chess.reset();
-      lastMove = null;
-
-      for (let i = 0; i < targetPly; i++) {
-        const m = chess.move(mainlineMovesSAN[i], { sloppy: true });
-        if (m) lastMove = { from: m.from, to: m.to };
-      }
-    }
-
-    function goToPly(targetPly) {
-      targetPly = Math.max(0, Math.min(targetPly, mainlineMovesSAN.length));
-      plyIndex = targetPly;
-      rebuildPositionFromMainline(plyIndex);
-      renderPieces();
-      updateMeta();
-      renderMoveList();
-      stopEngineSearch(); // stop analysis if navigating
-    }
-
-    // =========================
-    // PGN parsing (multi games)
-    // =========================
-    function splitGamesFromPgn(bigText) {
-      // simple splitter: split when new [Event ...] starts
-      // keeps the tag lines
-      const text = bigText.trim();
-      if (!text) return [];
-      const parts = text.split(/\n(?=\[Event\s+")/g);
-      return parts.map(s => s.trim()).filter(Boolean);
-    }
-
-    function gameLabelFromHeaders(headers) {
-      const w = headers.White || "White";
-      const b = headers.Black || "Black";
-      const ev = headers.Event || "Game";
-      const date = headers.Date && headers.Date !== "????.??.??" ? headers.Date : "";
-      return `${w} vs ${b}${date ? " · " + date : ""} — ${ev}`;
-    }
-
-    function importPgnText(text) {
-      const games = splitGamesFromPgn(text);
-      if (!games.length) {
-        setStatus("No games found.");
-        return;
-      }
-
-      loadedGames = [];
-      gameSelect.innerHTML = "";
-
-      for (let i = 0; i < games.length; i++) {
-        const pgn = games[i];
-        const tmp = new Chess();
-
-        try {
-          const ok = tmp.loadPgn(pgn, { sloppy: true });
-          if (!ok) continue;
-
-          const headers = tmp.header();
-          const history = tmp.history(); // SAN list
-          loadedGames.push({ pgn, headers, history });
-
-          const opt = document.createElement("option");
-          opt.value = String(loadedGames.length - 1);
-          opt.textContent = gameLabelFromHeaders(headers);
-          gameSelect.appendChild(opt);
-        } catch (e) {
-          // ignore bad games
-        }
-      }
-
-      if (!loadedGames.length) {
-        setStatus("All games failed to parse. (Maybe weird PGN annotations?)");
-        return;
-      }
-
-      setStatus(`Imported ${loadedGames.length} game(s). Pick one.`);
-      gameSelect.selectedIndex = 0;
-      loadGame(0);
-    }
-
-    function loadGame(index) {
-      stopPlay();
-      stopEngineSearch();
-
-      currentGameIndex = index;
-      const g = loadedGames[index];
-
-      mainlineMovesSAN = g.history.slice();
-      plyIndex = 0;
-
-      chess.reset();
-      lastMove = null;
-
-      renderPieces();
-      updateMeta();
-      renderMoveList();
-
-      setStatus(`Loaded: ${gameLabelFromHeaders(g.headers)}`);
-    }
-
-    // =========================
-    // Drag to move (legal only)
-    // =========================
-    function showLegalTargets(fromSq) {
-      clearSquareMarks();
-      const moves = chess.moves({ square: fromSq, verbose: true });
-      const fromEl = squareLayer.querySelector(`[data-square="${fromSq}"]`);
-      if (fromEl) fromEl.classList.add("highlight");
-
-      for (const m of moves) {
-        const toEl = squareLayer.querySelector(`[data-square="${m.to}"]`);
-        if (toEl) toEl.classList.add("highlight");
-      }
-    }
-
-    function onPiecePointerDown(ev, fromSq) {
-      ev.preventDefault();
-      stopPlay();
-
-      const piece = chess.get(fromSq);
-      if (!piece) return;
-
-      // only allow dragging side to move
-      if (piece.color !== chess.turn()) return;
-
-      dragFrom = fromSq;
-      showLegalTargets(fromSq);
-
-      const moveHandler = (e) => { /* no-op (we do drop on square click) */ };
-      const upHandler = (e) => {
-        window.removeEventListener("pointermove", moveHandler);
-        window.removeEventListener("pointerup", upHandler);
-        // do nothing here, user will click destination
-      };
-
-      window.addEventListener("pointermove", moveHandler);
-      window.addEventListener("pointerup", upHandler, { once: true });
-    }
-
-    // click square to drop
-    squareLayer.addEventListener("click", (ev) => {
-      const sqEl = ev.target.closest(".sq");
-      if (!sqEl) return;
-      const toSq = sqEl.dataset.square;
-
-      if (!dragFrom) return;
-
-      const legal = chess.moves({ square: dragFrom, verbose: true });
-      const found = legal.find(m => m.to === toSq);
-
-      if (!found) {
-        // cancel
-        dragFrom = null;
-        clearSquareMarks();
-        markLastMove(lastMove?.from, lastMove?.to);
-        return;
-      }
-
-      // handle promotion (auto queen)
-      let promotion = undefined;
-      if (found.flags.includes("p")) promotion = "q";
-
-      const mv = chess.move({ from: dragFrom, to: toSq, promotion });
-      dragFrom = null;
-      clearSquareMarks();
-
-      if (!mv) {
-        markLastMove(lastMove?.from, lastMove?.to);
-        return;
-      }
-
-      lastMove = { from: mv.from, to: mv.to };
-
-      // When user makes a move, we "branch" from PGN mainline:
-      // keep history as your new line.
-      mainlineMovesSAN = chess.history();
-      plyIndex = mainlineMovesSAN.length;
-
-      renderPieces();
-      updateMeta();
-      renderMoveList();
-
-      // auto analyze after manual move
-      startEngineSearch();
-    });
-
-    // =========================
-    // Controls
-    // =========================
-    resetBtn.addEventListener("click", () => {
-      stopPlay();
-      goToPly(0);
-    });
-
-    prevBtn.addEventListener("click", () => {
-      stopPlay();
-      goToPly(plyIndex - 1);
-    });
-
-    nextBtn.addEventListener("click", () => {
-      stopPlay();
-      goToPly(plyIndex + 1);
-    });
-
-    playBtn.addEventListener("click", () => {
-      if (!mainlineMovesSAN.length) return;
-
-      if (playing) {
-        stopPlay();
-        return;
-      }
-
-      playing = true;
-      playBtn.textContent = "⏸ Pause";
-      playTimer = setInterval(() => {
-        if (plyIndex >= mainlineMovesSAN.length) {
-          stopPlay();
-          return;
-        }
-        goToPly(plyIndex + 1);
-      }, 650);
-    });
-
-    downloadBtn.addEventListener("click", () => {
-      // export current line as PGN
-      const pgn = chess.pgn({ newline: "\n" });
-      const blob = new Blob([pgn], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "jacobanalysis.pgn";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    });
-
-    gameSelect.addEventListener("change", () => {
-      const idx = parseInt(gameSelect.value, 10);
-      if (!Number.isFinite(idx)) return;
-      loadGame(idx);
-    });
-
-    clearBtn.addEventListener("click", () => {
-      stopPlay();
-      stopEngineSearch();
-
-      pgnText.value = "";
-      loadedGames = [];
-      currentGameIndex = -1;
-      gameSelect.innerHTML = "";
-
-      mainlineMovesSAN = [];
-      plyIndex = 0;
-
-      chess.reset();
-      lastMove = null;
-
-      renderPieces();
-      updateMeta();
-      renderMoveList();
-      setStatus("Cleared.");
-    });
-
-    demoBtn.addEventListener("click", () => {
-      pgnText.value = `[Event "Demo"]
-[Site "JacobAnalysis"]
-[Date "2026.01.26"]
-[Round "1"]
-[White "White"]
-[Black "Black"]
-[Result "*"]
-
-1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 *`;
-      setStatus("Demo loaded. Click Import PGN.");
-    });
-
-    importBtn.addEventListener("click", () => {
-      stopPlay();
-      stopEngineSearch();
-      importPgnText(pgnText.value);
-    });
-
-    pgnFile.addEventListener("change", async () => {
-      const file = pgnFile.files?.[0];
-      if (!file) return;
-      const text = await file.text();
-      pgnText.value = text;
-      setStatus(`Loaded file: ${file.name}. Click Import PGN.`);
-    });
-
-    // =========================
-    // Stockfish engine (local worker)
-    // =========================
-    let engine = null;
-    let engineReady = false;
-    let lastEngineInfo = { depth: 0, nodes: 0 };
-    let pvStore = new Map(); // multipv -> {scoreText, pvText}
-
-    function setEngineBadge(txt) {
-      engineBadge.textContent = txt;
-    }
-
-    function startEngine() {
-      try {
-        // IMPORTANT: module worker makes it work on GitHub Pages
-        engine = new Worker("./stockfish-17.1-asm-341ff22.js", { type: "module" });
-
-        engine.onmessage = (e) => {
-          const line = String(e.data || "");
-          // console.log("SF:", line);
-
-          if (line.includes("uciok")) {
-            engineReady = true;
-            setEngineBadge("Engine: ready ✅");
-            setStatus("Engine ready ✅");
-            return;
-          }
-
-          if (line.startsWith("info ")) {
-            parseInfo(line);
-          }
-
-          if (line.startsWith("bestmove ")) {
-            // done
-          }
-        };
-
-        engine.onerror = (err) => {
-          console.log("Engine error:", err);
-          setEngineBadge("Engine: error ❌");
-          setStatus("Engine error ❌ (check console)");
-        };
-
-        engine.postMessage("uci");
-        engine.postMessage("setoption name MultiPV value 3");
-        engine.postMessage("setoption name Threads value 2");
-        engine.postMessage("setoption name Hash value 64");
-      } catch (e) {
-        console.log("Engine start failed:", e);
-        setEngineBadge("Engine: failed ❌");
-      }
-    }
-
-    function stopEngineSearch() {
-      if (!engine) return;
-      try {
-        engine.postMessage("stop");
-      } catch { }
-    }
-
-    function startEngineSearch() {
-      if (!engine || !engineReady) return;
-
-      pvStore.clear();
-      pvLines.innerHTML = "";
-      evalText.textContent = "Thinking…";
-      depthText.textContent = "—";
-      nodesText.textContent = "—";
-
-      stopEngineSearch();
-
-      // Send position
-      const movesUci = chess.history({ verbose: true }).map(m => m.from + m.to + (m.promotion || ""));
-      const posCmd = movesUci.length
-        ? `position startpos moves ${movesUci.join(" ")}`
-        : `position startpos`;
-
-      engine.postMessage(posCmd);
-
-      // Think
-      engine.postMessage("go depth 16");
-    }
-
-    function parseInfo(line) {
-      // example:
-      // info depth 16 seldepth 22 multipv 1 score cp 34 nodes 123456 nps ... pv e2e4 e7e5 ...
-      const tokens = line.split(/\s+/);
-
-      let depth = null;
-      let nodes = null;
-      let multipv = 1;
-      let scoreType = null;
-      let scoreVal = null;
-      let pvIndex = tokens.indexOf("pv");
-
-      for (let i = 0; i < tokens.length; i++) {
-        const t = tokens[i];
-        if (t === "depth") depth = parseInt(tokens[i + 1], 10);
-        if (t === "nodes") nodes = parseInt(tokens[i + 1], 10);
-        if (t === "multipv") multipv = parseInt(tokens[i + 1], 10);
-        if (t === "score") {
-          scoreType = tokens[i + 1];
-          scoreVal = parseInt(tokens[i + 2], 10);
-        }
-      }
-
-      if (depth != null) lastEngineInfo.depth = depth;
-      if (nodes != null) lastEngineInfo.nodes = nodes;
-
-      depthText.textContent = String(lastEngineInfo.depth || "—");
-      nodesText.textContent = String(lastEngineInfo.nodes || "—");
-
-      if (scoreType && Number.isFinite(scoreVal)) {
-        const { scoreText, scoreForBar } = scoreToHuman(scoreType, scoreVal, chess.turn());
-        if (multipv === 1) {
-          evalText.textContent = scoreText;
-          updateEvalBar(scoreForBar);
-        }
-        // PV line
-        if (pvIndex !== -1) {
-          const pvMoves = tokens.slice(pvIndex + 1).join(" ");
-          pvStore.set(multipv, { scoreText, pvText: pvMoves });
-          renderPvLines();
-        }
-      }
-    }
-
-    function scoreToHuman(type, val, turn) {
-      // Stockfish score is from side-to-move perspective
-      // We'll convert to White perspective.
-      let whiteScore = 0;
-
-      if (type === "cp") {
-        const cp = val;
-        // if black to move, flip sign to keep White perspective
-        whiteScore = (turn === "w") ? cp : -cp;
-        const s = (whiteScore / 100).toFixed(2);
-        const scoreText = (whiteScore >= 0 ? `+${s}` : `${s}`) + " (White)";
-        return { scoreText, scoreForBar: whiteScore / 100 };
-      }
-
-      if (type === "mate") {
-        // mate in N for side to move
-        let mate = val;
-        // convert to white perspective
-        if (turn === "b") mate = -mate;
-
-        const scoreText = (mate > 0 ? `Mate in ${mate} (White)` : `Mate in ${Math.abs(mate)} (Black)`);
-        // huge number for bar
-        const scoreForBar = mate > 0 ? 99 : -99;
-        return { scoreText, scoreForBar };
-      }
-
-      return { scoreText: "—", scoreForBar: 0 };
-    }
-
-    function updateEvalBar(score) {
-      // score in pawns from White perspective
-      // clamp
-      let s = Math.max(-8, Math.min(8, score));
-      // map -8..+8 to 0..100 (white on top)
-      const pctWhite = ((s + 8) / 16) * 100;
-      // bar-fill is white area from bottom
-      evalBar.style.height = `${pctWhite}%`;
-    }
-
-    function renderPvLines() {
-      const arr = [...pvStore.entries()].sort((a, b) => a[0] - b[0]);
-      pvLines.innerHTML = "";
-
-      for (const [mpv, obj] of arr) {
-        const scoreNum = parseFloat(obj.scoreText.replace(/[^\d\.\-+]/g, "")) || 0;
-        const isGood = scoreNum >= 0;
-
-        const div = document.createElement("div");
-        div.className = "line";
-        div.innerHTML = `
-          <div class="pvhead">
-            <div class="score ${isGood ? "good" : "bad"}">#${mpv} ${obj.scoreText}</div>
-            <div class="tiny">PV</div>
-          </div>
-          <div class="pv">${escapeHtml(obj.pvText)}</div>
-        `;
-        pvLines.appendChild(div);
-      }
-    }
-
-    function escapeHtml(s) {
-      return String(s)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
-    }
-
-    analyzeBtn.addEventListener("click", () => {
-      startEngineSearch();
-    });
-
-    stopBtn.addEventListener("click", () => {
-      stopEngineSearch();
-      evalText.textContent = "Stopped.";
-    });
-
-    // =========================
-    // Init
-    // =========================
-    buildBoardSquares();
-    renderPieces();
+    /* ======================
+       EVENTS
+    ====================== */
+    $("importBtn")?.addEventListener("click", () =>
+      importPGN($("pgnText").value)
+    );
+
+    $("demoBtn")?.addEventListener("click", () =>
+      importPGN("1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6")
+    );
+
+    $("nextBtn")?.addEventListener("click", nextMove);
+    $("prevBtn")?.addEventListener("click", prevMove);
+    $("resetBtn")?.addEventListener("click", resetGame);
+
+    /* ======================
+       INIT
+    ====================== */
+    renderBoardFromFEN(chess.fen());
     updateMeta();
-    renderMoveList();
-
-    setEngineBadge("Engine: loading…");
-    startEngine();
-
+    setStatus("Ready");
     console.log("Module script started OK ✅");
   </script>
+
+
+
+
 </body>
 
 </html>
