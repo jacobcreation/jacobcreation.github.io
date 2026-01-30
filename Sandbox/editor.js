@@ -17,16 +17,31 @@ export function initEditor() {
 }
 
 export function setActiveTab(tab) {
-  saveCurrentFile();
-  active = tab;
+  const aiPanel = document.getElementById("aiPanel");
 
   document.querySelectorAll(".tab").forEach(t =>
     t.classList.toggle("active", t.dataset.tab === tab)
   );
 
-  codeEl.value = files[tab];
+  // AI TAB
+  if (tab === "ai") {
+    saveCurrentFile();
+    if (codeEl) codeEl.style.display = "none";
+    aiPanel.style.display = "flex";
+    return;
+  }
+
+  // CODE TABS
+  saveCurrentFile();
+  aiPanel.style.display = "none";
+  if (codeEl) codeEl.style.display = "block";
+
+  active = tab;
+  if (codeEl) codeEl.value = files[tab] ?? "";
 }
 
 export function saveCurrentFile() {
+  if (!codeEl) return;
+  if (files[active] === undefined) return;
   files[active] = codeEl.value;
 }

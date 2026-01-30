@@ -7,22 +7,16 @@
   <link rel="icon" href="data:,">
 
   <style>
+    /* ===== BASE ===== */
     body {
       margin: 0;
       height: 100vh;
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: auto 1fr;
       background: #020617;
       color: #e5e7eb;
       font-family: system-ui, monospace;
-    }
-
-    header {
-      display: flex;
-      gap: 8px;
-      padding: 10px;
-      background: #0f172a;
-      border-bottom: 1px solid #1f2937;
+      position: relative;
     }
 
     button {
@@ -34,20 +28,34 @@
       cursor: pointer;
     }
 
+    /* ===== HEADER ===== */
+    header {
+      display: flex;
+      gap: 8px;
+      padding: 10px;
+      background: #0f172a;
+      border-bottom: 1px solid #1f2937;
+    }
+
+    /* ===== LAYOUT ===== */
     #layout {
       display: grid;
       grid-template-columns: 50% 6px 50%;
+      height: 100%;
     }
 
     #divider {
       background: #1f2937;
+      cursor: col-resize;
     }
 
     #left {
       display: flex;
       flex-direction: column;
+      height: 100%;
     }
 
+    /* ===== TABS ===== */
     #tabs {
       display: flex;
       background: #020617;
@@ -66,6 +74,7 @@
       color: #38bdf8;
     }
 
+    /* ===== EDITOR ===== */
     textarea {
       flex: 1;
       background: #020617;
@@ -83,6 +92,51 @@
       background: white;
     }
 
+    /* ===== AI TAB ===== */
+    #aiPanel {
+      display: none;
+      /* shown via JS */
+      flex: 1;
+      flex-direction: column;
+      background: #020617;
+    }
+
+    #aiChat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ai-user {
+      align-self: flex-end;
+      background: #2563eb;
+      color: white;
+      padding: 8px 10px;
+      border-radius: 12px 12px 0 12px;
+      max-width: 80%;
+    }
+
+    .ai-bot {
+      align-self: flex-start;
+      background: #1f2937;
+      color: #e5e7eb;
+      padding: 8px 10px;
+      border-radius: 12px 12px 12px 0;
+      max-width: 80%;
+    }
+
+    #aiInput {
+      border: none;
+      outline: none;
+      padding: 10px;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+
+    /* ===== CONSOLE ===== */
     #console {
       height: 120px;
       background: #020617;
@@ -90,6 +144,8 @@
       overflow: auto;
       font-size: 12px;
       padding: 6px;
+      display: none;
+      /* hidden by default */
     }
 
     .console-log {
@@ -104,52 +160,57 @@
       color: #f87171;
     }
 
-    #aiLog {
-      height: 140px;
-      overflow: auto;
-      padding: 6px;
-      background: #020617;
+    #aiInput {
+      height: 42px;
+      flex-shrink: 0;
       border-top: 1px solid #1f2937;
-    }
-
-    .chat-user {
-      color: #38bdf8;
-    }
-
-    .chat-ai {
-      color: #e5e7eb;
     }
   </style>
 </head>
 
 <body>
 
+  <!-- ===== HEADER ===== -->
   <header>
     <button id="run">▶ Run</button>
     <button id="downloadZip">⬇ ZIP</button>
     <button id="clearConsole">🧹 Console</button>
   </header>
 
+  <!-- ===== MAIN ===== -->
   <div id="layout">
     <div id="left">
+
       <div id="tabs">
         <div class="tab active" data-tab="html">HTML</div>
         <div class="tab" data-tab="css">CSS</div>
         <div class="tab" data-tab="js">JS</div>
+        <div class="tab" data-tab="ai">AI</div>
       </div>
+
+      <!-- CODE EDITOR -->
       <textarea id="code"></textarea>
+
+      <!-- AI PANEL -->
+      <div id="aiPanel">
+        <div id="aiChat">
+          <div class="ai-bot">Hi! I’m PoliteBot 🤗 Ask me anything!</div>
+        </div>
+        <input id="aiInput" placeholder="Ask AI and press Enter…" />
+      </div>
+
     </div>
 
     <div id="divider"></div>
     <iframe id="preview"></iframe>
   </div>
 
+  <!-- CONSOLE -->
   <div id="console"></div>
 
-  <div id="aiLog">🤖 AI ready. Ask about your code.</div>
-  <input id="aiInput" placeholder="Ask AI and press Enter…" />
-
+  <!-- APP -->
   <script type="module" src="./app.js"></script>
+
 </body>
 
 </html>
