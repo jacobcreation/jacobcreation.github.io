@@ -23,25 +23,23 @@ export function setActiveTab(tab) {
     t.classList.toggle("active", t.dataset.tab === tab)
   );
 
-  // AI TAB
+  saveCurrentFile();
+
   if (tab === "ai") {
-    saveCurrentFile();
-    if (codeEl) codeEl.style.display = "none";
+    codeEl.style.display = "none";
     aiPanel.style.display = "flex";
+    setTimeout(() => document.getElementById("aiInput")?.focus(), 0);
     return;
   }
 
-  // CODE TABS
-  saveCurrentFile();
   aiPanel.style.display = "none";
-  if (codeEl) codeEl.style.display = "block";
-
+  codeEl.style.display = "block";
   active = tab;
-  if (codeEl) codeEl.value = files[tab] ?? "";
+  codeEl.value = files[tab];
 }
 
 export function saveCurrentFile() {
-  if (!codeEl) return;
-  if (files[active] === undefined) return;
-  files[active] = codeEl.value;
+  if (files[active] !== undefined) {
+    files[active] = codeEl.value;
+  }
 }
