@@ -2,6 +2,9 @@
 <html lang="en">
 
 <head>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#000000">
+
   <meta charset="UTF-8" />
   <title>🧪 JacobCreation</title>
   <link rel="icon" href="data:,">
@@ -183,6 +186,13 @@
   <div id="console"></div>
 
   <script type="module" src="./app.js"></script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js");
+}
+</script>
+
 </body>
 
 </html>

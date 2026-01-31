@@ -2,6 +2,9 @@
 <html lang="en">
 
 <head>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#000000">
+
   <meta charset="UTF-8">
   <title>Salary Calculator (2025 Official + Prototype Style)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -380,6 +383,13 @@
     document.getElementById("printBtn").addEventListener("click", () => window.print());
   </script>
   <script src="../global-header.js"></script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js");
+}
+</script>
+
 </body>
 
 </html>

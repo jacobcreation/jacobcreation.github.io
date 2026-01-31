@@ -2,6 +2,9 @@
 <html lang="en">
 
 <head>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#000000">
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Chat with our helper and play fun minigames like Snake, Tetris, and Chess!" />
@@ -617,7 +620,7 @@
     const upgradeCancel = document.getElementById("upgradeCancel");
     const upgradeSend = document.getElementById("upgradeSend");
     const upgradeText = document.getElementById("upgradeText");
-
+    const SITE_NAME = "jacobcreation";
     function openUpgradeModal() {
       upgradeModal.style.display = "block";
       upgradeText.value = "";
@@ -870,16 +873,17 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: "chat",
+            site: SITE_NAME,
             message: msg,
             sessionId: getSessionId()
           })
-        });
+
 
         const raw = await res.text();
-        let data = {};
-        try { data = JSON.parse(raw); } catch { }
+          let data = {};
+          try { data = JSON.parse(raw); } catch {}
 
-        if (!res.ok) throw new Error("Network error: " + res.status);
+        if(!res.ok) throw new Error("Network error: " + res.status);
 
         addBubble(data.reply || "No reply 😅", "bot");
       } catch (err) {
@@ -1115,6 +1119,13 @@
   </script>
 
   <script src="../global-header.js"></script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js");
+}
+</script>
+
 </body>
 
 </html>

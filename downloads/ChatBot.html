@@ -2,6 +2,9 @@
 <html lang="en">
 
 <head>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#000000">
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Chat with our helper and play fun minigames like Snake, Tetris, and Chess!" />
@@ -1710,6 +1713,13 @@
     }
   </script>
 
+
+
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js");
+}
+</script>
 
 </body>
 

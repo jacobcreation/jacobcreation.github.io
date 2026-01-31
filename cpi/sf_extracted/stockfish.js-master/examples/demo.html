@@ -1,6 +1,9 @@
 <!doctype html>
 <html>
   <head>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#000000">
+
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/chessboard-0.3.0.min.css" />
     <script src="js/jquery-1.10.1.min.js"></script>
@@ -114,5 +117,12 @@
         document.addEventListener("DOMContentLoaded", init);
       }
     </script>
-  </body>
+  
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js");
+}
+</script>
+
+</body>
 </html>

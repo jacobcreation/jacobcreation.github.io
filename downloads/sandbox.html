@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#000000">
+
 <meta charset="utf-8">
 <title>Advanced JavaScript Sandbox</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -194,7 +197,14 @@ function addLine(type,msg){
 
 function clearAll(){
   consoleEl.textContent='';
-  frame.srcdoc='<!DOCTYPE html><html><body></body></html>';
+  frame.srcdoc='<!DOCTYPE html><html><body>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js");
+}
+</script>
+
+</body></html>';
 }
 
 function updateRunState(){

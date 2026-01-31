@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <head>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#000000">
+
   <meta charset="utf-8" />
   <title>Stockfish.js Tester</title>
   <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no" />
@@ -70,6 +73,13 @@ console.info = function (a)
     <select id=selection title=Examples></select>
   </td></tr>
   </table>
+
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js");
+}
+</script>
+
 </body>
 <script src=loadEngine.js></script>
 <script>

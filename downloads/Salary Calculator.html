@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#000000">
+
   <meta charset="UTF-8" />
   <title>Philippine Peso Salary Calculator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -321,5 +324,12 @@
       if (i.id === 'otMultiplier' && parseNum(i.value) < 1) i.value = '1.00';
     }));
   </script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js");
+}
+</script>
+
 </body>
 </html>

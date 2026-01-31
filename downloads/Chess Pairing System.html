@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#000000">
+
 <meta charset="UTF-8">
 <title>Chess Tournament System | JacobCreation</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -372,6 +375,13 @@ function resetAll(){location.reload()}
 /* DOM */
 const standings=document.getElementById("standings");
 const pairingsEl=document.getElementById("pairings");
+</script>
+
+
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js");
+}
 </script>
 
 </body>
