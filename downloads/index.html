@@ -2,8 +2,8 @@
 <html lang="en">
 
 <head>
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#000000">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -46,7 +46,6 @@
     main {
       max-width: 1000px;
       margin: 80px auto 40px;
-      /* Top margin for fixed header */
       padding: 20px;
       width: 100%;
       flex: 1;
@@ -114,6 +113,8 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      border: none;
+      cursor: pointer;
     }
 
     .btn-download:hover {
@@ -132,6 +133,14 @@
 <body>
   <main>
     <h1>📂 Offline Downloads</h1>
+
+    <!-- Install button -->
+    <div style="text-align:center; margin-bottom:20px;">
+      <button id="installBtn" hidden class="btn-download">
+        Install JacobCreation
+      </button>
+    </div>
+
     <div id="fileGrid" class="grid">
       <p class="loading-text">Loading available games…</p>
     </div>
@@ -169,11 +178,31 @@
 
   <script src="../global-header.js"></script>
 
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/service-worker.js");
-}
-</script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/service-worker.js");
+    }
+
+    let deferredPrompt;
+    const installBtn = document.getElementById("installBtn");
+
+    window.addEventListener("beforeinstallprompt", e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (installBtn) installBtn.hidden = false;
+    });
+
+    if (installBtn) {
+      installBtn.addEventListener("click", async () => {
+        if (!deferredPrompt) return;
+
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        installBtn.hidden = true;
+      });
+    }
+  </script>
 
 </body>
 
