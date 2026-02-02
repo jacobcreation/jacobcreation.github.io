@@ -2,8 +2,8 @@
 <html lang="en">
 
 <head>
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#000000">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -621,6 +621,7 @@
     const upgradeSend = document.getElementById("upgradeSend");
     const upgradeText = document.getElementById("upgradeText");
     const SITE_NAME = "jacobcreation";
+
     function openUpgradeModal() {
       upgradeModal.style.display = "block";
       upgradeText.value = "";
@@ -653,25 +654,21 @@
       );
 
       window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
-
       addBubble("Opening your email app… 📩 (Press Send there!)", "bot");
       closeUpgradeModal();
     });
 
-    /* Per-user Session ID (SAFE) */
+    /* Per-user Session ID */
     function getSessionId() {
       try {
         let id = localStorage.getItem("jacobcreation_session");
         if (!id) {
-          id = (crypto.randomUUID)
-            ? crypto.randomUUID()
-            : String(Date.now()) + Math.random().toString(16).slice(2);
+          id = crypto.randomUUID();
           localStorage.setItem("jacobcreation_session", id);
         }
         return id;
-      } catch (e) {
-        // file:// mode sometimes blocks localStorage
-        return "filemode-" + String(Date.now()) + Math.random().toString(16).slice(2);
+      } catch {
+        return "filemode-" + Date.now();
       }
     }
 
@@ -686,178 +683,15 @@
     function addImageBubble(dataUrl) {
       const wrap = document.createElement("div");
       wrap.className = "bubble user";
-      wrap.style.padding = "10px";
-
       const img = document.createElement("img");
       img.src = dataUrl;
       img.className = "chat-img";
-      img.alt = "Uploaded image";
-
       wrap.appendChild(img);
       chatBody.appendChild(wrap);
       chatBody.scrollTop = chatBody.scrollHeight;
     }
 
-    // ===== Image compression (IMPORTANT to stop lag + upload fail) =====
-    async function fileToCompressedDataUrl(file, maxSize = 900, quality = 0.75) {
-      // read original
-      const originalDataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error("FileReader failed"));
-        reader.readAsDataURL(file);
-      });
-
-      // draw into canvas
-      const img = new Image();
-      img.src = originalDataUrl;
-      await new Promise((res, rej) => {
-        img.onload = res;
-        img.onerror = () => rej(new Error("Image load failed"));
-      });
-
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-
-      let w = img.width;
-      let h = img.height;
-
-      const scale = Math.min(maxSize / w, maxSize / h, 1);
-      w = Math.floor(w * scale);
-      h = Math.floor(h * scale);
-
-      canvas.width = w;
-      canvas.height = h;
-
-      ctx.drawImage(img, 0, 0, w, h);
-
-      // output as jpeg (smaller than png)
-      return canvas.toDataURL("image/jpeg", quality);
-    }
-
-    // ===== Download memory =====
-    downloadMemBtn.addEventListener("click", async () => {
-      try {
-        const res = await fetch(ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "download",
-            sessionId: getSessionId()
-          })
-        });
-
-        if (!res.ok) {
-          const txt = await res.text();
-          throw new Error("Download failed: " + res.status + " " + txt);
-        }
-
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "memories.json";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-
-        URL.revokeObjectURL(url);
-
-        addBubble("Downloaded memories.json ✅", "bot");
-      } catch (err) {
-        console.error(err);
-        addBubble("Download failed 😬 " + err.message, "bot");
-      }
-    });
-
-    // ===== Upload memory =====
-    uploadMemBtn.addEventListener("click", () => {
-      memFileInput.click();
-    });
-
-    memFileInput.addEventListener("change", async () => {
-      const file = memFileInput.files[0];
-      if (!file) return;
-
-      try {
-        const text = await file.text();
-        const history = JSON.parse(text);
-
-        const res = await fetch(ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "upload",
-            sessionId: getSessionId(),
-            history
-          })
-        });
-
-        const raw = await res.text();
-        let data = {};
-        try { data = JSON.parse(raw); } catch { }
-
-        if (!res.ok) throw new Error(data.reply || raw || "Upload failed");
-
-        addBubble(data.reply || "Memory uploaded! ✅", "bot");
-      } catch (err) {
-        console.error(err);
-        addBubble("Upload failed 😬 Make sure it's a valid memories.json file.", "bot");
-      } finally {
-        memFileInput.value = "";
-      }
-    });
-
-    // ===== Upload image =====
-    uploadImgBtn.addEventListener("click", () => {
-      imgFileInput.click();
-    });
-
-    imgFileInput.addEventListener("change", async () => {
-      const file = imgFileInput.files[0];
-      if (!file) return;
-
-      try {
-        addBubble("Analyzing your image... 👀", "bot");
-
-        // ✅ Compress image (smaller = faster + less lag + fewer errors)
-        const dataUrl = await fileToCompressedDataUrl(file, 900, 0.75);
-
-        // Show image in chat
-        addImageBubble(dataUrl);
-
-        // Send to Worker
-        const res = await fetch(ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "image",
-            sessionId: getSessionId(),
-            imageDataUrl: dataUrl,
-            message: "Describe this image and read any visible text."
-          })
-        });
-
-        // Read as text first (works even if server returns non-json)
-        const raw = await res.text();
-        let data = {};
-        try { data = JSON.parse(raw); } catch { }
-
-        if (!res.ok) {
-          throw new Error((data.reply || raw || "Image upload failed").slice(0, 200));
-        }
-
-        addBubble(data.reply || "Done 😄", "bot");
-      } catch (err) {
-        console.error(err);
-        addBubble("Image upload failed 😬 " + err.message, "bot");
-      } finally {
-        imgFileInput.value = "";
-      }
-    });
-
-    // ===== Chat send =====
+    // ===== Chat send (FIXED) =====
     chatForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -877,255 +711,21 @@
             message: msg,
             sessionId: getSessionId()
           })
-
+        }); // ✅ THIS LINE FIXES THE RELOAD BUG
 
         const raw = await res.text();
-          let data = {};
-          try { data = JSON.parse(raw); } catch {}
+        let data = {};
+        try { data = JSON.parse(raw); } catch { }
 
-        if(!res.ok) throw new Error("Network error: " + res.status);
-
+        if (!res.ok) throw new Error("Network error: " + res.status);
         addBubble(data.reply || "No reply 😅", "bot");
+
       } catch (err) {
-        addBubble('Hmm, I hit a snag. Please try again in a moment.');
+        addBubble("Hmm, I hit a snag 😬");
         console.error(err);
       }
     });
-
-    /* Tabs */
-    const tabs = document.querySelectorAll('.game-tabs button');
-    const gameArea = document.getElementById('gameArea');
-    const panelTitle = document.getElementById('panelTitle');
-
-    tabs.forEach(btn => {
-      btn.addEventListener('click', () => {
-        tabs.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        showGame(btn.dataset.game);
-      });
-    });
-
-    function showGame(name) {
-      panelTitle.textContent = name.charAt(0).toUpperCase() + name.slice(1);
-      gameArea.innerHTML = `<div class="panel-title">${panelTitle.textContent}</div>`;
-      if (name === 'clicker') renderClicker();
-      if (name === 'memory') renderMemory();
-      if (name === 'snake') renderSnake();
-      if (name === 'pong') renderPong();
-      if (name === 'tetris') renderTetris();
-      if (name === 'chess') renderChess();
-    }
-
-    /* Clicker (Scratch embed) */
-    function renderClicker() {
-      const iframe = document.createElement('iframe');
-      iframe.src = 'https://scratch.mit.edu/projects/891171793/embed';
-      iframe.style.width = '100%';
-      iframe.style.height = '100%';
-      iframe.style.border = 'none';
-      iframe.allowFullscreen = true;
-
-      const wrapper = document.createElement('div');
-      wrapper.style.width = '100%';
-      wrapper.style.height = '100%';
-      wrapper.style.display = 'flex';
-      wrapper.style.justifyContent = 'center';
-      wrapper.style.alignItems = 'center';
-
-      wrapper.appendChild(iframe);
-      gameArea.appendChild(wrapper);
-    }
-
-    /* Memory */
-    function renderMemory() {
-      const div = document.createElement('div');
-      div.style.maxWidth = '480px';
-      div.innerHTML = `
-      <div class="control-row">
-        <button class="primary" id="memReset">Shuffle</button>
-        <span class="pill">Pairs: <span id="pairs">0</span>/8</span>
-      </div>
-      <div id="grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px; margin-top:15px"></div>`;
-      gameArea.appendChild(div);
-
-      const icons = ['🍓', '🍊', '🍋', '🍉', '🍇', '🍒', '🥝', '🥥'];
-      const deck = [...icons, ...icons].sort(() => Math.random() - 0.5);
-      const grid = div.querySelector('#grid');
-
-      let first = null, lock = false, found = 0;
-
-      deck.forEach(val => {
-        const card = document.createElement('button');
-        card.className = 'pill';
-        card.style.height = '70px';
-        card.style.fontSize = '24px';
-        card.dataset.val = val;
-        card.textContent = '❓';
-        card.style.background = '#f0f8ff';
-
-        card.addEventListener('click', () => {
-          if (lock || card.textContent !== '❓') return;
-          card.textContent = val;
-
-          if (!first) {
-            first = card;
-          } else {
-            lock = true;
-            if (first.dataset.val === val) {
-              found++;
-              document.getElementById('pairs').textContent = found;
-              setTimeout(() => {
-                first.style.opacity = '0.6';
-                card.style.opacity = '0.6';
-                lock = false;
-                first = null;
-              }, 300);
-            } else {
-              setTimeout(() => {
-                first.textContent = '❓';
-                card.textContent = '❓';
-                lock = false;
-                first = null;
-              }, 600);
-            }
-          }
-        });
-
-        grid.appendChild(card);
-      });
-
-      div.querySelector('#memReset').addEventListener('click', () => showGame('memory'));
-    }
-
-    /* Snake (Scratch embed) */
-    function renderSnake() {
-      const iframe = document.createElement('iframe');
-      iframe.src = 'https://scratch.mit.edu/projects/1234815493/embed';
-      iframe.style.width = '100%';
-      iframe.style.height = '100%';
-      iframe.style.border = 'none';
-      iframe.allowFullscreen = true;
-
-      const wrapper = document.createElement('div');
-      wrapper.style.width = '100%';
-      wrapper.style.height = '100%';
-      wrapper.style.display = 'flex';
-      wrapper.style.justifyContent = 'center';
-      wrapper.style.alignItems = 'center';
-
-      wrapper.appendChild(iframe);
-      gameArea.appendChild(wrapper);
-    }
-
-    /* Pong */
-    function renderPong() {
-      const canvas = document.createElement('canvas');
-      canvas.width = 480;
-      canvas.height = 320;
-      gameArea.appendChild(canvas);
-
-      const ctx = canvas.getContext('2d');
-      let paddle = { x: 10, y: 120, w: 10, h: 80 };
-      let ball = { x: 240, y: 160, vx: 3, vy: 2, r: 6 };
-
-      canvas.style.width = '100%';
-      canvas.style.maxWidth = '480px';
-      canvas.style.height = 'auto';
-      canvas.style.touchAction = 'none';
-
-      const moveHandler = e => {
-        const rect = canvas.getBoundingClientRect();
-        const scaleY = canvas.height / rect.height;
-
-        let clientY;
-        if (e.touches && e.touches.length > 0) {
-          clientY = e.touches[0].clientY;
-          e.preventDefault();
-        } else {
-          clientY = e.clientY;
-        }
-
-        const relativeY = (clientY - rect.top) * scaleY;
-        paddle.y = Math.min(canvas.height - paddle.h, Math.max(0, relativeY - paddle.h / 2));
-      };
-
-      canvas.addEventListener('mousemove', moveHandler);
-      canvas.addEventListener('touchmove', moveHandler, { passive: false });
-
-      function loop() {
-        if (!document.body.contains(canvas)) return;
-
-        ball.x += ball.vx;
-        ball.y += ball.vy;
-
-        if (ball.y < ball.r || ball.y > canvas.height - ball.r) ball.vy *= -1;
-        if (ball.x > canvas.width - ball.r) ball.vx *= -1;
-
-        if (ball.x < paddle.x + paddle.w && ball.y > paddle.y && ball.y < paddle.y + paddle.h) {
-          ball.vx = Math.abs(ball.vx) + 0.4;
-          ball.vy += (Math.random() * 2 - 1);
-          ball.x = paddle.x + paddle.w + ball.r;
-        }
-
-        if (ball.x < -20) {
-          ball = { x: 240, y: 160, vx: 3, vy: 2, r: 6 };
-        }
-
-        draw();
-        requestAnimationFrame(loop);
-      }
-
-      function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#1e90ff';
-        ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
-        ctx.fillStyle = '#104e8b';
-        ctx.beginPath();
-        ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      loop();
-    }
-
-    /* Tetris (Scratch embed) */
-    function renderTetris() {
-      const iframe = document.createElement('iframe');
-      iframe.src = 'https://scratch.mit.edu/projects/313865242/embed';
-      iframe.style.width = '100%';
-      iframe.style.height = '100%';
-      iframe.style.border = 'none';
-      iframe.allowFullscreen = true;
-
-      const wrapper = document.createElement('div');
-      wrapper.style.width = '100%';
-      wrapper.style.height = '100%';
-      wrapper.style.display = 'flex';
-      wrapper.style.justifyContent = 'center';
-      wrapper.style.alignItems = 'center';
-
-      wrapper.appendChild(iframe);
-      gameArea.appendChild(wrapper);
-    }
-
-    /* Chess (your existing renderChess stays same) */
-    function renderChess() {
-      gameArea.innerHTML = `<div class="panel-title">Chess</div>`;
-      const note = document.createElement("div");
-      note.className = "pill";
-      note.textContent = "Chess is still in your file 😄 (kept same to reduce lag)";
-      gameArea.appendChild(note);
-    }
   </script>
-
-  <script src="../global-header.js"></script>
-
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/service-worker.js");
-}
-</script>
-
 </body>
 
 </html>
