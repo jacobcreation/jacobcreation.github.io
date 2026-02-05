@@ -487,6 +487,87 @@
         min-height: 400px;
       }
     }
+
+    /* Modal Styles */
+    #upgradeModal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 2000;
+      display: none;
+      /* JS toggles this */
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn .3s ease;
+    }
+
+    /* Ensure modal uses flex when displayed */
+    #upgradeModal[style*="block"] {
+      display: flex !important;
+    }
+
+    .modal-content {
+      background: #fff;
+      padding: 24px;
+      border-radius: var(--radius);
+      width: 90%;
+      max-width: 420px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      animation: bubbleIn .3s ease;
+      position: relative;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 1.25em;
+      color: var(--blue-dark);
+    }
+
+    .close-icon {
+      background: none;
+      border: none;
+      font-size: 1.5em;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .close-icon:hover {
+      color: var(--text);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    textarea.upgrade-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      resize: vertical;
+      font-family: inherit;
+      min-height: 80px;
+    }
+
+    textarea.upgrade-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
   </style>
 </head>
 
@@ -518,38 +599,40 @@
                 <div class="chat-subtitle">Ask anything—I'll answer kindly.</div>
               </div>
 
-              <!-- Buttons -->
               <div class="mem-actions">
-                <button class="mem-mini-btn" type="button" id="downloadMemBtn" title="Download Memory">⬇️</button>
-                <button class="mem-mini-btn" type="button" id="uploadMemBtn" title="Upload Memory">⬆️</button>
-                <button class="mem-mini-btn" type="button" id="uploadImgBtn" title="Upload Image">🖼️</button>
-                <button class="mem-mini-btn" type="button" id="upgradeBtn" title="Needs Upgrades">🛠️</button>
+                <button class="mem-mini-btn" type="button" id="downloadMemBtn">⬇️</button>
+                <button class="mem-mini-btn" type="button" id="uploadMemBtn">⬆️</button>
+                <button class="mem-mini-btn" type="button" id="uploadImgBtn">🖼️</button>
+                <button class="mem-mini-btn" type="button" id="upgradeBtn">🛠️</button>
 
                 <input type="file" id="memFileInput" accept="application/json" style="display:none;">
                 <input type="file" id="imgFileInput" accept="image/*" style="display:none;">
               </div>
             </div>
 
-            <!-- Warning stays here (NOT in chat) -->
             <div class="tiny-note">
               ⚠️ I can read your image NOW 👀 but after refresh I won’t remember the image itself 🙂
             </div>
           </div>
         </header>
 
-        <div class="chat-body" id="chatBody" aria-live="polite">
+        <div class="chat-body" id="chatBody">
           <div class="bubble bot">Hi! How can I help today?</div>
         </div>
 
-        <form class="chat-input" id="chatForm" autocomplete="off">
-          <input id="chatText" type="text" placeholder="Type your message..." />
-          <button class="send-btn" type="submit">Send</button>
+        <!-- THIS IS THE IMPORTANT PART -->
+        <!-- NO FORM. ONLY DIV. -->
+        <!-- Fixed: Changed div to form and added ID expected by JS -->
+        <form class="chat-input" id="chatForm">
+          <input id="chatText" type="text" placeholder="Type your message..." autocomplete="off" />
+          <button class="send-btn" type="submit" id="sendBtn">Send</button>
         </form>
+
       </section>
 
       <!-- Games -->
       <section class="game-panel">
-        <div class="game-tabs">
+        <div class="game-tabs" id="gameTabs">
           <button class="active" data-game="clicker">Clicker</button>
           <button data-game="memory">Memory</button>
           <button data-game="snake">Snake</button>
@@ -559,10 +642,10 @@
         </div>
 
         <div class="game-area" id="gameArea">
-          <div class="panel-title" id="panelTitle">Clicker</div>
-          <div id="clicker" style="width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
+          <div id="clicker" style="width:100%; height:100%;">
             <iframe src="https://scratch.mit.edu/projects/891171793/embed" style="width:100%; height:100%; border:none;"
-              allowfullscreen></iframe>
+              allowfullscreen>
+            </iframe>
           </div>
         </div>
       </section>
@@ -575,157 +658,148 @@
   </footer>
 
   <!-- Needs Upgrades Modal -->
-  <div id="upgradeModal"
-    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:9999; padding:20px;">
-    <div
-      style="max-width:520px; margin:80px auto; background:white; border-radius:16px; padding:16px; box-shadow:0 12px 40px rgba(0,0,0,.2);">
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-        <strong style="color:#104e8b;">🛠️ Needs Upgrades</strong>
-        <button id="upgradeClose" class="mem-mini-btn" type="button">✖</button>
+  <!-- Needs Upgrades Modal (Populated) -->
+  <div id="upgradeModal" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>✨ Request Feature</h3>
+        <button id="upgradeClose" class="close-icon">&times;</button>
       </div>
-
-      <p style="margin:10px 0; color:#6b7280; font-size:13px;">
-        Type what you want added or fixed, then click Send. It will open your email app 📩
+      <p style="margin:0; color:var(--muted); font-size:0.9em;">
+        Found a bug or have a cool idea? Let us know!
       </p>
-
-      <textarea id="upgradeText" placeholder="Type requests..."
-        style="width:100%; height:120px; padding:10px; border-radius:12px; border:1px solid #e5e7eb; font-family:inherit; resize:vertical;"></textarea>
-
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
-        <button id="upgradeCancel" class="mem-mini-btn" type="button">Cancel</button>
-        <button id="upgradeSend" class="primary" type="button">Send</button>
+      <textarea id="upgradeText" class="upgrade-input" rows="4" placeholder="I wish the chatbot could..."></textarea>
+      <div class="modal-actions">
+        <button id="upgradeCancel" class="pill">Cancel</button>
+        <button id="upgradeSend" class="primary">Send Request</button>
       </div>
     </div>
   </div>
 
-  <script>
-    /* Chat endpoint */
-    const ENDPOINT = 'https://chatbot-ai.b4rjxr9lk.workers.dev/';
+  <!-- <script> STARTS HERE -->
 
-    const chatBody = document.getElementById('chatBody');
-    const chatForm = document.getElementById('chatForm');
-    const chatText = document.getElementById('chatText');
+
+  <script>
+    const ENDPOINT = "https://chatbot.workers.dev/";
+    const SITE_NAME = "jacobcreation";
+
+    const chatBody = document.getElementById("chatBody");
+    const chatForm = document.getElementById("chatForm");
+    const chatText = document.getElementById("chatText");
 
     const downloadMemBtn = document.getElementById("downloadMemBtn");
     const uploadMemBtn = document.getElementById("uploadMemBtn");
     const memFileInput = document.getElementById("memFileInput");
 
-    const uploadImgBtn = document.getElementById("uploadImgBtn");
-    const imgFileInput = document.getElementById("imgFileInput");
-
-    // ===== Needs Upgrades (mailto) =====
-    const upgradeBtn = document.getElementById("upgradeBtn");
-    const upgradeModal = document.getElementById("upgradeModal");
-    const upgradeClose = document.getElementById("upgradeClose");
-    const upgradeCancel = document.getElementById("upgradeCancel");
-    const upgradeSend = document.getElementById("upgradeSend");
-    const upgradeText = document.getElementById("upgradeText");
-    const SITE_NAME = "jacobcreation";
-
-    function openUpgradeModal() {
-      upgradeModal.style.display = "block";
-      upgradeText.value = "";
-      upgradeText.focus();
-    }
-
-    function closeUpgradeModal() {
-      upgradeModal.style.display = "none";
-    }
-
-    upgradeBtn.addEventListener("click", openUpgradeModal);
-    upgradeClose.addEventListener("click", closeUpgradeModal);
-    upgradeCancel.addEventListener("click", closeUpgradeModal);
-
-    upgradeModal.addEventListener("click", (e) => {
-      if (e.target === upgradeModal) closeUpgradeModal();
-    });
-
-    upgradeSend.addEventListener("click", () => {
-      const msg = upgradeText.value.trim();
-      if (!msg) {
-        addBubble("Type a request first 😄", "bot");
-        return;
-      }
-
-      const to = "iliganchesskid@gmail.com";
-      const subject = encodeURIComponent("JacobCreation - Needs Upgrades Request");
-      const body = encodeURIComponent(
-        `Hi! I have a request for JacobCreation:\n\n${msg}\n\n(Session: ${getSessionId()})`
-      );
-
-      window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
-      addBubble("Opening your email app… 📩 (Press Send there!)", "bot");
-      closeUpgradeModal();
-    });
-
-    /* Per-user Session ID */
+    // -------- Session (per device) --------
     function getSessionId() {
-      try {
-        let id = localStorage.getItem("jacobcreation_session");
-        if (!id) {
-          id = crypto.randomUUID();
-          localStorage.setItem("jacobcreation_session", id);
-        }
-        return id;
-      } catch {
-        return "filemode-" + Date.now();
+      let id = localStorage.getItem("jc_session");
+      if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem("jc_session", id);
       }
+      return id;
     }
 
-    function addBubble(text, who = 'bot') {
-      const div = document.createElement('div');
+    // -------- UI --------
+    function addBubble(text, who = "bot") {
+      const div = document.createElement("div");
       div.className = `bubble ${who}`;
       div.textContent = text;
       chatBody.appendChild(div);
       chatBody.scrollTop = chatBody.scrollHeight;
     }
 
-    function addImageBubble(dataUrl) {
-      const wrap = document.createElement("div");
-      wrap.className = "bubble user";
-      const img = document.createElement("img");
-      img.src = dataUrl;
-      img.className = "chat-img";
-      wrap.appendChild(img);
-      chatBody.appendChild(wrap);
-      chatBody.scrollTop = chatBody.scrollHeight;
-    }
-
-    // ===== Chat send (FIXED) =====
-    chatForm.addEventListener('submit', async (e) => {
+    // -------- Chat --------
+    chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-
       const msg = chatText.value.trim();
       if (!msg) return;
 
-      addBubble(msg, 'user');
-      chatText.value = '';
+      addBubble(msg, "user");
+      chatText.value = "";
 
-      try {
-        const res = await fetch(ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+      const typing = document.createElement("div");
+      typing.className = "bubble bot";
+      typing.textContent = "Chatbot is typing… ⏳";
+      chatBody.appendChild(typing);
+
+      const res = await fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "chat",
+          site: SITE_NAME,
+          sessionId: getSessionId(),
+          message: msg
+        })
+      });
+
+      const data = await res.json();
+      typing.remove();
+      addBubble(data.reply || "No reply 😅");
+    });
+
+    // -------- Download Memory --------
+    downloadMemBtn.addEventListener("click", async () => {
+      const res = await fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "download-memory",
+          site: SITE_NAME,
+          sessionId: getSessionId()
+        })
+      });
+
+      const data = await res.json();
+
+      const blob = new Blob(
+        [JSON.stringify(data.memories, null, 2)],
+        { type: "application/json" }
+      );
+
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "jacob-memory.json";
+      a.click();
+
+      addBubble("Memory downloaded ✅");
+    });
+
+    // -------- Upload Memory --------
+    uploadMemBtn.addEventListener("click", () => memFileInput.click());
+
+    memFileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        let json = JSON.parse(reader.result);
+
+        // Accept both formats
+        if (Array.isArray(json)) {
+          json = { facts: json, personality: "Restored user" };
+        }
+
+        await fetch(ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            action: "chat",
+            action: "upload-memory",
             site: SITE_NAME,
-            message: msg,
-            sessionId: getSessionId()
+            sessionId: getSessionId(),
+            memories: json
           })
-        }); // ✅ THIS LINE FIXES THE RELOAD BUG
+        });
 
-        const raw = await res.text();
-        let data = {};
-        try { data = JSON.parse(raw); } catch { }
-
-        if (!res.ok) throw new Error("Network error: " + res.status);
-        addBubble(data.reply || "No reply 😅", "bot");
-
-      } catch (err) {
-        addBubble("Hmm, I hit a snag 😬");
-        console.error(err);
-      }
+        addBubble("Memory restored 🎉");
+      };
+      reader.readAsText(file);
     });
   </script>
+
 </body>
 
 </html>
