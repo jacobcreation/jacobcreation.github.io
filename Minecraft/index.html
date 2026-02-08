@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <!-- Created with https://packager.turbowarp.org/ -->
 <html>
+
 <head>
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#000000">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -20,7 +21,10 @@
       background: #000;
     }
 
-    #app, #loading, #error, #launch {
+    #app,
+    #loading,
+    #error,
+    #launch {
       position: absolute;
       inset: 0;
     }
@@ -33,6 +37,18 @@
       text-align: center;
       user-select: none;
       background: black;
+    }
+
+    #error-message {
+      font-family: monospace;
+      white-space: pre-wrap;
+      max-width: 90%;
+      background: rgba(255, 0, 0, 0.2);
+      padding: 10px;
+      border: 1px solid red;
+      border-radius: 5px;
+      margin-top: 20px;
+      word-break: break-all;
     }
 
     /* MOBILE BLOCK SCREEN */
@@ -77,97 +93,157 @@
 
 <body>
 
-<!-- MOBILE BLOCK MESSAGE -->
-<div id="mobile-block">
-  <div>
-    <h1>Sorry!</h1>
-    <p>This isn’t mobile-friendly.</p>
-    <p>Please try it on a PC or laptop.</p>
+  <!-- MOBILE BLOCK MESSAGE -->
+  <div id="mobile-block">
+    <div>
+      <h1>Sorry!</h1>
+      <p>This isn’t mobile-friendly.</p>
+      <p>Please try it on a PC or laptop.</p>
+    </div>
   </div>
-</div>
 
-<!-- APP -->
-<div id="app"></div>
+  <!-- APP -->
+  <div id="app"></div>
 
-<!-- LOADING -->
-<div id="loading" class="screen">
-  <div class="progress-bar-outer">
-    <div class="progress-bar-inner" id="loading-inner"></div>
+  <!-- LOADING -->
+  <div id="loading" class="screen">
+    <div class="progress-bar-outer">
+      <div class="progress-bar-inner" id="loading-inner"></div>
+    </div>
   </div>
-</div>
 
-<!-- ERROR -->
-<div id="error" class="screen" hidden>
-  <h1>Error</h1>
-  <pre id="error-message"></pre>
-</div>
+  <!-- ERROR -->
+  <div id="custom-error" class="screen" hidden>
+    <h1>Error</h1>
+    <pre id="custom-error-message">Waiting for error details...</pre>
+  </div>
 
-<!-- 🚫 MOBILE CHECK (BLOCKS EVERYTHING) -->
-<script>
-  function isMobile() {
-    return (
-      /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent)
-      || window.innerWidth < 768
-    );
-  }
-
-  if (isMobile()) {
-    document.getElementById("mobile-block").style.display = "flex";
-    document.getElementById("app").style.display = "none";
-    document.getElementById("loading").style.display = "none";
-    throw new Error("Mobile devices are not supported");
-  }
-</script>
-
-<!-- TURBOWARP RUNTIME -->
-<script src="script.js"></script>
-
-<script>
-  const loadingInner = document.getElementById('loading-inner');
-
-  function setProgress(p) {
-    loadingInner.style.width = (p * 100) + '%';
-  }
-
-  try {
-    setProgress(0.1);
-
-    const scaffolding = new Scaffolding.Scaffolding();
-    scaffolding.width = 480;
-    scaffolding.height = 360;
-    scaffolding.resizeMode = "preserve-ratio";
-    scaffolding.usePackagedRuntime = true;
-    scaffolding.setup();
-    scaffolding.appendTo(document.getElementById('app'));
-
-    window.scaffolding = scaffolding;
-    const vm = scaffolding.vm;
-
-    setProgress(0.5);
-
-    const xhr = new XMLHttpRequest();
-    xhr.responseType = "arraybuffer";
-    xhr.onload = async () => {
-      await scaffolding.loadProject(xhr.response);
-      setProgress(1);
-      document.getElementById("loading").style.display = "none";
-      scaffolding.start();
+  <script>
+    window.onerror = function (msg, url, lineNo, columnNo, error) {
+      const errorDiv = document.getElementById("custom-error");
+      const errorMessage = document.getElementById("custom-error-message");
+      if (errorDiv && errorMessage) {
+        errorDiv.hidden = false;
+        document.getElementById("loading").style.display = "none";
+        errorMessage.textContent = "Global Error:\n" + msg + "\n" + url + ":" + lineNo;
+      }
+      return false;
     };
-    xhr.open("GET", "./project.zip");
-    xhr.send();
 
-  } catch (e) {
-    document.getElementById("error").hidden = false;
-    document.getElementById("error-message").textContent = e.toString();
-  }
-</script>
+    window.addEventListener('unhandledrejection', function (event) {
+      const errorDiv = document.getElementById("custom-error");
+      const errorMessage = document.getElementById("custom-error-message");
+      if (errorDiv && errorMessage) {
+        errorDiv.hidden = false;
+        document.getElementById("loading").style.display = "none";
+        errorMessage.textContent = "Unhandled Promise Rejection:\n" + event.reason;
+      }
+    });
+  </script>
 
 
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/service-worker.js");
-}
-</script>
+  <!-- 🚫 MOBILE CHECK (BLOCKS EVERYTHING) -->
+  <script>
+    function isMobile() {
+      return (
+        /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent)
+        || window.innerWidth < 768
+      );
+    }
+
+    if (isMobile()) {
+      document.getElementById("mobile-block").style.display = "flex";
+      document.getElementById("app").style.display = "none";
+      document.getElementById("loading").style.display = "none";
+      throw new Error("Mobile devices are not supported");
+    }
+  </script>
+
+  <!-- TURBOWARP RUNTIME -->
+  <script src="script.js"></script>
+
+  <script>
+    const loadingInner = document.getElementById('loading-inner');
+
+    function showError(msg, details) {
+      document.getElementById("loading").style.display = "none";
+      document.getElementById("error").hidden = false;
+      document.getElementById("error-message").textContent = msg + (details ? "\n" + details : "");
+      console.error(msg, details);
+    }
+
+    function setProgress(p) {
+      loadingInner.style.width = (p * 100) + '%';
+    }
+
+    try {
+      setProgress(0.1);
+
+      if (typeof Scaffolding === 'undefined') {
+        throw new Error("Scaffolding library not found. The 'script.js' file might be missing or failed to load. Check that script.js is in the same folder as index.html.");
+      }
+
+      const scaffolding = new Scaffolding.Scaffolding();
+      scaffolding.width = 480;
+      scaffolding.height = 360;
+      scaffolding.resizeMode = "preserve-ratio";
+      scaffolding.usePackagedRuntime = true;
+      scaffolding.setup();
+      scaffolding.appendTo(document.getElementById('app'));
+
+      window.scaffolding = scaffolding;
+      const vm = scaffolding.vm;
+
+      setProgress(0.5);
+
+      const xhr = new XMLHttpRequest();
+      xhr.responseType = "arraybuffer";
+
+      xhr.onload = async () => {
+        try {
+          if (xhr.status >= 400) {
+            throw new Error("Failed to load project.zip. Server returned status: " + xhr.status + " " + xhr.statusText);
+          }
+          if (!xhr.response) {
+            throw new Error("Failed to load project.zip. Response was empty.");
+          }
+
+          await scaffolding.loadProject(xhr.response);
+          setProgress(1);
+          document.getElementById("loading").style.display = "none";
+
+          // Start automatically since launch screen was removed
+          scaffolding.start();
+
+        } catch (e) {
+          showError("Load Error", e.toString());
+        }
+      };
+
+      xhr.onerror = () => {
+        showError("Network Error", "Failed to load project.zip. Please check if the file exists and you are not running from file:// protocol without a local server.");
+      };
+
+      xhr.open("GET", "./project.zip");
+      xhr.send();
+
+    } catch (e) {
+      showError("Setup Error", e.toString());
+    }
+  </script>
+
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      // Unregister existing service workers to avoid caching issues during development
+      navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        for (let registration of registrations) {
+          registration.unregister();
+        }
+      });
+    }
+  </script>
 
 </body>
+
 </html>
