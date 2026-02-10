@@ -391,6 +391,7 @@
     let enemyHealth = 100;
     let currentRiddle = "";
     let currentAnswer = "";
+    let seenAnswers = []; // Track past answers to avoid repeats
     let isProcessing = false;
 
     // Elements
@@ -481,15 +482,24 @@
       els.inputArea.classList.add('hidden');
       els.startBtn.style.display = "none";
 
+      // Randomize the request to prevent duplicates
+      const themes = ["Animals", "Space", "Food", "Time", "Nature", "Household Objects", "Logic", "Words", "Mystery", "History", "Science"];
+      const randomTheme = themes[Math.floor(Math.random() * themes.length)];
+
       try {
         const res = await fetch(WORKER_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "get_riddle", level: level })
+          // Send theme and list of answers to avoid
+          body: JSON.stringify({
+            action: "get_riddle",
+            level: level,
+            theme: randomTheme,
+            avoid: seenAnswers.slice(-10) // Only send last 10 to keep payload small
+          })
         });
 
         // Parse JSON response
-        // Worker now returns { raw: "RIDDLE: ... \n ANSWER: ..." }
         const data = await res.json();
         const rawText = data.raw || "";
 
@@ -501,11 +511,9 @@
         const answerIndex = upper.lastIndexOf("ANSWER:");
 
         if (answerIndex !== -1) {
-          // Found split
           rText = rawText.substring(0, answerIndex).replace(/RIDDLE:/i, '').trim();
           aText = rawText.substring(answerIndex).replace(/ANSWER:/i, '').trim();
         } else {
-          // Fallback (maybe worker not updated yet?)
           rText = rawText;
           aText = "unknown";
         }
@@ -559,6 +567,8 @@
         els.status.textContent = "CRITICAL HIT! 💥";
         els.status.style.color = "var(--green)";
         takeDamage('enemy');
+
+        seenAnswers.push(currentAnswer); // Remember this answer
 
         if (enemyHealth > 0) {
           els.input.disabled = true;
