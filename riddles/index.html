@@ -1,488 +1,624 @@
 <!DOCTYPE html>
-<!-- Created with https://packager.turbowarp.org/ -->
-<html>
+<html lang="en">
 
 <head>
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#000000">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#000000">
+  <title>Riddle Battle - JacobCreation</title>
 
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <!-- We only include this to explicitly loosen the CSP of various packager environments. It does not provide any security. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:">
-  <title>Riddles</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+
   <style>
+    /* Design Tokens */
+    :root {
+      --bg1: #0b1020;
+      --bg2: #0a1633;
+      --card: rgba(255, 255, 255, 0.08);
+      --card2: rgba(255, 255, 255, 0.12);
+      --border: rgba(255, 255, 255, 0.14);
+      --text: #eaf2ff;
+      --muted: rgba(234, 242, 255, 0.75);
+      --blue: #4ea1ff;
+      --red: #ff4c4c;
+      --green: #4ade80;
+      --shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      color: #ffffff;
-      font-family: sans-serif;
-      overflow: hidden;
       margin: 0;
-      padding: 0;
+      font-family: "Poppins", sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(78, 161, 255, 0.30), transparent 55%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 80px;
     }
 
-    :root,
-    body.is-fullscreen {
-      background-color: #000000;
-    }
-
-    [hidden] {
-      display: none !important;
-    }
-
-    h1 {
-      font-weight: normal;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-
-    #app,
-    #loading,
-    #error,
-    #launch {
-      position: absolute;
-      top: 0;
-      left: 0;
+    /* Game Layout */
+    .game-container {
       width: 100%;
-      height: 100%;
+      max-width: 800px;
+      padding: 0 20px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
     }
 
-    .screen {
+    /* Level Indicator */
+    .level-badge {
+      background: linear-gradient(90deg, #ff8c00, #ff0055);
+      padding: 6px 16px;
+      border-radius: 99px;
+      font-weight: 800;
+      font-family: "Orbitron", sans-serif;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      box-shadow: 0 0 15px rgba(255, 140, 0, 0.4);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    /* Arena (Health Bars & Avatars) */
+    .arena {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 0px;
+      gap: 20px;
+    }
+
+    .fighter {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 15px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .avatar {
+      font-size: 3rem;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+      transition: transform 0.2s;
+    }
+
+    .shake {
+      animation: shake 0.5s;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-5px) rotate(-5deg);
+      }
+
+      75% {
+        transform: translateX(5px) rotate(5deg);
+      }
+    }
+
+    .health-track {
+      width: 100%;
+      height: 12px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .health-fill {
+      height: 100%;
+      background: var(--green);
+      width: 100%;
+      transition: width 0.5s ease, background 0.3s;
+    }
+
+    .health-fill.low {
+      background: var(--red);
+    }
+
+    .health-fill.med {
+      background: #ffaa00;
+    }
+
+    .name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    /* Riddle Card */
+    .card {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 30px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #riddle-text {
+      font-size: 1.3rem;
+      line-height: 1.6;
+      text-align: center;
+      min-height: 60px;
+      margin: 0;
+    }
+
+    .placeholder {
+      font-style: italic;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    /* Input Area */
+    .input-wrap {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 450px;
+      transition: all 0.3s ease;
+    }
+
+    .input-wrap.hidden {
+      opacity: 0.5;
+      pointer-events: none;
+      filter: blur(2px);
+    }
+
+    input {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 14px 24px;
+      color: white;
+      font-family: inherit;
+      font-size: 1.1rem;
+      outline: none;
+      transition: 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(78, 161, 255, 0.2);
+    }
+
+    .btn {
+      border: none;
+      padding: 12px 28px;
+      border-radius: 999px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: transform 0.2s;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1e90ff, #ff2d2d);
+      color: white;
+      box-shadow: 0 4px 15px rgba(30, 144, 255, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 22px rgba(30, 144, 255, 0.5);
+    }
+
+    .btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Feedback & Status */
+    .status-msg {
+      font-weight: 700;
+      font-size: 1.2rem;
+      height: 30px;
+      text-align: center;
+    }
+
+    .game-over-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      text-align: center;
-      cursor: default;
-      user-select: none;
-      -webkit-user-select: none;
-      background-color: #000000;
+      gap: 20px;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s;
     }
 
-    #launch {
-      background-color: rgba(0, 0, 0, 0.7);
-      cursor: pointer;
+    .game-over-overlay.visible {
+      opacity: 1;
+      pointer-events: all;
     }
 
-    .green-flag {
-      width: 80px;
-      height: 80px;
-      padding: 16px;
-      border-radius: 100%;
-      background: rgba(255, 255, 255, 0.75);
-      border: 3px solid hsla(0, 100%, 100%, 1);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      box-sizing: border-box;
+    .game-over-title {
+      font-size: 3rem;
+      font-family: "Orbitron";
+      font-weight: 800;
     }
 
-    #loading {}
-
-    .progress-bar-outer {
-      border: 1px solid currentColor;
-      height: 10px;
-      width: 200px;
-      max-width: 200px;
+    .win-text {
+      color: var(--green);
+      text-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
     }
 
-    .progress-bar-inner {
-      height: 100%;
-      width: 0;
-      background-color: currentColor;
+    .lose-text {
+      color: var(--red);
+      text-shadow: 0 0 20px rgba(255, 76, 76, 0.5);
     }
 
-    .loading-text,
-    noscript {
-      font-weight: normal;
-      font-size: 36px;
-      margin: 0 0 16px;
+    .spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+      margin: 10px auto;
     }
 
-    .loading-image {
-      margin: 0 0 16px;
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
     }
 
-    #error-message,
-    #error-stack {
-      font-family: monospace;
-      max-width: 600px;
-      white-space: pre-wrap;
-      user-select: text;
-      -webkit-user-select: text;
-    }
-
-    #error-stack {
-      text-align: left;
-      max-height: 200px;
-      overflow: auto;
-    }
-
-    .control-button {
-      width: 2rem;
-      height: 2rem;
-      padding: 0.375rem;
-      margin-top: 0.5rem;
-      margin-bottom: 0.5rem;
-      user-select: none;
-      -webkit-user-select: none;
-      cursor: pointer;
-      border: 0;
-      border-radius: 4px;
-    }
-
-    .control-button-highlight:hover {
-      background: #ff4c4c26;
-    }
-
-    .control-button-highlight.active {
-      background: #ff4c4c59;
-    }
-
-    .fullscreen-button {
-      background: white;
-    }
-
-    .standalone-fullscreen-button {
-      position: absolute;
-      top: 0;
-      right: 0;
-      background-color: rgba(0, 0, 0, 0.5);
-      border-radius: 0 0 0 4px;
-      padding: 4px;
-      cursor: pointer;
-    }
-
-    .sc-canvas {
-      cursor: auto;
-    }
-
-    .sc-monitor-root[data-opcode^="data_"] .sc-monitor-value-color {
-      background-color: #ff8c1a;
-    }
-
-    .sc-monitor-row-value-outer {
-      background-color: #fc662c;
-    }
-
-    .sc-monitor-row-value-editing .sc-monitor-row-value-outer {
-      background-color: #e25b27;
+    .loading .spinner {
+      display: block;
     }
   </style>
-  <meta name="theme-color" content="#000000">
-
 </head>
 
 <body>
-  <div id="app"></div>
 
-  <div id="launch" class="screen" hidden title="Click to start">
-    <div class="green-flag">
-      <svg viewBox="0 0 16.63 17.5" width="42" height="44">
-        <defs>
-          <style>
-            .cls-1,
-            .cls-2 {
-              fill: #4cbf56;
-              stroke: #45993d;
-              stroke-linecap: round;
-              stroke-linejoin: round;
-            }
-
-            .cls-2 {
-              stroke-width: 1.5px;
-            }
-          </style>
-        </defs>
-        <path class="cls-1"
-          d="M.75,2A6.44,6.44,0,0,1,8.44,2h0a6.44,6.44,0,0,0,7.69,0V12.4a6.44,6.44,0,0,1-7.69,0h0a6.44,6.44,0,0,0-7.69,0" />
-        <line class="cls-2" x1="0.75" y1="16.75" x2="0.75" y2="0.75" />
-      </svg>
-    </div>
-  </div>
-
-  <div id="loading" class="screen">
-    <noscript>Enable JavaScript</noscript>
-
-
-    <div class="progress-bar-outer">
-      <div class="progress-bar-inner" id="loading-inner"></div>
-    </div>
-  </div>
-
-  <div id="error" class="screen" hidden>
-    <h1>Error</h1>
-    <details>
-      <summary id="error-message"></summary>
-      <p id="error-stack"></p>
-    </details>
-  </div>
-
-  <script src="script.js"></script>
-  <script>
-    const appElement = document.getElementById('app');
-    const launchScreen = document.getElementById('launch');
-    const loadingScreen = document.getElementById('loading');
-    const loadingInner = document.getElementById('loading-inner');
-    const errorScreen = document.getElementById('error');
-    const errorScreenMessage = document.getElementById('error-message');
-    const errorScreenStack = document.getElementById('error-stack');
-
-    const handleError = (error) => {
-      console.error(error);
-      if (!errorScreen.hidden) return;
-      errorScreen.hidden = false;
-      errorScreenMessage.textContent = '' + error;
-      let debug = error && error.stack || 'no stack';
-      debug += '\nUser agent: ' + navigator.userAgent;
-      errorScreenStack.textContent = debug;
-    };
-    const setProgress = (progress) => {
-      if (loadingInner) loadingInner.style.width = progress * 100 + '%';
-    };
-    const interpolate = (a, b, t) => a + t * (b - a);
-
-    try {
-      setProgress(0.1);
-
-      const scaffolding = new Scaffolding.Scaffolding();
-      scaffolding.width = 480;
-      scaffolding.height = 360;
-      scaffolding.resizeMode = "preserve-ratio";
-      scaffolding.editableLists = false;
-      scaffolding.usePackagedRuntime = true;
-      scaffolding.setup();
-      scaffolding.appendTo(appElement);
-
-      const vm = scaffolding.vm;
-      window.scaffolding = scaffolding;
-      window.vm = scaffolding.vm;
-      window.Scratch = {
-        vm,
-        renderer: vm.renderer,
-        audioEngine: vm.runtime.audioEngine,
-        bitmapAdapter: vm.runtime.v2BitmapAdapter,
-        videoProvider: vm.runtime.ioDevices.video.provider
-      };
-
-      scaffolding.setUsername("player####".replace(/#/g, () => Math.floor(Math.random() * 10)));
-      scaffolding.setAccentColor("#ff4c4c");
-
-      try {
-        scaffolding.addCloudProvider(new Scaffolding.Cloud.WebSocketProvider(["wss://clouddata.turbowarp.org", "wss://clouddata.turbowarp.xyz"], "25051048"));
-      } catch (error) {
-        console.error(error);
-      }
-
-      const greenFlagButton = document.createElement('img');
-      greenFlagButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16.63 17.5"><path d="M.75 2a6.44 6.44 0 017.69 0h0a6.44 6.44 0 007.69 0v10.4a6.44 6.44 0 01-7.69 0h0a6.44 6.44 0 00-7.69 0" fill="#4cbf56" stroke="#45993d" stroke-linecap="round" stroke-linejoin="round"/><path stroke-width="1.5" fill="#4cbf56" stroke="#45993d" stroke-linecap="round" stroke-linejoin="round" d="M.75 16.75v-16"/></svg>');
-      greenFlagButton.className = 'control-button control-button-highlight green-flag-button';
-      greenFlagButton.draggable = false;
-      greenFlagButton.addEventListener('click', () => {
-        scaffolding.greenFlag();
-      });
-      scaffolding.addEventListener('PROJECT_RUN_START', () => {
-        greenFlagButton.classList.add('active');
-      });
-      scaffolding.addEventListener('PROJECT_RUN_STOP', () => {
-        greenFlagButton.classList.remove('active');
-      });
-      scaffolding.addControlButton({
-        element: greenFlagButton,
-        where: 'top-left'
-      });
-
-      const pauseButton = document.createElement('img');
-      pauseButton.className = 'control-button control-button-highlight pause-button';
-      pauseButton.draggable = false;
-      let isPaused = false;
-      pauseButton.addEventListener('click', () => {
-        vm.setPaused(!isPaused);
-      });
-      const updatePause = () => {
-        if (isPaused) {
-          pauseButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg width="16" height="16" viewBox="0 0 4.2333332 4.2333335" xmlns="http://www.w3.org/2000/svg"><path d="m3.95163484 2.02835365-1.66643921.9621191-1.66643913.96211911V.10411543l1.66643922.9621191z" fill="#ffae00"/></svg>');
-        } else {
-          pauseButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg width="16" height="16" viewBox="0 0 4.2333332 4.2333335" xmlns="http://www.w3.org/2000/svg"><g fill="#ffae00"><path d="M.389.19239126h1.2631972v3.8485508H.389zM2.5810001.19239126h1.2631972v3.8485508H2.5810001z"/></g></svg>');
-        }
-      };
-      vm.runtime.on('RUNTIME_PAUSED', () => {
-        isPaused = true;
-        updatePause();
-      });
-      vm.runtime.on('RUNTIME_UNPAUSED', () => {
-        isPaused = false;
-        updatePause();
-      });
-      updatePause();
-      scaffolding.addControlButton({
-        element: pauseButton,
-        where: 'top-left'
-      });
-
-      const stopAllButton = document.createElement('img');
-      stopAllButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 14"><path fill="#ec5959" stroke="#b84848" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M4.3.5h5.4l3.8 3.8v5.4l-3.8 3.8H4.3L.5 9.7V4.3z"/></svg>');
-      stopAllButton.className = 'control-button control-button-highlight stop-all-button';
-      stopAllButton.draggable = false;
-      stopAllButton.addEventListener('click', () => {
-        scaffolding.stopAll();
-      });
-      scaffolding.addControlButton({
-        element: stopAllButton,
-        where: 'top-left'
-      });
-
-      if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
-        let isFullScreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
-        const fullscreenButton = document.createElement('img');
-        fullscreenButton.draggable = false;
-        fullscreenButton.className = 'control-button fullscreen-button';
-        fullscreenButton.addEventListener('click', () => {
-          if (isFullScreen) {
-            if (document.exitFullscreen) {
-              document.exitFullscreen();
-            } else if (document.webkitExitFullscreen) {
-              document.webkitExitFullscreen();
-            }
-          } else {
-            if (document.body.requestFullscreen) {
-              document.body.requestFullscreen();
-            } else if (document.body.webkitRequestFullscreen) {
-              document.body.webkitRequestFullscreen();
-            }
-          }
-        });
-        const otherControlsExist = true;
-        const fillColor = otherControlsExist ? '#575E75' : '#ffffff';
-        const updateFullScreen = () => {
-          isFullScreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
-          document.body.classList.toggle('is-fullscreen', isFullScreen);
-          if (isFullScreen) {
-            fullscreenButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><g fill="' + fillColor + '" fill-rule="evenodd"><path d="M12.662 3.65l.89.891 3.133-2.374a.815.815 0 011.15.165.819.819 0 010 .986L15.467 6.46l.867.871c.25.25.072.664-.269.664L12.388 8A.397.397 0 0112 7.611V3.92c0-.341.418-.514.662-.27M7.338 16.35l-.89-.89-3.133 2.374a.817.817 0 01-1.15-.166.819.819 0 010-.985l2.37-3.143-.87-.871a.387.387 0 01.27-.664L7.612 12a.397.397 0 01.388.389v3.692a.387.387 0 01-.662.27M7.338 3.65l-.89.891-3.133-2.374a.815.815 0 00-1.15.165.819.819 0 000 .986l2.37 3.142-.87.871a.387.387 0 00.27.664L7.612 8A.397.397 0 008 7.611V3.92a.387.387 0 00-.662-.27M12.662 16.35l.89-.89 3.133 2.374a.817.817 0 001.15-.166.819.819 0 000-.985l-2.368-3.143.867-.871a.387.387 0 00-.269-.664L12.388 12a.397.397 0 00-.388.389v3.692c0 .342.418.514.662.27"/></g></svg>');
-          } else {
-            fullscreenButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><g fill="' + fillColor + '" fill-rule="evenodd"><path d="M16.338 7.35l-.89-.891-3.133 2.374a.815.815 0 01-1.15-.165.819.819 0 010-.986l2.368-3.142-.867-.871a.387.387 0 01.269-.664L16.612 3a.397.397 0 01.388.389V7.08a.387.387 0 01-.662.27M3.662 12.65l.89.89 3.133-2.374a.817.817 0 011.15.166.819.819 0 010 .985l-2.37 3.143.87.871c.248.25.071.664-.27.664L3.388 17A.397.397 0 013 16.611V12.92c0-.342.418-.514.662-.27M3.662 7.35l.89-.891 3.133 2.374a.815.815 0 001.15-.165.819.819 0 000-.986L6.465 4.54l.87-.871a.387.387 0 00-.27-.664L3.388 3A.397.397 0 003 3.389V7.08c0 .341.418.514.662.27M16.338 12.65l-.89.89-3.133-2.374a.817.817 0 00-1.15.166.819.819 0 000 .985l2.368 3.143-.867.871a.387.387 0 00.269.664l3.677.005a.397.397 0 00.388-.389V12.92a.387.387 0 00-.662-.27"/></g></svg>');
-          }
-        };
-        updateFullScreen();
-        document.addEventListener('fullscreenchange', updateFullScreen);
-        document.addEventListener('webkitfullscreenchange', updateFullScreen);
-        if (otherControlsExist) {
-          fullscreenButton.className = 'control-button fullscreen-button';
-          scaffolding.addControlButton({
-            element: fullscreenButton,
-            where: 'top-right'
-          });
-        } else {
-          fullscreenButton.className = 'standalone-fullscreen-button';
-          document.body.appendChild(fullscreenButton);
-        }
-      }
-
-      vm.setTurboMode(false);
-      if (vm.setInterpolation) vm.setInterpolation(true);
-      if (vm.setFramerate) vm.setFramerate(30);
-      if (vm.renderer.setUseHighQualityRender) vm.renderer.setUseHighQualityRender(true);
-      if (vm.setRuntimeOptions) vm.setRuntimeOptions({
-        fencing: true,
-        miscLimits: false,
-        maxClones: 300,
-      });
-      if (vm.setCompilerOptions) vm.setCompilerOptions({
-        enabled: true,
-        warpTimer: false
-      });
-      if (vm.renderer.setMaxTextureDimension) vm.renderer.setMaxTextureDimension(2048);
-
-      // enforcePrivacy threat model only makes sense in the editor
-      if (vm.runtime.setEnforcePrivacy) vm.runtime.setEnforcePrivacy(false);
-
-      if (typeof ScaffoldingAddons !== 'undefined') {
-        ScaffoldingAddons.run(scaffolding, { "gamepad": false, "pointerlock": false, "specialCloudBehaviors": false, "unsafeCloudBehaviors": false, "pause": true });
-      }
-
-      scaffolding.setExtensionSecurityManager({
-        getSandboxMode: () => 'unsandboxed',
-        canLoadExtensionFromProject: () => true
-      });
-      for (const extension of []) {
-        vm.extensionManager.loadExtensionURL(extension);
-      }
-
-    } catch (e) {
-      handleError(e);
-    }
-  </script>
-
-
-  <script>
-    const getProjectData = (function () {
-      const storage = scaffolding.storage;
-      storage.onprogress = (total, loaded) => {
-        setProgress(interpolate(0.75, 0.98, loaded / total));
-      };
-
-      storage.addWebStore(
-        [
-          storage.AssetType.ImageVector,
-          storage.AssetType.ImageBitmap,
-          storage.AssetType.Sound,
-          storage.AssetType.Font
-        ].filter(i => i),
-        (asset) => new URL('./assets/' + asset.assetId + '.' + asset.dataFormat, location).href
-      );
-      return () => new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.onload = () => {
-          resolve(xhr.response);
-        };
-        xhr.onerror = () => {
-          if (location.protocol === 'file:') {
-            reject(new Error('Zip environment must be used on a website, not on a local file. To fix this error, use the "Plain HTML" environment instead.'));
-          } else {
-            reject(new Error('Request to load project data failed.'));
-          }
-        };
-        xhr.onprogress = (e) => {
-          if (e.lengthComputable) {
-            setProgress(interpolate(0.1, 0.75, e.loaded / e.total));
-          }
-        };
-        xhr.responseType = 'arraybuffer';
-        xhr.open('GET', "./project.zip");
-        xhr.send();
-      });
-    })();
-  </script>
-  <script>
-    const run = async () => {
-      const projectData = await getProjectData();
-      await scaffolding.loadProject(projectData);
-      setProgress(1);
-      loadingScreen.hidden = true;
-      if (false) {
-        scaffolding.start();
-      } else {
-        launchScreen.hidden = false;
-        launchScreen.addEventListener('click', () => {
-          launchScreen.hidden = true;
-          scaffolding.start();
-        });
-        launchScreen.focus();
-      }
-    };
-    run().catch(handleError);
-  </script>
+  <!-- Provides the sticky header -->
   <script src="../global-header.js"></script>
 
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/service-worker.js");
-}
-</script>
+  <div class="game-container">
 
+    <div class="level-badge">Level <span id="level-display">1</span></div>
+
+    <div class="arena">
+      <!-- Player -->
+      <div class="fighter">
+        <div class="name">YOU</div>
+        <div class="avatar" id="player-avatar">😎</div>
+        <div class="health-track">
+          <div class="health-fill" id="player-health"></div>
+        </div>
+      </div>
+
+      <!-- VS -->
+      <div style="display:grid; place-items:center; font-weight:900; opacity:0.5; font-size:1.5rem">VS</div>
+
+      <!-- Enemy -->
+      <div class="fighter">
+        <div class="name">RIDDLE BOT</div>
+        <div class="avatar" id="enemy-avatar">🤖</div>
+        <div class="health-track">
+          <div class="health-fill" id="enemy-health"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Game Card -->
+    <div class="card" id="game-card">
+      <div class="spinner"></div>
+
+      <p id="riddle-text" class="placeholder">Press Start to battle!</p>
+
+      <div class="status-msg" id="status-msg"></div>
+
+      <div class="input-wrap hidden" id="input-area">
+        <input type="text" id="answer-input" placeholder="Your answer..." autocomplete="off">
+        <button class="btn btn-primary" id="submit-btn" disabled>Attack!</button>
+      </div>
+
+      <button class="btn btn-primary" id="start-btn">⚔️ Start Battle</button>
+
+      <!-- Game Over / Win Screen Overlay -->
+      <div class="game-over-overlay" id="overlay">
+        <div class="game-over-title" id="overlay-title">VICTORY</div>
+        <p id="overlay-msg">You defeated the bot!</p>
+        <button class="btn btn-primary" id="next-level-btn">Next Level ➡️</button>
+        <button class="btn btn-primary" id="restart-btn" style="display:none; background: #555;">Try Again ↺</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const WORKER_URL = "https://riddle-ai.b4rjxr9lk.workers.dev/";
+
+    // State
+    let level = 1;
+    let playerHealth = 100;
+    let enemyHealth = 100;
+    let currentRiddle = "";
+    let currentAnswer = "";
+    let isProcessing = false;
+
+    // Elements
+    const els = {
+      level: document.getElementById('level-display'),
+      pHealth: document.getElementById('player-health'),
+      eHealth: document.getElementById('enemy-health'),
+      pAvatar: document.getElementById('player-avatar'),
+      eAvatar: document.getElementById('enemy-avatar'),
+      riddle: document.getElementById('riddle-text'),
+      status: document.getElementById('status-msg'),
+      inputArea: document.getElementById('input-area'),
+      input: document.getElementById('answer-input'),
+      submit: document.getElementById('submit-btn'),
+      startBtn: document.getElementById('start-btn'),
+      card: document.getElementById('game-card'),
+      overlay: document.getElementById('overlay'),
+      overlayTitle: document.getElementById('overlay-title'),
+      overlayMsg: document.getElementById('overlay-msg'),
+      nextBtn: document.getElementById('next-level-btn'),
+      restartBtn: document.getElementById('restart-btn')
+    };
+
+    // --- GAME LOGIC ---
+
+    function updateHealthUI() {
+      els.pHealth.style.width = playerHealth + '%';
+      els.eHealth.style.width = enemyHealth + '%';
+
+      // Color changes
+      els.pHealth.className = `health-fill ${playerHealth < 40 ? 'low' : playerHealth < 70 ? 'med' : ''}`;
+      els.eHealth.className = `health-fill ${enemyHealth < 40 ? 'low' : enemyHealth < 70 ? 'med' : ''}`;
+    }
+
+    function takeDamage(target) {
+      if (target === 'player') {
+        playerHealth = Math.max(0, playerHealth - 10); // 10 mistakes = game over
+        els.pAvatar.classList.add('shake');
+        setTimeout(() => els.pAvatar.classList.remove('shake'), 500);
+      } else {
+        enemyHealth = Math.max(0, enemyHealth - 10); // 10 correct = win level
+        els.eAvatar.classList.add('shake');
+        setTimeout(() => els.eAvatar.classList.remove('shake'), 500);
+      }
+      updateHealthUI();
+      checkWinCondition();
+    }
+
+    function checkWinCondition() {
+      if (playerHealth <= 0) {
+        showGameOver(false);
+      } else if (enemyHealth <= 0) {
+        showGameOver(true);
+      } else {
+        // Continue game - fetch new riddle if the enemy was hit but not dead?
+        // Actually, let's fetch a NEW riddle after every correct answer to keep fighting
+        if (enemyHealth > 0 && playerHealth > 0) {
+          // If we just hit the enemy, get the next riddle immediately
+          // If we got hit, we can retry the SAME riddle
+        }
+      }
+    }
+
+    function showGameOver(isWin) {
+      els.overlay.classList.add('visible');
+      if (isWin) {
+        els.overlayTitle.textContent = "VICTORY!";
+        els.overlayTitle.className = "game-over-title win-text";
+        els.overlayMsg.textContent = `You defeated the Level ${level} Bot!`;
+        els.nextBtn.style.display = "inline-flex";
+        els.restartBtn.style.display = "none";
+      } else {
+        els.overlayTitle.textContent = "DEFEATED";
+        els.overlayTitle.className = "game-over-title lose-text";
+        els.overlayMsg.textContent = "The Bot outsmarted you.";
+        els.nextBtn.style.display = "none";
+        els.restartBtn.style.display = "inline-flex";
+      }
+    }
+
+    async function fetchRiddle() {
+      if (isProcessing) return;
+      isProcessing = true;
+
+      els.card.classList.add('loading');
+      els.riddle.textContent = "Bot is thinking of a riddle...";
+      els.status.textContent = "";
+      els.inputArea.classList.add('hidden');
+      els.startBtn.style.display = "none";
+
+      try {
+        const res = await fetch(WORKER_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "get_riddle", level: level })
+        });
+
+        // Parse JSON response
+        // Worker now returns { raw: "RIDDLE: ... \n ANSWER: ..." }
+        const data = await res.json();
+        const rawText = data.raw || "";
+
+        let rText = "Could not parse riddle.";
+        let aText = "";
+
+        // Robust parsing of "ANSWER:" tag
+        const upper = rawText.toUpperCase();
+        const answerIndex = upper.lastIndexOf("ANSWER:");
+
+        if (answerIndex !== -1) {
+          // Found split
+          rText = rawText.substring(0, answerIndex).replace(/RIDDLE:/i, '').trim();
+          aText = rawText.substring(answerIndex).replace(/ANSWER:/i, '').trim();
+        } else {
+          // Fallback (maybe worker not updated yet?)
+          rText = rawText;
+          aText = "unknown";
+        }
+
+        currentRiddle = rText;
+        currentAnswer = aText;
+
+        els.riddle.innerHTML = currentRiddle;
+        els.riddle.classList.remove('placeholder');
+        els.inputArea.classList.remove('hidden');
+        els.input.value = "";
+        els.input.focus();
+        els.input.disabled = false;
+        els.submit.disabled = true;
+
+        console.log("Answer Key:", currentAnswer);
+
+      } catch (e) {
+        console.error(e);
+        els.riddle.textContent = "Error communicating with the Bot.";
+      } finally {
+        els.card.classList.remove('loading');
+        isProcessing = false;
+      }
+    }
+
+    async function checkAnswer() {
+      const userAns = els.input.value.trim();
+      if (!userAns) return;
+
+      // LOCAL CHECK (Instant)
+      // We check if:
+      // 1. User answer is inside correct answer (e.g. "Piano" in "Use a Piano")
+      // 2. Correct answer is inside user answer
+      // 3. Exact match
+
+      const cleanUser = userAns.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const cleanKey = currentAnswer.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+      // Basic validation to avoid empty matches
+      if (cleanUser.length < 2) return;
+
+      let isCorrect = false;
+      if (cleanKey.includes(cleanUser) || cleanUser.includes(cleanKey)) {
+        isCorrect = true;
+      }
+
+      // Extra check: edit distance could be added here later
+
+      if (isCorrect) {
+        els.status.textContent = "CRITICAL HIT! 💥";
+        els.status.style.color = "var(--green)";
+        takeDamage('enemy');
+
+        if (enemyHealth > 0) {
+          els.input.disabled = true;
+          els.submit.disabled = true;
+          setTimeout(() => {
+            els.status.textContent = "Next riddle coming...";
+            setTimeout(fetchRiddle, 1000);
+          }, 1000);
+        }
+      } else {
+        els.status.textContent = "WRONG! YOU TAKE DAMAGE! 🛡️";
+        els.status.style.color = "var(--red)";
+        takeDamage('player');
+
+        if (playerHealth > 0) {
+          els.input.value = "";
+          els.input.focus();
+          els.input.classList.add('shake');
+          setTimeout(() => els.input.classList.remove('shake'), 500);
+        }
+      }
+    }
+
+    // Controls
+    els.startBtn.addEventListener('click', () => {
+      fetchRiddle();
+    });
+
+    els.input.addEventListener('input', () => {
+      els.submit.disabled = els.input.value.trim().length === 0;
+    });
+
+    els.input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !els.submit.disabled) checkAnswer();
+    });
+    els.submit.addEventListener('click', checkAnswer);
+
+    // Level Managment
+    els.nextBtn.addEventListener('click', () => {
+      level++;
+      els.level.textContent = level;
+      resetGame();
+    });
+
+    els.restartBtn.addEventListener('click', () => {
+      resetGame(); // Keep same level
+    });
+
+    function resetGame() {
+      playerHealth = 100;
+      enemyHealth = 100;
+      updateHealthUI();
+      els.overlay.classList.remove('visible');
+      fetchRiddle();
+    }
+
+    // Init Visuals
+    updateHealthUI();
+
+  </script>
 </body>
 
 </html>
