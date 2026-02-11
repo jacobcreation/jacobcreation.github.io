@@ -476,37 +476,65 @@
       if (isProcessing) return;
       isProcessing = true;
 
+      const loadingMessages = [
+        "Bot is thinking...",
+        "Consulting the oracle...",
+        "Reading ancient scrolls...",
+        "Calculus is hard...",
+        "Parsing the universe...",
+        "Generating wit...",
+        "Almost there..."
+      ];
+      let msgIdx = 0;
+
       els.card.classList.add('loading');
-      els.riddle.textContent = "Bot is thinking of a riddle...";
+      els.riddle.textContent = loadingMessages[0];
       els.status.textContent = "";
       els.inputArea.classList.add('hidden');
       els.startBtn.style.display = "none";
+
+      // Rotate messages every 2 seconds
+      const loadingInterval = setInterval(() => {
+        msgIdx = (msgIdx + 1) % loadingMessages.length;
+        els.riddle.textContent = loadingMessages[msgIdx];
+      }, 2000);
 
       // Randomize the request to prevent duplicates
       const themes = ["Animals", "Space", "Food", "Time", "Nature", "Household Objects", "Logic", "Words", "Mystery", "History", "Science"];
       const randomTheme = themes[Math.floor(Math.random() * themes.length)];
 
+      // 20 Second Timeout (Increased slightly as 13s is common)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+
       try {
         const res = await fetch(WORKER_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          // Send theme and list of answers to avoid
+          signal: controller.signal,
           body: JSON.stringify({
             action: "get_riddle",
             level: level,
             theme: randomTheme,
-            avoid: seenAnswers.slice(-10) // Only send last 10 to keep payload small
+            avoid: seenAnswers.slice(-10)
           })
         });
 
-        // Parse JSON response
-        const data = await res.json();
-        const rawText = data.raw || "";
+        clearTimeout(timeoutId);
 
+        if (!res.ok) {
+          throw new Error(`Server returned ${res.status}`);
+        }
+
+        // Parse JSON response
+        const data = await res.json().catch(() => {
+          throw new Error("Worker returned invalid format. Did you update the worker code?");
+        });
+
+        const rawText = data.raw || "";
         let rText = "Could not parse riddle.";
         let aText = "";
 
-        // Robust parsing of "ANSWER:" tag
         const upper = rawText.toUpperCase();
         const answerIndex = upper.lastIndexOf("ANSWER:");
 
@@ -516,6 +544,7 @@
         } else {
           rText = rawText;
           aText = "unknown";
+          console.warn("Worker didn't return RIDDLE/ANSWER format:", rawText);
         }
 
         currentRiddle = rText;
@@ -534,10 +563,19 @@
 
       } catch (e) {
         console.error(e);
-        els.riddle.textContent = "Error communicating with the Bot.";
+        if (e.name === 'AbortError') {
+          els.riddle.textContent = "Request timed out. The Bot is asleep.";
+        } else {
+          els.riddle.textContent = `Error: ${e.message}`;
+        }
+        els.startBtn.style.display = "inline-block"; // Allow retry
+        els.startBtn.textContent = "🔄 Retry";
+
       } finally {
         els.card.classList.remove('loading');
         isProcessing = false;
+        clearTimeout(timeoutId);
+        clearInterval(loadingInterval);
       }
     }
 
