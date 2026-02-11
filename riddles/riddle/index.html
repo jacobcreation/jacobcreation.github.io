@@ -392,6 +392,7 @@
     let currentRiddle = "";
     let currentAnswer = "";
     let seenAnswers = []; // Track past answers to avoid repeats
+    let wrongAttempts = 0; // Track wrong guesses per riddle
     let isProcessing = false;
 
     // Elements
@@ -549,6 +550,7 @@
 
         currentRiddle = rText;
         currentAnswer = aText;
+        wrongAttempts = 0; // Reset wrong attempts for new riddle
 
         els.riddle.innerHTML = currentRiddle;
         els.riddle.classList.remove('placeholder');
@@ -622,11 +624,29 @@
         els.status.style.color = "var(--red)";
         takeDamage('player');
 
+        wrongAttempts++;
+
         if (playerHealth > 0) {
-          els.input.value = "";
-          els.input.focus();
-          els.input.classList.add('shake');
-          setTimeout(() => els.input.classList.remove('shake'), 500);
+
+          // 3 Wrong Guesses -> Reveal Answer
+          if (wrongAttempts >= 3) {
+            els.status.textContent = `Too hard! Answer was: ${currentAnswer}`;
+            els.input.disabled = true;
+            els.submit.disabled = true;
+
+            // Move to next riddle automatically
+            setTimeout(() => {
+              els.status.textContent = "Next riddle coming...";
+              setTimeout(fetchRiddle, 2000);
+            }, 2500); // Give user time to read answer
+
+          } else {
+            // Just let them retry
+            els.input.value = "";
+            els.input.focus();
+            els.input.classList.add('shake');
+            setTimeout(() => els.input.classList.remove('shake'), 500);
+          }
         }
       }
     }

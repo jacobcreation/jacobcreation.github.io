@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#000000">
+  <title>Try Not To Laugh Challenge - JacobCreation</title>
+
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* Design Tokens */
+    :root {
+      --bg1: #2a0b20;
+      --bg2: #160a33;
+      --card: rgba(255, 255, 255, 0.08);
+      --card2: rgba(255, 255, 255, 0.12);
+      --border: rgba(255, 255, 255, 0.14);
+      --text: #eaf2ff;
+      --muted: rgba(234, 242, 255, 0.75);
+      --purple: #ce4eff;
+      --red: #ff4c4c;
+      --green: #4ade80;
+      --shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      background:
+        radial-gradient(1200px 600px at 80% 90%, rgba(206, 78, 255, 0.15), transparent 55%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 80px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      padding: 0 20px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+    }
+
+    /* Health Bars */
+    .arena {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 0px;
+      gap: 20px;
+    }
+
+    .fighter {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 15px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .avatar {
+      font-size: 3rem;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+    }
+
+    .health-track {
+      width: 100%;
+      height: 12px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .health-fill {
+      height: 100%;
+      background: var(--green);
+      width: 100%;
+      transition: width 0.5s ease, background 0.3s;
+    }
+
+    .health-fill.low {
+      background: var(--red);
+    }
+
+    .name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    /* Joke Card */
+    .card {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 30px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      text-align: center;
+      min-height: 250px;
+      position: relative;
+    }
+
+    .setup {
+      font-size: 1.4rem;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    .punchline {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #ffd700;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: 0.3s;
+    }
+
+    .punchline.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Mic Meter */
+    .mic-status {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 8px 16px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+    }
+
+    .mic-dot {
+      width: 12px;
+      height: 12px;
+      background: #555;
+      border-radius: 50%;
+    }
+
+    .mic-dot.active {
+      background: #ff4e50;
+      box-shadow: 0 0 10px #ff4e50;
+      animation: pulse-red 1s infinite;
+    }
+
+    .volume-meter {
+      width: 100px;
+      height: 6px;
+      background: #333;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .volume-fill {
+      height: 100%;
+      width: 0%;
+      background: lime;
+      transition: width 0.05s;
+    }
+
+    @keyframes pulse-red {
+      0% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+
+      100% {
+        opacity: 1;
+      }
+    }
+
+    .btn {
+      border: none;
+      padding: 14px 32px;
+      border-radius: 999px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 1.1rem;
+      background: linear-gradient(135deg, var(--purple), #ff4e50);
+      color: white;
+      box-shadow: 0 4px 15px rgba(206, 78, 255, 0.4);
+      transition: 0.2s;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: #555;
+      box-shadow: none;
+    }
+
+    .shake {
+      animation: shake 0.5s;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-5px);
+      }
+
+      75% {
+        transform: translateX(5px);
+      }
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 99;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.5s;
+    }
+
+    .overlay.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .overlay h1 {
+      font-family: 'Orbitron';
+      font-size: 3rem;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <script src="../../global-header.js"></script>
+
+  <div class="container">
+
+    <div style="font-family:'Orbitron'; font-size:1.5rem; color:var(--purple);">DON'T LAUGH 🤫</div>
+
+    <!-- Battle Arena -->
+    <div class="arena">
+      <div class="fighter">
+        <div class="name">YOU</div>
+        <div class="avatar" id="p-avatar">😐</div>
+        <div class="health-track">
+          <div class="health-fill" id="p-health"></div>
+        </div>
+      </div>
+      <div style="display:grid; place-items:center; opacity:0.5; font-weight:900;">VS</div>
+      <div class="fighter">
+        <div class="name">COMEDY BOT</div>
+        <div class="avatar" id="e-avatar">🤡</div>
+        <div class="health-track">
+          <div class="health-fill" id="e-health"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status & Mic -->
+    <div class="mic-status" id="mic-ui">
+      <div class="mic-dot" id="mic-dot"></div>
+      <div style="font-size:0.8rem">MICROPHONE</div>
+      <div class="volume-meter">
+        <div class="volume-fill" id="vol-fill"></div>
+      </div>
+    </div>
+
+    <!-- Joke Display -->
+    <div class="card">
+      <div id="status-text" style="color:var(--muted); font-style:italic;">Press Start to Enable Mic</div>
+      <div class="setup" id="setup">...</div>
+      <div class="punchline" id="punchline">...</div>
+    </div>
+
+    <button class="btn" id="start-btn">🎙️ Enable Mic & Start</button>
+    <button class="btn" id="next-btn" style="display:none;">Next Joke ➡️</button>
+
+  </div>
+
+  <!-- Game Over Screen -->
+  <div class="overlay" id="overlay">
+    <h1 id="end-title">YOU LAUGHED!</h1>
+    <p id="end-msg">Game Over.</p>
+    <button class="btn" onclick="location.reload()">Try Again</button>
+  </div>
+
+  <script>
+    const WORKER_URL = "https://jokeai.b4rjxr9lk.workers.dev/";
+
+    // Game State
+    let playerHealth = 100;
+    let enemyHealth = 100; // 5 Jokes to win?
+    let isListening = false;
+    let audioContext, analyser, microphone, dataArray;
+    let laughThreshold = 30; // Sensitivity 0-255 (Lower = more sensitive)
+    let laughDetected = false;
+    let currentJoke = { setup: "", punchline: "" };
+
+    const els = {
+      pHealth: document.getElementById('p-health'),
+      eHealth: document.getElementById('e-health'),
+      pAvatar: document.getElementById('p-avatar'),
+      eAvatar: document.getElementById('e-avatar'),
+      setup: document.getElementById('setup'),
+      punchline: document.getElementById('punchline'),
+      status: document.getElementById('status-text'),
+      micDot: document.getElementById('mic-dot'),
+      volFill: document.getElementById('vol-fill'),
+      startBtn: document.getElementById('start-btn'),
+      nextBtn: document.getElementById('next-btn'),
+      overlay: document.getElementById('overlay'),
+      endTitle: document.getElementById('end-title'),
+      endMsg: document.getElementById('end-msg')
+    };
+
+    // --- AUDIO LOGIC ---
+    async function initAudio() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        microphone = audioContext.createMediaStreamSource(stream);
+        microphone.connect(analyser);
+
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        dataArray = new Uint8Array(bufferLength);
+
+        els.startBtn.style.display = 'none';
+        els.nextBtn.style.display = 'inline-block';
+        els.status.textContent = "Mic Active. Don't make a sound...";
+
+        checkVolume();
+        fetchJoke(); // Start game
+
+      } catch (err) {
+        console.error(err);
+        alert("Please allow microphone access to play!");
+      }
+    }
+
+    function checkVolume() {
+      if (!isListening) {
+        requestAnimationFrame(checkVolume);
+        return;
+      }
+
+      analyser.getByteFrequencyData(dataArray);
+
+      // Calculate average volume
+      let sum = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        sum += dataArray[i];
+      }
+      let average = sum / dataArray.length;
+
+      // Visual Meter
+      els.volFill.style.width = Math.min(100, average * 2) + '%';
+      els.volFill.style.background = average > laughThreshold ? '#ff4e50' : 'lime';
+
+      // Detect Laugh (Volume Spike)
+      if (average > laughThreshold && !laughDetected) {
+        playerLaughed();
+      }
+
+      requestAnimationFrame(checkVolume);
+    }
+
+    // --- GAME LOGIC ---
+
+    function playerLaughed() {
+      laughDetected = true;
+      isListening = false; // Stop punishing for same laugh
+      els.micDot.classList.remove('active');
+
+      els.status.textContent = "YOU LAUGHED! 🤣";
+      els.status.style.color = "var(--red)";
+
+      els.pAvatar.textContent = "🤣";
+      takeDamage('player');
+
+      // Force next round interaction
+      els.nextBtn.textContent = "Next Round (Try harder!)";
+      els.nextBtn.disabled = false;
+    }
+
+    function botFailed() {
+      // Called if user survives the joke without laughing
+      laughDetected = true; // Stop listening
+      isListening = false;
+      els.micDot.classList.remove('active');
+
+      els.status.textContent = "TOUGH CROWD! Bot takes damage. 🗿";
+      els.status.style.color = "var(--green)";
+
+      els.eAvatar.textContent = "😰";
+      takeDamage('enemy');
+
+      els.nextBtn.textContent = "Next Joke";
+      els.nextBtn.disabled = false;
+    }
+
+    function takeDamage(target) {
+      if (target === 'player') {
+        playerHealth = Math.max(0, playerHealth - 20); // 5 laughs = lose
+        els.pAvatar.classList.add('shake');
+        setTimeout(() => els.pAvatar.classList.remove('shake'), 500);
+      } else {
+        enemyHealth = Math.max(0, enemyHealth - 20); // 5 survivals = win
+        els.eAvatar.classList.add('shake');
+        setTimeout(() => els.eAvatar.classList.remove('shake'), 500);
+      }
+      updateHealthUI();
+
+      if (playerHealth <= 0) endGame(false);
+      else if (enemyHealth <= 0) endGame(true);
+    }
+
+    function updateHealthUI() {
+      els.pHealth.style.width = playerHealth + '%';
+      els.eHealth.style.width = enemyHealth + '%';
+      els.pHealth.className = `health-fill ${playerHealth < 40 ? 'low' : ''}`;
+    }
+
+    function endGame(win) {
+      els.overlay.classList.add('visible');
+      if (win) {
+        els.endTitle.textContent = "MASTER OF STONE FACE 🗿";
+        els.endMsg.textContent = "You defeated the Comedy Bot!";
+        els.endTitle.style.color = "var(--green)";
+      } else {
+        els.endTitle.textContent = "YOU CRACKED UP! 😂";
+        els.endMsg.textContent = "The bot made you laugh too many times.";
+        els.endTitle.style.color = "var(--red)";
+      }
+    }
+
+    async function fetchJoke() {
+      // Reset Round State
+      laughDetected = false;
+      isListening = false; // Don't listen while loading
+      els.micDot.classList.remove('active');
+      els.nextBtn.disabled = true;
+      els.nextBtn.textContent = "Loading...";
+
+      els.pAvatar.textContent = "😐";
+      els.eAvatar.textContent = "🤡";
+
+      els.setup.textContent = "Bot is preparing a joke...";
+      els.punchline.textContent = "";
+      els.punchline.classList.remove('visible');
+      els.status.textContent = "Stay quiet...";
+
+      try {
+        const res = await fetch(WORKER_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "get_joke" })
+        });
+        const data = await res.json();
+        const raw = data.raw || "";
+
+        // Parse
+        let setup = "Unknown";
+        let punchline = "Unknown";
+        const split = raw.toUpperCase().lastIndexOf("PUNCHLINE:");
+        if (split !== -1) {
+          setup = raw.substring(0, split).replace(/SETUP:/i, '').trim();
+          punchline = raw.substring(split).replace(/PUNCHLINE:/i, '').trim();
+        } else {
+          setup = raw;
+        }
+
+        els.setup.textContent = setup;
+
+        // Wait 3 seconds, then deliver punchline
+        setTimeout(() => {
+          els.punchline.textContent = punchline;
+          els.punchline.classList.add('visible');
+
+          // START LISTENING FOR LAUGHS NOW!
+          isListening = true;
+          els.micDot.classList.add('active');
+          els.status.textContent = "DON'T LAUGH! 🎙️ Listening...";
+          els.eAvatar.textContent = "🤪"; // Bot making face
+
+          // If user survives 5 seconds, they win the round
+          setTimeout(() => {
+            if (!laughDetected && isListening) {
+              botFailed();
+            }
+          }, 5000); // 5 seconds to hold laughter
+
+        }, 3000); // 3 seconds to read setup
+
+      } catch (e) {
+        console.error(e);
+        els.setup.textContent = "Error loading joke.";
+        els.nextBtn.disabled = false;
+        els.nextBtn.textContent = "Retry";
+      }
+    }
+
+    els.startBtn.addEventListener('click', initAudio);
+    els.nextBtn.addEventListener('click', fetchJoke);
+
+  </script>
+</body>
+
+</html>
