@@ -15,91 +15,136 @@
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="icon" href="/favicon.png" type="image/png" />
 
-  <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
 
   <style>
+    :root {
+      --bg1: #0b1020;
+      --bg2: #0a1633;
+      --card: rgba(255, 255, 255, 0.08);
+      --card2: rgba(255, 255, 255, 0.12);
+      --border: rgba(255, 255, 255, 0.14);
+      --text: #eaf2ff;
+      --muted: rgba(234, 242, 255, 0.75);
+      --blue: #4ea1ff;
+      --blue2: #2d6bff;
+      --shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+      --shadow2: 0 10px 22px rgba(0, 0, 0, 0.28);
+      --radius: 18px;
+    }
+
     * {
       box-sizing: border-box;
     }
 
-    :root {
-      --blue: #1e90ff;
-      --blue-dark: #104e8b;
-      --bg-gradient: linear-gradient(135deg, #f0f8ff, #e6f2ff);
-      --text: #333;
-      --muted: #6b7280;
-      --card-bg: #ffffff;
-      --accent: #1e90ff;
-      --accent-dark: #104e8b;
-      --soft: #eaf6ff;
-      --radius: 20px;
-      --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
     body {
-      font-family: "Poppins", Arial, sans-serif;
-      background: var(--bg-gradient);
-      color: var(--text);
       margin: 0;
-      padding: 0;
+      font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
       min-height: 100vh;
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(78, 161, 255, 0.30), transparent 55%),
+        radial-gradient(900px 600px at 90% 15%, rgba(45, 107, 255, 0.22), transparent 55%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
       display: flex;
       flex-direction: column;
-      align-items: center;
     }
 
+    /* Header */
     header {
-      width: 100%;
-      background: linear-gradient(90deg, var(--blue), var(--blue-dark));
-      color: white;
-      padding: 15px 0;
-      box-shadow: var(--shadow);
       position: sticky;
       top: 0;
       z-index: 1000;
-      display: block;
+      backdrop-filter: blur(10px);
+      background: rgba(10, 16, 32, 0.65);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.10);
     }
 
     .header-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 14px 18px;
       display: flex;
-      justify-content: center;
       align-items: center;
-      gap: 20px;
-      padding: 0 14px;
-      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     .logo {
-      font-size: 2em;
-      font-weight: 700;
-    }
-
-    header nav a {
-      background: var(--blue);
-      color: white;
+      display: flex;
+      align-items: center;
       text-decoration: none;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 0.9em;
+      color: inherit;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      font-size: 1.15rem;
+      white-space: nowrap;
+    }
+
+    .logo-badge {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #1e90ff, #ff2d2d);
+      box-shadow: 0 10px 24px rgba(30, 144, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.20);
+      font-weight: 900;
+      color: white;
+    }
+
+    .logo-text {
+      font-family: "Orbitron", sans-serif;
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, #1e90ff, #ff2d2d);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow:
+        0 0 14px rgba(30, 144, 255, 0.35),
+        0 0 14px rgba(255, 45, 45, 0.25);
+    }
+
+    nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: var(--text);
       font-weight: 600;
-      transition: background 0.3s ease, transform 0.2s ease;
-      display: inline-block;
+      font-size: 0.92rem;
+      padding: 9px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.06);
+      transition: transform 0.18s ease, background 0.18s ease, border 0.18s ease;
     }
 
-    header nav a:hover {
-      background: var(--blue-dark);
+    nav a:hover {
       transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.10);
+      border-color: rgba(255, 255, 255, 0.22);
     }
 
+    /* Main */
     main {
-      padding: 40px 20px;
+      padding: 28px 18px 60px;
       width: 100%;
       max-width: 1100px;
+      margin: 0 auto;
       flex: 1;
       display: flex;
       justify-content: center;
-      box-sizing: border-box;
     }
 
     .container {
@@ -110,43 +155,48 @@
       width: 100%;
     }
 
-    /* Chat panel */
-    .chat-panel {
-      width: 360px;
-      height: 500px;
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(12px);
+    /* Panels */
+    .chat-panel,
+    .game-panel {
       border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.05));
+      backdrop-filter: blur(12px);
       box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.5);
+      height: 600px;
     }
 
+    .chat-panel {
+      width: 380px;
+    }
+
+    .game-panel {
+      width: 660px;
+    }
+
+    /* Chat Elements */
     .chat-header {
-      background: linear-gradient(135deg, #fff, var(--soft));
-      padding: 12px 14px;
-      font-weight: 700;
-      border-bottom: 1px solid #f0f0f0;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.03);
       display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      color: var(--blue-dark);
+      gap: 12px;
       flex-shrink: 0;
     }
 
     .chat-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: var(--soft);
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: var(--card2);
       display: grid;
       place-items: center;
-      font-size: 20px;
-      border: 1px solid #dbeafe;
+      font-size: 22px;
+      border: 1px solid var(--border);
       flex-shrink: 0;
-      margin-top: 2px;
     }
 
     .chat-header-right {
@@ -154,239 +204,159 @@
       min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
     }
 
     .chat-title-row {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 10px;
-    }
-
-    .chat-title {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
+      gap: 8px;
     }
 
     .chat-title strong {
-      font-size: 14px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size: 1rem;
+      color: var(--text);
+      display: block;
     }
 
     .chat-subtitle {
-      font-size: 12px;
+      font-size: 0.8rem;
       color: var(--muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
-    /* Buttons area expanded */
     .mem-actions {
       display: flex;
       gap: 6px;
-      flex-shrink: 0;
-      flex-wrap: wrap;
-      justify-content: flex-end;
     }
 
     .mem-mini-btn {
-      border: 1px solid #dbeafe;
-      background: #ffffff;
-      color: var(--blue-dark);
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-size: 12px;
-      font-weight: 700;
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      border-radius: 8px;
+      font-size: 14px;
       cursor: pointer;
-      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
-      font-family: inherit;
-      white-space: nowrap;
+      transition: all 0.2s ease;
     }
 
     .mem-mini-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 14px rgba(30, 144, 255, 0.18);
-      background: #f8fbff;
-    }
-
-    .mem-mini-btn:active {
-      transform: translateY(0px) scale(0.98);
-    }
-
-    .tiny-note {
-      margin-top: 6px;
-      font-size: 11px;
-      color: var(--muted);
-      line-height: 1.25;
+      background: var(--card2);
+      transform: translateY(-2px);
     }
 
     .chat-body {
       flex: 1;
-      overflow: auto;
-      padding: 12px;
+      overflow-y: auto;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      background: transparent;
+      gap: 12px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
     }
 
     .bubble {
       max-width: 85%;
-      border-radius: 24px;
+      border-radius: 18px;
       padding: 12px 16px;
-      line-height: 1.4;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-      animation: bubbleIn .4s cubic-bezier(.25, .8, .25, 1.2);
-      white-space: pre-wrap;
-      word-break: break-word;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      position: relative;
+      animation: bubbleIn 0.3s ease-out;
     }
 
     .bubble.bot {
-      background: var(--soft);
       align-self: flex-start;
-      color: #333;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
     }
 
     .bubble.user {
-      background: var(--blue);
-      color: white;
       align-self: flex-end;
-    }
-
-    .chat-img {
-      max-width: 220px;
-      border-radius: 12px;
-      border: 1px solid #e5e7eb;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-      display: block;
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+      color: #071122;
+      font-weight: 600;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 4px 12px rgba(45, 107, 255, 0.2);
     }
 
     .chat-input {
-      border-top: 1px solid #f0f0f0;
-      padding: 10px;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-      background: transparent;
-      flex-shrink: 0;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.02);
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
     }
 
     .chat-input input {
-      border: 1px solid #e5e7eb;
-      border-radius: 999px;
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
       padding: 10px 14px;
-      outline: none;
-      transition: box-shadow .15s ease, border-color .15s ease;
+      color: var(--text);
       font-family: inherit;
-      min-width: 0;
+      outline: none;
+      transition: border-color 0.2s;
     }
 
     .chat-input input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+      border-color: var(--blue);
     }
 
-    .send-btn {
+    .btn-send {
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+      color: #071122;
       border: none;
-      border-radius: 999px;
-      padding: 10px 16px;
-      background: var(--accent);
-      color: #fff;
+      border-radius: 12px;
+      padding: 0 18px;
       font-weight: 700;
       cursor: pointer;
-      transition: transform .15s ease, background .3s ease, box-shadow .3s ease;
-      font-family: inherit;
+      transition: transform 0.2s;
     }
 
-    .send-btn:hover {
-      transform: scale(1.05);
-      background: var(--accent-dark);
-      box-shadow: 0 0 12px rgba(30, 144, 255, 0.4);
+    .btn-send:hover {
+      transform: scale(1.03);
     }
 
-    .send-btn:active {
-      transform: scale(0.95);
-    }
-
-    .primary {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 999px;
-      padding: 8px 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform .15s ease, background .3s ease, box-shadow .3s ease;
-      font-family: inherit;
-    }
-
-    .primary:hover {
-      background: var(--accent-dark);
-      transform: scale(1.05);
-      box-shadow: 0 0 12px rgba(30, 144, 255, 0.4);
-    }
-
-    .primary:active {
-      transform: scale(0.95);
-    }
-
-    /* Game panel */
-    .game-panel {
-      width: 640px;
-      height: 500px;
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(12px);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.5);
-    }
-
+    /* Game Elements */
     .game-tabs {
       display: flex;
-      border-bottom: 1px solid #eee;
+      background: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid var(--border);
       overflow-x: auto;
     }
 
     .game-tabs button {
       flex: 1;
-      min-width: 80px;
-      padding: 12px;
+      min-width: 90px;
+      padding: 14px;
       border: none;
-      background: #f9fafb;
-      cursor: pointer;
-      font-weight: 600;
+      background: transparent;
       color: var(--muted);
-      transition: background .3s ease, color .3s ease;
-      position: relative;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-bottom: 3px solid transparent;
       font-family: inherit;
     }
 
-    .game-tabs button.active {
-      background: #fff;
-      color: var(--accent);
-    }
-
-    .game-tabs button.active::after {
-      content: "";
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 3px;
-      background: var(--accent);
-      animation: slideIn .3s ease;
-    }
-
     .game-tabs button:hover {
-      background: var(--soft);
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .game-tabs button.active {
+      color: var(--blue);
+      border-bottom-color: var(--blue);
+      background: rgba(78, 161, 255, 0.05);
     }
 
     .game-area {
@@ -394,132 +364,34 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 10px;
+      padding: 16px;
       position: relative;
-      overflow: auto;
     }
 
-    .game-area>* {
-      animation: fadeIn .4s ease;
-    }
-
-    .panel-title {
-      position: absolute;
-      top: 8px;
-      left: 12px;
-      font-size: 14px;
-      color: var(--muted);
-      font-weight: 600;
-    }
-
-    canvas {
-      background: #fdfdfd;
-      border-radius: 12px;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
-      border: 1px solid #eee;
-    }
-
-    .control-row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-
-    .pill {
-      border: 1px solid #e5e7eb;
-      border-radius: 999px;
-      padding: 6px 15px;
-      background: #fff;
-      font-size: 0.9em;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    }
-
-    footer {
-      width: 100%;
-      background: var(--blue-dark);
-      color: white;
-      text-align: center;
-      padding: 15px 0;
-      font-size: 0.9em;
-      margin-top: auto;
-    }
-
-    @keyframes bubbleIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-
-      to {
-        opacity: 1;
-      }
-    }
-
-    @keyframes slideIn {
-      from {
-        width: 0;
-      }
-
-      to {
-        width: 100%;
-      }
-    }
-
-    @media (max-width: 900px) {
-
-      .chat-panel,
-      .game-panel {
-        width: 100%;
-        height: auto;
-        min-height: 400px;
-      }
-    }
-
-    /* Modal Styles */
+    /* Modal Styling */
     #upgradeModal {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.4);
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
       z-index: 2000;
       display: none;
-      /* JS toggles this */
       align-items: center;
       justify-content: center;
-      animation: fadeIn .3s ease;
-    }
-
-    /* Ensure modal uses flex when displayed */
-    #upgradeModal[style*="block"] {
-      display: flex !important;
+      padding: 20px;
     }
 
     .modal-content {
-      background: #fff;
-      padding: 24px;
+      background: var(--bg1);
+      border: 1px solid var(--border);
       border-radius: var(--radius);
-      width: 90%;
-      max-width: 420px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 440px;
+      padding: 24px;
+      box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
-      gap: 15px;
-      animation: bubbleIn .3s ease;
+      gap: 16px;
       position: relative;
     }
 
@@ -531,21 +403,34 @@
 
     .modal-header h3 {
       margin: 0;
-      font-size: 1.25em;
-      color: var(--blue-dark);
+      font-size: 1.25rem;
+      font-family: "Orbitron", sans-serif;
+      background: linear-gradient(90deg, var(--blue), #ff2d2d);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
 
     .close-icon {
-      background: none;
-      border: none;
-      font-size: 1.5em;
-      color: var(--muted);
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
       cursor: pointer;
-      padding: 0;
     }
 
-    .close-icon:hover {
+    textarea.upgrade-input {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
       color: var(--text);
+      font-family: inherit;
+      resize: none;
+      min-height: 100px;
     }
 
     .modal-actions {
@@ -554,19 +439,64 @@
       gap: 10px;
     }
 
-    textarea.upgrade-input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      resize: vertical;
-      font-family: inherit;
-      min-height: 80px;
+    .pill {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
     }
 
-    textarea.upgrade-input:focus {
-      outline: none;
-      border-color: var(--accent);
+    .pill:hover {
+      background: var(--card2);
+    }
+
+    .primary {
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+      color: #071122;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 999px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.10);
+      background: rgba(10, 16, 32, 0.55);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @keyframes bubbleIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @media (max-width: 1080px) {
+
+      .chat-panel,
+      .game-panel {
+        width: 100%;
+        height: 500px;
+      }
+
+      main {
+        padding-top: 20px;
+      }
     }
   </style>
 </head>
@@ -575,11 +505,14 @@
 
   <header>
     <div class="header-container">
-      <div class="logo">🌟 JacobCreation</div>
+      <a href="/" class="logo">
+        <span class="logo-badge">J</span>
+        <span class="logo-text">JacobCreation</span>
+      </a>
+
       <nav>
-        <a href="https://jacobcreation.github.io/">Home</a>
-        <a href="https://jacobcreation.github.io/about">About</a>
-        <a href="https://jacobcreation.github.io/downloads">🎮 Play Offline</a>
+        <a href="/about">About</a>
+        <a href="/downloads">🎮 Play Offline</a>
       </nav>
     </div>
   </header>
@@ -625,7 +558,7 @@
         <!-- Fixed: Changed div to form and added ID expected by JS -->
         <form class="chat-input" id="chatForm">
           <input id="chatText" type="text" placeholder="Type your message..." autocomplete="off" />
-          <button class="send-btn" type="submit" id="sendBtn">Send</button>
+          <button class="btn-send" type="submit" id="sendBtn">Send</button>
         </form>
 
       </section>
@@ -654,7 +587,7 @@
   </main>
 
   <footer>
-    © 2026 JacobCreation. All rights reserved.
+    © 2026 JacobCreation • Built by Jacob 💙
   </footer>
 
   <!-- Needs Upgrades Modal -->
@@ -680,18 +613,27 @@
 
 
   <script>
-    const ENDPOINT = "https://chatbot.workers.dev/";
+    // ---------------------------------------------------------
+    //  CONFIGURATION
+    // ---------------------------------------------------------
+    const ENDPOINT = "https://chatbot-ai.b4rjxr9lk.workers.dev/"; // Correct with subdomain
     const SITE_NAME = "jacobcreation";
 
+    // ---------------------------------------------------------
+    //  DOM ELEMENTS
+    // ---------------------------------------------------------
     const chatBody = document.getElementById("chatBody");
-    const chatForm = document.getElementById("chatForm");
-    const chatText = document.getElementById("chatText");
+    const chatForm = document.getElementById("chatForm"); // The form element
+    const chatText = document.getElementById("chatText"); // The input
+    // const sendId = document.getElementById("sendBtn");
 
-    const downloadMemBtn = document.getElementById("downloadMemBtn");
-    const uploadMemBtn = document.getElementById("uploadMemBtn");
-    const memFileInput = document.getElementById("memFileInput");
+    const dlBtn = document.getElementById("downloadMemBtn");
+    const ulBtn = document.getElementById("uploadMemBtn");
+    const memFile = document.getElementById("memFileInput");
 
-    // -------- Session (per device) --------
+    // ---------------------------------------------------------
+    //  SESSION MANAGEMENT
+    // ---------------------------------------------------------
     function getSessionId() {
       let id = localStorage.getItem("jc_session");
       if (!id) {
@@ -701,103 +643,403 @@
       return id;
     }
 
-    // -------- UI --------
+    // ---------------------------------------------------------
+    //  UI HELPERS
+    // ---------------------------------------------------------
     function addBubble(text, who = "bot") {
       const div = document.createElement("div");
       div.className = `bubble ${who}`;
-      div.textContent = text;
+      div.innerText = text; // Safer than textContent for basic text
       chatBody.appendChild(div);
       chatBody.scrollTop = chatBody.scrollHeight;
     }
 
-    // -------- Chat --------
+    // ---------------------------------------------------------
+    //  CHAT LOGIC
+    // ---------------------------------------------------------
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const msg = chatText.value.trim();
       if (!msg) return;
 
+      // 1. Show User Message
       addBubble(msg, "user");
       chatText.value = "";
 
-      const typing = document.createElement("div");
-      typing.className = "bubble bot";
-      typing.textContent = "Chatbot is typing… ⏳";
-      chatBody.appendChild(typing);
+      // 2. Show Typing Indicator
+      const typingDiv = document.createElement("div");
+      typingDiv.className = "bubble bot";
+      typingDiv.textContent = "Thinking... 💭";
+      chatBody.appendChild(typingDiv);
+      chatBody.scrollTop = chatBody.scrollHeight;
 
-      const res = await fetch(ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "chat",
-          site: SITE_NAME,
-          sessionId: getSessionId(),
-          message: msg
-        })
-      });
+      try {
+        // 3. Send to Worker
+        const res = await fetch(ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "chat",
+            site: SITE_NAME,
+            sessionId: getSessionId(),
+            message: msg
+          })
+        });
 
-      const data = await res.json();
-      typing.remove();
-      addBubble(data.reply || "No reply 😅");
+        if (!res.ok) throw new Error("Network response was not ok");
+
+        const data = await res.json();
+
+        // 4. Remove Typing & Show Reply
+        typingDiv.remove();
+        addBubble(data.reply || "I'm not sure what to say.");
+
+      } catch (err) {
+        console.error(err);
+        typingDiv.remove();
+        addBubble("Error connecting to brain. 🧠�", "bot");
+        addBubble("Error connecting to brain. 🧠", "bot");
+      }
     });
 
-    // -------- Download Memory --------
-    downloadMemBtn.addEventListener("click", async () => {
-      const res = await fetch(ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "download-memory",
-          site: SITE_NAME,
-          sessionId: getSessionId()
-        })
-      });
+    // ---------------------------------------------------------
+    //  MEMORY MANAGEMENT (Download/Upload)
+    // -----------------------------------------    // -------- Download Memory --------
+    dlBtn.addEventListener("click", async () => {
+      try {
+        const res = await fetch(ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "download", // Matching worker
+            sessionId: getSessionId()
+          })
+        });
 
-      const data = await res.json();
+        const data = await res.json();
+        // Worker returns { history: [], facts: {} }
+        // Create downloadable JSON file
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
 
-      const blob = new Blob(
-        [JSON.stringify(data.memories, null, 2)],
-        { type: "application/json" }
-      );
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `memory-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
 
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "jacob-memory.json";
-      a.click();
+        addBubble("Memory downloaded! Keep it safe. 💾");
 
-      addBubble("Memory downloaded ✅");
+      } catch (err) {
+        console.error(err);
+        addBubble("Failed to download memory.");
+      }
     });
 
-    // -------- Upload Memory --------
-    uploadMemBtn.addEventListener("click", () => memFileInput.click());
+    // UPLOAD PREPARATIONS
+    ulBtn.addEventListener("click", () => {
+      memFile.click(); // Trigger hidden file input
+    });
 
-    memFileInput.addEventListener("change", (e) => {
+    // UPLOAD EXECUTION
+    memFile.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = async () => {
-        let json = JSON.parse(reader.result);
+      reader.onload = async (event) => {
+        try {
+          const jsonContent = JSON.parse(event.target.result);
 
-        // Accept both formats
-        if (Array.isArray(json)) {
-          json = { facts: json, personality: "Restored user" };
+          addBubble("Uploading memory... 📤");
+
+          const res = await fetch(ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "upload", // Matching worker
+              sessionId: getSessionId(),
+              history: jsonContent.history || [] // Worker expects 'history' array
+            })
+          });
+
+          if (res.ok) {
+            addBubble("Memory restored successfully! 🧠✨");
+          } else {
+            addBubble("Server rejected the memory.");
+          }
+
+        } catch (err) {
+          console.error(err);
+          addBubble("Invalid memory file. Corrupt JSON?");
+        }
+      };
+
+      reader.readAsText(file);
+      // Reset input so you can upload same file again if needed
+      memFile.value = "";
+    });
+
+    // ---------------------------------------------------------
+    //  GAME TAB SWITCHING
+    // ---------------------------------------------------------
+    // Simple Tab Switching Logic
+    const gameTabsContainer = document.getElementById("gameTabs");
+    const gameArea = document.getElementById("gameArea");
+
+    gameTabsContainer.addEventListener("click", (e) => {
+      if (e.target.tagName !== "BUTTON") return;
+
+      // 1. Update Active Tab
+      const buttons = gameTabsContainer.querySelectorAll("button");
+      buttons.forEach(b => b.classList.remove("active"));
+      e.target.classList.add("active");
+
+      // 2. Load Content based on Game Name
+      const gameName = e.target.getAttribute("data-game");
+      loadGameContent(gameName);
+    });
+
+    function loadGameContent(gameName) {
+      gameArea.innerHTML = ""; // Clear current game
+
+      switch (gameName) {
+        case "clicker":
+          gameArea.innerHTML = `
+            <iframe src="https://scratch.mit.edu/projects/891171793/embed" 
+              style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
+          break;
+
+        case "chess":
+          gameArea.innerHTML = `
+            <iframe src="/chess/index.html" 
+              style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
+          break;
+
+        case "tetris":
+          gameArea.innerHTML = `
+            <iframe src="/Tetris/index.html" 
+              style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
+          break;
+
+        case "snake":
+          // Assuming you have a snake game at /snake/index.html
+          gameArea.innerHTML = `
+            <iframe src="/snake/index.html" 
+              style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
+          break;
+
+        case "pong":
+          initPongGame();
+          break;
+
+        case "memory":
+          initMemoryGame();
+          break;
+
+        default:
+          gameArea.innerHTML = "Select a game to play!";
+      }
+    }
+
+    // ---------------------------------------------------------
+    //  EMBEDDED PONG GAME
+    // ---------------------------------------------------------
+    function initPongGame() {
+      gameArea.innerHTML = `
+        <div style="position:relative; width:100%; height:100%; display:flex; flex-direction:column; align-items:center;">
+           <div id="pongScore" style="font-size:1.5rem; font-weight:800; margin-bottom:5px; color:var(--blue);">0 : 0</div>
+           <canvas id="pongCanvas" width="500" height="300" style="background:#000; border:3px solid var(--blue); max-width:100%; cursor:none;"></canvas>
+           <div style="margin-top:10px; font-size:0.8rem; color:var(--muted);">Mouse/Touch to move paddle</div>
+        </div>
+      `;
+
+      const canvas = document.getElementById("pongCanvas");
+      const ctx = canvas.getContext("2d");
+      const scoreDisplay = document.getElementById("pongScore");
+
+      let p1Score = 0;
+      let p2Score = 0;
+
+      const ball = { x: 250, y: 150, radius: 7, dx: 4, dy: 4, speed: 4 };
+      const p1 = { x: 10, y: 125, w: 10, h: 50 };
+      const p2 = { x: 480, y: 125, w: 10, h: 50 };
+
+      function resetBall() {
+        ball.x = canvas.width / 2;
+        ball.y = canvas.height / 2;
+        ball.speed = 4;
+        ball.dx = -ball.dx;
+      }
+
+      function drawRect(x, y, w, h, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, w, h);
+      }
+
+      function drawCircle(x, y, r, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2, false);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      canvas.addEventListener("mousemove", (e) => {
+        let rect = canvas.getBoundingClientRect();
+        p1.y = e.clientY - rect.top - p1.h / 2;
+      });
+
+      function update() {
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+
+        // Wall collision
+        if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+          ball.dy = -ball.dy;
         }
 
-        await fetch(ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "upload-memory",
-            site: SITE_NAME,
-            sessionId: getSessionId(),
-            memories: json
-          })
+        // Paddle collision
+        let player = (ball.x < canvas.width / 2) ? p1 : p2;
+        if (collision(ball, player)) {
+          let collidePoint = ball.y - (player.y + player.h / 2);
+          collidePoint = collidePoint / (player.h / 2);
+          let angleRad = (Math.PI / 4) * collidePoint;
+          let direction = (ball.x < canvas.width / 2) ? 1 : -1;
+          ball.dx = direction * ball.speed * Math.cos(angleRad);
+          ball.dy = ball.speed * Math.sin(angleRad);
+          ball.speed += 0.2;
+        }
+
+        // AI Paddle
+        p2.y += (ball.y - (p2.y + p2.h / 2)) * 0.1;
+
+        // Score
+        if (ball.x - ball.radius < 0) {
+          p2Score++;
+          resetBall();
+        } else if (ball.x + ball.radius > canvas.width) {
+          p1Score++;
+          resetBall();
+        }
+        scoreDisplay.innerText = `${p1Score} : ${p2Score}`;
+      }
+
+      function collision(b, p) {
+        p.top = p.y;
+        p.bottom = p.y + p.h;
+        p.left = p.x;
+        p.right = p.x + p.w;
+
+        b.top = b.y - b.radius;
+        b.bottom = b.y + b.radius;
+        b.left = b.x - b.radius;
+        b.right = b.x + b.radius;
+
+        return b.right > p.left && b.bottom > p.top && b.left < p.right && b.top < p.bottom;
+      }
+
+      function render() {
+        drawRect(0, 0, canvas.width, canvas.height, "#000"); // Clear
+        drawRect(p1.x, p1.y, p1.w, p1.h, "#fff");
+        drawRect(p2.x, p2.y, p2.w, p2.h, "#fff");
+        drawCircle(ball.x, ball.y, ball.radius, varToHex('--blue') || "#4ea1ff");
+      }
+
+      function varToHex(variable) {
+        return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+      }
+
+      function game() {
+        if (!document.getElementById("pongCanvas")) return; // Stop if tab changed
+        update();
+        render();
+        requestAnimationFrame(game);
+      }
+      game();
+    }
+
+    // ---------------------------------------------------------
+    //  EMBEDDED MEMORY GAME
+    // ---------------------------------------------------------
+    function initMemoryGame() {
+      gameArea.innerHTML = '';
+
+      const grid = document.createElement('div');
+      grid.id = "memBoard";
+      grid.style.cssText = "display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; width:100%; max-width:400px; margin:auto;";
+
+      const restartBtn = document.createElement('div');
+      restartBtn.style.textAlign = "center";
+      restartBtn.style.marginTop = "10px";
+      restartBtn.innerHTML = `<button class="pill" id="restartMemBtn">Restart</button>`;
+
+      gameArea.appendChild(grid);
+      gameArea.appendChild(restartBtn);
+
+      document.getElementById('restartMemBtn').addEventListener('click', initMemoryGame);
+
+      const icons = ["🍎", "🍎", "🍌", "🍌", "🍇", "🍇", "🍉", "🍉", "🍒", "🍒", "🥝", "🥝", "🍍", "🍍", "🥭", "🥭"];
+
+      // Shuffle
+      for (let i = icons.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [icons[i], icons[j]] = [icons[j], icons[i]];
+      }
+
+      let flippedCards = [];
+      let matchedCount = 0;
+
+      icons.forEach((icon, idx) => {
+        const card = document.createElement("div");
+        card.style.cssText = `
+          background: var(--card2); height: 80px; border-radius: 12px; 
+          display: flex; align-items: center; justify-content: center; 
+          font-size: 2rem; cursor: pointer; user-select: none; transition: transform 0.2s;
+          border: 1px solid var(--border);
+        `;
+        card.dataset.val = icon;
+        card.dataset.idx = idx;
+        card.innerText = "❓"; // Face down
+
+        card.addEventListener("click", () => {
+          // Logic: Check if card is flipped or matched
+          if (card.innerText !== "❓" || flippedCards.length >= 2) return;
+
+          card.innerText = icon;
+          card.style.background = "#fff";
+          card.style.transform = "scale(1.05)";
+          flippedCards.push(card);
+
+          if (flippedCards.length === 2) {
+            const [c1, c2] = flippedCards;
+            if (c1.dataset.val === c2.dataset.val) {
+              // Match
+              c1.style.background = "rgba(45, 107, 255, 0.2)";
+              c2.style.background = "rgba(45, 107, 255, 0.2)";
+              flippedCards = []; // Reset flipped array
+              matchedCount += 2;
+
+              if (matchedCount === icons.length) {
+                setTimeout(() => alert("You Won! 🎉"), 500);
+              }
+            } else {
+              // No Match
+              setTimeout(() => {
+                c1.innerText = "❓"; c1.style.background = "var(--card2)"; c1.style.transform = "scale(1)";
+                c2.innerText = "❓"; c2.style.background = "var(--card2)"; c2.style.transform = "scale(1)";
+                flippedCards = []; // Reset flipped array
+              }, 800);
+            }
+          }
         });
 
-        addBubble("Memory restored 🎉");
-      };
-      reader.readAsText(file);
-    });
+        grid.appendChild(card);
+      });
+    }
+
   </script>
 
 </body>
