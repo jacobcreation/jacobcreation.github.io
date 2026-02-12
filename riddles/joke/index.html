@@ -325,6 +325,7 @@
     <button class="btn" onclick="location.reload()">Try Again</button>
   </div>
 
+  <script src="lold.js"></script>
   <script>
     const WORKER_URL = "https://jokeai.b4rjxr9lk.workers.dev/";
 
@@ -332,10 +333,18 @@
     let playerHealth = 100;
     let enemyHealth = 100; // 5 Jokes to win?
     let isListening = false;
-    let audioContext, analyser, microphone, dataArray;
-    let laughThreshold = 30; // Sensitivity 0-255 (Lower = more sensitive)
+    let laughThreshold = 15; // Sensitivity 0-255 (Lower = more sensitive)
     let laughDetected = false;
     let currentJoke = { setup: "", punchline: "" };
+    let seenJokes = []; // 🧠 To prevent repeats
+
+    // Initialize LOLD
+    const detector = new LOLD({
+      threshold: 15,
+      onLaugh: (vol) => {
+        if (isListening) playerLaughed();
+      }
+    });
 
     const els = {
       pHealth: document.getElementById('p-health'),
@@ -356,62 +365,31 @@
 
     // --- AUDIO LOGIC ---
     async function initAudio() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        analyser = audioContext.createAnalyser();
-        microphone = audioContext.createMediaStreamSource(stream);
-        microphone.connect(analyser);
-
-        analyser.fftSize = 256;
-        const bufferLength = analyser.frequencyBinCount;
-        dataArray = new Uint8Array(bufferLength);
-
+      const success = await detector.start();
+      if (success) {
         els.startBtn.style.display = 'none';
         els.nextBtn.style.display = 'inline-block';
         els.status.textContent = "Mic Active. Don't make a sound...";
 
-        checkVolume();
-        fetchJoke(); // Start game
+        // Link volume meter to detector
+        detector.onVolumeChange = (average) => {
+          els.volFill.style.width = Math.min(100, average * 3) + '%';
+          els.volFill.style.background = average > detector.threshold ? '#ff4e50' : 'lime';
+        };
 
-      } catch (err) {
-        console.error(err);
+        fetchJoke();
+      } else {
         alert("Please allow microphone access to play!");
       }
-    }
-
-    function checkVolume() {
-      if (!isListening) {
-        requestAnimationFrame(checkVolume);
-        return;
-      }
-
-      analyser.getByteFrequencyData(dataArray);
-
-      // Calculate average volume
-      let sum = 0;
-      for (let i = 0; i < dataArray.length; i++) {
-        sum += dataArray[i];
-      }
-      let average = sum / dataArray.length;
-
-      // Visual Meter
-      els.volFill.style.width = Math.min(100, average * 2) + '%';
-      els.volFill.style.background = average > laughThreshold ? '#ff4e50' : 'lime';
-
-      // Detect Laugh (Volume Spike)
-      if (average > laughThreshold && !laughDetected) {
-        playerLaughed();
-      }
-
-      requestAnimationFrame(checkVolume);
     }
 
     // --- GAME LOGIC ---
 
     function playerLaughed() {
+      if (laughDetected) return;
       laughDetected = true;
-      isListening = false; // Stop punishing for same laugh
+      isListening = false;
+      detector.setListening(false);
       els.micDot.classList.remove('active');
 
       els.status.textContent = "YOU LAUGHED! 🤣";
@@ -429,6 +407,7 @@
       // Called if user survives the joke without laughing
       laughDetected = true; // Stop listening
       isListening = false;
+      detector.setListening(false);
       els.micDot.classList.remove('active');
 
       els.status.textContent = "TOUGH CROWD! Bot takes damage. 🗿";
@@ -479,7 +458,8 @@
     async function fetchJoke() {
       // Reset Round State
       laughDetected = false;
-      isListening = false; // Don't listen while loading
+      isListening = false;
+      detector.setListening(false);
       els.micDot.classList.remove('active');
       els.nextBtn.disabled = true;
       els.nextBtn.textContent = "Loading...";
@@ -492,12 +472,22 @@
       els.punchline.classList.remove('visible');
       els.status.textContent = "Stay quiet...";
 
+      // ⏱️ TIMEOUT LOGIC (6 Seconds)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+
       try {
         const res = await fetch(WORKER_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "get_joke" })
+          signal: controller.signal,
+          body: JSON.stringify({
+            action: "get_joke",
+            avoid: seenJokes.slice(-10) // Tell AI not to repeat last 10 jokes
+          })
         });
+
+        clearTimeout(timeoutId);
         const data = await res.json();
         const raw = data.raw || "";
 
@@ -512,33 +502,40 @@
           setup = raw;
         }
 
+        // Save to seen list
+        seenJokes.push(setup);
+
         els.setup.textContent = setup;
 
-        // Wait 3 seconds, then deliver punchline
+        // Wait 2.5 seconds (Faster) then deliver punchline
         setTimeout(() => {
           els.punchline.textContent = punchline;
           els.punchline.classList.add('visible');
 
-          // START LISTENING FOR LAUGHS NOW!
+          // START LISTENING
           isListening = true;
+          detector.setListening(true);
           els.micDot.classList.add('active');
           els.status.textContent = "DON'T LAUGH! 🎙️ Listening...";
-          els.eAvatar.textContent = "🤪"; // Bot making face
+          els.eAvatar.textContent = "🤪";
 
-          // If user survives 5 seconds, they win the round
           setTimeout(() => {
             if (!laughDetected && isListening) {
               botFailed();
             }
-          }, 5000); // 5 seconds to hold laughter
+          }, 5000);
 
-        }, 3000); // 3 seconds to read setup
+        }, 2500);
 
       } catch (e) {
         console.error(e);
-        els.setup.textContent = "Error loading joke.";
+        if (e.name === 'AbortError') {
+          els.setup.textContent = "The Bot thought too long! Click next to try again.";
+        } else {
+          els.setup.textContent = "Error loading joke.";
+        }
         els.nextBtn.disabled = false;
-        els.nextBtn.textContent = "Retry";
+        els.nextBtn.textContent = "Retry 🔄";
       }
     }
 
@@ -546,6 +543,7 @@
     els.nextBtn.addEventListener('click', fetchJoke);
 
   </script>
+
 </body>
 
 </html>
