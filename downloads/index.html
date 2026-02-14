@@ -53,7 +53,7 @@
 
     h1 {
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 20px;
       font-size: 2.5rem;
       background: linear-gradient(135deg, #fff 0%, #4ea1ff 100%);
       -webkit-background-clip: text;
@@ -122,6 +122,27 @@
       box-shadow: 0 0 15px rgba(78, 161, 255, 0.5);
     }
 
+    #installBtn {
+      display: none;
+      /* Hidden by default */
+    }
+
+    .ios-notice {
+      background: rgba(45, 107, 255, 0.15);
+      border: 1px solid var(--blue);
+      border-radius: var(--radius);
+      padding: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 0.95rem;
+      display: none;
+      /* Shown for iOS users */
+    }
+
+    .ios-notice strong {
+      color: var(--blue);
+    }
+
     .loading-text {
       text-align: center;
       font-size: 1.2rem;
@@ -134,11 +155,16 @@
   <main>
     <h1>📂 Offline Downloads</h1>
 
-    <!-- Install button -->
+    <!-- Install button & iOS Notice -->
     <div style="text-align:center; margin-bottom:20px;">
       <button id="installBtn" class="btn-download">
-        Install JacobCreation
+        📲 Install JacobCreation App
       </button>
+
+      <div id="iosNotice" class="ios-notice">
+        To install on iPhone: tap <strong>Share</strong> ( <span style="font-size: 1.2em;">⎋</span> ) then <strong>Add
+          to Home Screen</strong>.
+      </div>
     </div>
 
     <div id="fileGrid" class="grid">
@@ -147,10 +173,14 @@
   </main>
 
   <script>
-    fetch('./files.json')
-      .then(res => res.json())
+    fetch('/downloads/files.json')
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
       .then(files => {
         const grid = document.getElementById('fileGrid');
+        if (!grid) return;
         grid.innerHTML = '';
         files.forEach(file => {
           const card = document.createElement('div');
@@ -170,8 +200,11 @@
         });
       })
       .catch(err => {
-        document.getElementById('fileGrid').innerHTML =
-          "<p style='color:#ff6b6b; text-align:center;'>⚠️ Could not load files.json</p>";
+        const grid = document.getElementById('fileGrid');
+        if (grid) {
+          grid.innerHTML =
+            `<p style='color:#ff6b6b; text-align:center;'>⚠️ Could not load file list.<br><small>${err.message}</small></p>`;
+        }
         console.error(err);
       });
   </script>
@@ -185,11 +218,20 @@
 
     let deferredPrompt;
     const installBtn = document.getElementById("installBtn");
+    const iosNotice = document.getElementById("iosNotice");
+
+    // Check if it's iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+
+    if (isIOS && !isStandalone) {
+      if (iosNotice) iosNotice.style.display = "block";
+    }
 
     window.addEventListener("beforeinstallprompt", e => {
       e.preventDefault();
       deferredPrompt = e;
-      if (installBtn) installBtn.hidden = false;
+      if (installBtn) installBtn.style.display = "inline-flex";
     });
 
     if (installBtn) {
@@ -197,11 +239,20 @@
         if (!deferredPrompt) return;
 
         deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to the install prompt: ${outcome}`);
         deferredPrompt = null;
-        installBtn.hidden = true;
+        installBtn.style.display = "none";
       });
     }
+
+    // Hide notice if already installed
+    window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
+      if (e.matches) {
+        if (installBtn) installBtn.style.display = "none";
+        if (iosNotice) iosNotice.style.display = "none";
+      }
+    });
   </script>
 
 </body>

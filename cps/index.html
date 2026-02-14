@@ -2,23 +2,44 @@
 <html lang="en">
 
 <head>
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#000000">
+  <link rel="icon" href="/favicon.png" type="image/png" />
 
-  <meta charset="UTF-8">
-  <title>Chess Tournament System | JacobCreation</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
 
   <style>
+    :root {
+      --bg1: #0b1020;
+      --bg2: #0a1633;
+      --card: rgba(255, 255, 255, 0.08);
+      --card2: rgba(255, 255, 255, 0.12);
+      --border: rgba(255, 255, 255, 0.14);
+      --text: #eaf2ff;
+      --muted: rgba(234, 242, 255, 0.75);
+      --blue: #4ea1ff;
+      --blue2: #2d6bff;
+      --danger: #ff4e4e;
+      --shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+      --shadow2: 0 10px 22px rgba(0, 0, 0, 0.28);
+      --radius: 18px;
+    }
+
     * {
       box-sizing: border-box
     }
 
     body {
       margin: 0;
-      font-family: Segoe UI, system-ui, sans-serif;
-      background: #eef6ff;
-      color: #1f2937;
+      font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(78, 161, 255, 0.15), transparent 55%),
+        radial-gradient(900px 600px at 90% 15%, rgba(45, 107, 255, 0.12), transparent 55%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      display: flex;
+      flex-direction: column;
     }
 
     .hidden {
@@ -26,84 +47,186 @@
     }
 
     /* Header */
-    .site-header {
-      background: #1e73c9;
-      color: #fff;
-      padding: 14px 22px;
-      font-size: 20px;
-      font-weight: 600;
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      background: rgba(10, 16, 32, 0.65);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+      margin-bottom: 20px;
+    }
+
+    .header-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      font-size: 1.15rem;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+
+    .logo-badge {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #1e90ff, #ff2d2d);
+      box-shadow: 0 10px 24px rgba(30, 144, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.20);
+      font-weight: 900;
+      color: white;
+    }
+
+    .logo-text {
+      font-family: "Orbitron", sans-serif;
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, #1e90ff, #ff2d2d);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 14px rgba(30, 144, 255, 0.35);
     }
 
     /* Layout */
     .wrapper {
-      max-width: 1200px;
-      margin: 20px auto;
-      padding: 0 14px
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 18px;
+      width: 100%;
     }
 
     .card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 18px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, .08);
-      margin-bottom: 22px;
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+    }
+
+    h2,
+    h3 {
+      margin-top: 0;
+      color: var(--text);
     }
 
     /* Controls */
     .controls {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px
+      gap: 12px;
+      margin-top: 10px;
     }
 
     button,
     input,
     select {
-      padding: 10px 14px;
-      border-radius: 10px;
-      border: none;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
       font-size: 15px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    input::placeholder {
+      color: rgba(234, 242, 255, 0.4);
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--blue);
+      background: rgba(255, 255, 255, 0.1);
     }
 
     button {
       cursor: pointer;
-      background: #1e73c9;
-      color: #fff
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+      color: #071122;
+      border: none;
+      box-shadow: 0 4px 15px rgba(45, 107, 255, 0.2);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(45, 107, 255, 0.3);
     }
 
     button.secondary {
-      background: #e6f0ff;
-      color: #1e73c9
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+
+    button.secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.25);
     }
 
     button.danger {
-      background: #ef4444
+      background: linear-gradient(135deg, #ff4e4e, #d32f2f);
+      color: white;
+      box-shadow: 0 4px 15px rgba(255, 78, 78, 0.2);
     }
 
     /* Tables */
     .table-wrap {
-      overflow-x: auto
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 900px
+      min-width: 800px;
+      background: rgba(255, 255, 255, 0.02);
     }
 
     th,
     td {
-      padding: 10px;
+      padding: 14px;
       text-align: center;
       white-space: nowrap;
     }
 
     th {
-      background: #f2f6fb
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     tr:not(:last-child) td {
-      border-bottom: 1px solid #e5e7eb
+      border-bottom: 1px solid var(--border)
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.03);
     }
 
     /* Mobile */
@@ -116,20 +239,27 @@
       input,
       select {
         width: 100%;
-        font-size: 16px
       }
     }
 
     /* Print */
     @media print {
       body {
-        background: #fff
+        background: #fff;
+        color: #000;
       }
 
-      .site-header,
+      header,
       .controls,
       .card:not(.print-round) {
         display: none
+      }
+
+      .card {
+        background: #fff;
+        border: 1px solid #000;
+        box-shadow: none;
+        color: #000;
       }
 
       .result-col {
@@ -141,6 +271,7 @@
         border: 1px solid #000;
         font-size: 14px;
         padding: 8px;
+        color: #000;
       }
     }
   </style>
@@ -148,7 +279,14 @@
 
 <body>
 
-  <div class="site-header">⭐ JacobCreation</div>
+  <header>
+    <div class="header-container">
+      <a href="/" class="logo">
+        <span class="logo-badge">J</span>
+        <span class="logo-text">JacobCreation</span>
+      </a>
+    </div>
+  </header>
 
   <!-- MODE SELECT -->
   <div id="modeScreen" class="wrapper">
@@ -523,11 +661,11 @@
 
   <script src="../global-header.js"></script>
 
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/service-worker.js");
-}
-</script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.worker.register("/service-worker.js");
+    }
+  </script>
 
 </body>
 

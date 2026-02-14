@@ -26,5 +26,12 @@
     "size": "105 MB",
     "date": "2026-02-14",
     "url": "apps/JacobCreation Sandbox-Linux.AppImage"
+  },
+  {
+    "name": "Web Language Sandbox for Windows",
+    "description": "Free Web Sandbox, works offline!",
+    "size": "105 MB",
+    "date": "2026-02-14",
+    "url": "apps/JacobCreation Sandbox Setup 1.0.0.exe"
   }
 ]

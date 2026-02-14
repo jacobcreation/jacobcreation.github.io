@@ -7,6 +7,7 @@
     <title>Releases - JacobCreation</title>
 
     <!-- Google Fonts -->
+    <link rel="icon" href="/favicon.png" type="image/png" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
 
@@ -239,7 +240,8 @@
             const loading = document.getElementById('loading');
 
             try {
-                const response = await fetch('files.json');
+                const response = await fetch('/releases/files.json');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const files = await response.json();
 
                 if (files.length === 0) {

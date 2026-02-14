@@ -130,8 +130,9 @@
       </a>
 
       <nav class="jacob-nav">
-        <a href="https://jacobcreation.github.io/about">About</a>
-        <a href="https://jacobcreation.github.io/downloads">🎮 Play Offline</a>
+        <a href="https://jacobcreation.github.io/about/">About</a>
+        <a href="https://jacobcreation.github.io/downloads/">🎮 Play Offline</a>
+        <a href="https://jacobcreation.github.io/releases/">🚀 Releases</a>
       </nav>
     </div>
   `;
