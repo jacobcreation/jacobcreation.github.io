@@ -1,0 +1,207 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>JacobConvert</title>
+  <style>
+    body {
+      font-family: system-ui;
+      margin: 20px;
+      max-width: 980px
+    }
+
+    h1 {
+      margin-bottom: 6px
+    }
+
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 16px;
+      padding: 16px
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 12px
+    }
+
+    input,
+    select {
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid #aaa
+    }
+
+    button {
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid #111;
+      background: #111;
+      color: #fff;
+      cursor: pointer
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed
+    }
+
+    .drop {
+      border: 2px dashed #999;
+      border-radius: 16px;
+      padding: 18px;
+      text-align: center;
+      margin-top: 12px
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 999px;
+      margin: 4px;
+      cursor: pointer
+    }
+
+    .pill:hover {
+      background: #f4f4f4
+    }
+
+    small {
+      opacity: .75
+    }
+
+    #status {
+      white-space: pre-wrap
+    }
+  </style>
+</head>
+
+<body>
+  <h1>JacobConvert</h1>
+  <p><small>CloudConvert backend via Worker</small></p>
+
+  <div class="card">
+    <div class="row">
+      <label>From:
+        <input id="from" placeholder="auto (file extension)" />
+      </label>
+
+      <label>To:
+        <input id="to" placeholder="e.g. pdf, mp3, webp" />
+      </label>
+
+      <button id="convert" disabled>Convert</button>
+    </div>
+
+    <div class="row">
+      <span class="pill" data-to="pdf">to PDF</span>
+      <span class="pill" data-to="mp3">to MP3</span>
+      <span class="pill" data-to="mp4">to MP4</span>
+      <span class="pill" data-to="webp">to WEBP</span>
+      <span class="pill" data-to="zip">to ZIP</span>
+    </div>
+
+    <div id="drop" class="drop">
+      Drop a file here or <input id="file" type="file" />
+    </div>
+
+    <p id="status"></p>
+  </div>
+
+  <script>
+    const WORKER = "https://jacobconvert.b4rjxr9lk.workers.dev";
+
+    const fileEl = document.getElementById("file");
+    const fromEl = document.getElementById("from");
+    const toEl = document.getElementById("to");
+    const statusEl = document.getElementById("status");
+    const btn = document.getElementById("convert");
+    const drop = document.getElementById("drop");
+
+    let selectedFile = null;
+
+    function ext(name) {
+      const i = name.lastIndexOf(".");
+      return i === -1 ? "" : name.slice(i + 1).toLowerCase();
+    }
+
+    function updateButton() {
+      btn.disabled = !(selectedFile && toEl.value.trim());
+    }
+
+    function setStatus(msg) { statusEl.textContent = msg; }
+
+    function setFile(f) {
+      selectedFile = f;
+      if (!fromEl.value.trim()) fromEl.value = ext(f.name);
+      setStatus(`Selected: ${f.name}\nFrom: ${fromEl.value || "(blank)"}\nTo: ${toEl.value || "(blank)"}`);
+      updateButton();
+    }
+
+    fileEl.addEventListener("change", () => {
+      if (fileEl.files[0]) setFile(fileEl.files[0]);
+    });
+
+    drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.style.opacity = 0.8; });
+    drop.addEventListener("dragleave", () => { drop.style.opacity = 1; });
+    drop.addEventListener("drop", (e) => {
+      e.preventDefault(); drop.style.opacity = 1;
+      const f = e.dataTransfer.files[0];
+      if (f) setFile(f);
+    });
+
+    toEl.addEventListener("input", updateButton);
+
+    document.querySelectorAll(".pill").forEach(p => {
+      p.addEventListener("click", () => {
+        toEl.value = p.dataset.to;
+        updateButton();
+      });
+    });
+
+    btn.addEventListener("click", async () => {
+      if (!selectedFile) return;
+
+      const from = fromEl.value.trim().toLowerCase() || ext(selectedFile.name);
+      const to = toEl.value.trim().toLowerCase();
+
+      if (!from || !to) return setStatus("Please enter From and To.");
+
+      setStatus("Converting… (this can take a bit for big files)");
+
+      const form = new FormData();
+      form.append("file", selectedFile, selectedFile.name);
+      form.append("from", from);
+      form.append("to", to);
+
+      try {
+        const res = await fetch(`${WORKER}/api/convert`, { method: "POST", body: form });
+        if (!res.ok) throw new Error(await res.text());
+
+        const blob = await res.blob();
+        const cd = res.headers.get("content-disposition") || "";
+        const outName = (cd.match(/filename="([^"]+)"/)?.[1]) || `converted.${to}`;
+
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = outName;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1200);
+
+        setStatus(`✅ Done!\nDownloaded: ${outName}`);
+      } catch (e) {
+        setStatus("❌ " + e.message);
+      }
+    });
+
+    updateButton();
+  </script>
+</body>
+
+</html>
