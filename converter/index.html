@@ -1,142 +1,514 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>JacobConvert</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JacobConvert - Jacob's File Converter</title>
+
+  <!-- ✅ Favicon setup -->
+  <link rel="icon" href="/favicon.png" type="image/png" />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+
   <style>
-    body {
-      font-family: system-ui;
-      margin: 20px;
-      max-width: 980px
+    :root {
+      --bg1: #0b1020;
+      --bg2: #0a1633;
+      --card: rgba(255, 255, 255, 0.08);
+      --card2: rgba(255, 255, 255, 0.12);
+      --border: rgba(255, 255, 255, 0.14);
+      --text: #eaf2ff;
+      --muted: rgba(234, 242, 255, 0.75);
+      --blue: #4ea1ff;
+      --blue2: #2d6bff;
+      --shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+      --shadow2: 0 10px 22px rgba(0, 0, 0, 0.28);
+      --radius: 18px;
     }
 
-    h1 {
-      margin-bottom: 6px
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(78, 161, 255, 0.30), transparent 55%),
+        radial-gradient(900px 600px at 90% 15%, rgba(45, 107, 255, 0.22), transparent 55%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      background: rgba(10, 16, 32, 0.65);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+    }
+
+    .header-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .logo {
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      font-size: 1.15rem;
+      white-space: nowrap;
+    }
+
+    .logo-badge {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #1e90ff, #ff2d2d);
+      box-shadow: 0 10px 24px rgba(30, 144, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.20);
+      font-weight: 900;
+      color: white;
+    }
+
+    .logo-text {
+      font-family: "Orbitron", sans-serif;
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, #1e90ff, #ff2d2d);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow:
+        0 0 14px rgba(30, 144, 255, 0.35),
+        0 0 14px rgba(255, 45, 45, 0.25);
+    }
+
+    nav {
+      display: flex;
+      gap: 10px;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 600;
+      font-size: 0.92rem;
+      padding: 9px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.06);
+      transition: transform 0.18s ease, background 0.18s ease, border 0.18s ease;
+    }
+
+    nav a:hover {
+      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.10);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    /* Main Content */
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 18px 60px;
+      width: 100%;
+      flex: 1;
+    }
+
+    .hero-section {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .hero-section h1 {
+      font-family: "Orbitron", sans-serif;
+      font-size: 2.5rem;
+      margin: 0;
+      background: linear-gradient(90deg, #4ea1ff, #ff2d2d);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 20px rgba(78, 161, 255, 0.3);
+    }
+
+    .hero-section p {
+      color: var(--muted);
+      font-size: 1.1rem;
+      margin-top: 8px;
     }
 
     .card {
-      border: 1px solid #ddd;
-      border-radius: 16px;
-      padding: 16px
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.05));
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-top: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: -40px -40px auto auto;
+      width: 160px;
+      height: 160px;
+      background: radial-gradient(circle, rgba(78, 161, 255, 0.25), transparent 60%);
+      transform: rotate(18deg);
+      pointer-events: none;
     }
 
     .row {
       display: flex;
-      gap: 12px;
+      gap: 16px;
       flex-wrap: wrap;
-      align-items: center;
-      margin-top: 12px
+      align-items: flex-end;
+      margin-top: 16px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .input-group label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-left: 4px;
     }
 
     input,
     select {
-      padding: 10px;
-      border-radius: 12px;
-      border: 1px solid #aaa
+      padding: 12px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-family: "Poppins", sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--blue);
+      background: rgba(255, 255, 255, 0.1);
     }
 
     button {
-      padding: 10px 14px;
-      border-radius: 12px;
-      border: 1px solid #111;
-      background: #111;
-      color: #fff;
-      cursor: pointer
+      padding: 12px 24px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+      color: #071122;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1rem;
+      box-shadow: 0 10px 26px rgba(45, 107, 255, 0.3);
+      transition: transform 0.2s, opacity 0.2s;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
     }
 
     button:disabled {
-      opacity: .5;
-      cursor: not-allowed
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
     }
 
     .drop {
-      border: 2px dashed #999;
+      border: 2px dashed rgba(234, 242, 255, 0.2);
       border-radius: 16px;
-      padding: 18px;
+      padding: 40px 20px;
       text-align: center;
-      margin-top: 12px
+      margin-top: 24px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.03);
+      transition: all 0.2s;
     }
 
-    .pill {
+    .drop:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: var(--blue);
+    }
+
+    .drop input[type="file"] {
+      display: none;
+    }
+
+    .drop-text {
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .drop-btn {
       display: inline-block;
-      padding: 6px 10px;
-      border: 1px solid #ddd;
+      margin-top: 10px;
+      padding: 8px 16px;
       border-radius: 999px;
-      margin: 4px;
-      cursor: pointer
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 0.9rem;
+      font-weight: 600;
     }
 
-    .pill:hover {
-      background: #f4f4f4
+    /* Categories & Formats */
+    .formats-label {
+      font-weight: 700;
+      font-size: 1rem;
+      margin: 24px 0 12px;
+      display: block;
     }
 
-    small {
-      opacity: .75
+    .category {
+      position: relative;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+
+    .category-title {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.06);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .category-title:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--blue);
+    }
+
+    .formats {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: rgba(10, 16, 32, 0.95);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px;
+      box-shadow: var(--shadow);
+      z-index: 100;
+      margin-top: 8px;
+      min-width: 150px;
+    }
+
+    .formats .pill {
+      display: block;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+
+    .formats .pill:hover {
+      background: rgba(78, 161, 255, 0.2);
+      color: var(--blue);
+    }
+
+    .category:hover .formats {
+      display: block;
     }
 
     #status {
-      white-space: pre-wrap
+      white-space: pre-wrap;
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      font-family: monospace;
+      font-size: 0.9rem;
+      color: var(--muted);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      display: none;
+    }
+
+    #status:not(:empty) {
+      display: block;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.10);
+      background: rgba(10, 16, 32, 0.55);
+      backdrop-filter: blur(10px);
+      padding: 14px 18px;
+      text-align: center;
+      color: rgba(234, 242, 255, 0.70);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 600px) {
+      .hero-section h1 {
+        font-size: 2rem;
+      }
+
+      .logo-text {
+        font-size: 1rem;
+      }
     }
   </style>
 </head>
 
 <body>
-  <h1>JacobConvert</h1>
-  <p><small>CloudConvert backend via Worker</small></p>
+  <header>
+    <div class="header-container">
+      <a href="/" class="logo">
+        <span class="logo-badge">J</span>
+        <span class="logo-text">JacobCreation</span>
+      </a>
 
-  <div class="card">
-    <div class="row">
-      <label>From:
-        <input id="from" placeholder="auto (file extension)" />
-      </label>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+      </nav>
+    </div>
+  </header>
 
-      <label>To:
-        <input id="to" placeholder="e.g. pdf, mp3, webp" />
-      </label>
-
-      <button id="convert" disabled>Convert</button>
+  <main>
+    <div class="hero-section">
+      <h1>JacobConvert</h1>
+      <p>Powerful file conversion powered by CloudConvert</p>
     </div>
 
-    <div class="row">
-      <span class="pill" data-to="pdf">to PDF</span>
-      <span class="pill" data-to="mp3">to MP3</span>
-      <span class="pill" data-to="mp4">to MP4</span>
-      <span class="pill" data-to="webp">to WEBP</span>
-      <span class="pill" data-to="zip">to ZIP</span>
-    </div>
+    <div class="card">
+      <div class="row">
+        <div class="input-group">
+          <label for="from">From</label>
+          <input id="from" placeholder="auto (from extension)">
+        </div>
+        <div class="input-group">
+          <label for="to">To</label>
+          <input id="to" placeholder="choose format below">
+        </div>
+        <button id="convert" disabled>🚀 Convert Now</button>
+      </div>
 
-    <div id="drop" class="drop">
-      Drop a file here or <input id="file" type="file" />
-    </div>
+      <span class="formats-label">Recommended Formats</span>
+      <div id="categories"></div>
 
-    <p id="status"></p>
-  </div>
+      <div id="drop" class="drop">
+        <div class="drop-text">Drop a file here or</div>
+        <label class="drop-btn" for="file">
+          📁 Choose File
+          <input id="file" type="file">
+        </label>
+      </div>
+
+      <p id="status"></p>
+    </div>
+  </main>
+
+  <footer>
+    © 2026 JacobCreation • Built by Jacob 💙
+  </footer>
 
   <script>
-    const WORKER = "https://jacobconvert.b4rjxr9lk.workers.dev";
+    // ---------------------- FORMATS ----------------------
+    const allFormats = [
+      { name: "mp3", type: "audio" }, { name: "wav", type: "audio" }, { name: "aac", type: "audio" },
+      { name: "flac", type: "audio" }, { name: "ogg", type: "audio" }, { name: "m4a", type: "audio" },
+      { name: "mp4", type: "video" }, { name: "mkv", type: "video" }, { name: "avi", type: "video" },
+      { name: "mov", type: "video" }, { name: "jpg", type: "image" }, { name: "png", type: "image" },
+      { name: "gif", type: "image" }, { name: "webp", type: "image" }, { name: "pdf", type: "document" },
+      { name: "doc", type: "document" }, { name: "docx", type: "document" }, { name: "txt", type: "document" },
+      { name: "xls", type: "spreadsheet" }, { name: "xlsx", type: "spreadsheet" }, { name: "csv", type: "spreadsheet" },
+      { name: "ppt", type: "presentation" }, { name: "pptx", type: "presentation" },
+      { name: "epub", type: "ebook" }, { name: "mobi", type: "ebook" },
+      { name: "zip", type: "archive" }, { name: "rar", type: "archive" }, { name: "7z", type: "archive" },
+      { name: "ttf", type: "font" }, { name: "otf", type: "font" },
+      { name: "json", type: "data" }, { name: "xml", type: "data" }
+    ];
 
+    // ---------------------- UI ----------------------
+    const categoriesDiv = document.getElementById("categories");
+    const toEl = document.getElementById("to");
+    let selectedFile = null;
+
+    const categories = Array.from(new Set(allFormats.map(f => f.type)));
+    categories.forEach(cat => {
+      const catDiv = document.createElement("div");
+      catDiv.className = "category";
+
+      const title = document.createElement("div");
+      title.className = "category-title";
+      title.textContent = cat.toUpperCase();
+      catDiv.appendChild(title);
+
+      const formatsDiv = document.createElement("div");
+      formatsDiv.className = "formats";
+
+      allFormats.filter(f => f.type === cat).forEach(f => {
+        const pill = document.createElement("span");
+        pill.className = "pill";
+        pill.textContent = f.name;
+        pill.addEventListener("click", () => {
+          toEl.value = f.name;
+          updateButton();
+        });
+        formatsDiv.appendChild(pill);
+      });
+
+      catDiv.appendChild(formatsDiv);
+      categoriesDiv.appendChild(catDiv);
+    });
+
+    // ---------------------- FILE LOGIC ----------------------
+    const WORKER = "https://jacobconvert.b4rjxr9lk.workers.dev";
     const fileEl = document.getElementById("file");
     const fromEl = document.getElementById("from");
-    const toEl = document.getElementById("to");
     const statusEl = document.getElementById("status");
     const btn = document.getElementById("convert");
     const drop = document.getElementById("drop");
-
-    let selectedFile = null;
 
     function ext(name) {
       const i = name.lastIndexOf(".");
       return i === -1 ? "" : name.slice(i + 1).toLowerCase();
     }
 
-    function updateButton() {
-      btn.disabled = !(selectedFile && toEl.value.trim());
-    }
-
+    function updateButton() { btn.disabled = !(selectedFile && toEl.value.trim()); }
     function setStatus(msg) { statusEl.textContent = msg; }
-
     function setFile(f) {
       selectedFile = f;
       if (!fromEl.value.trim()) fromEl.value = ext(f.name);
@@ -144,36 +516,21 @@
       updateButton();
     }
 
-    fileEl.addEventListener("change", () => {
-      if (fileEl.files[0]) setFile(fileEl.files[0]);
-    });
-
-    drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.style.opacity = 0.8; });
+    fileEl.addEventListener("change", () => { if (fileEl.files[0]) setFile(fileEl.files[0]); });
+    drop.addEventListener("dragover", e => { e.preventDefault(); drop.style.opacity = 0.8; });
     drop.addEventListener("dragleave", () => { drop.style.opacity = 1; });
-    drop.addEventListener("drop", (e) => {
+    drop.addEventListener("drop", e => {
       e.preventDefault(); drop.style.opacity = 1;
-      const f = e.dataTransfer.files[0];
-      if (f) setFile(f);
+      const f = e.dataTransfer.files[0]; if (f) setFile(f);
     });
-
     toEl.addEventListener("input", updateButton);
-
-    document.querySelectorAll(".pill").forEach(p => {
-      p.addEventListener("click", () => {
-        toEl.value = p.dataset.to;
-        updateButton();
-      });
-    });
 
     btn.addEventListener("click", async () => {
       if (!selectedFile) return;
-
       const from = fromEl.value.trim().toLowerCase() || ext(selectedFile.name);
       const to = toEl.value.trim().toLowerCase();
-
       if (!from || !to) return setStatus("Please enter From and To.");
-
-      setStatus("Converting… (this can take a bit for big files)");
+      setStatus("Converting… 🚀");
 
       const form = new FormData();
       form.append("file", selectedFile, selectedFile.name);
@@ -187,17 +544,13 @@
         const blob = await res.blob();
         const cd = res.headers.get("content-disposition") || "";
         const outName = (cd.match(/filename="([^"]+)"/)?.[1]) || `converted.${to}`;
-
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = outName;
         a.click();
         setTimeout(() => URL.revokeObjectURL(a.href), 1200);
-
         setStatus(`✅ Done!\nDownloaded: ${outName}`);
-      } catch (e) {
-        setStatus("❌ " + e.message);
-      }
+      } catch (e) { setStatus("❌ " + e.message); }
     });
 
     updateButton();
