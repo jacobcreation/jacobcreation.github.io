@@ -4,12 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JacobConvert - Jacob's File Converter</title>
+  <title>JacobConvert - File Converter</title>
 
-  <!-- ✅ Favicon setup -->
-  <link rel="icon" href="/favicon.png" type="image/png" />
-
-  <!-- Google Fonts -->
+  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
 
@@ -25,7 +22,6 @@
       --blue: #4ea1ff;
       --blue2: #2d6bff;
       --shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
-      --shadow2: 0 10px 22px rgba(0, 0, 0, 0.28);
       --radius: 18px;
     }
 
@@ -35,18 +31,16 @@
 
     body {
       margin: 0;
-      font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-family: "Poppins", sans-serif;
       color: var(--text);
       min-height: 100vh;
-      background:
-        radial-gradient(1200px 600px at 20% 10%, rgba(78, 161, 255, 0.30), transparent 55%),
+      background: radial-gradient(1200px 600px at 20% 10%, rgba(78, 161, 255, 0.3), transparent 55%),
         radial-gradient(900px 600px at 90% 15%, rgba(45, 107, 255, 0.22), transparent 55%),
         linear-gradient(135deg, var(--bg1), var(--bg2));
       display: flex;
       flex-direction: column;
     }
 
-    /* Header */
     header {
       position: sticky;
       top: 0;
@@ -85,7 +79,7 @@
       border-radius: 12px;
       background: linear-gradient(135deg, #1e90ff, #ff2d2d);
       box-shadow: 0 10px 24px rgba(30, 144, 255, 0.25);
-      border: 1px solid rgba(255, 255, 255, 0.20);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       font-weight: 900;
       color: white;
     }
@@ -99,9 +93,7 @@
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      text-shadow:
-        0 0 14px rgba(30, 144, 255, 0.35),
-        0 0 14px rgba(255, 45, 45, 0.25);
+      text-shadow: 0 0 14px rgba(30, 144, 255, 0.35), 0 0 14px rgba(255, 45, 45, 0.25);
     }
 
     nav {
@@ -118,7 +110,7 @@
       border-radius: 999px;
       border: 1px solid rgba(255, 255, 255, 0.14);
       background: rgba(255, 255, 255, 0.06);
-      transition: transform 0.18s ease, background 0.18s ease, border 0.18s ease;
+      transition: all 0.18s;
     }
 
     nav a:hover {
@@ -127,7 +119,6 @@
       border-color: rgba(255, 255, 255, 0.22);
     }
 
-    /* Main Content */
     main {
       max-width: 900px;
       margin: 0 auto;
@@ -168,17 +159,6 @@
       margin-top: 20px;
       position: relative;
       overflow: hidden;
-    }
-
-    .card::after {
-      content: "";
-      position: absolute;
-      inset: -40px -40px auto auto;
-      width: 160px;
-      height: 160px;
-      background: radial-gradient(circle, rgba(78, 161, 255, 0.25), transparent 60%);
-      transform: rotate(18deg);
-      pointer-events: none;
     }
 
     .row {
@@ -240,10 +220,6 @@
       transform: translateY(-2px);
     }
 
-    button:active:not(:disabled) {
-      transform: translateY(0);
-    }
-
     button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
@@ -286,7 +262,6 @@
       font-weight: 600;
     }
 
-    /* Categories & Formats */
     .formats-label {
       font-weight: 700;
       font-size: 1rem;
@@ -348,10 +323,6 @@
       color: var(--blue);
     }
 
-    .category:hover .formats {
-      display: block;
-    }
-
     #status {
       white-space: pre-wrap;
       margin-top: 20px;
@@ -379,7 +350,7 @@
       font-size: 0.9rem;
     }
 
-    @media (max-width: 600px) {
+    @media(max-width:600px) {
       .hero-section h1 {
         font-size: 2rem;
       }
@@ -398,7 +369,6 @@
         <span class="logo-badge">J</span>
         <span class="logo-text">JacobCreation</span>
       </a>
-
       <nav>
         <a href="/">Home</a>
         <a href="/about">About</a>
@@ -430,8 +400,7 @@
 
       <div id="drop" class="drop">
         <div class="drop-text">Drop a file here or</div>
-        <label class="drop-btn" for="file">
-          📁 Choose File
+        <label class="drop-btn" for="file">📁 Choose File
           <input id="file" type="file">
         </label>
       </div>
@@ -440,19 +409,14 @@
     </div>
   </main>
 
-  <footer>
-    © 2026 JacobCreation • Built by Jacob 💙
-  </footer>
+  <footer>© 2026 JacobCreation • Built by Jacob 💙</footer>
 
   <script>
-    // ---------------------- FORMATS ----------------------
     const allFormats = [
-      { name: "mp3", type: "audio" }, { name: "wav", type: "audio" }, { name: "aac", type: "audio" },
-      { name: "flac", type: "audio" }, { name: "ogg", type: "audio" }, { name: "m4a", type: "audio" },
-      { name: "mp4", type: "video" }, { name: "mkv", type: "video" }, { name: "avi", type: "video" },
-      { name: "mov", type: "video" }, { name: "jpg", type: "image" }, { name: "png", type: "image" },
-      { name: "gif", type: "image" }, { name: "webp", type: "image" }, { name: "pdf", type: "document" },
-      { name: "doc", type: "document" }, { name: "docx", type: "document" }, { name: "txt", type: "document" },
+      { name: "mp3", type: "audio" }, { name: "wav", type: "audio" }, { name: "aac", type: "audio" }, { name: "flac", type: "audio" }, { name: "ogg", type: "audio" }, { name: "m4a", type: "audio" },
+      { name: "mp4", type: "video" }, { name: "mkv", type: "video" }, { name: "avi", type: "video" }, { name: "mov", type: "video" },
+      { name: "jpg", type: "image" }, { name: "png", type: "image" }, { name: "gif", type: "image" }, { name: "webp", type: "image" },
+      { name: "pdf", type: "document" }, { name: "doc", type: "document" }, { name: "docx", type: "document" }, { name: "txt", type: "document" },
       { name: "xls", type: "spreadsheet" }, { name: "xlsx", type: "spreadsheet" }, { name: "csv", type: "spreadsheet" },
       { name: "ppt", type: "presentation" }, { name: "pptx", type: "presentation" },
       { name: "epub", type: "ebook" }, { name: "mobi", type: "ebook" },
@@ -461,70 +425,59 @@
       { name: "json", type: "data" }, { name: "xml", type: "data" }
     ];
 
-    // ---------------------- UI ----------------------
     const categoriesDiv = document.getElementById("categories");
     const toEl = document.getElementById("to");
-    let selectedFile = null;
-
-    const categories = Array.from(new Set(allFormats.map(f => f.type)));
-    categories.forEach(cat => {
-      const catDiv = document.createElement("div");
-      catDiv.className = "category";
-
-      const title = document.createElement("div");
-      title.className = "category-title";
-      title.textContent = cat.toUpperCase();
-      catDiv.appendChild(title);
-
-      const formatsDiv = document.createElement("div");
-      formatsDiv.className = "formats";
-
-      allFormats.filter(f => f.type === cat).forEach(f => {
-        const pill = document.createElement("span");
-        pill.className = "pill";
-        pill.textContent = f.name;
-        pill.addEventListener("click", () => {
-          toEl.value = f.name;
-          updateButton();
-        });
-        formatsDiv.appendChild(pill);
-      });
-
-      catDiv.appendChild(formatsDiv);
-      categoriesDiv.appendChild(catDiv);
-    });
-
-    // ---------------------- FILE LOGIC ----------------------
-    const WORKER = "https://jacobconvert.b4rjxr9lk.workers.dev";
-    const fileEl = document.getElementById("file");
     const fromEl = document.getElementById("from");
+    const fileEl = document.getElementById("file");
     const statusEl = document.getElementById("status");
     const btn = document.getElementById("convert");
     const drop = document.getElementById("drop");
+    const WORKER = "https://jacobconvert.b4rjxr9lk.workers.dev";
+    let selectedFile = null;
 
-    function ext(name) {
-      const i = name.lastIndexOf(".");
-      return i === -1 ? "" : name.slice(i + 1).toLowerCase();
-    }
+    // Populate categories
+    const categories = Array.from(new Set(allFormats.map(f => f.type)));
+    categories.forEach(cat => {
+      const catDiv = document.createElement("div"); catDiv.className = "category";
+      const title = document.createElement("div"); title.className = "category-title"; title.textContent = cat.toUpperCase();
+      catDiv.appendChild(title);
+      const formatsDiv = document.createElement("div"); formatsDiv.className = "formats";
+      allFormats.filter(f => f.type === cat).forEach(f => {
+        const pill = document.createElement("span"); pill.className = "pill"; pill.textContent = f.name;
+        pill.addEventListener("click", () => { toEl.value = f.name; updateButton(); formatsDiv.style.display = "none"; });
+        formatsDiv.appendChild(pill);
+      });
+      catDiv.appendChild(formatsDiv);
+      categoriesDiv.appendChild(catDiv);
 
-    function updateButton() { btn.disabled = !(selectedFile && toEl.value.trim()); }
-    function setStatus(msg) { statusEl.textContent = msg; }
-    function setFile(f) {
-      selectedFile = f;
-      if (!fromEl.value.trim()) fromEl.value = ext(f.name);
-      setStatus(`Selected: ${f.name}\nFrom: ${fromEl.value || "(blank)"}\nTo: ${toEl.value || "(blank)"}`);
-      updateButton();
-    }
-
-    fileEl.addEventListener("change", () => { if (fileEl.files[0]) setFile(fileEl.files[0]); });
-    drop.addEventListener("dragover", e => { e.preventDefault(); drop.style.opacity = 0.8; });
-    drop.addEventListener("dragleave", () => { drop.style.opacity = 1; });
-    drop.addEventListener("drop", e => {
-      e.preventDefault(); drop.style.opacity = 1;
-      const f = e.dataTransfer.files[0]; if (f) setFile(f);
+      // Click to toggle
+      title.addEventListener("click", () => { formatsDiv.style.display = formatsDiv.style.display === "block" ? "none" : "block"; });
     });
-    toEl.addEventListener("input", updateButton);
 
+    // Helpers
+    function ext(name) { const i = name.lastIndexOf("."); return i > -1 ? name.slice(i + 1).toLowerCase() : ""; }
+    function setStatus(txt) { statusEl.textContent = txt; }
+    function updateButton() { btn.disabled = !selectedFile || !toEl.value.trim(); }
+
+    // File selection
+    fileEl.addEventListener("change", e => {
+      selectedFile = e.target.files[0]; fileEl.files = e.target.files;
+      if (selectedFile) fromEl.value = ext(selectedFile.name);
+      setStatus(`Selected: ${selectedFile.name}`); updateButton();
+    });
+
+    drop.addEventListener("dragover", e => { e.preventDefault(); });
+    drop.addEventListener("drop", e => {
+      e.preventDefault();
+      if (e.dataTransfer.files.length) {
+        selectedFile = e.dataTransfer.files[0];
+        fileEl.files = e.dataTransfer.files;
+        if (selectedFile) fromEl.value = ext(selectedFile.name);
+        setStatus(`Selected: ${selectedFile.name}`); updateButton();
+      }
+    });
+
+    // Convert
     btn.addEventListener("click", async () => {
       if (!selectedFile) return;
       const from = fromEl.value.trim().toLowerCase() || ext(selectedFile.name);
@@ -532,18 +485,16 @@
       if (!from || !to) return setStatus("Please enter From and To.");
       setStatus("Converting… 🚀");
 
-      const form = new FormData();
-      form.append("file", selectedFile, selectedFile.name);
-      form.append("from", from);
-      form.append("to", to);
-
       try {
+        const form = new FormData();
+        form.append("file", selectedFile, selectedFile.name);
+        form.append("from", from);
+        form.append("to", to);
         const res = await fetch(`${WORKER}/api/convert`, { method: "POST", body: form });
         if (!res.ok) throw new Error(await res.text());
-
         const blob = await res.blob();
-        const cd = res.headers.get("content-disposition") || "";
-        const outName = (cd.match(/filename="([^"]+)"/)?.[1]) || `converted.${to}`;
+        const baseName = selectedFile.name.replace(/\.[^/.]+$/, "");
+        const outName = `${baseName}_JacobConvert.${to}`;
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = outName;
@@ -552,8 +503,6 @@
         setStatus(`✅ Done!\nDownloaded: ${outName}`);
       } catch (e) { setStatus("❌ " + e.message); }
     });
-
-    updateButton();
   </script>
 </body>
 
