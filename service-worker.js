@@ -1,6 +1,6 @@
 // JacobCreation Service Worker
 
-const CACHE_NAME = 'jacobcreation-cache-v2';
+const CACHE_NAME = 'jacobcreation-cache-v3';
 const OFFLINE_URL = './offline.html';
 
 // Install event — cache offline page
