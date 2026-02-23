@@ -31,6 +31,7 @@ let timeSinceLastSend = 0;
 let lastSendTime = 0;
 let partySocket = null;
 let myTank = null;
+let buildings = [];
 
 // ----------------------------------------------------
 // 2. THREE.JS SETUP
@@ -67,24 +68,61 @@ dirLight.shadow.camera.top = 50;
 dirLight.shadow.camera.bottom = -50;
 scene.add(dirLight);
 
-// Ground
-const groundGeometry = new THREE.PlaneGeometry(200, 200);
+// Landscape (Ground)
+const groundGeometry = new THREE.PlaneGeometry(250, 250, 64, 64);
+const posAttr = groundGeometry.attributes.position;
+for (let i = 0; i < posAttr.count; i++) {
+    const vx = posAttr.getX(i);
+    const vy = posAttr.getY(i);
+
+    // Calculate distance from center
+    const dist = Math.sqrt(vx * vx + vy * vy);
+    let vz = 0;
+
+    // Flat combat arena in the center (radius ~35)
+    if (dist > 35) {
+        // Curve upwards
+        const upward = Math.pow(dist - 35, 1.2) * 0.4;
+        // Add procedural noise (hills)
+        const noise = Math.sin(vx * 0.1) * Math.cos(vy * 0.1) * 4 + Math.sin(vx * 0.05 + vy * 0.03) * 6;
+        vz = upward + noise;
+    }
+    posAttr.setZ(i, vz);
+}
+groundGeometry.computeVertexNormals();
+
 const groundMaterial = new THREE.MeshStandardMaterial({
-    color: 0x111122,
-    roughness: 0.8,
-    metalness: 0.2
+    color: 0x0d0d1a,
+    roughness: 0.9,
+    metalness: 0.1,
+    flatShading: true // Low-poly aesthetic
 });
 const ground = new THREE.Mesh(groundGeometry, groundMaterial);
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
 
-// Neon Grid
-const gridHelper = new THREE.GridHelper(200, 100, 0x00d2d3, 0x00d2d3);
-gridHelper.position.y = 0.05;
-gridHelper.material.opacity = 0.15;
-gridHelper.material.transparent = true;
-scene.add(gridHelper);
+// Procedural Grid overlay that maps to the terrain
+const gridGeo = new THREE.WireframeGeometry(groundGeometry);
+const gridMat = new THREE.LineBasicMaterial({ color: 0x00d2d3, transparent: true, opacity: 0.1 });
+const gridLines = new THREE.LineSegments(gridGeo, gridMat);
+gridLines.rotation.x = -Math.PI / 2;
+gridLines.position.y = 0.1; // Slightly above ground to prevent z-fighting
+scene.add(gridLines);
+
+// Starry Sky Background
+const starsGeo = new THREE.BufferGeometry();
+const starsCount = 2000;
+const posArray = new Float32Array(starsCount * 3);
+for (let i = 0; i < starsCount * 3; i += 3) {
+    posArray[i] = (Math.random() - 0.5) * 600;
+    posArray[i + 1] = Math.random() * 200 + 30; // High in the sky
+    posArray[i + 2] = (Math.random() - 0.5) * 600;
+}
+starsGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.7, transparent: true, opacity: 0.8 });
+const starMesh = new THREE.Points(starsGeo, starsMat);
+scene.add(starMesh);
 
 // ----------------------------------------------------
 // 3. TANK CREATION 
@@ -135,6 +173,30 @@ function createTankMesh(colorHex = 0x1dd1a1) {
     group.userData.turret = turret;
 
     return group;
+}
+
+function spawnBuilding(b) {
+    const height = 15;
+    const geo = new THREE.BoxGeometry(b.width, height, b.depth);
+    const mat = new THREE.MeshStandardMaterial({
+        color: 0x0a0a1a,
+        roughness: 0.6,
+        metalness: 0.4,
+        transparent: true,
+        opacity: 0.95
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(b.x, height / 2, b.z);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    const edges = new THREE.EdgesGeometry(geo);
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0x22a6b3, linewidth: 2 });
+    const wireframe = new THREE.LineSegments(edges, edgeMat);
+    mesh.add(wireframe);
+
+    scene.add(mesh);
+    buildings.push(b);
 }
 
 // ----------------------------------------------------
@@ -340,6 +402,7 @@ function animate() {
         const rotateSpeed = 2.5 * dt;
 
         let moved = false;
+        const oldPos = myTank.position.clone();
 
         if (keys['w'] || keys['arrowup']) {
             myTank.translateZ(-moveSpeed);
@@ -349,6 +412,24 @@ function animate() {
             myTank.translateZ(moveSpeed);
             moved = true;
         }
+
+        // Build collision prediction
+        if (moved) {
+            let hitBuilding = false;
+            const radius = 1.5;
+            for (const b of buildings) {
+                if (myTank.position.x > b.x - b.width / 2 - radius && myTank.position.x < b.x + b.width / 2 + radius &&
+                    myTank.position.z > b.z - b.depth / 2 - radius && myTank.position.z < b.z + b.depth / 2 + radius) {
+                    hitBuilding = true;
+                    break;
+                }
+            }
+            if (hitBuilding) {
+                myTank.position.copy(oldPos);
+                moved = false;
+            }
+        }
+
         if (keys['a'] || keys['arrowleft']) {
             myTank.rotation.y += rotateSpeed;
             moved = true;
@@ -445,6 +526,13 @@ function initNetwork() {
                 if (data.teamScores) {
                     gameState.teamScores = data.teamScores;
                     updateScoreboard();
+                }
+
+                // Initialize buildings
+                if (data.buildings && buildings.length === 0) {
+                    for (const b of data.buildings) {
+                        spawnBuilding(b);
+                    }
                 }
 
                 // Spawn our tank
