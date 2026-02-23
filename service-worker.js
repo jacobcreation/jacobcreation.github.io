@@ -1,6 +1,6 @@
 // JacobCreation Service Worker
 
-const CACHE_NAME = 'jacobcreation-cache-v1';
+const CACHE_NAME = 'jacobcreation-cache-v2';
 const OFFLINE_URL = './offline.html';
 
 // Install event — cache offline page
@@ -45,11 +45,18 @@ self.addEventListener('fetch', event => {
                 // Fetch from network and cache it
                 return fetch(event.request)
                     .then(networkResponse => {
-                        return caches.open(CACHE_NAME).then(cache => {
-                            // Cache the new file
-                            cache.put(event.request, networkResponse.clone());
+                        // Don't cache if not a valid normal response, or if it's a redirect
+                        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'opaque' || networkResponse.redirected) {
                             return networkResponse;
+                        }
+
+                        const responseToCache = networkResponse.clone();
+                        caches.open(CACHE_NAME).then(cache => {
+                            // Cache the new file
+                            cache.put(event.request, responseToCache);
                         });
+
+                        return networkResponse;
                     })
                     .catch(() => {
                         // If offline and request fails, show offline page for HTML pages
