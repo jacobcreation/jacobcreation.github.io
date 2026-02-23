@@ -37,8 +37,8 @@ let buildings = [];
 // 2. THREE.JS SETUP
 // ----------------------------------------------------
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x050510);
-scene.fog = new THREE.Fog(0x050510, 20, 150);
+scene.background = new THREE.Color(0x87CEEB); // Sky blue
+scene.fog = new THREE.Fog(0x87CEEB, 40, 200);
 
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 const cameraOffset = new THREE.Vector3(0, 12, 20);
@@ -54,11 +54,11 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 // Lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
 scene.add(ambientLight);
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-dirLight.position.set(20, 40, 20);
+const dirLight = new THREE.DirectionalLight(0xfffaeb, 1.2);
+dirLight.position.set(40, 80, 40);
 dirLight.castShadow = true;
 dirLight.shadow.mapSize.width = 2048;
 dirLight.shadow.mapSize.height = 2048;
@@ -92,37 +92,15 @@ for (let i = 0; i < posAttr.count; i++) {
 groundGeometry.computeVertexNormals();
 
 const groundMaterial = new THREE.MeshStandardMaterial({
-    color: 0x0d0d1a,
+    color: 0x4d7a4d, // Grassy green
     roughness: 0.9,
-    metalness: 0.1,
-    flatShading: true // Low-poly aesthetic
+    metalness: 0.05,
+    flatShading: true // Low-poly realistic terrain
 });
 const ground = new THREE.Mesh(groundGeometry, groundMaterial);
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
-
-// Procedural Grid overlay that maps to the terrain
-const gridGeo = new THREE.WireframeGeometry(groundGeometry);
-const gridMat = new THREE.LineBasicMaterial({ color: 0x00d2d3, transparent: true, opacity: 0.1 });
-const gridLines = new THREE.LineSegments(gridGeo, gridMat);
-gridLines.rotation.x = -Math.PI / 2;
-gridLines.position.y = 0.1; // Slightly above ground to prevent z-fighting
-scene.add(gridLines);
-
-// Starry Sky Background
-const starsGeo = new THREE.BufferGeometry();
-const starsCount = 2000;
-const posArray = new Float32Array(starsCount * 3);
-for (let i = 0; i < starsCount * 3; i += 3) {
-    posArray[i] = (Math.random() - 0.5) * 600;
-    posArray[i + 1] = Math.random() * 200 + 30; // High in the sky
-    posArray[i + 2] = (Math.random() - 0.5) * 600;
-}
-starsGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.7, transparent: true, opacity: 0.8 });
-const starMesh = new THREE.Points(starsGeo, starsMat);
-scene.add(starMesh);
 
 // ----------------------------------------------------
 // 3. TANK CREATION 
@@ -142,10 +120,8 @@ function createTankMesh(colorHex = 0x1dd1a1) {
     const bodyGeo = new THREE.BoxGeometry(2, 0.8, 3);
     const bodyMat = new THREE.MeshStandardMaterial({
         color: colorHex,
-        roughness: 0.4,
-        metalness: 0.6,
-        emissive: colorHex,
-        emissiveIntensity: 0.2
+        roughness: 0.7,
+        metalness: 0.2
     });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
     body.position.y = 1.0;
@@ -179,21 +155,14 @@ function spawnBuilding(b) {
     const height = 15;
     const geo = new THREE.BoxGeometry(b.width, height, b.depth);
     const mat = new THREE.MeshStandardMaterial({
-        color: 0x0a0a1a,
-        roughness: 0.6,
-        metalness: 0.4,
-        transparent: true,
-        opacity: 0.95
+        color: 0x88888a, // Concrete gray
+        roughness: 0.9,
+        metalness: 0.1
     });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(b.x, height / 2, b.z);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
-
-    const edges = new THREE.EdgesGeometry(geo);
-    const edgeMat = new THREE.LineBasicMaterial({ color: 0x22a6b3, linewidth: 2 });
-    const wireframe = new THREE.LineSegments(edges, edgeMat);
-    mesh.add(wireframe);
 
     scene.add(mesh);
     buildings.push(b);
