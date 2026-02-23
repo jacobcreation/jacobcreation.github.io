@@ -40,8 +40,9 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87CEEB); // Sky blue
 scene.fog = new THREE.Fog(0x87CEEB, 40, 200);
 
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-const cameraOffset = new THREE.Vector3(0, 12, 20);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+// cameraOffset is now strictly for first-person (relative to tank body)
+const cameraOffset = new THREE.Vector3(0, 2.4, 0.5);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -399,6 +400,13 @@ function animate() {
             }
         }
 
+        // Local World boundary enforcement
+        const WORLD_LIMIT = 45;
+        if (myTank.position.x > WORLD_LIMIT) { myTank.position.x = WORLD_LIMIT; moved = true; }
+        if (myTank.position.x < -WORLD_LIMIT) { myTank.position.x = -WORLD_LIMIT; moved = true; }
+        if (myTank.position.z > WORLD_LIMIT) { myTank.position.z = WORLD_LIMIT; moved = true; }
+        if (myTank.position.z < -WORLD_LIMIT) { myTank.position.z = -WORLD_LIMIT; moved = true; }
+
         if (keys['a'] || keys['arrowleft']) {
             myTank.rotation.y += rotateSpeed;
             moved = true;
@@ -408,10 +416,12 @@ function animate() {
             moved = true;
         }
 
-        // Camera follow (smooth)
-        const idealOffset = cameraOffset.clone().applyMatrix4(myTank.matrixWorld);
-        camera.position.lerp(idealOffset, 0.1);
-        camera.lookAt(myTank.position);
+        // First-Person Camera behavior
+        // Camera stays fixed to the tank hull (body) looking forward
+        const cameraPos = cameraOffset.clone().applyMatrix4(myTank.matrixWorld);
+        camera.position.copy(cameraPos);
+        const lookTarget = new THREE.Vector3(0, 2.4, -100).applyMatrix4(myTank.matrixWorld);
+        camera.lookAt(lookTarget);
 
         // Turret Aiming
         if (myTank.userData.turret) {
@@ -509,6 +519,14 @@ function initNetwork() {
                     myTank = createTankMesh(data.myColor);
                     myTank.position.set(data.state[data.id].x, 0, data.state[data.id].z);
                     myTank.rotation.y = data.state[data.id].ry;
+
+                    // Hide local tank meshes to prevent camera clipping in first-person
+                    myTank.traverse((child) => {
+                        if (child.isMesh) {
+                            child.visible = false;
+                        }
+                    });
+
                     scene.add(myTank);
 
                     // Set match status based on team
@@ -630,6 +648,7 @@ function initNetwork() {
         console.warn("PartySocket library not loaded yet or failed to connect.", e);
         if (!myTank) {
             myTank = createTankMesh(0xff9ff3);
+            myTank.traverse((child) => { if (child.isMesh) child.visible = false; });
             scene.add(myTank);
         }
     }
