@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neon Tanks 3D - Online Multiplayer</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Import Maps for Three.js -->
+  <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+          "partysocket": "https://unpkg.com/partysocket"
+        }
+      }
+    </script>
+</head>
+
+<body>
+  <div id="ui-layer">
+    <div id="scoreboard">
+      <div class="team-score red-team">RED: <span id="red-score">0</span></div>
+      <div class="team-score blue-team">BLUE: <span id="blue-score">0</span></div>
+    </div>
+    <div id="health-bar-container">
+      <div id="health-bar"></div>
+    </div>
+    <div id="coins-container">Coins: <span id="coin-count">0</span></div>
+    <div id="shop-hint">Press [B] to open Shop</div>
+  </div>
+
+  <div id="shop-modal" class="hidden">
+    <h2>Spell Shop</h2>
+    <div class="spell-buttons">
+      <button id="buy-dash" class="spell-btn">Dash (50 Coins) [Q]</button>
+      <button id="buy-shield" class="spell-btn">Shield (100 Coins) [E]</button>
+      <button id="buy-blast" class="spell-btn">Big Blast (150 Coins) [F]</button>
+    </div>
+    <button id="close-shop">Close</button>
+  </div>
+
+  <div id="match-status">Connecting to server...</div>
+
+  <div id="death-screen" class="hidden">
+    <h1>YOU DIED</h1>
+    <div class="death-buttons">
+      <button id="respawn-btn">RESPAWN</button>
+      <button id="quit-btn">QUIT</button>
+    </div>
+  </div>
+
+  <!-- Game Source -->
+  <script type="module" src="game.js?v=3"></script>
+</body>
+
+</html>
