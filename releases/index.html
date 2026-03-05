@@ -200,7 +200,207 @@
                 display: none;
             }
         }
+
+        /* Chat Widget Styles */
+        .chat-widget {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .chat-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue), var(--blue2));
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 15px rgba(78, 161, 255, 0.3);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: #0b1020;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(78, 161, 255, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px rgba(78, 161, 255, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(78, 161, 255, 0);
+            }
+        }
+
+        .chat-btn:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .chat-btn svg {
+            width: 28px;
+            height: 28px;
+            fill: currentColor;
+        }
+
+        .chat-window {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 350px;
+            height: 480px;
+            background: rgba(15, 25, 50, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+            opacity: 0;
+            transform: translateY(20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            transform-origin: bottom right;
+        }
+
+        .chat-window.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #0b1020;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .chat-header-info h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-family: "Orbitron", sans-serif;
+            color: #fff;
+        }
+
+        .chat-header-info p {
+            margin: 0;
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .message.jacob {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: var(--blue2);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-input-area {
+            padding: 20px;
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 15px;
+            color: #fff;
+            outline: none;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--blue);
+        }
+
+        .chat-send-btn {
+            background: var(--blue);
+            border: none;
+            border-radius: 12px;
+            width: 42px;
+            height: 42px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .chat-send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .chat-send-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: #0b1020;
+        }
+
+        @media (max-width: 480px) {
+            .chat-window {
+                width: calc(100vw - 40px);
+                right: -10px;
+                bottom: 70px;
+            }
+        }
     </style>
+
 </head>
 
 <body>
@@ -231,8 +431,7 @@
                 <div class="file-desc">Chess pairing system setup for Windows</div>
                 <div class="file-size">~16 MB</div>
                 <div class="file-date">2026-02-25</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/blob/main/releases/apps/Chess%20Pairing%20System%20Setup%201.0.0.exe?raw=true"
-                    class="btn-download" download>Download</a>
+                <a href="https://github.com/jacobcreation/jacobcreation.github.io/blob/main/releases/apps/Chess%20Pairing%20System%20Setup%201.0.0.exe?raw=true" class="btn-download" download>Download</a>
             </div>
 
             <div class="file-row">
@@ -240,8 +439,7 @@
                 <div class="file-desc">Chess pairing system AppImage for Linux</div>
                 <div class="file-size">~20 MB</div>
                 <div class="file-date">2026-02-25</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/blob/main/releases/apps/Chess%20Pairing%20System-Linux.AppImage?raw=true"
-                    class="btn-download" download>Download</a>
+                <a href="https://github.com/jacobcreation/jacobcreation.github.io/blob/main/releases/apps/Chess%20Pairing%20System-Linux.AppImage?raw=true" class="btn-download" download>Download</a>
             </div>
 
             <div class="file-row">
@@ -249,8 +447,7 @@
                 <div class="file-desc">JacobCreation Sandbox setup for Windows</div>
                 <div class="file-size">~15 MB</div>
                 <div class="file-date">2026-02-25</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/blob/main/releases/apps/JacobCreation%20Sandbox%20Setup%201.0.0.exe?raw=true"
-                    class="btn-download" download>Download</a>
+                <a href="https://github.com/jacobcreation/jacobcreation.github.io/blob/main/releases/apps/JacobCreation%20Sandbox%20Setup%201.0.0.exe?raw=true" class="btn-download" download>Download</a>
             </div>
 
             <div class="file-row">
@@ -258,28 +455,56 @@
                 <div class="file-desc">JacobCreation Sandbox AppImage for Linux</div>
                 <div class="file-size">~18 MB</div>
                 <div class="file-date">2026-02-25</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/blob/main/releases/apps/JacobCreation%20Sandbox-Linux.AppImage?raw=true"
-                    class="btn-download" download>Download</a>
+                <a href="https://github.com/jacobcreation/jacobcreation.github.io/blob/main/releases/apps/JacobCreation%20Sandbox-Linux.AppImage?raw=true" class="btn-download" download>Download</a>
             </div>
             <div class="file-row">
                 <div class="file-name">📦 JacobCreation Reminder (Linux)</div>
                 <div class="file-desc">JacobCreation Reminder for Linux</div>
                 <div class="file-size">~18 MB</div>
                 <div class="file-date">2026-02-25</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/blob/main/releases/apps/JacobReminder-1.0.0.AppImage?raw=true"
-                    class="btn-download" download>Download</a>
+                <a href="https://github.com/jacobcreation/jacobcreation.github.io/blob/main/releases/apps/JacobReminder-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
             </div>
             <div class="file-row">
                 <div class="file-name">📦 JacobCreation Reminder (Windows)</div>
                 <div class="file-desc">JacobCreation Reminder for Windows</div>
                 <div class="file-size">~18 MB</div>
                 <div class="file-date">2026-02-25</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/blob/main/releases/apps/JacobReminder%20Setup%201.0.0.exe?raw=true"
-                    class="btn-download" download>Download</a>
+                <a href="https://github.com/jacobcreation/jacobcreation.github.io/blob/main/releases/apps/JacobReminder%20Setup%201.0.0.exe?raw=true" class="btn-download" download>Download</a>
             </div>
 
         </div>
+
+        <div class="chat-widget">
+            <button class="chat-btn" id="chatBtn" title="Request a new release">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+                </svg>
+            </button>
+            <div class="chat-window" id="chatWindow">
+                <div class="chat-header">
+                    <div class="chat-avatar">J</div>
+                    <div class="chat-header-info">
+                        <h3>Jacob</h3>
+                        <p>Request New Releases</p>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message jacob">
+                        Hey there! 👋 Looking for a specific app or a new version? Let me know what you need!
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="chatInput" placeholder="Type your request..." />
+                    <button class="chat-send-btn" id="chatSend">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
     </main>
+
 
     <footer>
         © 2026 JacobCreation • Built by Jacob 💙
@@ -288,6 +513,8 @@
     <script>
         async function loadFiles() {
             const container = document.getElementById('filesList');
+            if (!container) return; // Prevent errors if filesList doesn't exist
+
             const loading = document.getElementById('loading');
 
             try {
@@ -296,11 +523,11 @@
                 const files = await response.json();
 
                 if (files.length === 0) {
-                    loading.textContent = 'No releases available yet.';
+                    if (loading) loading.textContent = 'No releases available yet.';
                     return;
                 }
 
-                loading.remove();
+                if (loading) loading.remove();
 
                 files.forEach(file => {
                     const row = document.createElement('div');
@@ -316,12 +543,67 @@
                 });
             } catch (error) {
                 console.error('Error loading files:', error);
-                loading.textContent = 'Error loading releases. Please try again later.';
+                if (loading) loading.textContent = 'Error loading releases. Please try again later.';
             }
         }
 
+        // Chat Logic
+        const chatBtn = document.getElementById('chatBtn');
+        const chatWindow = document.getElementById('chatWindow');
+        const chatInput = document.getElementById('chatInput');
+        const chatSend = document.getElementById('chatSend');
+        const chatMessages = document.getElementById('chatMessages');
+
+        chatBtn.addEventListener('click', () => {
+            chatWindow.classList.toggle('active');
+            if (chatWindow.classList.contains('active')) {
+                chatInput.focus();
+            }
+        });
+
+        function addMessage(text, side) {
+            const msg = document.createElement('div');
+            msg.className = `message ${side}`;
+            msg.textContent = text;
+            chatMessages.appendChild(msg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function handleSend() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            addMessage(text, 'user');
+            chatInput.value = '';
+
+            // Simulate Jacob typing
+            setTimeout(() => {
+                addMessage("Got it! I'll open your email client so you can send this request to me. Press 'Send' in Gmail! 🚀", 'jacob');
+
+                setTimeout(() => {
+                    const email = "iliganchesskid@gmail.com";
+                    const subject = encodeURIComponent("New Release Request");
+                    const body = encodeURIComponent(text);
+                    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+                }, 1500);
+            }, 800);
+        }
+
+        chatSend.addEventListener('click', handleSend);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSend();
+        });
+
+        // Close chat if clicking outside
+        document.addEventListener('click', (e) => {
+            if (!chatWindow.contains(e.target) && !chatBtn.contains(e.target)) {
+                chatWindow.classList.remove('active');
+            }
+        });
+
         loadFiles();
     </script>
+
 </body>
 
 </html>
