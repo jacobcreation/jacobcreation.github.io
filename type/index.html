@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Typing Game</title>
+  <style>
+    body { font-family: monospace; padding: 2rem; }
+    #text { font-size: 1.2rem; margin-bottom: 1rem; }
+    #input { width: 100%; font-size: 1.2rem; padding: 0.5rem; }
+    .correct { color: green; }
+    .wrong { color: red; }
+  </style>
+</head>
+<body>
+  <h1>Typing Game</h1>
+  <p id="text">Click "Start" to load a paragraph</p>
+  <input id="input" autocomplete="off" />
+  <button onclick="startGame()">Start</button>
+  <p>WPM: <span id="wpm">0</span> | Accuracy: <span id="accuracy">0%</span></p>
+
+  <script>
+    const WORKER_URL = "http://localhost:8787"; // <-- Replace this with your Worker URL
+    let currentText = "";
+    let startTime;
+
+    async function startGame() {
+      // Fetch a paragraph from Worker
+      const res = await fetch(WORKER_URL);
+      const data = await res.json();
+      currentText = data.text;
+      document.getElementById("text").innerHTML = currentText;
+      document.getElementById("input").value = "";
+      startTime = Date.now();
+      updateStats();
+    }
+
+    document.getElementById("input").addEventListener("input", function() {
+      const typed = this.value;
+      const textElem = document.getElementById("text");
+
+      // Color letters
+      let colored = "";
+      for (let i = 0; i < currentText.length; i++) {
+        if (typed[i] == null) colored += currentText[i];
+        else if (typed[i] === currentText[i]) colored += `<span class="correct">${currentText[i]}</span>`;
+        else colored += `<span class="wrong">${currentText[i]}</span>`;
+      }
+      textElem.innerHTML = colored;
+
+      // Stats
+      const correctChars = typed.split("").filter((c,i)=>c===currentText[i]).length;
+      const accuracy = typed.length ? (correctChars / typed.length * 100).toFixed(1) : 0;
+      const minutes = (Date.now() - startTime) / 1000 / 60;
+      const wpm = typed.length ? Math.round((typed.length/5)/minutes) : 0;
+
+      document.getElementById("accuracy").textContent = accuracy;
+      document.getElementById("wpm").textContent = wpm;
+
+      // Auto next paragraph when finished
+      if (typed === currentText) setTimeout(startGame, 500);
+    });
+
+    function updateStats() {
+      document.getElementById("accuracy").textContent = 0;
+      document.getElementById("wpm").textContent = 0;
+    }
+  </script>
+</body>
+</html>
