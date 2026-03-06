@@ -57,6 +57,7 @@
             margin: 0;
             background: linear-gradient(to right, var(--accent-blue), var(--accent-purple));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             text-transform: uppercase;
             letter-spacing: 4px;
@@ -516,7 +517,8 @@
                 shield: 0
             },
             fallInterval: null,
-            spawnTimer: 0
+            spawnTimer: 0,
+            isFetching: false
         };
 
         // Spell Configs
@@ -562,7 +564,8 @@
                     shield: 0
                 },
                 fallInterval: null,
-                spawnTimer: 0
+                spawnTimer: 0,
+                isFetching: false
             };
 
             // UI Reset
@@ -573,13 +576,7 @@
             mainInput.focus();
             updateUI();
 
-            try {
-                const res = await fetch(WORKER_URL);
-                const data = await res.json();
-                state.wordsList = data.text.split(" ").filter(w => w.length > 2);
-            } catch (e) {
-                state.wordsList = ["magic", "spell", "arcane", "mystic", "typing", "victory", "defeat", "legend", "frost", "ember"];
-            }
+            await refillWords();
 
             if (state.fallInterval) clearInterval(state.fallInterval);
             state.fallInterval = setInterval(gameLoop, 20);
@@ -591,6 +588,11 @@
             // Handle Spawning
             state.spawnTimer += 20;
             const spawnRate = Math.max(500, 2000 - (state.difficulty * 100));
+
+            if (state.wordsList.length < 15) {
+                refillWords();
+            }
+
             if (state.spawnTimer > spawnRate && state.wordsList.length > 0) {
                 spawnWord();
                 state.spawnTimer = 0;
@@ -600,7 +602,7 @@
             // Handle Movement
             if (!state.spellsActive.frozen) {
                 const elapsed = (Date.now() - state.startTime) / 1000;
-                let speedMult = 1 + (elapsed * 0.02);
+                let speedMult = Math.min(5, 1 + (elapsed * 0.02));
                 if (state.spellsActive.slow) speedMult *= 0.4;
 
                 state.activeWords.forEach((w, i) => {
@@ -782,6 +784,23 @@
                     break;
             }
             updateUI();
+        }
+
+        async function refillWords() {
+            if (state.isFetching || state.gameEnded) return;
+            state.isFetching = true;
+            try {
+                const res = await fetch(WORKER_URL);
+                const data = await res.json();
+                const newWords = data.text.split(" ").filter(w => w.length > 2);
+                state.wordsList.push(...newWords);
+            } catch (e) {
+                console.warn("Failed to fetch words, using fallbacks");
+                const fallback = ["magic", "spell", "arcane", "mystic", "typing", "victory", "defeat", "legend", "frost", "ember", "scroll", "potion", "wizard", "dragon", "knight", "castle", "shadow", "light", "spirit", "ancient", "alchemy", "enchant", "grimoire", "staff", "wand", "relic", "golem", "portal", "void", "ethereal"];
+                state.wordsList.push(...fallback.sort(() => Math.random() - 0.5));
+            } finally {
+                state.isFetching = false;
+            }
         }
 
         // keyboard listeners
