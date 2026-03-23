@@ -10,6 +10,7 @@ const startBtn = document.getElementById('start-btn');
 const respawnBtn = document.getElementById('respawn-btn');
 const playerNameInput = document.getElementById('player-name-input');
 const fpsDisplay = document.getElementById('fps');
+const leaderboardList = document.getElementById('leaderboard-list');
 
 // Game State
 let gameState = 'START'; // START, PLAYING, DEAD
@@ -18,10 +19,18 @@ let frameCount = 0;
 let lastFpsTime = 0;
 let score = 0;
 let animationFrameId;
+let matchStartTime = 0;
 
 // World settings
 const WORLD_SIZE = 3000;
 const GRID_SIZE = 40;
+const BALANCE = {
+    spawnProtectionMs: 3500,
+    botSpawnGraceMs: 6000,
+    botSafeSpawnDistance: 850,
+    maxAttackersBase: 2,
+    bodyHitCooldownMs: 250
+};
 
 // Entities
 let player;
@@ -75,6 +84,26 @@ function resizeCanvas() {
     canvas.height = window.innerHeight;
 }
 
+function getDistance(x1, y1, x2, y2) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+function getMaxActiveAttackers() {
+    return Math.min(4, BALANCE.maxAttackersBase + Math.floor(player.level / 15));
+}
+
+function countBotsAttackingPlayer(excludeBot = null) {
+    let count = 0;
+    for (let i = 0; i < bots.length; i++) {
+        const b = bots[i];
+        if (b === excludeBot || b.markedForDeletion) continue;
+        if (b.state === 'ATTACK') count++;
+    }
+    return count;
+}
+
 class Player {
     constructor(x, y) {
         this.x = x;
@@ -97,6 +126,10 @@ class Player {
         this.health = 100;
         this.healthRegen = 1; // hp per second
         this.bodyDamage = 10;
+        this.score = 0;
+        this.spawnProtectionDuration = BALANCE.spawnProtectionMs;
+        this.spawnProtectedUntil = lastTime + this.spawnProtectionDuration;
+        this.lastBodyHitTime = -Infinity;
         
         // Progression
         this.level = 1;
@@ -114,6 +147,10 @@ class Player {
             reload: 0,
             moveSpeed: 0
         };
+    }
+
+    hasSpawnProtection() {
+        return lastTime < this.spawnProtectedUntil;
     }
 
     upgradeStat(statId) {
@@ -143,7 +180,8 @@ class Player {
 
     gainExp(amount) {
         this.exp += amount;
-        if(this === player) score += amount;
+        this.score += amount;
+        if(this === player) score = this.score;
         
         while (this.exp >= this.maxExp && this.level < 45) {
             this.exp -= this.maxExp;
@@ -241,6 +279,14 @@ class Player {
         ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
+
+        if (this.hasSpawnProtection()) {
+            ctx.strokeStyle = 'rgba(0, 176, 255, 0.6)';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius + 8, 0, Math.PI * 2);
+            ctx.stroke();
+        }
         
         // Draw Health Bar
         if (this.health < this.maxHealth) {
@@ -279,16 +325,38 @@ class Bot extends Player {
         this.state = 'WANDER'; // WANDER, ATTACK
         this.stateTimer = 0;
         this.moveAngle = Math.random() * Math.PI * 2;
+        this.aggroRange = 550 + Math.random() * 100;
+        this.disengageRange = this.aggroRange + 120;
+        this.preferredDistance = 230 + Math.random() * 80;
+        this.orbitDirection = Math.random() < 0.5 ? 1 : -1;
+        this.fireCooldown = 620 + Math.random() * 280;
+        this.spawnProtectedUntil = 0; // Bots should not use player spawn shield
+        this.reactionDelayUntil = lastTime + 300 + Math.random() * 350;
+        this.aimInaccuracy = 0.05 + Math.random() * 0.05;
+
+        // Slightly nerf baseline bot stats to keep fights fair.
+        this.speed *= 0.88;
+        this.reloadTime += 180;
+        this.bulletDamage *= 0.72;
+        this.bulletSpeed *= 0.9;
+        this.bodyDamage *= 0.75;
+        this.maxHealth *= 0.92;
+        this.health = this.maxHealth;
     }
 
     update(dt) {
-        super.update(dt);
-        
-        // Find closest target (player or shapes)
-        this.target = player; // simple: always target player if close
-        const distToPlayer = Math.sqrt((player.x - this.x) ** 2 + (player.y - this.y) ** 2);
-        
-        if (distToPlayer < 800) {
+        if (this.health < this.maxHealth) {
+            this.health = Math.min(this.maxHealth, this.health + this.healthRegen * (dt / 1000));
+        }
+
+        const playerIsShielded = player.hasSpawnProtection();
+        const distToPlayer = getDistance(this.x, this.y, player.x, player.y);
+        const wasAttacking = this.state === 'ATTACK';
+        const attackersAlreadyActive = countBotsAttackingPlayer(this);
+        const canJoinAttack = attackersAlreadyActive < getMaxActiveAttackers();
+        const inAggroRange = distToPlayer < this.aggroRange || (wasAttacking && distToPlayer < this.disengageRange);
+
+        if (!playerIsShielded && inAggroRange && canJoinAttack) {
             this.state = 'ATTACK';
             this.angle = Math.atan2(player.y - this.y, player.x - this.x);
         } else {
@@ -301,10 +369,49 @@ class Bot extends Player {
             }
         }
 
+        if (!wasAttacking && this.state === 'ATTACK') {
+            this.reactionDelayUntil = lastTime + 220 + Math.random() * 320;
+            this.orbitDirection = Math.random() < 0.5 ? 1 : -1;
+        }
+
         // Move
-        const currentSpeed = (this.state === 'ATTACK' && distToPlayer < 300) ? -this.speed * 0.5 : this.speed;
-        this.x += Math.cos(this.state === 'ATTACK' ? this.angle : this.moveAngle) * currentSpeed * (dt / 1000);
-        this.y += Math.sin(this.state === 'ATTACK' ? this.angle : this.moveAngle) * currentSpeed * (dt / 1000);
+        let moveAngle = this.moveAngle;
+        let currentSpeed = this.speed * 0.6;
+        if (this.state === 'ATTACK') {
+            if (distToPlayer > this.preferredDistance + 80) {
+                moveAngle = this.angle;
+            } else if (distToPlayer < this.preferredDistance - 70) {
+                moveAngle = this.angle + Math.PI;
+            } else {
+                moveAngle = this.angle + this.orbitDirection * (Math.PI / 2);
+            }
+            currentSpeed = this.speed * 0.72;
+        } else if (playerIsShielded && distToPlayer < 420) {
+            moveAngle = Math.atan2(this.y - player.y, this.x - player.x);
+            currentSpeed = this.speed * 0.9;
+        }
+
+        // Separation steering to prevent clumping/surround stacks.
+        let separateX = 0;
+        let separateY = 0;
+        for (let i = 0; i < bots.length; i++) {
+            const other = bots[i];
+            if (other === this || other.markedForDeletion) continue;
+            const dx = this.x - other.x;
+            const dy = this.y - other.y;
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            const desiredSpacing = this.radius * 3.3;
+            if (dist < desiredSpacing) {
+                const push = (desiredSpacing - dist) / desiredSpacing;
+                separateX += (dx / dist) * push;
+                separateY += (dy / dist) * push;
+            }
+        }
+
+        const moveX = Math.cos(moveAngle) * currentSpeed + separateX * 90;
+        const moveY = Math.sin(moveAngle) * currentSpeed + separateY * 90;
+        this.x += moveX * (dt / 1000);
+        this.y += moveY * (dt / 1000);
         
         this.x = Math.max(this.radius, Math.min(WORLD_SIZE - this.radius, this.x));
         this.y = Math.max(this.radius, Math.min(WORLD_SIZE - this.radius, this.y));
@@ -316,11 +423,15 @@ class Bot extends Player {
         }
 
         // Shoot randomly or when attacking
-        if (this.state === 'ATTACK' && lastTime - this.lastShotTime >= this.reloadTime) {
-            // override mouse down check for bots
-            const originalMouseDist = { isDown: true }; // conceptually
+        const canShoot = lastTime - this.lastShotTime >= Math.max(this.reloadTime, this.fireCooldown);
+        if (this.state === 'ATTACK' && distToPlayer < this.aggroRange * 0.9 && canShoot && lastTime >= this.reactionDelayUntil) {
+            const originalAngle = this.angle;
+            const distanceRatio = Math.min(1, distToPlayer / this.aggroRange);
+            const spread = this.aimInaccuracy + distanceRatio * 0.06;
+            this.angle += (Math.random() - 0.5) * spread;
             this.shoot();
-        } else if (this.state === 'WANDER' && Math.random() < 0.05 && lastTime - this.lastShotTime >= this.reloadTime) {
+            this.angle = originalAngle;
+        } else if (this.state === 'WANDER' && Math.random() < 0.01 && canShoot) {
            this.shoot();
         }
     }
@@ -379,6 +490,7 @@ class Shape {
         this.angle = Math.random() * Math.PI * 2;
         this.rotationSpeed = (Math.random() - 0.5) * 2;
         this.markedForDeletion = false;
+        this.lastBodyHitTime = -Infinity;
         
         switch(type) {
             case 'square':
@@ -475,19 +587,25 @@ function spawnShapes() {
 }
 
 function spawnBots() {
-    const targetBots = 5;
-    if (bots.length < targetBots && Math.random() < 0.01) {
+    const elapsed = lastTime - matchStartTime;
+    if (elapsed < BALANCE.botSpawnGraceMs) return;
+
+    const targetBots = Math.min(7, 2 + Math.floor(player.level / 6));
+    const spawnChance = Math.min(0.02, 0.004 + player.level * 0.0004);
+
+    if (bots.length < targetBots && Math.random() < spawnChance) {
         let spawnX = Math.random() * WORLD_SIZE;
         let spawnY = Math.random() * WORLD_SIZE;
         // Don't spawn too close to player
-        while (Math.sqrt((spawnX - player.x) ** 2 + (spawnY - player.y) ** 2) < 500) {
+        while (getDistance(spawnX, spawnY, player.x, player.y) < BALANCE.botSafeSpawnDistance) {
             spawnX = Math.random() * WORLD_SIZE;
             spawnY = Math.random() * WORLD_SIZE;
         }
         
         let b = new Bot(spawnX, spawnY);
-        // Level up bot randomly between 1 and player level + 5
-        let targetLevel = Math.max(1, player.level + Math.floor(Math.random() * 10 - 5));
+        // Keep bot level near player, but avoid unfair spikes.
+        let targetLevel = Math.max(1, player.level + Math.floor(Math.random() * 6 - 4));
+        targetLevel = Math.min(targetLevel, player.level + 2);
         for(let l=1; l < targetLevel; l++) {
              b.gainExp(b.maxExp);
         }
@@ -572,6 +690,7 @@ function checkCollisions() {
         
         // vs Player
         if (!b.isPlayer && !b.markedForDeletion) {
+             if (player.hasSpawnProtection()) continue;
              const dx = b.x - player.x;
              const dy = b.y - player.y;
              if (Math.sqrt(dx*dx + dy*dy) < b.radius + player.radius) {
@@ -624,9 +743,21 @@ function checkCollisions() {
                  // Body collision happens
                  let dmgTo1 = e2.bodyDamage || e2.damage || 0;
                  let dmgTo2 = e1.bodyDamage || e1.damage || 0;
-                 
-                 e1.health -= dmgTo1;
-                 e2.health -= dmgTo2;
+
+                 if ((e1 === player && player.hasSpawnProtection()) || (e2 === player && player.hasSpawnProtection())) {
+                     dmgTo1 = 0;
+                     dmgTo2 = 0;
+                 }
+
+                 const canBodyDamage = (lastTime - (e1.lastBodyHitTime || -Infinity) >= BALANCE.bodyHitCooldownMs) &&
+                     (lastTime - (e2.lastBodyHitTime || -Infinity) >= BALANCE.bodyHitCooldownMs);
+
+                 if (canBodyDamage) {
+                     e1.health -= dmgTo1;
+                     e2.health -= dmgTo2;
+                     e1.lastBodyHitTime = lastTime;
+                     e2.lastBodyHitTime = lastTime;
+                 }
                  
                  if(e1.health <= 0) e1.markedForDeletion = true;
                  if(e2.health <= 0) e2.markedForDeletion = true;
@@ -656,7 +787,10 @@ function startGame() {
     // Reset Entity state
     bullets = [];
     shapes = [];
+    bots = [];
+    particles = [];
     score = 0;
+    matchStartTime = performance.now();
     
     player = new Player(WORLD_SIZE / 2, WORLD_SIZE / 2);
     player.name = playerNameInput.value || 'Player';
@@ -707,7 +841,6 @@ function updateUpgradeUI() {
 
 function updateUI() {
     if (!player) return;
-    document.getElementById('score').innerText = score;
     document.getElementById('level').innerText = player.level;
     document.getElementById('exp-bar').style.width = `${(player.exp / player.maxExp) * 100}%`;
     
@@ -718,6 +851,33 @@ function updateUI() {
     } else {
         upPointsDisplay.style.display = 'none';
     }
+
+    updateLeaderboard();
+}
+
+function updateLeaderboard() {
+    if (!player || !leaderboardList) return;
+
+    const entries = [player, ...bots]
+        .filter(entity => !entity.markedForDeletion)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 8);
+
+    leaderboardList.innerHTML = '';
+    entries.forEach((entity, index) => {
+        const isPlayer = entity === player;
+        const displayName = `${entity.name || 'Bot'}${isPlayer ? ' (You)' : ''}`;
+        const displayScore = Math.floor(entity.score);
+
+        const item = document.createElement('li');
+        item.textContent = `${index + 1}. ${displayName}`;
+
+        const scoreEl = document.createElement('span');
+        scoreEl.textContent = displayScore.toString();
+        item.appendChild(scoreEl);
+
+        leaderboardList.appendChild(item);
+    });
 }
 
 function updateCamera() {
