@@ -146,6 +146,21 @@
       background: white;
     }
 
+    .record-button.active {
+      animation: record-pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes record-pulse {
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.08);
+      }
+    }
+
     .standalone-fullscreen-button {
       position: absolute;
       top: 0;
@@ -332,6 +347,178 @@
       });
       scaffolding.addControlButton({
         element: stopAllButton,
+        where: 'top-left'
+      });
+
+      const recordButton = document.createElement('img');
+      const recordStartIcon = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="6" fill="#ec5959" stroke="#b84848" stroke-width="1.5"/></svg>');
+      const recordStopIcon = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><rect x="5.5" y="5.5" width="9" height="9" rx="1.5" fill="#ec5959" stroke="#b84848" stroke-width="1.5"/></svg>');
+      const recordingState = {
+        chunks: [],
+        disconnectAudio: null,
+        isRecording: false,
+        mediaRecorder: null,
+        mimeType: '',
+        stream: null
+      };
+      const updateRecordButton = () => {
+        recordButton.src = recordingState.isRecording ? recordStopIcon : recordStartIcon;
+        recordButton.classList.toggle('active', recordingState.isRecording);
+        recordButton.title = recordingState.isRecording ? 'Stop recording and download' : 'Start recording';
+      };
+      const getRecordingMimeType = () => {
+        if (typeof MediaRecorder === 'undefined') {
+          return '';
+        }
+        const mimeTypes = [
+          'video/webm;codecs=vp9,opus',
+          'video/webm;codecs=vp8,opus',
+          'video/webm;codecs=h264,opus',
+          'video/webm'
+        ];
+        return mimeTypes.find((mimeType) => MediaRecorder.isTypeSupported(mimeType)) || '';
+      };
+      const attachRecorderAudio = () => {
+        const audioEngine = vm.runtime && vm.runtime.audioEngine;
+        const audioContext = audioEngine && audioEngine.audioContext;
+        if (!audioContext || typeof audioContext.createMediaStreamDestination !== 'function') {
+          return { disconnect: null, tracks: [] };
+        }
+
+        const destination = audioContext.createMediaStreamDestination();
+        const connectedNodes = [];
+        const candidateNodes = [
+          audioEngine.outputNode,
+          audioEngine.inputNode,
+          audioEngine.masterGainNode,
+          audioEngine.masterGain
+        ].filter((node, index, nodes) => node && typeof node.connect === 'function' && nodes.indexOf(node) === index);
+
+        for (const node of candidateNodes) {
+          if (node === audioContext.destination) {
+            continue;
+          }
+          try {
+            node.connect(destination);
+            connectedNodes.push(node);
+            break;
+          } catch (error) {
+            console.warn('Unable to connect recorder audio node', error);
+          }
+        }
+
+        const disconnect = connectedNodes.length ? () => {
+          for (const node of connectedNodes) {
+            try {
+              node.disconnect(destination);
+            } catch (error) {
+              console.warn('Unable to disconnect recorder audio node', error);
+            }
+          }
+        } : null;
+
+        return {
+          disconnect,
+          tracks: destination.stream.getAudioTracks()
+        };
+      };
+      const downloadRecording = () => {
+        if (!recordingState.chunks.length) {
+          return;
+        }
+        const mimeType = recordingState.mimeType || 'video/webm';
+        const extension = mimeType.includes('mp4') ? 'mp4' : 'webm';
+        const blob = new Blob(recordingState.chunks, { type: mimeType });
+        const downloadUrl = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        anchor.href = downloadUrl;
+        anchor.download = `piano-recording-${timestamp}.${extension}`;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+      };
+      const cleanupRecording = () => {
+        if (recordingState.disconnectAudio) {
+          recordingState.disconnectAudio();
+        }
+        if (recordingState.stream) {
+          for (const track of recordingState.stream.getTracks()) {
+            track.stop();
+          }
+        }
+        recordingState.chunks = [];
+        recordingState.disconnectAudio = null;
+        recordingState.isRecording = false;
+        recordingState.mediaRecorder = null;
+        recordingState.mimeType = '';
+        recordingState.stream = null;
+        updateRecordButton();
+      };
+      const startRecording = async () => {
+        const stageCanvas = appElement.querySelector('canvas');
+        if (!stageCanvas || typeof stageCanvas.captureStream !== 'function') {
+          throw new Error('Recording is not supported in this browser.');
+        }
+
+        const mimeType = getRecordingMimeType();
+        const stream = stageCanvas.captureStream(30);
+        const { disconnect, tracks } = attachRecorderAudio();
+        for (const track of tracks) {
+          stream.addTrack(track);
+        }
+
+        const mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+        recordingState.chunks = [];
+        recordingState.disconnectAudio = disconnect;
+        recordingState.isRecording = true;
+        recordingState.mediaRecorder = mediaRecorder;
+        recordingState.mimeType = mediaRecorder.mimeType || mimeType || 'video/webm';
+        recordingState.stream = stream;
+
+        mediaRecorder.addEventListener('dataavailable', (event) => {
+          if (event.data && event.data.size > 0) {
+            recordingState.chunks.push(event.data);
+          }
+        });
+        mediaRecorder.addEventListener('stop', () => {
+          const recordedChunks = recordingState.chunks.slice();
+          const recordedMimeType = recordingState.mimeType;
+          cleanupRecording();
+          recordingState.chunks = recordedChunks;
+          recordingState.mimeType = recordedMimeType;
+          downloadRecording();
+          recordingState.chunks = [];
+          recordingState.mimeType = '';
+        });
+
+        mediaRecorder.start(250);
+        updateRecordButton();
+      };
+      const stopRecording = () => {
+        if (recordingState.mediaRecorder && recordingState.mediaRecorder.state !== 'inactive') {
+          recordingState.mediaRecorder.stop();
+        }
+      };
+      recordButton.className = 'control-button control-button-highlight record-button';
+      recordButton.draggable = false;
+      recordButton.addEventListener('click', async () => {
+        try {
+          if (recordingState.isRecording) {
+            stopRecording();
+            return;
+          }
+          await startRecording();
+        } catch (error) {
+          console.error(error);
+          cleanupRecording();
+          alert(error.message || 'Unable to start recording.');
+        }
+      });
+      updateRecordButton();
+      scaffolding.addControlButton({
+        element: recordButton,
         where: 'top-left'
       });
 
