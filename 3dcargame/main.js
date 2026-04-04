@@ -326,6 +326,229 @@ function buildPark(group, colliders, centerX, centerZ, width, depth, rng) {
   }
 }
 
+function buildParkingLot(group, colliders, centerX, centerZ, width, depth, rng) {
+  const lot = new THREE.Mesh(
+    new THREE.BoxGeometry(width, 0.08, depth),
+    materials.asphalt,
+  );
+  lot.position.set(centerX, 0.04, centerZ);
+  lot.receiveShadow = true;
+  group.add(lot);
+
+  const stripeMaterial = materials.stripe.clone();
+  stripeMaterial.color.setHex(0xece8d9);
+  for (let i = -2; i <= 2; i += 1) {
+    const stripe = new THREE.Mesh(
+      new THREE.BoxGeometry(0.2, 0.1, depth - 8),
+      stripeMaterial,
+    );
+    stripe.position.set(centerX + i * 4.6, 0.1, centerZ);
+    group.add(stripe);
+  }
+
+  for (let i = 0; i < 3; i += 1) {
+    const colorIndex = 8 + i + Math.floor(rng() * 4);
+    const parked = createTrafficCar(colorIndex);
+    parked.speed = 0;
+    parked.axis = "x";
+    parked.dir = 1;
+    parked.car.position.set(centerX - 8 + i * 8, 0, centerZ - depth * 0.15 + rng() * 4);
+    parked.car.rotation.y = Math.PI / 2;
+    group.add(parked.car);
+    addStaticCollider(colliders, parked.car.position.x, parked.car.position.z, 2.2, 2.5, "parked car");
+  }
+
+  addStaticCollider(colliders, centerX, centerZ, Math.max(width, depth) * 0.48, 2, "parking lot");
+}
+
+function buildPlaza(group, colliders, centerX, centerZ, width, depth, rng) {
+  const ground = new THREE.Mesh(
+    new THREE.BoxGeometry(width, 0.12, depth),
+    materials.sidewalk,
+  );
+  ground.position.set(centerX, 0.06, centerZ);
+  ground.receiveShadow = true;
+  group.add(ground);
+
+  const fountainBase = createBox(group, centerX, 0.45, centerZ, 7, 0.6, 7, materials.buildingC, false);
+  fountainBase.receiveShadow = true;
+  const fountainWater = new THREE.Mesh(
+    new THREE.CylinderGeometry(2.2, 2.6, 0.45, 18),
+    materials.glass.clone(),
+  );
+  fountainWater.material.emissiveIntensity = 0.12;
+  fountainWater.position.set(centerX, 0.9, centerZ);
+  group.add(fountainWater);
+  addStaticCollider(colliders, centerX, centerZ, 3.8, 2, "fountain");
+
+  for (let i = 0; i < 4; i += 1) {
+    const angle = (i / 4) * Math.PI * 2;
+    const bx = centerX + Math.cos(angle) * 10;
+    const bz = centerZ + Math.sin(angle) * 10;
+    createBox(group, bx, 0.45, bz, 4.2, 0.3, 1.1, materials.bench);
+    addStaticCollider(colliders, bx, bz, 2.2, 2, "bench");
+  }
+
+  for (let i = 0; i < 5; i += 1) {
+    const tx = centerX - width / 2 + 8 + rng() * (width - 16);
+    const tz = centerZ - depth / 2 + 8 + rng() * (depth - 16);
+    const trunk = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.42, 0.52, 4, 8),
+      materials.treeTrunk,
+    );
+    trunk.position.set(tx, 2, tz);
+    group.add(trunk);
+    const leaves = new THREE.Mesh(
+      new THREE.SphereGeometry(2.4 + rng() * 0.6, 8, 8),
+      materials.treeLeaves,
+    );
+    leaves.position.set(tx, 5, tz);
+    group.add(leaves);
+    addStaticCollider(colliders, tx, tz, 1.9, 30, "tree");
+  }
+}
+
+function buildGasStation(group, colliders, centerX, centerZ, rng) {
+  const forecourt = new THREE.Mesh(
+    new THREE.BoxGeometry(34, 0.08, 26),
+    materials.asphalt,
+  );
+  forecourt.position.set(centerX, 0.04, centerZ);
+  forecourt.receiveShadow = true;
+  group.add(forecourt);
+
+  const shopMaterial = materials.buildingB.clone();
+  shopMaterial.color.offsetHSL(0.02, 0.04, 0.06);
+  createBox(group, centerX - 8, 4, centerZ + 7, 14, 8, 10, shopMaterial);
+
+  const canopyMaterial = materials.glass.clone();
+  canopyMaterial.color.setHex(0xdce9ff);
+  canopyMaterial.emissiveIntensity = 0.18;
+  createBox(group, centerX + 7, 5.3, centerZ - 1, 16, 0.8, 12, canopyMaterial);
+  for (const px of [centerX + 2, centerX + 12]) {
+    for (const pz of [centerZ - 4, centerZ + 2]) {
+      createBox(group, px, 2.5, pz, 0.7, 5, 0.7, materials.lamp);
+      createBox(group, px, 1.2, pz, 1.1, 2.2, 1.8, materials.playerCar.clone());
+      addStaticCollider(colliders, px, pz, 1.3, 3, "pump");
+    }
+  }
+
+  createBox(group, centerX - 1.5, 2.6, centerZ + 10, 3.6, 3.8, 0.3, materials.stripe);
+  addStaticCollider(colliders, centerX - 8, centerZ + 7, 8, 8, "gas station");
+}
+
+function buildWarehouse(group, colliders, centerX, centerZ, width, depth, rng) {
+  const warehouseMaterial = materials.buildingC.clone();
+  warehouseMaterial.color.offsetHSL(0, -0.05, -0.08);
+  createBox(group, centerX, 7, centerZ, width, 14, depth, warehouseMaterial);
+  createBox(group, centerX, 2.8, centerZ + depth / 2 + 0.2, 8, 5.5, 0.3, materials.lamp);
+
+  for (let i = 0; i < 4; i += 1) {
+    const crateX = centerX - width * 0.28 + i * 5.2;
+    const crateZ = centerZ - depth * 0.34 + (i % 2) * 5.5;
+    createBox(group, crateX, 1.1, crateZ, 2.4, 2.2, 2.4, materials.bench);
+    addStaticCollider(colliders, crateX, crateZ, 1.6, 2.5, "crate stack");
+  }
+
+  addStaticCollider(colliders, centerX, centerZ, Math.max(width, depth) * 0.5, 16, "warehouse");
+}
+
+function buildMall(group, colliders, centerX, centerZ, rng) {
+  const shellMaterial = materials.buildingA.clone();
+  shellMaterial.color.offsetHSL(-0.02, -0.05, 0.1);
+  createBox(group, centerX, 9, centerZ, 52, 18, 38, shellMaterial);
+
+  const entranceGlass = new THREE.Mesh(
+    new THREE.BoxGeometry(18, 9, 0.4),
+    materials.glass.clone(),
+  );
+  entranceGlass.position.set(centerX, 6.5, centerZ + 19.2);
+  entranceGlass.material.color.setHex(0xd7ebff);
+  entranceGlass.material.emissiveIntensity = 0.22;
+  group.add(entranceGlass);
+
+  const signMaterial = new THREE.MeshStandardMaterial({
+    color: 0xffd166,
+    emissive: 0x62450f,
+    emissiveIntensity: 0.42,
+    roughness: 0.35,
+  });
+  createBox(group, centerX, 13.4, centerZ + 19.4, 14, 2.2, 0.4, signMaterial, false);
+
+  for (let i = 0; i < 6; i += 1) {
+    const banner = createBox(
+      group,
+      centerX - 18 + i * 7.2,
+      7.5,
+      centerZ + 19.25,
+      3.2,
+      5.4,
+      0.2,
+      materials.glass.clone(),
+      false,
+    );
+    banner.material.color.setHSL((0.08 * i + rng() * 0.1) % 1, 0.7, 0.68);
+  }
+
+  buildParkingLot(group, colliders, centerX, centerZ - 28, 48, 18, rng);
+  addStaticCollider(colliders, centerX, centerZ, 24, 18, "mall");
+}
+
+function buildLot(group, colliders, centerX, centerZ, rng, district, lotType = "mixed") {
+  const roll = rng();
+  if (lotType === "mall") {
+    buildMall(group, colliders, centerX, centerZ, rng);
+    return;
+  }
+  if (lotType === "service") {
+    if (roll > 0.5) {
+      buildGasStation(group, colliders, centerX, centerZ, rng);
+    } else {
+      buildParkingLot(group, colliders, centerX, centerZ, 34, 34, rng);
+    }
+    return;
+  }
+  if (lotType === "industrial") {
+    if (roll > 0.35) {
+      buildWarehouse(group, colliders, centerX, centerZ, 28 + rng() * 6, 24 + rng() * 8, rng);
+    } else {
+      buildParkingLot(group, colliders, centerX, centerZ, 34, 34, rng);
+    }
+    return;
+  }
+  if (lotType === "plaza") {
+    if (roll > 0.42) {
+      buildPlaza(group, colliders, centerX, centerZ, 34, 34, rng);
+    } else {
+      buildPark(group, colliders, centerX, centerZ, 34, 34, rng);
+    }
+    return;
+  }
+
+  if (district === "downtown" && roll > 0.72) {
+    buildPlaza(group, colliders, centerX, centerZ, 34, 34, rng);
+    return;
+  }
+  if (district === "commercial" && roll > 0.7) {
+    buildParkingLot(group, colliders, centerX, centerZ, 34, 34, rng);
+    return;
+  }
+  if (district === "residential" && roll > 0.74) {
+    buildPark(group, colliders, centerX, centerZ, 34, 34, rng);
+    return;
+  }
+
+  const width = district === "downtown" ? 20 + rng() * 9 : 16 + rng() * 10;
+  const depth = district === "downtown" ? 20 + rng() * 9 : 16 + rng() * 10;
+  const heightBase = district === "downtown" ? 28 : district === "commercial" ? 20 : 14;
+  const height = heightBase + rng() * (district === "downtown" ? 34 : 20);
+  const materialChoices = [materials.buildingA, materials.buildingB, materials.buildingC];
+  const material = materialChoices[Math.floor(rng() * materialChoices.length)].clone();
+  material.color.offsetHSL((rng() - 0.5) * 0.04, (rng() - 0.5) * 0.08, (rng() - 0.5) * 0.08);
+  const glassTint = [0xa9d0f0, 0xd8e4ef, 0x9fc3df, 0xb8dbf2][Math.floor(rng() * 4)];
+  buildBuilding(group, colliders, centerX, centerZ, width, depth, height, material, glassTint);
+}
+
 function buildStreetLights(group, colliders, chunkCenterX, chunkCenterZ) {
   const offsets = [
     [-ROAD_WIDTH * 0.6, -ROAD_WIDTH * 0.6],
