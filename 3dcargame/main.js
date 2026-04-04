@@ -13,6 +13,14 @@ const handbrakeStatusEl = document.querySelector("#handbrake-status");
 const objectiveEl = document.querySelector("#objective");
 const pursuitEl = document.querySelector("#combo");
 const statusPill = document.querySelector("#status-pill");
+const navForm = document.querySelector("#nav-form");
+const navSearchEl = document.querySelector("#nav-search");
+const navTitleEl = document.querySelector("#nav-title");
+const navHintEl = document.querySelector("#nav-hint");
+const overlay = document.querySelector("#overlay");
+const overlayKickerEl = document.querySelector("#overlay-kicker");
+const overlayTitleEl = document.querySelector("#overlay-title");
+const overlayBodyEl = document.querySelector("#overlay-body");
 const respawnButton = document.querySelector("#respawn-button");
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -94,6 +102,7 @@ const trafficCars = [];
 const pedestrians = [];
 const policeCars = [];
 const pickups = [];
+const destinationSearchRadius = 5;
 
 const up = new THREE.Vector3(0, 1, 0);
 const cameraTarget = new THREE.Vector3();
@@ -166,7 +175,9 @@ const state = {
   comboTime: 0,
   handbrakeTime: 0,
   refuelTime: 0,
+  navigation: null,
   gameOver: false,
+  paused: false,
   deathMessage: "",
 };
 
@@ -243,9 +254,40 @@ function updateDust(delta) {
 function awardScore(basePoints, message = "") {
   const earned = basePoints * state.comboMultiplier;
   state.score += earned;
-  if (message) {
+  if (message && !state.paused) {
     statusPill.textContent = `${message} x${state.comboMultiplier.toFixed(1)}`;
   }
+}
+
+function setOverlay(visible, kicker = "", title = "", bodyText = "") {
+  overlay.classList.toggle("is-visible", visible);
+  overlayKickerEl.textContent = kicker;
+  overlayTitleEl.textContent = title;
+  overlayBodyEl.textContent = bodyText;
+}
+
+function setPaused(paused) {
+  if (state.gameOver) return;
+  state.paused = paused;
+  if (paused) {
+    Object.keys(keys).forEach((key) => {
+      keys[key] = false;
+    });
+    setOverlay(true, "Paused", "Drive paused", "Press P to jump back into the city.");
+    statusPill.textContent = "Simulation paused";
+    pursuitEl.textContent = "Paused";
+  } else {
+    setOverlay(false, "", "", "");
+    statusPill.textContent = state.wanted > 0.05
+      ? "Back on the run"
+      : state.fuel < 12
+        ? "Watch the tank"
+        : "Back on the road";
+  }
+}
+
+function togglePause() {
+  setPaused(!state.paused);
 }
 
 function addStaticCollider(colliders, x, z, radius, height = 30, label = "object") {
@@ -284,6 +326,16 @@ function activeGasStations(x, z) {
   return nearby;
 }
 
+function addDestination(destinations, x, z, type, label, aliases = []) {
+  destinations.push({
+    x,
+    z,
+    type,
+    label,
+    aliases: [label, type, ...aliases].map((entry) => entry.toLowerCase()),
+  });
+}
+
 function createBox(group, x, y, z, sx, sy, sz, material, castShadow = true) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), material);
   mesh.position.set(x, y, z);
@@ -306,7 +358,7 @@ function buildBuilding(group, colliders, x, z, width, depth, height, material, g
   addStaticCollider(colliders, x, z, Math.max(width, depth) * 0.52, 30, "building");
 }
 
-function buildPark(group, colliders, centerX, centerZ, width, depth, rng) {
+function buildPark(group, colliders, destinations, centerX, centerZ, width, depth, rng) {
   const grass = new THREE.Mesh(
     new THREE.BoxGeometry(width, 0.2, depth),
     materials.grass,
@@ -343,9 +395,11 @@ function buildPark(group, colliders, centerX, centerZ, width, depth, rng) {
     createBox(group, bx + 1.8, 0.8, bz, 0.2, 0.9, 1.1, materials.lamp);
     addStaticCollider(colliders, bx, bz, 2.5, 2, "bench");
   }
+
+  addDestination(destinations, centerX, centerZ, "park", "Park", ["green space", "garden"]);
 }
 
-function buildParkingLot(group, colliders, centerX, centerZ, width, depth, rng) {
+function buildParkingLot(group, colliders, destinations, centerX, centerZ, width, depth, rng) {
   const lot = new THREE.Mesh(
     new THREE.BoxGeometry(width, 0.08, depth),
     materials.asphalt,
@@ -376,10 +430,10 @@ function buildParkingLot(group, colliders, centerX, centerZ, width, depth, rng) 
     group.add(parked.car);
     addStaticCollider(colliders, parked.car.position.x, parked.car.position.z, 2.2, 2.5, "parked car");
   }
-
+  addDestination(destinations, centerX, centerZ, "parking lot", "Parking Lot", ["parking", "lot"]);
 }
 
-function buildPlaza(group, colliders, centerX, centerZ, width, depth, rng) {
+function buildPlaza(group, colliders, destinations, centerX, centerZ, width, depth, rng) {
   const ground = new THREE.Mesh(
     new THREE.BoxGeometry(width, 0.12, depth),
     materials.sidewalk,
@@ -424,9 +478,11 @@ function buildPlaza(group, colliders, centerX, centerZ, width, depth, rng) {
     group.add(leaves);
     addStaticCollider(colliders, tx, tz, 1.9, 30, "tree");
   }
+
+  addDestination(destinations, centerX, centerZ, "plaza", "Plaza", ["square", "fountain"]);
 }
 
-function buildGasStation(group, colliders, gasStations, centerX, centerZ, rng) {
+function buildGasStation(group, colliders, gasStations, destinations, centerX, centerZ, rng) {
   const forecourt = new THREE.Mesh(
     new THREE.BoxGeometry(34, 0.08, 26),
     materials.asphalt,
@@ -454,9 +510,10 @@ function buildGasStation(group, colliders, gasStations, centerX, centerZ, rng) {
   createBox(group, centerX - 1.5, 2.6, centerZ + 10, 3.6, 3.8, 0.3, materials.stripe);
   addStaticCollider(colliders, centerX - 8, centerZ + 7, 8, 8, "gas station");
   gasStations.push({ x: centerX + 7, z: centerZ - 1, radius: 9.5 });
+  addDestination(destinations, centerX + 7, centerZ - 1, "gas station", "Gas Station", ["gas", "fuel", "station"]);
 }
 
-function buildWarehouse(group, colliders, centerX, centerZ, width, depth, rng) {
+function buildWarehouse(group, colliders, destinations, centerX, centerZ, width, depth, rng) {
   const warehouseMaterial = materials.buildingC.clone();
   warehouseMaterial.color.offsetHSL(0, -0.05, -0.08);
   createBox(group, centerX, 7, centerZ, width, 14, depth, warehouseMaterial);
@@ -470,9 +527,10 @@ function buildWarehouse(group, colliders, centerX, centerZ, width, depth, rng) {
   }
 
   addStaticCollider(colliders, centerX, centerZ, Math.max(width, depth) * 0.5, 16, "warehouse");
+  addDestination(destinations, centerX, centerZ, "warehouse", "Warehouse", ["industrial", "depot"]);
 }
 
-function buildMall(group, colliders, centerX, centerZ, rng) {
+function buildMall(group, colliders, destinations, centerX, centerZ, rng) {
   const shellMaterial = materials.buildingA.clone();
   shellMaterial.color.offsetHSL(-0.02, -0.05, 0.1);
   createBox(group, centerX, 9, centerZ, 52, 18, 38, shellMaterial);
@@ -509,51 +567,52 @@ function buildMall(group, colliders, centerX, centerZ, rng) {
     banner.material.color.setHSL((0.08 * i + rng() * 0.1) % 1, 0.7, 0.68);
   }
 
-  buildParkingLot(group, colliders, centerX, centerZ - 28, 48, 18, rng);
+  buildParkingLot(group, colliders, destinations, centerX, centerZ - 28, 48, 18, rng);
   addStaticCollider(colliders, centerX, centerZ, 24, 18, "mall");
+  addDestination(destinations, centerX, centerZ, "mall", "Mall", ["shopping center", "shopping"]);
 }
 
-function buildLot(group, colliders, gasStations, centerX, centerZ, rng, district, lotType = "mixed") {
+function buildLot(group, colliders, gasStations, destinations, centerX, centerZ, rng, district, lotType = "mixed") {
   const roll = rng();
   if (lotType === "mall") {
-    buildMall(group, colliders, centerX, centerZ, rng);
+    buildMall(group, colliders, destinations, centerX, centerZ, rng);
     return;
   }
   if (lotType === "service") {
     if (roll > 0.5) {
-      buildGasStation(group, colliders, gasStations, centerX, centerZ, rng);
+      buildGasStation(group, colliders, gasStations, destinations, centerX, centerZ, rng);
     } else {
-      buildParkingLot(group, colliders, centerX, centerZ, 34, 34, rng);
+      buildParkingLot(group, colliders, destinations, centerX, centerZ, 34, 34, rng);
     }
     return;
   }
   if (lotType === "industrial") {
     if (roll > 0.35) {
-      buildWarehouse(group, colliders, centerX, centerZ, 28 + rng() * 6, 24 + rng() * 8, rng);
+      buildWarehouse(group, colliders, destinations, centerX, centerZ, 28 + rng() * 6, 24 + rng() * 8, rng);
     } else {
-      buildParkingLot(group, colliders, centerX, centerZ, 34, 34, rng);
+      buildParkingLot(group, colliders, destinations, centerX, centerZ, 34, 34, rng);
     }
     return;
   }
   if (lotType === "plaza") {
     if (roll > 0.42) {
-      buildPlaza(group, colliders, centerX, centerZ, 34, 34, rng);
+      buildPlaza(group, colliders, destinations, centerX, centerZ, 34, 34, rng);
     } else {
-      buildPark(group, colliders, centerX, centerZ, 34, 34, rng);
+      buildPark(group, colliders, destinations, centerX, centerZ, 34, 34, rng);
     }
     return;
   }
 
   if (district === "downtown" && roll > 0.72) {
-    buildPlaza(group, colliders, centerX, centerZ, 34, 34, rng);
+    buildPlaza(group, colliders, destinations, centerX, centerZ, 34, 34, rng);
     return;
   }
   if (district === "commercial" && roll > 0.7) {
-    buildParkingLot(group, colliders, centerX, centerZ, 34, 34, rng);
+    buildParkingLot(group, colliders, destinations, centerX, centerZ, 34, 34, rng);
     return;
   }
   if (district === "residential" && roll > 0.74) {
-    buildPark(group, colliders, centerX, centerZ, 34, 34, rng);
+    buildPark(group, colliders, destinations, centerX, centerZ, 34, 34, rng);
     return;
   }
 
@@ -605,6 +664,7 @@ function createChunk(cx, cz) {
   const group = new THREE.Group();
   const colliders = [];
   const gasStations = [];
+  const destinations = [];
   const centerX = cx * CHUNK_SIZE;
   const centerZ = cz * CHUNK_SIZE;
   const distanceFromCenter = Math.abs(cx) + Math.abs(cz);
@@ -710,15 +770,15 @@ function createChunk(cx, cz) {
   quadrants.forEach((quad, index) => {
     const lotType = lotTypes[index];
     if (lotType === "parking") {
-      buildParkingLot(group, colliders, quad.x, quad.z, 34, 34, rng);
+      buildParkingLot(group, colliders, destinations, quad.x, quad.z, 34, 34, rng);
       return;
     }
-    buildLot(group, colliders, gasStations, quad.x, quad.z, rng, district, lotType);
+    buildLot(group, colliders, gasStations, destinations, quad.x, quad.z, rng, district, lotType);
   });
 
   buildStreetLights(group, colliders, centerX, centerZ);
   world.add(group);
-  chunkMap.set(key, { group, colliders, gasStations });
+  chunkMap.set(key, { group, colliders, gasStations, destinations });
 }
 
 function updateChunks(x, z) {
@@ -742,6 +802,131 @@ function updateChunks(x, z) {
       chunkMap.delete(key);
     }
   }
+}
+
+const navigationBeacon = new THREE.Group();
+const beaconColumn = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.45, 0.45, 20, 12),
+  new THREE.MeshBasicMaterial({
+    color: 0x8ef0cb,
+    transparent: true,
+    opacity: 0.24,
+  }),
+);
+beaconColumn.position.y = 10;
+navigationBeacon.add(beaconColumn);
+
+const beaconRing = new THREE.Mesh(
+  new THREE.TorusGeometry(3, 0.18, 12, 32),
+  new THREE.MeshBasicMaterial({ color: 0xffd166 }),
+);
+beaconRing.rotation.x = Math.PI / 2;
+beaconRing.position.y = 0.3;
+navigationBeacon.add(beaconRing);
+navigationBeacon.visible = false;
+scene.add(navigationBeacon);
+
+const destinationSearchIndex = [
+  { type: "gas station", aliases: ["gas station", "gas", "fuel", "station"] },
+  { type: "park", aliases: ["park", "garden", "green space"] },
+  { type: "plaza", aliases: ["plaza", "square", "fountain"] },
+  { type: "mall", aliases: ["mall", "shopping", "shopping center"] },
+  { type: "warehouse", aliases: ["warehouse", "industrial", "depot"] },
+  { type: "parking lot", aliases: ["parking lot", "parking", "lot"] },
+];
+
+function findDestinationSearchType(query) {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return null;
+
+  for (const entry of destinationSearchIndex) {
+    if (entry.aliases.some((alias) => normalized.includes(alias) || alias.includes(normalized))) {
+      return entry.type;
+    }
+  }
+
+  return null;
+}
+
+function collectDestinationsAround(x, z, radius = destinationSearchRadius) {
+  const centerChunkX = Math.round(x / CHUNK_SIZE);
+  const centerChunkZ = Math.round(z / CHUNK_SIZE);
+  const results = [];
+
+  for (let dz = -radius; dz <= radius; dz += 1) {
+    for (let dx = -radius; dx <= radius; dx += 1) {
+      const cx = centerChunkX + dx;
+      const cz = centerChunkZ + dz;
+      createChunk(cx, cz);
+      const chunk = chunkMap.get(chunkKey(cx, cz));
+      if (!chunk) continue;
+      results.push(...chunk.destinations);
+    }
+  }
+
+  return results;
+}
+
+function directionLabelToTarget(dx, dz) {
+  const targetHeading = Math.atan2(dx, dz);
+  let delta = targetHeading - state.heading;
+  delta = Math.atan2(Math.sin(delta), Math.cos(delta));
+  const absDelta = Math.abs(delta);
+
+  if (absDelta < Math.PI / 6) return "Ahead";
+  if (absDelta > Math.PI * 5 / 6) return "Behind";
+  return delta > 0 ? "Left" : "Right";
+}
+
+function clearNavigation(message = "Navigation cleared") {
+  state.navigation = null;
+  navigationBeacon.visible = false;
+  navTitleEl.textContent = "No destination selected";
+  navHintEl.textContent = "Search a place and the city will mark the nearest one.";
+  if (!state.gameOver && !state.paused) {
+    statusPill.textContent = message;
+  }
+}
+
+function setNavigationFromQuery(query) {
+  const type = findDestinationSearchType(query);
+  if (!type) {
+    navTitleEl.textContent = "No match";
+    navHintEl.textContent = "Try gas station, park, plaza, mall, warehouse, or parking lot.";
+    statusPill.textContent = "Search not recognized";
+    return;
+  }
+
+  const destinations = collectDestinationsAround(car.position.x, car.position.z);
+  const matches = destinations.filter((destination) => destination.type === type);
+  if (matches.length === 0) {
+    navTitleEl.textContent = "No destination found";
+    navHintEl.textContent = `No ${type} found nearby. Drive farther and try again.`;
+    statusPill.textContent = `No ${type} nearby`;
+    return;
+  }
+
+  let nearest = matches[0];
+  let bestDistanceSq = Infinity;
+  for (const destination of matches) {
+    const dx = destination.x - car.position.x;
+    const dz = destination.z - car.position.z;
+    const distanceSq = dx * dx + dz * dz;
+    if (distanceSq < bestDistanceSq) {
+      bestDistanceSq = distanceSq;
+      nearest = destination;
+    }
+  }
+
+  state.navigation = {
+    ...nearest,
+    query: query.trim(),
+    arrived: false,
+  };
+  navSearchEl.value = nearest.label;
+  navigationBeacon.visible = true;
+  navigationBeacon.position.set(nearest.x, 0, nearest.z);
+  statusPill.textContent = `Routing to ${nearest.label.toLowerCase()}`;
 }
 
 function createCarMesh(bodyMaterial, roofColor) {
@@ -1003,6 +1188,7 @@ function resetTraffic() {
 }
 
 function resetGame() {
+  setOverlay(false, "", "", "");
   car.position.set(0, 0, 0);
   state.velocity.set(0, 0, 0);
   state.heading = 0;
@@ -1020,12 +1206,15 @@ function resetGame() {
   state.comboTime = 0;
   state.handbrakeTime = 0;
   state.refuelTime = 0;
+  state.navigation = null;
   state.gameOver = false;
+  state.paused = false;
   state.deathMessage = "";
   previousCarPosition.copy(car.position);
   respawnButton.classList.remove("is-visible");
   resetTraffic();
   updateChunks(0, 0);
+  clearNavigation("City drive reset");
   statusPill.textContent = "City drive reset";
 }
 
@@ -1042,6 +1231,7 @@ window.addEventListener("keydown", (event) => {
   if (key === "d" || key === "arrowright") keys.right = true;
   if (key === "shift") keys.boost = true;
   if (key === " ") keys.handbrake = true;
+  if (key === "p") togglePause();
   if (key === "r") resetGame();
 });
 
@@ -1053,6 +1243,16 @@ window.addEventListener("keyup", (event) => {
   if (key === "d" || key === "arrowright") keys.right = false;
   if (key === "shift") keys.boost = false;
   if (key === " ") keys.handbrake = false;
+});
+
+navForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const query = navSearchEl.value.trim();
+  if (!query) {
+    clearNavigation();
+    return;
+  }
+  setNavigationFromQuery(query);
 });
 
 function addCrime(amount, message) {
@@ -1099,7 +1299,7 @@ function resolveStaticCollisions() {
     createDustBurst(car.position.x, 0.8, car.position.z, 1.1);
     statusPill.textContent = strongestHit > 10 ? "Hard collision" : "Clipped a city prop";
     if (state.health <= 0) {
-      state.deathMessage = `User bumped too hard against ${withArticle(strongestLabel)}`;
+      state.deathMessage = `You hit ${withArticle(strongestLabel)} too hard`;
     }
   }
 }
@@ -1149,7 +1349,7 @@ function updateTraffic(delta) {
         awardScore(15, "Traffic hit");
         addCrime(1, "Traffic collision reported");
         if (state.health <= 0) {
-          state.deathMessage = "User bumped too hard against a car";
+          state.deathMessage = "You totaled the car in traffic";
         }
       }
     }
@@ -1286,10 +1486,11 @@ function updatePolice(delta) {
       state.gameOver = true;
       state.velocity.set(0, 0, 0);
       state.pursuitCapture = 1;
-      state.deathMessage = "User was caught by police";
+      state.deathMessage = "You were caught by police";
       objectiveEl.textContent = state.deathMessage;
       pursuitEl.textContent = "Lost";
       statusPill.textContent = state.deathMessage;
+      setOverlay(true, "Busted", "Pursuit failed", "Respawn to get back behind the wheel.");
       respawnButton.classList.add("is-visible");
       break;
     }
@@ -1336,7 +1537,11 @@ function updateHud(forwardSpeed) {
   }
 
   if (state.gameOver) {
-    objectiveEl.textContent = state.deathMessage || "User was lost";
+    objectiveEl.textContent = state.deathMessage || "Drive ended";
+  } else if (state.paused) {
+    objectiveEl.textContent = "Paused. Press P to resume the drive";
+  } else if (state.navigation) {
+    objectiveEl.textContent = `Navigating to ${state.navigation.label}`;
   } else if (state.fuel <= 0.5) {
     objectiveEl.textContent = "Out of gas. Roll into a gas station forecourt to refill";
   } else if (state.fuel < 18) {
@@ -1345,6 +1550,38 @@ function updateHud(forwardSpeed) {
     objectiveEl.textContent = "Evade the police or survive until your heat drops";
   } else {
     objectiveEl.textContent = "Cruise the city, avoid crimes, or test your luck";
+  }
+}
+
+function updateNavigation(time) {
+  if (!state.navigation) {
+    navigationBeacon.visible = false;
+    return;
+  }
+
+  const dx = state.navigation.x - car.position.x;
+  const dz = state.navigation.z - car.position.z;
+  const distance = Math.hypot(dx, dz);
+  const direction = directionLabelToTarget(dx, dz);
+
+  navTitleEl.textContent = `${state.navigation.label} ${Math.round(distance)}m`;
+  navHintEl.textContent = `${direction} of you. Follow the beacon.`;
+
+  navigationBeacon.visible = true;
+  navigationBeacon.position.set(state.navigation.x, 0, state.navigation.z);
+  beaconRing.rotation.z = time * 0.9;
+  beaconRing.position.y = 0.55 + Math.sin(time * 2.5) * 0.12;
+  beaconColumn.material.opacity = 0.18 + (Math.sin(time * 3) + 1) * 0.08;
+
+  if (distance < 14) {
+    navTitleEl.textContent = `${state.navigation.label} reached`;
+    navHintEl.textContent = "Destination reached. Search another place or keep exploring.";
+    if (!state.navigation.arrived) {
+      state.navigation.arrived = true;
+      statusPill.textContent = `${state.navigation.label} reached`;
+    }
+  } else {
+    state.navigation.arrived = false;
   }
 }
 
@@ -1383,6 +1620,14 @@ function animate() {
 
   const delta = Math.min(clock.getDelta(), 0.03);
   const time = clock.elapsedTime;
+  updateNavigation(time);
+
+  if (state.paused) {
+    updateHud(0);
+    renderer.render(scene, camera);
+    return;
+  }
+
   updateChunks(car.position.x, car.position.z);
   updateDust(delta);
 
@@ -1445,10 +1690,11 @@ function animate() {
 
   if (state.health <= 0 && !state.gameOver) {
     state.gameOver = true;
-    state.deathMessage = state.deathMessage || "User bumped too hard against an object";
+    state.deathMessage = state.deathMessage || "You wrecked the car";
     statusPill.textContent = state.deathMessage;
     objectiveEl.textContent = state.deathMessage;
     pursuitEl.textContent = "Lost";
+    setOverlay(true, "Wrecked", "Car destroyed", "Respawn to restart the city run.");
     respawnButton.classList.add("is-visible");
   }
 

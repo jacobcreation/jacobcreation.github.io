@@ -82,17 +82,53 @@
         </div>
       </div>
 
+      <div class="nav-panel">
+        <div class="nav-head">
+          <span class="strip-label">Destination Search</span>
+          <strong id="nav-title">No destination selected</strong>
+        </div>
+        <form class="nav-form" id="nav-form">
+          <input
+            id="nav-search"
+            name="nav-search"
+            type="text"
+            list="poi-options"
+            placeholder="Search park, gas station, mall..."
+            autocomplete="off"
+          />
+          <datalist id="poi-options">
+            <option value="gas station"></option>
+            <option value="park"></option>
+            <option value="plaza"></option>
+            <option value="mall"></option>
+            <option value="warehouse"></option>
+            <option value="parking lot"></option>
+          </datalist>
+          <button type="submit">Guide Me</button>
+        </form>
+        <p class="nav-hint" id="nav-hint">Search a place and the city will mark the nearest one.</p>
+      </div>
+
       <div class="controls">
         <span><kbd>W</kbd> Accelerate</span>
         <span><kbd>S</kbd> Brake / Reverse</span>
         <span><kbd>A</kbd><kbd>D</kbd> Steer</span>
+        <span><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> Arrow keys work too</span>
         <span><kbd>Shift</kbd> Boost</span>
         <span><kbd>Space</kbd> Handbrake</span>
+        <span><kbd>P</kbd> Pause</span>
         <span><kbd>R</kbd> Reset</span>
       </div>
     </div>
 
     <div class="status-pill" id="status-pill">Cruise the city and keep it clean</div>
+    <div class="overlay" id="overlay" aria-live="polite">
+      <div class="overlay-card">
+        <p class="overlay-kicker" id="overlay-kicker">Paused</p>
+        <h2 id="overlay-title">Drive paused</h2>
+        <p id="overlay-body">Press P to jump back into the city.</p>
+      </div>
+    </div>
     <button class="respawn-button" id="respawn-button" type="button">Respawn</button>
 
     <canvas id="scene"></canvas>
