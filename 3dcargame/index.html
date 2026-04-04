@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dustline Driver</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="hud">
+      <div class="brand">
+        <p class="eyebrow">3D Car Simulator</p>
+        <h1>Dustline Driver</h1>
+        <p class="subtitle">
+          Tear through an endless city with traffic, pedestrians, parks, and a
+          police response if you cause trouble.
+        </p>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card">
+          <span class="label">Speed</span>
+          <strong id="speed">0</strong>
+          <span class="unit">km/h</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Score</span>
+          <strong id="drift">0</strong>
+          <span class="unit">pts</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Best</span>
+          <strong id="best">0</strong>
+          <span class="unit">pts</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Wanted</span>
+          <strong id="boost">0</strong>
+          <span class="unit">lvl</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Hull</span>
+          <strong id="health">100</strong>
+          <span class="unit">%</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Distance</span>
+          <strong id="distance">0</strong>
+          <span class="unit">m</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Combo</span>
+          <strong id="combo-multiplier">x1.0</strong>
+          <span class="unit">mult</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Brake</span>
+          <strong id="handbrake-status">Ready</strong>
+          <span class="unit">space</span>
+        </div>
+      </div>
+
+      <div class="mission-strip">
+        <div>
+          <span class="strip-label">City Status</span>
+          <strong id="objective">Drive clean or trigger a pursuit</strong>
+        </div>
+        <div>
+          <span class="strip-label">Pursuit</span>
+          <strong id="combo">Idle</strong>
+        </div>
+      </div>
+
+      <div class="controls">
+        <span><kbd>W</kbd> Accelerate</span>
+        <span><kbd>S</kbd> Brake / Reverse</span>
+        <span><kbd>A</kbd><kbd>D</kbd> Steer</span>
+        <span><kbd>Shift</kbd> Boost</span>
+        <span><kbd>Space</kbd> Handbrake</span>
+        <span><kbd>R</kbd> Reset</span>
+      </div>
+    </div>
+
+    <div class="status-pill" id="status-pill">Cruise the city and keep it clean</div>
+    <button class="respawn-button" id="respawn-button" type="button">Respawn</button>
+
+    <canvas id="scene"></canvas>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
