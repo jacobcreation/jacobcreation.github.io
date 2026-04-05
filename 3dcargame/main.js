@@ -6,6 +6,7 @@ const scoreEl = document.querySelector("#drift");
 const bestEl = document.querySelector("#best");
 const wantedEl = document.querySelector("#boost");
 const healthEl = document.querySelector("#health");
+const healthMeterFillEl = document.querySelector("#health-meter-fill");
 const distanceEl = document.querySelector("#distance");
 const fuelEl = document.querySelector("#fuel");
 const comboMultiplierEl = document.querySelector("#combo-multiplier");
@@ -91,6 +92,20 @@ const ACTIVE_CHUNK_RADIUS = 1;
 const ROAD_WIDTH = 26;
 const SIDEWALK_WIDTH = 8;
 const LANE_OFFSET = 5.5;
+const STATIC_DAMAGE_START = 9;
+const STATIC_DAMAGE_SCALE = 0.2;
+const STATIC_DAMAGE_COOLDOWN = 0.75;
+const STATIC_DAMAGE_MAX = 24;
+const TRAFFIC_DAMAGE_START = 11;
+const TRAFFIC_DAMAGE_SCALE = 0.18;
+const TRAFFIC_DAMAGE_MAX = 28;
+const STATIC_PUSH_RESOLVE = 0.7;
+const TRAFFIC_PUSH_PLAYER = 0.45;
+const TRAFFIC_PUSH_OTHER = 0.2;
+const TRAFFIC_BUMP_IMPULSE = 9;
+const TRAFFIC_BUMP_DAMPING = 4.5;
+const TRAFFIC_LANE_RETURN = 3.5;
+const PEDESTRIAN_DAMAGE = 4;
 const PLAYER_RADIUS = 1.7;
 const TRAFFIC_RADIUS = 1.9;
 const POLICE_RADIUS = 2;
@@ -175,6 +190,8 @@ const state = {
   comboTime: 0,
   handbrakeTime: 0,
   refuelTime: 0,
+  staticDamageCooldown: 0,
+  staticCollisionActive: false,
   navigation: null,
   gameOver: false,
   paused: false,
@@ -996,7 +1013,16 @@ function createTrafficCar(colorIndex = 0) {
   }
   const { car, wheels } = createCarMesh(bodyMaterial, 0xe8edf3);
   world.add(car);
-  return { car, wheels, axis: "x", dir: 1, laneCoord: 0, speed: 14, radius: TRAFFIC_RADIUS };
+  return {
+    car,
+    wheels,
+    axis: "x",
+    dir: 1,
+    laneCoord: 0,
+    speed: 14,
+    radius: TRAFFIC_RADIUS,
+    bumpVelocity: new THREE.Vector2(),
+  };
 }
 
 function createPoliceCar() {
@@ -1088,6 +1114,7 @@ function createPickup(type) {
 }
 
 function spawnTrafficCar(vehicle, index) {
+  vehicle.bumpVelocity.set(0, 0);
   const roadCenter = getRoadCenter(car.position[index % 2 === 0 ? "z" : "x"]);
   const offsetRoad = roadCenter + ((index % 4) - 1.5) * CHUNK_SIZE;
   if (index % 2 === 0) {
@@ -1206,6 +1233,8 @@ function resetGame() {
   state.comboTime = 0;
   state.handbrakeTime = 0;
   state.refuelTime = 0;
+  state.staticDamageCooldown = 0;
+  state.staticCollisionActive = false;
   state.navigation = null;
   state.gameOver = false;
   state.paused = false;
@@ -1267,6 +1296,7 @@ function resolveStaticCollisions() {
   const colliders = activeStaticColliders(car.position.x, car.position.z);
   let strongestHit = 0;
   let strongestLabel = "object";
+  let touchingStaticCollider = false;
 
   for (const collider of colliders) {
     const dx = car.position.x - collider.x;
@@ -1274,48 +1304,76 @@ function resolveStaticCollisions() {
     const minDistance = PLAYER_RADIUS + collider.radius;
     const distanceSq = dx * dx + dz * dz;
     if (distanceSq === 0 || distanceSq >= minDistance * minDistance) continue;
+    touchingStaticCollider = true;
 
     const distance = Math.sqrt(distanceSq);
     const nx = dx / distance;
     const nz = dz / distance;
     const push = minDistance - distance;
-    car.position.x += nx * push;
-    car.position.z += nz * push;
+    car.position.x += nx * push * STATIC_PUSH_RESOLVE;
+    car.position.z += nz * push * STATIC_PUSH_RESOLVE;
 
-    const hitSpeed = Math.abs(state.velocity.x * nx + state.velocity.z * nz);
+    const normalSpeed = state.velocity.x * nx + state.velocity.z * nz;
+    const hitSpeed = Math.max(0, -normalSpeed);
     strongestHit = Math.max(strongestHit, hitSpeed);
     if (hitSpeed >= strongestHit) {
       strongestLabel = collider.label || "object";
     }
-    if (hitSpeed > 0) {
-      state.velocity.x -= nx * hitSpeed * 1.1;
-      state.velocity.z -= nz * hitSpeed * 1.1;
-      state.velocity.multiplyScalar(0.75);
+    if (hitSpeed > 0.35) {
+      // Remove the into-the-wall component so the car scrubs along surfaces
+      // instead of bouncing sideways or getting launched back.
+      state.velocity.x += nx * hitSpeed;
+      state.velocity.z += nz * hitSpeed;
+      state.velocity.multiplyScalar(0.94);
     }
   }
 
-  if (strongestHit > 4) {
-    state.health = Math.max(0, state.health - strongestHit * 0.4);
+  if (
+    touchingStaticCollider &&
+    !state.staticCollisionActive &&
+    strongestHit > STATIC_DAMAGE_START &&
+    state.staticDamageCooldown <= 0
+  ) {
+    const collisionDamage = Math.min(
+      STATIC_DAMAGE_MAX,
+      (strongestHit - STATIC_DAMAGE_START) * STATIC_DAMAGE_SCALE,
+    );
+    state.health = Math.max(0, state.health - collisionDamage);
+    state.staticDamageCooldown = STATIC_DAMAGE_COOLDOWN;
     createDustBurst(car.position.x, 0.8, car.position.z, 1.1);
     statusPill.textContent = strongestHit > 10 ? "Hard collision" : "Clipped a city prop";
     if (state.health <= 0) {
       state.deathMessage = `You hit ${withArticle(strongestLabel)} too hard`;
     }
   }
+
+  state.staticCollisionActive = touchingStaticCollider;
 }
 
 function updateTraffic(delta) {
   for (let i = 0; i < trafficCars.length; i += 1) {
     const vehicle = trafficCars[i];
+    vehicle.car.position.x += vehicle.bumpVelocity.x * delta;
+    vehicle.car.position.z += vehicle.bumpVelocity.y * delta;
+    vehicle.bumpVelocity.multiplyScalar(Math.max(0, 1 - TRAFFIC_BUMP_DAMPING * delta));
+
     if (vehicle.axis === "x") {
       vehicle.car.position.x += vehicle.dir * vehicle.speed * delta;
-      vehicle.car.position.z = vehicle.laneCoord;
+      vehicle.car.position.z = THREE.MathUtils.lerp(
+        vehicle.car.position.z,
+        vehicle.laneCoord,
+        Math.min(1, TRAFFIC_LANE_RETURN * delta),
+      );
       if (Math.abs(vehicle.car.position.x - car.position.x) > CHUNK_SIZE * 3.2) {
         spawnTrafficCar(vehicle, i);
       }
     } else {
       vehicle.car.position.z += vehicle.dir * vehicle.speed * delta;
-      vehicle.car.position.x = vehicle.laneCoord;
+      vehicle.car.position.x = THREE.MathUtils.lerp(
+        vehicle.car.position.x,
+        vehicle.laneCoord,
+        Math.min(1, TRAFFIC_LANE_RETURN * delta),
+      );
       if (Math.abs(vehicle.car.position.z - car.position.z) > CHUNK_SIZE * 3.2) {
         spawnTrafficCar(vehicle, i);
       }
@@ -1336,16 +1394,28 @@ function updateTraffic(delta) {
       const nx = dx / distance;
       const nz = dz / distance;
       const overlap = minDistance - distance;
-      car.position.x += nx * overlap * 0.65;
-      car.position.z += nz * overlap * 0.65;
-      vehicle.car.position.x -= nx * overlap * 0.35;
-      vehicle.car.position.z -= nz * overlap * 0.35;
+      car.position.x += nx * overlap * TRAFFIC_PUSH_PLAYER;
+      car.position.z += nz * overlap * TRAFFIC_PUSH_PLAYER;
+      vehicle.car.position.x -= nx * overlap * TRAFFIC_PUSH_OTHER;
+      vehicle.car.position.z -= nz * overlap * TRAFFIC_PUSH_OTHER;
 
-      const relativeSpeed = Math.abs(state.velocity.x - (vehicle.axis === "x" ? vehicle.dir * vehicle.speed : 0)) +
-        Math.abs(state.velocity.z - (vehicle.axis === "z" ? vehicle.dir * vehicle.speed : 0));
-      state.velocity.multiplyScalar(0.7);
-      if (relativeSpeed > 10) {
-        state.health = Math.max(0, state.health - relativeSpeed * 0.25);
+      const relativeVelocityX = state.velocity.x - (vehicle.axis === "x" ? vehicle.dir * vehicle.speed : 0);
+      const relativeVelocityZ = state.velocity.z - (vehicle.axis === "z" ? vehicle.dir * vehicle.speed : 0);
+      const relativeNormalSpeed = relativeVelocityX * nx + relativeVelocityZ * nz;
+      const relativeSpeed = Math.max(0, -relativeNormalSpeed);
+      if (relativeSpeed > 0.2) {
+        state.velocity.x += nx * Math.min(relativeSpeed, 10);
+        state.velocity.z += nz * Math.min(relativeSpeed, 10);
+        vehicle.bumpVelocity.x -= nx * Math.min(relativeSpeed * TRAFFIC_BUMP_IMPULSE, 18);
+        vehicle.bumpVelocity.y -= nz * Math.min(relativeSpeed * TRAFFIC_BUMP_IMPULSE, 18);
+      }
+      state.velocity.multiplyScalar(0.88);
+      if (relativeSpeed > TRAFFIC_DAMAGE_START) {
+        const collisionDamage = Math.min(
+          TRAFFIC_DAMAGE_MAX,
+          (relativeSpeed - TRAFFIC_DAMAGE_START) * TRAFFIC_DAMAGE_SCALE,
+        );
+        state.health = Math.max(0, state.health - collisionDamage);
         awardScore(15, "Traffic hit");
         addCrime(1, "Traffic collision reported");
         if (state.health <= 0) {
@@ -1388,7 +1458,7 @@ function updatePedestrians(delta, time) {
       ped.group.visible = false;
       ped.respawnAt = 8;
       createDustBurst(ped.x, 1.1, ped.z, 0.7, 0xc8cdd8);
-      state.health = Math.max(0, state.health - 8);
+      state.health = Math.max(0, state.health - PEDESTRIAN_DAMAGE);
       awardScore(50, "Major chaos");
       addCrime(2, "Pedestrian hit. Police alerted");
     }
@@ -1520,11 +1590,18 @@ function syncCarBody(forwardSpeed, delta, throttleInput) {
   );
 }
 
-function updateHud(forwardSpeed) {
-  speedEl.textContent = Math.round(Math.abs(forwardSpeed) * 8.4).toString();
+function updateHud() {
+  speedEl.textContent = Math.round(Math.hypot(state.velocity.x, state.velocity.z) * 3.6).toString();
   scoreEl.textContent = Math.round(state.score).toString();
   wantedEl.textContent = state.wanted.toFixed(1);
-  healthEl.textContent = Math.round(state.health).toString();
+  const roundedHealth = Math.round(state.health);
+  healthEl.textContent = roundedHealth.toString();
+  healthMeterFillEl.style.transform = `scaleX(${THREE.MathUtils.clamp(state.health / 100, 0, 1)})`;
+  healthMeterFillEl.style.background = state.health > 60
+    ? "linear-gradient(90deg, #52d681, #8ef0cb)"
+    : state.health > 30
+      ? "linear-gradient(90deg, #ffb347, #ffd166)"
+      : "linear-gradient(90deg, #ff5d5d, #ff866e)";
   distanceEl.textContent = Math.round(state.distance).toString();
   fuelEl.textContent = Math.round(state.fuel).toString();
   comboMultiplierEl.textContent = `x${state.comboMultiplier.toFixed(1)}`;
@@ -1620,10 +1697,11 @@ function animate() {
 
   const delta = Math.min(clock.getDelta(), 0.03);
   const time = clock.elapsedTime;
+  state.staticDamageCooldown = Math.max(0, state.staticDamageCooldown - delta);
   updateNavigation(time);
 
   if (state.paused) {
-    updateHud(0);
+    updateHud();
     renderer.render(scene, camera);
     return;
   }
@@ -1741,7 +1819,7 @@ function animate() {
 
   sun.position.set(120 + Math.sin(time * 0.05) * 20, 145, 40 + Math.cos(time * 0.05) * 15);
 
-  updateHud(forwardSpeed);
+  updateHud();
   renderer.render(scene, camera);
 }
 
