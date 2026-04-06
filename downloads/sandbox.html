@@ -188,23 +188,17 @@ function ts(){return new Date().toLocaleTimeString();}
 function addLine(type,msg){
   const d=document.createElement('div');
   d.className='line '+type;
-  d.innerHTML=\`<span class="ts">\${ts()}</span>
-               <span class="tag">\${type.toUpperCase()}</span>
-               <span>\${msg}</span>\`;
+  d.innerHTML=`<span class="ts">${ts()}</span>
+               <span class="tag">${type.toUpperCase()}</span>
+               <span>${msg}</span>`;
   consoleEl.appendChild(d);
   consoleEl.scrollTop=consoleEl.scrollHeight;
 }
 
 function clearAll(){
   consoleEl.textContent='';
-  frame.srcdoc='<!DOCTYPE html><html><body>
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/service-worker.js");
-}
-</script>
-
-</body></html>';
+  frame.srcdoc=`<!DOCTYPE html><html><body>
+</body></html>`;
 }
 
 function updateRunState(){
@@ -233,7 +227,7 @@ resetBtn.onclick=()=>{
 function runCode(code){
   if(!code.trim()){clearAll();return;}
   consoleEl.textContent='';
-  frame.srcdoc=\`
+  frame.srcdoc=`
 <!DOCTYPE html>
 <html><body>
 <script>
@@ -242,10 +236,10 @@ console.log=(...a)=>send('log',a.join(' '));
 console.warn=(...a)=>send('warn',a.join(' '));
 console.error=(...a)=>send('error',a.join(' '));
 window.onerror=(m,s,l,c,e)=>send('error',e?.stack||m);
-try{(function(){\${code}})();send('info','Execution finished');}
+try{(function(){${code}})();send('info','Execution finished');}
 catch(e){console.error(e.stack||e);}
 <\/script>
-</body></html>\`;
+</body></html>`;
 }
 
 runCode(editor.value);
