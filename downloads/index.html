@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-  <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#000000">
 
   <meta charset="UTF-8">
@@ -18,6 +17,7 @@
       --bg2: #0a1633;
       --card: rgba(255, 255, 255, 0.08);
       --card-hover: rgba(255, 255, 255, 0.12);
+      --panel: rgba(9, 15, 31, 0.72);
       --border: rgba(255, 255, 255, 0.14);
       --text: #eaf2ff;
       --muted: rgba(234, 242, 255, 0.75);
@@ -44,41 +44,75 @@
     }
 
     main {
-      max-width: 1000px;
-      margin: 80px auto 40px;
-      padding: 20px;
+      max-width: 1120px;
+      margin: 64px auto 48px;
+      padding: 24px;
       width: 100%;
       flex: 1;
     }
 
+    .shell {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
     h1 {
       text-align: center;
-      margin-bottom: 20px;
-      font-size: 2.5rem;
+      margin: 0;
+      font-size: clamp(2.1rem, 4vw, 3.4rem);
+      line-height: 1.05;
       background: linear-gradient(135deg, #fff 0%, #4ea1ff 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       text-shadow: 0 10px 30px rgba(78, 161, 255, 0.3);
     }
 
+    .lede {
+      max-width: 640px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
     }
 
     .card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 24px;
-      text-align: center;
+      padding: 18px;
+      text-align: left;
       transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
       backdrop-filter: blur(10px);
       display: flex;
       flex-direction: column;
-      align-items: center;
+      align-items: stretch;
       justify-content: space-between;
+      gap: 14px;
       height: 100%;
     }
 
@@ -90,16 +124,43 @@
     }
 
     .card .icon {
-      font-size: 48px;
-      margin-bottom: 15px;
+      font-size: 34px;
+      margin-bottom: 0;
       filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .file-pill {
+      flex-shrink: 0;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #9eccff;
+      background: rgba(78, 161, 255, 0.14);
+      border: 1px solid rgba(78, 161, 255, 0.25);
     }
 
     .card-title {
       font-weight: 600;
-      font-size: 1.1rem;
-      margin-bottom: 20px;
+      font-size: 1rem;
+      line-height: 1.35;
+      margin: 0;
       color: var(--text);
+    }
+
+    .card-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
     }
 
     .btn-download {
@@ -107,14 +168,16 @@
       color: #071122;
       background: linear-gradient(135deg, #4ea1ff, #2d6bff);
       font-weight: 700;
-      padding: 10px 24px;
+      padding: 10px 16px;
       border-radius: 999px;
       transition: transform 0.15s ease, box-shadow 0.15s ease;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
       border: none;
       cursor: pointer;
+      width: 100%;
     }
 
     .btn-download:hover {
@@ -132,7 +195,7 @@
       border: 1px solid var(--blue);
       border-radius: var(--radius);
       padding: 15px;
-      margin-bottom: 20px;
+      margin-top: 14px;
       text-align: center;
       font-size: 0.95rem;
       display: none;
@@ -144,36 +207,62 @@
     }
 
     .loading-text {
+      grid-column: 1 / -1;
       text-align: center;
       font-size: 1.2rem;
       color: var(--muted);
+      padding: 36px 0 20px;
+    }
+
+    @media (max-width: 720px) {
+      main {
+        margin: 28px auto 36px;
+        padding: 16px;
+      }
+
+      .shell {
+        padding: 22px 18px;
+        border-radius: 22px;
+      }
+
+      .hero {
+        margin-bottom: 24px;
+      }
+
+      .toolbar {
+        margin-bottom: 22px;
+      }
     }
   </style>
 </head>
 
 <body>
   <main>
-    <h1>📂 Offline Downloads</h1>
+    <div class="shell">
+      <section class="hero">
+        <h1>Offline Downloads</h1>
+        <p class="lede">A cleaner place to grab the Android builds. Each app is packaged as a standalone APK, so you can install them one by one without digging through a crowded list.</p>
+      </section>
 
-    <!-- Install button & iOS Notice -->
-    <div style="text-align:center; margin-bottom:20px;">
-      <button id="installBtn" class="btn-download">
-        📲 Install JacobCreation App
-      </button>
+      <div class="toolbar">
+        <button id="installBtn" class="btn-download">
+          📲 Install JacobCreation App
+        </button>
+      </div>
 
       <div id="iosNotice" class="ios-notice">
         To install on iPhone: tap <strong>Share</strong> ( <span style="font-size: 1.2em;">⎋</span> ) then <strong>Add
           to Home Screen</strong>.
       </div>
-    </div>
 
-    <div id="fileGrid" class="grid">
-      <p class="loading-text">Loading available games…</p>
+      <div id="fileGrid" class="grid">
+        <p class="loading-text">Loading available games…</p>
+      </div>
     </div>
   </main>
 
   <script>
-    fetch('/downloads/files.json')
+    fetch('./files.json')
       .then(res => {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return res.json();
@@ -186,13 +275,27 @@
           const card = document.createElement('div');
           card.className = 'card';
 
-          const filename = file.split("/").pop().replace(".html", "");
+          const filename = file
+            .split("/")
+            .pop()
+            .replace(/\.(html|apk)$/i, "");
+          const isApk = /\.apk$/i.test(file);
+          const icon = isApk ? "📱" : "📄";
+          const typeLabel = isApk ? "APK" : "HTML";
+          const actionLabel = isApk ? "Download APK" : "Download File";
+          const blurb = isApk
+            ? "Android install package for offline play."
+            : "Source file available for download.";
 
           card.innerHTML = `
-            <div class="icon">📄</div>
+            <div class="card-top">
+              <div class="icon">${icon}</div>
+              <div class="file-pill">${typeLabel}</div>
+            </div>
             <div class="card-title">${filename}</div>
+            <p class="card-copy">${blurb}</p>
             <a href="${file}" class="btn-download" download>
-              Download
+              ${actionLabel}
             </a>
           `;
 
@@ -209,11 +312,34 @@
       });
   </script>
 
-  <script src="../global-header.js"></script>
-
   <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/service-worker.js");
+    const loadOptionalScript = async src => {
+      try {
+        const res = await fetch(src, { method: "HEAD" });
+        if (!res.ok) return false;
+      } catch {
+        return false;
+      }
+
+      return new Promise(resolve => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.head.appendChild(script);
+      });
+    };
+
+    loadOptionalScript("../global-header.js");
+
+    if ("serviceWorker" in navigator && location.protocol !== "file:") {
+      fetch("../service-worker.js", { method: "HEAD" })
+        .then(res => {
+          if (res.ok) {
+            return navigator.serviceWorker.register("../service-worker.js");
+          }
+        })
+        .catch(() => {});
     }
 
     let deferredPrompt;
