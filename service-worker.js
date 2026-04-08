@@ -3,6 +3,8 @@ const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
     '/offline.html',
+    '/404.html',
+    '/404-mascot.png',
     '/favicon.png',
     'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap',
     'https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap'
@@ -35,6 +37,9 @@ self.addEventListener('fetch', (event) => {
                     // Update the cache with the new version from network
                     if (networkResponse && networkResponse.status === 200) {
                         cache.put(event.request, networkResponse.clone());
+                    }
+                    if (networkResponse && networkResponse.status === 404) {
+                        return cache.match('/404.html');
                     }
                     return networkResponse;
                 }).catch(() => {
