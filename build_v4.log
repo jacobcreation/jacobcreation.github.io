@@ -1,0 +1,21 @@
+Found 38 projects. Building them in parallel (4 at a time)...
+==> Started ab
+==> Started 3dcargame
+==> Started as
+==> Started bb
+  ✗ FAILED bb (Platform error - see /tmp/cordova_logs/bb.log)
+==> Started bbss
+  ✗ FAILED as (Platform error - see /tmp/cordova_logs/as.log)
+==> Started brkut
+  ✗ FAILED 3dcargame (Platform error - see /tmp/cordova_logs/p3dcargame.log)
+==> Started calculator
+  ✗ FAILED ab (Build error - see /tmp/cordova_logs/ab.log)
+==> Started cc
+  ✗ FAILED cc (Platform error - see /tmp/cordova_logs/cc.log)
+==> Started cgol
+  ✗ FAILED cgol (Create error - see /tmp/cordova_logs/cgol.log)
+==> Started chatbot
+  ✗ FAILED chatbot (Create error - see /tmp/cordova_logs/chatbot.log)
+==> Started chcl
+  ✗ FAILED chcl (Platform error - see /tmp/cordova_logs/chcl.log)
+==> Started chess

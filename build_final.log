@@ -1,0 +1,39 @@
+Found 38 projects. Building them in parallel (4 at a time)...
+==> Started 3dcargame
+==> Started ab
+==> Started as
+==> Started bb
+  ✗ FAILED as (Create error - see /tmp/cordova_logs/as.log)
+==> Started bbss
+  ✗ FAILED 3dcargame (Build error - see /tmp/cordova_logs/p3dcargame.log)
+==> Started brkut
+  ✗ FAILED ab (Build error - see /tmp/cordova_logs/ab.log)
+==> Started calculator
+  ✗ FAILED bb (Build error - see /tmp/cordova_logs/bb.log)
+==> Started cc
+  ✗ FAILED bbss (Build error - see /tmp/cordova_logs/bbss.log)
+==> Started cgol
+  ✗ FAILED cgol (Platform error - see /tmp/cordova_logs/cgol.log)
+==> Started chatbot
+  ✗ FAILED brkut (Platform error - see /tmp/cordova_logs/brkut.log)
+==> Started chcl
+  ✗ FAILED chatbot (Platform error - see /tmp/cordova_logs/chatbot.log)
+==> Started chess
+  ✗ FAILED cc (Platform error - see /tmp/cordova_logs/cc.log)
+==> Started converter
+  ✗ FAILED calculator (Platform error - see /tmp/cordova_logs/calculator.log)
+==> Started cpi
+  ✗ FAILED chcl (Build error - see /tmp/cordova_logs/chcl.log)
+==> Started cps
+  ✗ FAILED chess (Build error - see /tmp/cordova_logs/chess.log)
+==> Started diepio
+  ✗ FAILED converter (Build error - see /tmp/cordova_logs/converter.log)
+==> Started flappybird
+  ✗ FAILED cpi (Build error - see /tmp/cordova_logs/cpi.log)
+==> Started jm
+  ✗ FAILED cps (Platform error - see /tmp/cordova_logs/cps.log)
+==> Started mg
+  ✗ FAILED diepio (Platform error - see /tmp/cordova_logs/diepio.log)
+==> Started Minecraft
+  ✗ FAILED flappybird (Build error - see /tmp/cordova_logs/flappybird.log)
+==> Started minesweeper

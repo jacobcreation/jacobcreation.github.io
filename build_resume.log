@@ -1,0 +1,100 @@
+Found 38 projects. Building them in sequence (one by one)...
+  [SKIP] 3dcargame (Already built)
+  [SKIP] ab (Already built)
+  [SKIP] as (Already built)
+  [SKIP] bb (Already built)
+  [SKIP] bbss (Already built)
+  [SKIP] brkut (Already built)
+  [SKIP] calculator (Already built)
+  [SKIP] cc (Already built)
+  [SKIP] cgol (Already built)
+  [SKIP] chatbot (Already built)
+  [SKIP] chcl (Already built)
+  [SKIP] chess (Already built)
+  [SKIP] converter (Already built)
+  [SKIP] cpi (Already built)
+  [SKIP] cps (Already built)
+  [SKIP] diepio (Already built)
+  [SKIP] flappybird (Already built)
+  [SKIP] jm (Already built)
+==> Started mg
+  ✓ DONE mg -> mg.apk
+==> Started Minecraft
+  ✓ DONE Minecraft -> minecraft.apk
+==> Started minesweeper
+  ✓ DONE minesweeper -> minesweeper.apk
+==> Started notdoc
+  ✓ DONE notdoc -> notdoc.apk
+==> Started p
+  ✓ DONE p -> p.apk
+==> Started piano
+  ✓ DONE piano -> piano.apk
+==> Started pm
+  ✓ DONE pm -> pm.apk
+==> Started pvz
+  ✓ DONE pvz -> pvz.apk
+==> Started rcs
+  ✓ DONE rcs -> rcs.apk
+==> Started riddles
+  ✓ DONE riddles -> riddles.apk
+==> Started Salary calculator
+  ✓ DONE Salary calculator -> salary_calculator.apk
+==> Started Sandbox
+  ✓ DONE Sandbox -> sandbox.apk
+==> Started shootthemonster
+  ✓ DONE shootthemonster -> shootthemonster.apk
+==> Started snake
+  ✓ DONE snake -> snake.apk
+==> Started solitaire
+  ✓ DONE solitaire -> solitaire.apk
+==> Started sss
+  ✓ DONE sss -> sss.apk
+==> Started tanks
+  ✓ DONE tanks -> tanks.apk
+==> Started Tetris
+  ✓ DONE Tetris -> tetris.apk
+==> Started type
+  ✓ DONE type -> type.apk
+==> Started Wordscapes
+  ✓ DONE Wordscapes -> wordscapes.apk
+
+Summary of APKs in /home/jacob/Desktop/APK:
+-rw-rw-r-- 1 jacob jacob 6.8M Apr  9 16:56 ab.apk
+-rw-rw-r-- 1 jacob jacob 9.8M Apr  9 16:57 as.apk
+-rw-rw-r-- 1 jacob jacob 4.8M Apr  9 16:58 bb.apk
+-rw-rw-r-- 1 jacob jacob 4.3M Apr  9 16:59 bbss.apk
+-rw-rw-r-- 1 jacob jacob 4.6M Apr  9 16:59 brkut.apk
+-rw-rw-r-- 1 jacob jacob 9.6M Apr  9 17:00 calculator.apk
+-rw-rw-r-- 1 jacob jacob 3.8M Apr  9 17:00 cc.apk
+-rw-rw-r-- 1 jacob jacob 3.6M Apr  9 17:01 cgol.apk
+-rw-rw-r-- 1 jacob jacob 2.8M Apr  9 17:02 chatbot.apk
+-rw-rw-r-- 1 jacob jacob 2.7M Apr  9 17:02 chcl.apk
+-rw-rw-r-- 1 jacob jacob 8.4M Apr  9 17:03 chess.apk
+-rw-rw-r-- 1 jacob jacob 2.7M Apr  9 17:04 converter.apk
+-rw-rw-r-- 1 jacob jacob  15M Apr  9 17:04 cpi.apk
+-rw-rw-r-- 1 jacob jacob 2.7M Apr  9 17:05 cps.apk
+-rw-rw-r-- 1 jacob jacob 2.8M Apr  9 17:06 diepio.apk
+-rw-rw-r-- 1 jacob jacob 3.8M Apr  9 17:07 flappybird.apk
+-rw-rw-r-- 1 jacob jacob 2.8M Apr  9 17:07 jm.apk
+-rw-rw-r-- 1 jacob jacob 2.7M Apr  9 19:51 mg.apk
+-rw-rw-r-- 1 jacob jacob 4.0M Apr  9 19:53 minecraft.apk
+-rw-rw-r-- 1 jacob jacob 3.6M Apr  9 19:54 minesweeper.apk
+-rw-rw-r-- 1 jacob jacob 2.7M Apr  9 19:54 notdoc.apk
+-rw-rw-r-- 1 jacob jacob 2.8M Apr  9 16:55 p3dcargame.apk
+-rw-rw-r-- 1 jacob jacob 5.9M Apr  9 19:55 p.apk
+-rw-rw-r-- 1 jacob jacob 5.1M Apr  9 19:56 piano.apk
+-rw-rw-r-- 1 jacob jacob 9.6M Apr  9 19:57 pm.apk
+-rw-rw-r-- 1 jacob jacob 9.8M Apr  9 19:57 pvz.apk
+-rw-rw-r-- 1 jacob jacob  29M Apr  9 19:58 rcs.apk
+-rw-rw-r-- 1 jacob jacob 2.8M Apr  9 19:59 riddles.apk
+-rw-rw-r-- 1 jacob jacob 2.7M Apr  9 19:59 salary_calculator.apk
+-rw-rw-r-- 1 jacob jacob 2.8M Apr  9 20:00 sandbox.apk
+-rw-rw-r-- 1 jacob jacob  14M Apr  9 20:00 shootthemonster.apk
+-rw-rw-r-- 1 jacob jacob 3.9M Apr  9 20:01 snake.apk
+-rw-rw-r-- 1 jacob jacob 3.8M Apr  9 20:02 solitaire.apk
+-rw-rw-r-- 1 jacob jacob  46M Apr  9 20:03 sss.apk
+-rw-rw-r-- 1 jacob jacob 2.8M Apr  9 20:03 tanks.apk
+-rw-rw-r-- 1 jacob jacob 2.7M Apr  9 20:04 tetris.apk
+-rw-rw-r-- 1 jacob jacob 2.8M Apr  9 20:05 type.apk
+-rw-rw-r-- 1 jacob jacob  38M Apr  9 20:06 wordscapes.apk
+38 APKs total.
