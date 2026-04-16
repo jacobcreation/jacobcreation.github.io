@@ -1,0 +1,11 @@
+{
+    "android": {
+        "release": {
+            "keystore": "/home/jacob/Desktop/jacobcreation.github.io/jacob-key.keystore",
+            "storePassword": "jacob123",
+            "alias": "jacob-alias",
+            "password": "jacob123",
+            "keystoreType": ""
+        }
+    }
+}

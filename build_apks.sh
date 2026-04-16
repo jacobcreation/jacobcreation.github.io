@@ -3,9 +3,14 @@
 # ── Environment ──────────────────────────────────────────────────────────────
 export ANDROID_HOME="$HOME/Android/Sdk"
 export ANDROID_SDK_ROOT="$ANDROID_HOME"
-export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/34.0.0:$ANDROID_HOME/platform-tools:/home/jacob/.gradle/wrapper/dists/gradle-8.14.3-all/10utluxaxniiv4wxiphsi49nj/gradle-8.14.3/bin:$PATH"
+export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/34.0.0:$ANDROID_HOME/platform-tools:/home/jacob/.gradle/wrapper/dists/gradle-8.14.2-bin/2pb3mgt1p815evrl3weanttgr/gradle-8.14.2/bin:$PATH"
+export CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL="file:///home/jacob/.gradle/wrapper/dists/gradle-8.14.2-bin.zip"
+# Create a dummy zip if it doesn't exist to satisfy the check, though it shouldn't be needed if already extracted
+if [ ! -f "/home/jacob/.gradle/wrapper/dists/gradle-8.14.2-bin.zip" ]; then
+  touch "/home/jacob/.gradle/wrapper/dists/gradle-8.14.2-bin.zip"
+fi
 export SRC="/home/jacob/Desktop/jacobcreation.github.io"
-export OUT="/home/jacob/Desktop/APK"
+export OUT="$SRC/downloads"
 export WORK="/tmp/cordova_build"
 export CORDOVA_TELEMETRY_OPTOUT=1
 
@@ -64,11 +69,11 @@ build_project() {
     app_name="Project_${safe_name}"
   fi
 
-  # Skip if already exists
-  if [ -f "$OUT/${safe_name}.apk" ]; then
-    echo "  [SKIP] $folder (Already built)"
-    return 0
-  fi
+  # Skip check disabled to force rebuild with signing
+  # if [ -f "$OUT/${safe_name}.apk" ]; then
+  #   echo "  [SKIP] $folder (Already built)"
+  #   return 0
+  # fi
 
   echo "==> Started $folder"
 
@@ -128,7 +133,7 @@ XML
     return 1
   fi
   
-  if cordova build android --release --quiet -- --packageType=apk >> "$log_file" 2>&1; then
+  if cordova build android --release --quiet --buildConfig="$SRC/build.json" -- --packageType=apk >> "$log_file" 2>&1; then
 
     local apk
     apk=$(find "$build_dir/platforms/android/app/build/outputs/apk/release" -name "*.apk" | head -1)
