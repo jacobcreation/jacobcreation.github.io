@@ -125,6 +125,40 @@
       font-size: .8rem;
       color: var(--muted);
     }
+
+    @media (max-width: 640px) {
+      body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+
+      .app {
+        max-width: none;
+      }
+
+      .time {
+        font-size: clamp(2.5rem, 13vw, 4rem);
+      }
+
+      .controls {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 12px;
+      }
+
+      .controls button,
+      input {
+        min-height: 48px;
+      }
+
+      .row {
+        grid-template-columns: 1fr;
+      }
+
+      .footer {
+        padding-bottom: 2px;
+      }
+    }
   </style>
 </head>
 

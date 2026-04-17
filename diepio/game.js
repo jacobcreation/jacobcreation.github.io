@@ -11,6 +11,11 @@ const respawnBtn = document.getElementById('respawn-btn');
 const playerNameInput = document.getElementById('player-name-input');
 const fpsDisplay = document.getElementById('fps');
 const leaderboardList = document.getElementById('leaderboard-list');
+const moveStick = document.getElementById('move-stick');
+const moveStickKnob = document.getElementById('move-stick-knob');
+const aimStick = document.getElementById('aim-stick');
+const aimStickKnob = document.getElementById('aim-stick-knob');
+const fireButton = document.getElementById('fire-button');
 
 // Game State
 let gameState = 'START'; // START, PLAYING, DEAD
@@ -64,6 +69,11 @@ const keys = {
     ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false
 };
 const mouse = { x: 0, y: 0, worldX: 0, worldY: 0, isDown: false };
+const touchControls = {
+    move: { active: false, pointerId: null, x: 0, y: 0 },
+    aim: { active: false, pointerId: null, x: 0, y: 0 },
+    fire: false
+};
 
 // Event Listeners
 window.addEventListener('resize', resizeCanvas);
@@ -78,6 +88,82 @@ canvas.addEventListener('mouseup', () => mouse.isDown = false);
 
 startBtn.addEventListener('click', startGame);
 respawnBtn.addEventListener('click', startGame);
+
+function updateStickKnob(knob, x, y) {
+    if (!knob) return;
+    const maxOffset = 32;
+    knob.style.transform = `translate(calc(-50% + ${x * maxOffset}px), calc(-50% + ${y * maxOffset}px))`;
+}
+
+function bindStick(root, knob, stateKey) {
+    if (!root || !knob) return;
+    const base = root.querySelector('.touch-stick-base');
+    const state = touchControls[stateKey];
+
+    function setFromPoint(clientX, clientY) {
+        const rect = base.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const radius = rect.width * 0.34;
+        let dx = clientX - centerX;
+        let dy = clientY - centerY;
+        const distance = Math.hypot(dx, dy);
+        if (distance > radius) {
+            const scale = radius / distance;
+            dx *= scale;
+            dy *= scale;
+        }
+        state.x = dx / radius;
+        state.y = dy / radius;
+        updateStickKnob(knob, state.x, state.y);
+    }
+
+    function reset() {
+        state.active = false;
+        state.pointerId = null;
+        state.x = 0;
+        state.y = 0;
+        updateStickKnob(knob, 0, 0);
+    }
+
+    base.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        state.active = true;
+        state.pointerId = event.pointerId;
+        base.setPointerCapture(event.pointerId);
+        setFromPoint(event.clientX, event.clientY);
+    });
+    base.addEventListener('pointermove', (event) => {
+        if (!state.active || event.pointerId !== state.pointerId) return;
+        event.preventDefault();
+        setFromPoint(event.clientX, event.clientY);
+    });
+    base.addEventListener('pointerup', (event) => {
+        if (event.pointerId === state.pointerId) reset();
+    });
+    base.addEventListener('pointercancel', (event) => {
+        if (event.pointerId === state.pointerId) reset();
+    });
+}
+
+bindStick(moveStick, moveStickKnob, 'move');
+bindStick(aimStick, aimStickKnob, 'aim');
+
+if (fireButton) {
+    const releaseFire = () => {
+        touchControls.fire = false;
+        fireButton.classList.remove('is-active');
+    };
+    fireButton.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        fireButton.setPointerCapture(event.pointerId);
+        touchControls.fire = true;
+        fireButton.classList.add('is-active');
+    });
+    fireButton.addEventListener('pointerup', releaseFire);
+    fireButton.addEventListener('pointercancel', releaseFire);
+    fireButton.addEventListener('lostpointercapture', releaseFire);
+}
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -208,6 +294,8 @@ class Player {
         if (keys.s || keys.ArrowDown) dy += 1;
         if (keys.a || keys.ArrowLeft) dx -= 1;
         if (keys.d || keys.ArrowRight) dx += 1;
+        dx += touchControls.move.x;
+        dy += touchControls.move.y;
 
         if (dx !== 0 && dy !== 0) {
             const length = Math.sqrt(dx * dx + dy * dy);
@@ -223,10 +311,15 @@ class Player {
         this.y = Math.max(this.radius, Math.min(WORLD_SIZE - this.radius, this.y));
 
         // Aiming
+        if (touchControls.aim.active && (Math.abs(touchControls.aim.x) > 0.08 || Math.abs(touchControls.aim.y) > 0.08)) {
+            this.angle = Math.atan2(touchControls.aim.y, touchControls.aim.x);
+            mouse.worldX = this.x + Math.cos(this.angle) * 500;
+            mouse.worldY = this.y + Math.sin(this.angle) * 500;
+        }
         this.angle = Math.atan2(mouse.worldY - this.y, mouse.worldX - this.x);
 
         // Shooting
-        if (mouse.isDown && lastTime - this.lastShotTime >= this.reloadTime) {
+        if ((mouse.isDown || touchControls.fire || touchControls.aim.active) && lastTime - this.lastShotTime >= this.reloadTime) {
             this.shoot();
         }
 

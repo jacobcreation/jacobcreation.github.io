@@ -61,6 +61,22 @@
                 <input type="text" id="player-name-input" placeholder="Enter Name" maxlength="15" value="Player">
                 <button id="start-btn">Play</button>
             </div>
+
+            <div id="mobile-controls" aria-label="Mobile controls">
+                <div class="touch-stick" id="move-stick">
+                    <div class="touch-stick-base">
+                        <div class="touch-stick-knob" id="move-stick-knob"></div>
+                    </div>
+                </div>
+                <div class="mobile-actions">
+                    <div class="touch-stick touch-stick--aim" id="aim-stick">
+                        <div class="touch-stick-base">
+                            <div class="touch-stick-knob" id="aim-stick-knob"></div>
+                        </div>
+                    </div>
+                    <button id="fire-button" class="touch-fire-button" type="button">Fire</button>
+                </div>
+            </div>
         </div>
     </div>
     <script src="game.js"></script>

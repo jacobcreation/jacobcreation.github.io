@@ -6,6 +6,7 @@ body {
     background-color: #0a1a0a;
     font-family: 'Rajdhani', 'Segoe UI', Tahoma, sans-serif;
     color: #e0ffe0;
+    touch-action: manipulation;
 }
 
 /* ---- Crosshair ---- */
@@ -309,4 +310,222 @@ body {
     background: rgba(0, 30, 10, 0.75);
     box-shadow: 0 0 12px rgba(0, 0, 0, 0.8);
     pointer-events: none;
+}
+
+#mobile-controls {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    z-index: 30;
+    display: none;
+    align-items: end;
+    justify-content: space-between;
+    pointer-events: none;
+}
+
+.touch-stick,
+.touch-btn {
+    pointer-events: auto;
+}
+
+.touch-stick-base {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.34);
+    border: 1px solid rgba(255,255,255,0.14);
+    backdrop-filter: blur(8px);
+}
+
+.touch-stick-knob {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: rgba(29, 209, 161, 0.92);
+    transform: translate(-50%, -50%);
+}
+
+.touch-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    width: min(240px, 48vw);
+}
+
+.touch-btn {
+    min-height: 50px;
+    border: none;
+    border-radius: 16px;
+    background: rgba(10, 16, 22, 0.78);
+    color: #fff;
+    font: inherit;
+    font-weight: 800;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.28);
+}
+
+.touch-btn--fire {
+    background: rgba(255, 71, 87, 0.94);
+}
+
+.touch-btn.is-active {
+    transform: scale(0.97);
+}
+
+@media (max-width: 900px) {
+    #scoreboard {
+        top: 14px;
+        gap: 24px;
+        padding: 10px 20px;
+    }
+
+    .team-score {
+        font-size: 18px;
+    }
+
+    #coins-container {
+        top: 18px;
+        right: 18px;
+        font-size: 22px;
+    }
+
+    #match-status {
+        top: 72px;
+        font-size: 18px;
+        letter-spacing: 1px;
+    }
+
+    #health-bar-container {
+        left: 16px;
+        width: calc(100% - 32px);
+    }
+
+    #shop-hint {
+        bottom: 52px;
+        width: calc(100% - 32px);
+        text-align: center;
+    }
+
+    #minimap {
+        width: 132px;
+        height: 132px;
+        right: 14px;
+        bottom: 72px;
+    }
+}
+
+@media (max-width: 640px) {
+    #mobile-controls {
+        display: flex;
+    }
+
+    #crosshair {
+        width: 28px;
+        height: 28px;
+    }
+
+    #scoreboard {
+        top: 12px;
+        left: 12px;
+        right: 12px;
+        transform: none;
+        justify-content: center;
+        gap: 16px;
+        padding: 8px 12px;
+        border-radius: 20px;
+    }
+
+    .team-score {
+        font-size: 15px;
+        letter-spacing: 1px;
+    }
+
+    #coins-container {
+        top: auto;
+        bottom: 18px;
+        right: 14px;
+        font-size: 18px;
+    }
+
+    #match-status {
+        top: 58px;
+        left: 12px;
+        right: 12px;
+        transform: none;
+        text-align: center;
+        font-size: 15px;
+    }
+
+    #health-bar-container {
+        bottom: 18px;
+        left: 12px;
+        width: calc(100% - 108px);
+        height: 22px;
+    }
+
+    #shop-hint {
+        left: 12px;
+        right: 12px;
+        bottom: 48px;
+        transform: none;
+        width: auto;
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+
+    #shop-modal {
+        width: calc(100% - 24px);
+        min-width: 0;
+        padding: 24px 16px;
+    }
+
+    .spell-btn,
+    #close-shop {
+        width: 100%;
+    }
+
+    #death-screen h1 {
+        font-size: 48px;
+        letter-spacing: 4px;
+        margin-bottom: 24px;
+    }
+
+    .death-buttons {
+        width: calc(100% - 32px);
+        flex-direction: column;
+    }
+
+    #respawn-btn,
+    #quit-btn {
+        width: 100%;
+        padding: 16px 18px;
+        font-size: 18px;
+    }
+
+    #minimap {
+        width: 92px;
+        height: 92px;
+        right: 12px;
+        bottom: 88px;
+        border-width: 2px;
+    }
+
+    .touch-stick-base {
+        width: 108px;
+        height: 108px;
+    }
+
+    .touch-stick-knob {
+        width: 48px;
+        height: 48px;
+    }
+
+    .touch-actions {
+        width: min(208px, 48vw);
+        gap: 8px;
+    }
 }

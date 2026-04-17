@@ -386,6 +386,116 @@
             color: var(--accent-gold);
             font-weight: bold;
         }
+
+        @media (max-width: 960px) {
+            body {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+
+            main {
+                padding: 16px;
+            }
+
+            header {
+                margin-bottom: 16px;
+            }
+
+            h1 {
+                font-size: clamp(2rem, 8vw, 2.6rem);
+                letter-spacing: 2px;
+            }
+
+            #hud {
+                width: 100%;
+                gap: 14px;
+                padding: 14px 18px;
+                border-radius: 22px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            #game-viewport,
+            #input-container {
+                max-width: none;
+            }
+
+            #game-viewport {
+                height: min(56vh, 520px);
+            }
+
+            .sidebar {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid var(--card-border);
+                padding: 20px 16px 28px;
+            }
+
+            .sidebar-title {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            main {
+                padding: 12px;
+            }
+
+            #hud {
+                gap: 10px;
+                padding: 12px;
+            }
+
+            .stat-item {
+                min-width: calc(50% - 8px);
+            }
+
+            .stat-value {
+                font-size: 1.1rem;
+            }
+
+            #game-viewport {
+                height: min(50vh, 380px);
+                border-radius: 18px;
+            }
+
+            .word {
+                font-size: 1.15rem;
+            }
+
+            #input-container {
+                margin-top: 14px;
+            }
+
+            #main-input {
+                padding: 14px 16px;
+                font-size: 1.1rem;
+            }
+
+            button.primary-btn {
+                width: 100%;
+                padding: 14px 18px;
+                font-size: 1rem;
+            }
+
+            .sidebar {
+                padding: 18px 12px 24px;
+            }
+
+            .store-item {
+                padding: 12px;
+            }
+
+            .item-header {
+                align-items: flex-start;
+                gap: 8px;
+                flex-direction: column;
+            }
+
+            #inventory {
+                gap: 8px;
+            }
+        }
     </style>
 </head>
 

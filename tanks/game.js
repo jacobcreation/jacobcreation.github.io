@@ -22,6 +22,10 @@ const keys = {
     ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false,
     space: false
 };
+const touchControls = {
+    drive: { active: false, pointerId: null, x: 0, y: 0 },
+    fire: false
+};
 
 // Global Mesh/State Collections
 const otherTanks = {};
@@ -33,6 +37,7 @@ let partySocket = null;
 let myTank = null;
 let buildings = [];
 let myTankYaw = 0; // Track yaw separately to avoid quaternion/Euler feedback loop
+let mobileAimInitialized = false;
 
 // ---- Infinite Terrain Chunk System ----
 const CHUNK_SIZE = 64;     // world units per chunk
@@ -90,6 +95,12 @@ document.body.appendChild(renderer.domElement);
 // Raycaster for aiming
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
+const driveStick = document.getElementById('drive-stick');
+const driveStickKnob = document.getElementById('drive-stick-knob');
+const fireBtn = document.getElementById('fire-btn');
+const dashBtn = document.getElementById('dash-btn');
+const shieldBtn = document.getElementById('shield-btn');
+const blastBtn = document.getElementById('blast-btn');
 
 // Lighting
 const hemisphereLight = new THREE.HemisphereLight(0x87ceeb, 0x4a6741, 0.7); // sky blue top, dark green bottom
@@ -197,6 +208,109 @@ const groundPlane = new THREE.Mesh(
 );
 groundPlane.rotation.x = -Math.PI / 2;
 scene.add(groundPlane);
+
+function setMobileAimCenter() {
+    mouse.x = 0;
+    mouse.y = 0;
+    mobileAimInitialized = true;
+}
+
+function updateStickKnob(knob, x, y) {
+    if (!knob) return;
+    const maxOffset = 32;
+    knob.style.transform = `translate(calc(-50% + ${x * maxOffset}px), calc(-50% + ${y * maxOffset}px))`;
+}
+
+function bindDriveStick() {
+    if (!driveStick || !driveStickKnob) return;
+    const base = driveStick.querySelector('.touch-stick-base');
+    const state = touchControls.drive;
+
+    function setFromPoint(clientX, clientY) {
+        const rect = base.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const radius = rect.width * 0.34;
+        let dx = clientX - centerX;
+        let dy = clientY - centerY;
+        const distance = Math.hypot(dx, dy);
+        if (distance > radius) {
+            const scale = radius / distance;
+            dx *= scale;
+            dy *= scale;
+        }
+        state.x = dx / radius;
+        state.y = dy / radius;
+        updateStickKnob(driveStickKnob, state.x, state.y);
+    }
+
+    function reset() {
+        state.active = false;
+        state.pointerId = null;
+        state.x = 0;
+        state.y = 0;
+        updateStickKnob(driveStickKnob, 0, 0);
+    }
+
+    base.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        state.active = true;
+        state.pointerId = event.pointerId;
+        base.setPointerCapture(event.pointerId);
+        setFromPoint(event.clientX, event.clientY);
+    });
+    base.addEventListener('pointermove', (event) => {
+        if (!state.active || event.pointerId !== state.pointerId) return;
+        event.preventDefault();
+        setFromPoint(event.clientX, event.clientY);
+    });
+    base.addEventListener('pointerup', (event) => {
+        if (event.pointerId === state.pointerId) reset();
+    });
+    base.addEventListener('pointercancel', (event) => {
+        if (event.pointerId === state.pointerId) reset();
+    });
+}
+
+function bindTouchActionButton(button, onPress, onRelease = null) {
+    if (!button) return;
+    const release = () => {
+        button.classList.remove('is-active');
+        onRelease?.();
+    };
+    button.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        button.classList.add('is-active');
+        button.setPointerCapture(event.pointerId);
+        onPress();
+    });
+    button.addEventListener('pointerup', release);
+    button.addEventListener('pointercancel', release);
+    button.addEventListener('lostpointercapture', release);
+}
+
+function triggerShoot() {
+    if (myTank && partySocket && partySocket.readyState === 1) {
+        let shootRy = myTank.rotation.y + Math.PI;
+        let spawnX = myTank.position.x;
+        let spawnZ = myTank.position.z;
+
+        if (myTank.userData.turret) {
+            const barrelTip = new THREE.Vector3(0, 0.1, -4.3);
+            barrelTip.applyMatrix4(myTank.userData.turret.matrixWorld);
+            spawnX = barrelTip.x;
+            spawnZ = barrelTip.z;
+            const dir = new THREE.Vector3(0, 0, -1);
+            dir.transformDirection(myTank.userData.turret.matrixWorld);
+            shootRy = Math.atan2(dir.x, dir.z);
+        }
+
+        partySocket.send(JSON.stringify({
+            type: 'shoot', x: spawnX, y: 1.8, z: spawnZ, ry: shootRy
+        }));
+        spawnMuzzleFlash(new THREE.Vector3(spawnX, 2.2, spawnZ));
+    }
+}
 
 // ----------------------------------------------------
 // 3. TANK CREATION 
@@ -531,6 +645,7 @@ document.addEventListener('DOMContentLoaded', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
+        setMobileAimCenter();
     });
 
     const closeShop = document.getElementById('close-shop');
@@ -549,27 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('mousedown', (e) => {
-        if (e.button === 0 && myTank && partySocket && partySocket.readyState === 1) {
-            let shootRy = myTank.rotation.y + Math.PI;
-            let spawnX = myTank.position.x;
-            let spawnZ = myTank.position.z;
-
-            if (myTank.userData.turret) {
-                const barrelTip = new THREE.Vector3(0, 0.1, -4.3);
-                barrelTip.applyMatrix4(myTank.userData.turret.matrixWorld);
-                spawnX = barrelTip.x;
-                spawnZ = barrelTip.z;
-                const dir = new THREE.Vector3(0, 0, -1);
-                dir.transformDirection(myTank.userData.turret.matrixWorld);
-                shootRy = Math.atan2(dir.x, dir.z);
-            }
-
-            partySocket.send(JSON.stringify({
-                type: 'shoot', x: spawnX, y: 1.8, z: spawnZ, ry: shootRy
-            }));
-            // Visual muzzle flash at barrel tip
-            spawnMuzzleFlash(new THREE.Vector3(spawnX, 2.2, spawnZ));
-        }
+        if (e.button === 0) triggerShoot();
     });
 
     const respawnBtn = document.getElementById('respawn-btn');
@@ -584,6 +679,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (quitBtn) quitBtn.addEventListener('click', () => {
         window.location.href = "../index.html";
     });
+
+    bindDriveStick();
+    bindTouchActionButton(fireBtn, () => {
+        touchControls.fire = true;
+        setMobileAimCenter();
+        triggerShoot();
+    }, () => {
+        touchControls.fire = false;
+    });
+    bindTouchActionButton(dashBtn, () => castSpell('dash'));
+    bindTouchActionButton(shieldBtn, () => castSpell('shield'));
+    bindTouchActionButton(blastBtn, () => castSpell('blast'));
+    setMobileAimCenter();
 
     // Start Loops & Network AFTER listeners are ready
     animate();
@@ -657,15 +765,19 @@ function animate() {
         const isDashing = Date.now() < gameState.dashEndTime;
         const moveSpeed = (isDashing ? 35 : 12) * dt;
         const rotateSpeed = 2.5 * dt;
+        const mobileForward = touchControls.drive.y < -0.12;
+        const mobileBackward = touchControls.drive.y > 0.12;
+        const mobileLeft = touchControls.drive.x < -0.12;
+        const mobileRight = touchControls.drive.x > 0.12;
 
         let moved = false;
         const oldPos = myTank.position.clone();
 
-        if (keys['w'] || keys['arrowup']) {
+        if (keys['w'] || keys['arrowup'] || mobileForward) {
             myTank.translateZ(-moveSpeed);
             moved = true;
         }
-        if (keys['s'] || keys['arrowdown']) {
+        if (keys['s'] || keys['arrowdown'] || mobileBackward) {
             myTank.translateZ(moveSpeed);
             moved = true;
         }
@@ -694,11 +806,11 @@ function animate() {
         if (myTank.position.z > WORLD_LIMIT) { myTank.position.z = WORLD_LIMIT; moved = true; }
         if (myTank.position.z < -WORLD_LIMIT) { myTank.position.z = -WORLD_LIMIT; moved = true; }
 
-        if (keys['a'] || keys['arrowleft']) {
+        if (keys['a'] || keys['arrowleft'] || mobileLeft) {
             myTankYaw += rotateSpeed;
             moved = true;
         }
-        if (keys['d'] || keys['arrowright']) {
+        if (keys['d'] || keys['arrowright'] || mobileRight) {
             myTankYaw -= rotateSpeed;
             moved = true;
         }

@@ -23,6 +23,12 @@ const overlayKickerEl = document.querySelector("#overlay-kicker");
 const overlayTitleEl = document.querySelector("#overlay-title");
 const overlayBodyEl = document.querySelector("#overlay-body");
 const respawnButton = document.querySelector("#respawn-button");
+const driveJoystick = document.querySelector("#drive-joystick");
+const driveJoystickKnob = document.querySelector("#drive-joystick-knob");
+const boostButton = document.querySelector("#boost-button");
+const handbrakeButton = document.querySelector("#handbrake-button");
+const pauseButton = document.querySelector("#pause-button");
+const resetButton = document.querySelector("#reset-button");
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -171,6 +177,18 @@ const keys = {
   handbrake: false,
 };
 
+const touchDrive = {
+  active: false,
+  pointerId: null,
+  steer: 0,
+  throttle: 0,
+};
+
+const touchButtons = {
+  boost: false,
+  handbrake: false,
+};
+
 const state = {
   velocity: new THREE.Vector3(),
   heading: 0,
@@ -290,6 +308,10 @@ function setPaused(paused) {
     Object.keys(keys).forEach((key) => {
       keys[key] = false;
     });
+    touchButtons.boost = false;
+    touchButtons.handbrake = false;
+    syncDriveJoystick(true);
+    syncTouchActionButtons();
     setOverlay(true, "Paused", "Drive paused", "Press P to jump back into the city.");
     statusPill.textContent = "Simulation paused";
     pursuitEl.textContent = "Paused";
@@ -305,6 +327,100 @@ function setPaused(paused) {
 
 function togglePause() {
   setPaused(!state.paused);
+}
+
+function syncDriveJoystick(reset = false) {
+  if (!driveJoystickKnob) return;
+  if (reset) {
+    touchDrive.active = false;
+    touchDrive.pointerId = null;
+    touchDrive.steer = 0;
+    touchDrive.throttle = 0;
+    driveJoystickKnob.style.transform = "translate(-50%, -50%)";
+    return;
+  }
+
+  const maxOffset = 36;
+  driveJoystickKnob.style.transform = `translate(calc(-50% + ${touchDrive.steer * maxOffset}px), calc(-50% + ${-touchDrive.throttle * maxOffset}px))`;
+}
+
+function syncTouchActionButtons() {
+  boostButton?.classList.toggle("is-active", touchButtons.boost);
+  handbrakeButton?.classList.toggle("is-active", touchButtons.handbrake);
+}
+
+function setTouchButtonState(buttonKey, active) {
+  touchButtons[buttonKey] = active;
+  syncTouchActionButtons();
+}
+
+function updateDriveJoystickFromPoint(clientX, clientY) {
+  if (!driveJoystick) return;
+  const base = driveJoystick.querySelector(".touch-joystick__base");
+  const rect = base.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  const radius = rect.width * 0.34;
+  let dx = clientX - centerX;
+  let dy = clientY - centerY;
+  const distance = Math.hypot(dx, dy);
+  if (distance > radius) {
+    const scale = radius / distance;
+    dx *= scale;
+    dy *= scale;
+  }
+  touchDrive.steer = THREE.MathUtils.clamp(dx / radius, -1, 1);
+  touchDrive.throttle = THREE.MathUtils.clamp(-dy / radius, -1, 1);
+  syncDriveJoystick();
+}
+
+function setupMobileDrivingControls() {
+  if (!driveJoystick || !driveJoystickKnob) return;
+
+  const joystickBase = driveJoystick.querySelector(".touch-joystick__base");
+  joystickBase.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    touchDrive.active = true;
+    touchDrive.pointerId = event.pointerId;
+    joystickBase.setPointerCapture(event.pointerId);
+    updateDriveJoystickFromPoint(event.clientX, event.clientY);
+  });
+
+  joystickBase.addEventListener("pointermove", (event) => {
+    if (!touchDrive.active || event.pointerId !== touchDrive.pointerId) return;
+    event.preventDefault();
+    updateDriveJoystickFromPoint(event.clientX, event.clientY);
+  });
+
+  const endJoystick = (event) => {
+    if (!touchDrive.active || event.pointerId !== touchDrive.pointerId) return;
+    touchDrive.active = false;
+    touchDrive.pointerId = null;
+    touchDrive.steer = 0;
+    touchDrive.throttle = 0;
+    syncDriveJoystick();
+  };
+
+  joystickBase.addEventListener("pointerup", endJoystick);
+  joystickBase.addEventListener("pointercancel", endJoystick);
+
+  const bindHoldButton = (button, key) => {
+    if (!button) return;
+    const release = () => setTouchButtonState(key, false);
+    button.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      button.setPointerCapture(event.pointerId);
+      setTouchButtonState(key, true);
+    });
+    button.addEventListener("pointerup", release);
+    button.addEventListener("pointercancel", release);
+    button.addEventListener("lostpointercapture", release);
+  };
+
+  bindHoldButton(boostButton, "boost");
+  bindHoldButton(handbrakeButton, "handbrake");
+  pauseButton?.addEventListener("click", () => togglePause());
+  resetButton?.addEventListener("click", () => resetGame());
 }
 
 function addStaticCollider(colliders, x, z, radius, height = 30, label = "object") {
@@ -1251,6 +1367,8 @@ respawnButton.addEventListener("click", () => {
   resetGame();
 });
 
+setupMobileDrivingControls();
+
 window.addEventListener("keydown", (event) => {
   if (event.repeat) return;
   const key = event.key.toLowerCase();
@@ -1710,15 +1828,22 @@ function animate() {
   updateDust(delta);
 
   const disabled = state.gameOver || state.health <= 0;
-  const boostActive = keys.boost && !disabled;
-  const handbrakeActive = keys.handbrake && !disabled;
+  const forwardInput = Math.max(keys.forward ? 1 : 0, touchDrive.throttle > 0.12 ? touchDrive.throttle : 0);
+  const backwardInput = Math.max(keys.backward ? 1 : 0, touchDrive.throttle < -0.12 ? -touchDrive.throttle : 0);
+  const steerInput = THREE.MathUtils.clamp(
+    (keys.left ? 1 : 0) + (keys.right ? -1 : 0) - touchDrive.steer,
+    -1,
+    1,
+  );
+  const boostActive = (keys.boost || touchButtons.boost) && !disabled;
+  const handbrakeActive = (keys.handbrake || touchButtons.handbrake) && !disabled;
   const outOfFuel = state.fuel <= 0.05;
-  const acceleration = disabled || outOfFuel ? 0 : keys.forward ? 28 : 0;
-  const brakeForce = keys.backward ? 18 : 0;
+  const acceleration = disabled || outOfFuel ? 0 : 28 * forwardInput;
+  const brakeForce = 18 * backwardInput;
   const boostMultiplier = boostActive ? 1.35 : 1;
-  const throttleInput = (keys.forward ? 1 : 0) - (keys.backward ? 1 : 0);
+  const throttleInput = forwardInput - backwardInput;
 
-  const steerTarget = (keys.left ? 1 : 0) + (keys.right ? -1 : 0);
+  const steerTarget = steerInput;
   state.steer = THREE.MathUtils.lerp(state.steer, steerTarget, delta * 5.3);
 
   forwardVec.set(Math.sin(state.heading), 0, Math.cos(state.heading));
