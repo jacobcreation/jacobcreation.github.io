@@ -1,18 +1,17 @@
 #!/bin/bash
 
+set -u
+
 # ── Environment ──────────────────────────────────────────────────────────────
-export ANDROID_HOME="$HOME/Android/Sdk"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
 export ANDROID_SDK_ROOT="$ANDROID_HOME"
-export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/34.0.0:$ANDROID_HOME/platform-tools:/home/jacob/.gradle/wrapper/dists/gradle-8.14.2-bin/2pb3mgt1p815evrl3weanttgr/gradle-8.14.2/bin:$PATH"
-export CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL="file:///home/jacob/.gradle/wrapper/dists/gradle-8.14.2-bin.zip"
-# Create a dummy zip if it doesn't exist to satisfy the check, though it shouldn't be needed if already extracted
-if [ ! -f "/home/jacob/.gradle/wrapper/dists/gradle-8.14.2-bin.zip" ]; then
-  touch "/home/jacob/.gradle/wrapper/dists/gradle-8.14.2-bin.zip"
-fi
-export SRC="/home/jacob/Desktop/jacobcreation.github.io"
+export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+export SRC="${SRC:-$SCRIPT_DIR}"
 export OUT="$SRC/downloads"
 export WORK="/tmp/cordova_build"
 export CORDOVA_TELEMETRY_OPTOUT=1
+export ANDROID_MIN_SDK_VERSION="${ANDROID_MIN_SDK_VERSION:-22}"
 
 mkdir -p "$OUT"
 mkdir -p "$WORK"
@@ -52,6 +51,90 @@ print_progress() {
   bar=${bar// /-}
 
   printf '[%s] %d/%d %s\n' "$bar" "$current" "$total" "$folder"
+}
+
+print_log_tail() {
+  local log_file="$1"
+  echo "  --- Last log lines ($log_file) ---"
+  tail -n 40 "$log_file" 2>/dev/null || echo "  (log unavailable)"
+  echo "  --- end log excerpt ---"
+}
+
+detect_latest_sdk_platform() {
+  local platforms_dir="$ANDROID_HOME/platforms"
+  local latest=""
+  local candidate=""
+
+  if [ ! -d "$platforms_dir" ]; then
+    return 1
+  fi
+
+  while IFS= read -r candidate; do
+    candidate="${candidate##*-}"
+    case "$candidate" in
+      ''|*[!0-9]*) continue ;;
+    esac
+
+    if [ -z "$latest" ] || [ "$candidate" -gt "$latest" ]; then
+      latest="$candidate"
+    fi
+  done < <(find "$platforms_dir" -maxdepth 1 -type d -name 'android-*' 2>/dev/null)
+
+  if [ -n "$latest" ]; then
+    printf '%s\n' "$latest"
+    return 0
+  fi
+
+  return 1
+}
+
+validate_environment() {
+  local fail=0
+
+  if ! command -v cordova >/dev/null 2>&1; then
+    echo "Missing required command: cordova"
+    fail=1
+  fi
+
+  if ! command -v java >/dev/null 2>&1; then
+    echo "Missing required command: java (JDK 17+ recommended)"
+    fail=1
+  fi
+
+  if [ ! -d "$ANDROID_HOME" ]; then
+    echo "ANDROID_HOME does not exist: $ANDROID_HOME"
+    fail=1
+  fi
+
+  if [ -z "${ANDROID_COMPILE_SDK_VERSION:-}" ] || [ -z "${ANDROID_TARGET_SDK_VERSION:-}" ]; then
+    local detected_sdk=""
+    if detected_sdk="$(detect_latest_sdk_platform)"; then
+      export ANDROID_COMPILE_SDK_VERSION="${ANDROID_COMPILE_SDK_VERSION:-$detected_sdk}"
+      export ANDROID_TARGET_SDK_VERSION="${ANDROID_TARGET_SDK_VERSION:-$detected_sdk}"
+      echo "Using detected SDK platform android-$detected_sdk for compile/target."
+    else
+      export ANDROID_COMPILE_SDK_VERSION="${ANDROID_COMPILE_SDK_VERSION:-35}"
+      export ANDROID_TARGET_SDK_VERSION="${ANDROID_TARGET_SDK_VERSION:-35}"
+      echo "Could not detect installed Android platforms; defaulting compile/target SDK to 35."
+    fi
+  fi
+
+  if [ ! -f "$SRC/real_names.txt" ]; then
+    echo "Missing $SRC/real_names.txt"
+    fail=1
+  fi
+
+  if [ ! -f "$SRC/build.json" ]; then
+    echo "Missing $SRC/build.json"
+    fail=1
+  fi
+
+  if [ "$fail" -ne 0 ]; then
+    echo ""
+    echo "Tip: set SRC and ANDROID_HOME explicitly if needed, e.g."
+    echo "  SRC=\"$(pwd)\" ANDROID_HOME=\"\$HOME/Android/Sdk\" ./build_apks.sh"
+    exit 1
+  fi
 }
 
 # ── Function for building a single project ───────────────────────────────────
@@ -120,9 +203,9 @@ build_project() {
     <allow-intent href="https://*/*" />
     <allow-navigation href="*" />
     <access origin="*" />
-    <preference name="android-minSdkVersion" value="22" />
-    <preference name="android-targetSdkVersion" value="36" />
-    <preference name="android-compileSdkVersion" value="36" />
+    <preference name="android-minSdkVersion" value="${ANDROID_MIN_SDK_VERSION}" />
+    <preference name="android-targetSdkVersion" value="${ANDROID_TARGET_SDK_VERSION}" />
+    <preference name="android-compileSdkVersion" value="${ANDROID_COMPILE_SDK_VERSION}" />
 </widget>
 XML
 
@@ -130,6 +213,7 @@ XML
   
   if ! cordova platform add android --quiet >> "$log_file" 2>&1; then
     echo "  ✗ FAILED $folder (Platform error - see $log_file)"
+    print_log_tail "$log_file"
     return 1
   fi
   
@@ -154,6 +238,8 @@ XML
     fi
   else
     echo "  ✗ FAILED $folder (Build error - see $log_file)"
+    print_log_tail "$log_file"
+    echo "  Common causes: missing Android SDK platform/build-tools, incorrect signing config in build.json, or unavailable target/compile SDK versions."
     pkill -f GradleDaemon || true
     return 1
   fi
@@ -162,6 +248,8 @@ XML
 
 export -f build_project
 export -f xml_escape
+export -f print_log_tail
+export -f detect_latest_sdk_platform
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 cd "$SRC" || exit 1
@@ -169,10 +257,7 @@ cd "$SRC" || exit 1
 export PROJECTS_FILE="/tmp/projects_list.txt"
 > "$PROJECTS_FILE"
 
-if [ ! -f "$REAL_NAMES_FILE" ]; then
-  echo "Missing $REAL_NAMES_FILE"
-  exit 1
-fi
+validate_environment
 
 while IFS= read -r line || [ -n "$line" ]; do
   case "$line" in
