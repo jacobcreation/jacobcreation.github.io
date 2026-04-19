@@ -5,10 +5,6 @@ export ANDROID_HOME="$HOME/Android/Sdk"
 export ANDROID_SDK_ROOT="$ANDROID_HOME"
 export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/34.0.0:$ANDROID_HOME/platform-tools:/home/jacob/.gradle/wrapper/dists/gradle-8.14.2-bin/2pb3mgt1p815evrl3weanttgr/gradle-8.14.2/bin:$PATH"
 export CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL="file:///home/jacob/.gradle/wrapper/dists/gradle-8.14.2-bin.zip"
-# Create a dummy zip if it doesn't exist to satisfy the check, though it shouldn't be needed if already extracted
-if [ ! -f "/home/jacob/.gradle/wrapper/dists/gradle-8.14.2-bin.zip" ]; then
-  touch "/home/jacob/.gradle/wrapper/dists/gradle-8.14.2-bin.zip"
-fi
 export SRC="/home/jacob/Desktop/jacobcreation.github.io"
 export OUT="$SRC/downloads"
 export WORK="/tmp/cordova_build"
