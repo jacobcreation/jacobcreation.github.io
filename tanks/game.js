@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import PartySocket from 'partysocket';
+import { PartySocket } from 'partysocket';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
@@ -129,33 +129,68 @@ const shieldBtn = document.getElementById('shield-btn');
 const blastBtn = document.getElementById('blast-btn');
 
 // Lighting
-const hemisphereLight = new THREE.HemisphereLight(0x111122, 0x000000, 0.6); // dark blue top
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // Add ambient light for overall brightness
+scene.add(ambientLight);
+
+const hemisphereLight = new THREE.HemisphereLight(0x4444ff, 0x000000, 0.8); // Brighter hemisphere
 scene.add(hemisphereLight);
 
-const dirLight = new THREE.DirectionalLight(0x7788ff, 1.0); // cold moonlight
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.5); // Brighter sun-like light
 dirLight.position.set(80, 150, 60);
 dirLight.castShadow = true;
-dirLight.shadow.mapSize.width = 2048;
-dirLight.shadow.mapSize.height = 2048;
+dirLight.shadow.mapSize.width = 4096; // Sharper shadows
+dirLight.shadow.mapSize.height = 4096;
 dirLight.shadow.camera.left = -120;
 dirLight.shadow.camera.right = 120;
 dirLight.shadow.camera.top = 120;
 dirLight.shadow.camera.bottom = -120;
-dirLight.shadow.bias = -0.0005;
+dirLight.shadow.bias = -0.0001;
 scene.add(dirLight);
 
 // Accent lights for neon feel
-const accentLight = new THREE.PointLight(0xff00ff, 0.5, 100);
-accentLight.position.set(0, 20, 0);
+const accentLight = new THREE.PointLight(0x00ffff, 1.0, 150); // Cyan accent
+accentLight.position.set(0, 30, 0);
 scene.add(accentLight);
 
 // Chunk material (shared, dark & reflective)
 const groundMaterial = new THREE.MeshStandardMaterial({
     vertexColors: true,
-    roughness: 0.6,
-    metalness: 0.2,
-    flatShading: true
+    roughness: 0.3, // Smoother for better reflections
+    metalness: 0.7, // More metallic
+    flatShading: false
 });
+
+// Helper for ground grid overlay
+const gridTexture = new THREE.CanvasTexture((() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#00d2d3';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0, 0, 64, 64);
+    return canvas;
+})());
+gridTexture.wrapS = THREE.RepeatWrapping;
+gridTexture.wrapT = THREE.RepeatWrapping;
+gridTexture.repeat.set(CHUNK_SIZE / 4, CHUNK_SIZE / 4);
+
+// Starfield Background
+function createStarfield() {
+    const starGeo = new THREE.BufferGeometry();
+    const starPos = [];
+    for (let i = 0; i < 2000; i++) {
+        const x = (Math.random() - 0.5) * 1000;
+        const y = (Math.random()) * 500;
+        const z = (Math.random() - 0.5) * 1000;
+        starPos.push(x, y, z);
+    }
+    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+    const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.7, sizeAttenuation: true });
+    const stars = new THREE.Points(starGeo, starMat);
+    scene.add(stars);
+}
+createStarfield();
 
 function terrainColor(height) {
     // Dark cyber-grid palette
@@ -199,6 +234,19 @@ function buildChunk(cx, cz) {
     mesh.rotation.x = -Math.PI / 2;
     mesh.position.set(cx * CHUNK_SIZE, 0, cz * CHUNK_SIZE);
     mesh.receiveShadow = true;
+    
+    // Add grid overlay
+    const gridGeo = geo.clone();
+    const gridMat = new THREE.MeshBasicMaterial({
+        map: gridTexture,
+        transparent: true,
+        opacity: 0.15,
+        blending: THREE.AdditiveBlending
+    });
+    const gridMesh = new THREE.Mesh(gridGeo, gridMat);
+    gridMesh.position.z = 0.05; // Slightly above terrain to avoid z-fighting
+    mesh.add(gridMesh);
+
     scene.add(mesh);
     loadedChunks[key] = mesh;
 }
@@ -218,8 +266,24 @@ function updateChunks(playerX, playerZ) {
     for (const key of Object.keys(loadedChunks)) {
         const [ccx, ccz] = key.split('_').map(Number);
         if (Math.abs(ccx - cx) > CHUNK_RADIUS + 1 || Math.abs(ccz - cz) > CHUNK_RADIUS + 1) {
-            scene.remove(loadedChunks[key]);
-            loadedChunks[key].geometry.dispose();
+            const mesh = loadedChunks[key];
+            scene.remove(mesh);
+            
+            // Recursively dispose children (grid overlay)
+            mesh.traverse((child) => {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(m => m.dispose());
+                    } else {
+                        child.material.dispose();
+                    }
+                }
+            });
+            
+            if (mesh.geometry) mesh.geometry.dispose();
+            if (mesh.material) mesh.material.dispose();
+            
             delete loadedChunks[key];
         }
     }
@@ -303,9 +367,16 @@ const particleSystem = new ParticleSystem();
 // Sound Manager
 class SoundManager {
     constructor() {
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.audioContext = null;
+    }
+    init() {
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
     }
     playExplosion() {
+        this.init();
+        if (this.audioContext.state === 'suspended') this.audioContext.resume();
         const oscillator = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
         oscillator.connect(gainNode);
@@ -318,6 +389,8 @@ class SoundManager {
         oscillator.stop(this.audioContext.currentTime + 0.5);
     }
     playShoot() {
+        this.init();
+        if (this.audioContext.state === 'suspended') this.audioContext.resume();
         const oscillator = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
         oscillator.connect(gainNode);
@@ -330,6 +403,8 @@ class SoundManager {
         oscillator.stop(this.audioContext.currentTime + 0.1);
     }
     playTeleport() {
+        this.init();
+        if (this.audioContext.state === 'suspended') this.audioContext.resume();
         const oscillator = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
         oscillator.connect(gainNode);
@@ -454,15 +529,28 @@ function triggerShoot() {
 function createTankMesh(colorHex = 0x4a7c3f) {
     const group = new THREE.Group();
 
-    const metalMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.3, metalness: 0.8 });
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5, metalness: 0.7 });
+    const metalMat = new THREE.MeshStandardMaterial({ 
+        color: 0x333333, 
+        roughness: 0.2, 
+        metalness: 0.9,
+        envMapIntensity: 1.0 
+    });
+    const bodyMat = new THREE.MeshStandardMaterial({ 
+        color: 0x111111, 
+        roughness: 0.3, 
+        metalness: 0.8 
+    });
     const neonMat = new THREE.MeshStandardMaterial({ 
         color: colorHex, 
         emissive: colorHex, 
-        emissiveIntensity: 2.0 
+        emissiveIntensity: 4.0 
     });
-    const darkMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.9 });
-    const barrelMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.2, metalness: 0.9 });
+    const darkMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.6, metalness: 0.5 });
+    const barrelMat = new THREE.MeshStandardMaterial({ 
+        color: 0x222222, 
+        roughness: 0.1, 
+        metalness: 1.0 
+    });
 
     // --- Track housings ---
     const trackGeo = new THREE.BoxGeometry(0.55, 0.7, 4.0);
@@ -759,10 +847,18 @@ function castSpell(spellId) {
             extraParams = { x: spawnX, y: 1.8, z: spawnZ, ry: shootRy };
         }
         if (spellId === 'teleport' && myTank) {
-            const dir = new THREE.Vector3(0, 0, -1);
-            dir.applyQuaternion(myTank.quaternion);
-            const targetX = myTank.position.x + dir.x * 20;
-            const targetZ = myTank.position.z + dir.z * 20;
+            const WORLD_LIMIT = 45;
+            // Use yaw for XZ direction to avoid tilting issues from terrain snapping
+            const dx = Math.sin(myTankYaw + Math.PI);
+            const dz = Math.cos(myTankYaw + Math.PI);
+            
+            let targetX = myTank.position.x + dx * 25;
+            let targetZ = myTank.position.z + dz * 25;
+            
+            // Constrain to world bounds
+            targetX = Math.max(-WORLD_LIMIT, Math.min(WORLD_LIMIT, targetX));
+            targetZ = Math.max(-WORLD_LIMIT, Math.min(WORLD_LIMIT, targetZ));
+            
             extraParams = { x: targetX, z: targetZ };
             soundManager.playTeleport();
         }
@@ -820,10 +916,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const respawnBtn = document.getElementById('respawn-btn');
-    if (respawnBtn) respawnBtn.addEventListener('click', () => {
+    if (respawnBtn) respawnBtn.addEventListener('pointerdown', () => {
         if (partySocket && partySocket.readyState === 1) {
             partySocket.send(JSON.stringify({ type: 'respawn' }));
-            hideDeathScreen();
+            // We wait for the 'update' message from server to hide the death screen
+            // this ensures gameState.dead is in sync.
         }
     });
 
@@ -1148,9 +1245,17 @@ function drawMinimap() {
 // 8. MULTIPLAYER WEBSOCKET SETUP
 // ----------------------------------------------------
 function initNetwork() {
-    const host = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-        ? "localhost:1999"
-        : "tanks-backend.jacobcreation.partykit.dev";
+    // Default to production server for ease of use
+    const host = "tanks-backend.jacobcreation.partykit.dev";
+
+    // Set a timeout to show a "Connection taking long" message
+    const connectionTimeout = setTimeout(() => {
+        const loaderText = document.querySelector('#loading-overlay p');
+        if (loaderText && !gameState.myId) {
+            loaderText.innerText = "SERVER IS SLEEPING, WAKING IT UP...";
+            loaderText.style.color = "#feca57";
+        }
+    }, 5000);
 
     try {
         partySocket = new PartySocket({
@@ -1162,6 +1267,7 @@ function initNetwork() {
             const data = JSON.parse(e.data);
 
             if (data.type === "init") {
+                clearTimeout(connectionTimeout);
                 const statusEl = document.getElementById('match-status');
                 if (statusEl) {
                     statusEl.innerText = "Connected!";
@@ -1189,14 +1295,21 @@ function initNetwork() {
                     myTank.position.set(data.state[data.id].x, 0, data.state[data.id].z);
                     myTank.rotation.y = data.state[data.id].ry;
 
-                    // Hide local tank meshes to prevent camera clipping in first-person
+                    // Ensure local tank is visible (third-person)
                     myTank.traverse((child) => {
                         if (child.isMesh) {
-                            child.visible = false;
+                            child.visible = true;
                         }
                     });
 
                     scene.add(myTank);
+
+                    // Hide loading overlay
+                    const loader = document.getElementById('loading-overlay');
+                    if (loader) {
+                        loader.classList.add('fade-out');
+                        setTimeout(() => loader.style.display = 'none', 1000);
+                    }
 
                     // Set match status based on team
                     const s = document.getElementById('match-status');
@@ -1217,6 +1330,8 @@ function initNetwork() {
             else if (data.type === "update") {
                 if (data.players[gameState.myId]) {
                     const myState = data.players[gameState.myId];
+                    
+                    // Update health and coins
                     if (myState.health < gameState.health) {
                         const hb = document.getElementById('health-bar');
                         if (hb) hb.style.background = 'linear-gradient(90deg, #ff6b6b, #ee5253)';
@@ -1225,8 +1340,9 @@ function initNetwork() {
                         }, 500);
                     }
 
+                    // Reset position on full health if previously dead or health was 0
                     if (myState.health === 100 && gameState.health <= 0 && myTank) {
-                        myTank.position.set(myState.x, myState.y, myState.z);
+                        myTank.position.set(myState.x, 0, myState.z);
                     }
 
                     gameState.health = myState.health;
@@ -1237,16 +1353,20 @@ function initNetwork() {
                         updateScoreboard();
                     }
 
-                    if (myState.dead && !gameState.dead) {
-                        gameState.dead = true;
-                        showDeathScreen();
-                        if (myTank) myTank.visible = false;
-                    } else if (!myState.dead && gameState.dead) {
-                        gameState.dead = false;
-                        hideDeathScreen();
-                        if (myTank) {
-                            myTank.position.set(myState.x, 0, myState.z);
-                            myTank.visible = true;
+                    // Handle Death/Respawn sync
+                    if (myState.dead !== gameState.dead) {
+                        gameState.dead = myState.dead;
+                        if (gameState.dead) {
+                            showDeathScreen();
+                            if (myTank) myTank.visible = false;
+                        } else {
+                            hideDeathScreen();
+                            if (myTank) {
+                                myTank.position.set(myState.x, 0, myState.z);
+                                myTank.visible = true;
+                                // Reset velocity to prevent sliding after respawn
+                                tankVelocity = 0;
+                            }
                         }
                     }
 
@@ -1254,7 +1374,8 @@ function initNetwork() {
                         gameState.spells = {
                             dash: myState.spells.dash || 0,
                             shield: myState.spells.shield || 0,
-                            blast: myState.spells.blast || 0
+                            blast: myState.spells.blast || 0,
+                            teleport: myState.spells.teleport || 0
                         };
                         updateSpellUI();
                     }

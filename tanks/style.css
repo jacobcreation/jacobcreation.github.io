@@ -74,6 +74,56 @@ body {
     z-index: 10;
 }
 
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--dark-bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    pointer-events: auto;
+    transition: opacity 1s ease-out;
+}
+
+#loading-overlay h1 {
+    font-size: 64px;
+    color: var(--neon-blue);
+    text-shadow: 0 0 20px var(--neon-blue);
+    margin: 20px 0;
+    letter-spacing: 10px;
+}
+
+#loading-overlay p {
+    font-size: 18px;
+    color: var(--neon-green);
+    letter-spacing: 4px;
+    animation: pulse 1.5s infinite;
+}
+
+.loader {
+    width: 80px;
+    height: 80px;
+    border: 4px solid rgba(0, 210, 211, 0.1);
+    border-top: 4px solid var(--neon-blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    box-shadow: 0 0 15px var(--neon-blue);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#loading-overlay.fade-out {
+    opacity: 0;
+}
+
 #health-bar-container {
     position: absolute;
     bottom: 40px;
@@ -98,13 +148,21 @@ body {
 
 #coins-container {
     position: absolute;
-    top: 30px;
-    right: 40px;
-    font-size: 32px;
+    top: 20px;
+    right: 20px;
+    background: rgba(254, 202, 87, 0.1);
+    border: 1px solid rgba(254, 202, 87, 0.4);
+    padding: 8px 20px;
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+    font-size: 24px;
     font-weight: 700;
     color: var(--neon-yellow);
-    text-shadow: 0 0 15px var(--neon-yellow);
+    text-shadow: 0 0 10px var(--neon-yellow);
     font-family: 'Share Tech Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 #leaderboard {
@@ -160,15 +218,20 @@ body {
 
 #match-status {
     position: absolute;
-    top: 40px;
+    top: 80px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 28px;
+    font-size: 18px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 4px;
-    color: var(--neon-purple);
-    text-shadow: 0 0 20px var(--neon-purple);
+    letter-spacing: 2px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px 20px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    transition: all 0.5s ease;
 }
 
 #shop-modal {
@@ -234,18 +297,20 @@ body {
 
 #scoreboard {
     position: absolute;
-    top: 30px;
-    left: 40px;
+    top: 20px;
+    left: 20px;
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 15px 25px;
-    border-left: 4px solid var(--neon-blue);
+    gap: 15px;
+    background: rgba(0, 5, 10, 0.6);
+    padding: 10px 20px;
+    border: 1px solid rgba(0, 210, 211, 0.3);
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(0, 210, 211, 0.1);
 }
 
 .team-score {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
     font-family: 'Share Tech Mono', monospace;
 }
@@ -258,7 +323,14 @@ body {
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(10, 0, 0, 0.9);
     display: flex; flex-direction: column; justify-content: center; align-items: center;
-    z-index: 100;
+    z-index: 200;
+    pointer-events: auto;
+}
+
+.death-buttons {
+    display: flex;
+    gap: 20px;
+    pointer-events: auto;
 }
 
 #death-screen h1 {
