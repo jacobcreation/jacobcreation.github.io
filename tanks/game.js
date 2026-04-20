@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { PartySocket } from 'partysocket';
+import PartySocket from 'partysocket';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
@@ -129,13 +129,13 @@ const shieldBtn = document.getElementById('shield-btn');
 const blastBtn = document.getElementById('blast-btn');
 
 // Lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // Balanced ambient
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); // Slightly dimmer ambient
 scene.add(ambientLight);
 
-const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6); 
+const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.5); 
 scene.add(hemisphereLight);
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 1.2); // Balanced sun
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.0); // Balanced sun intensity
 dirLight.position.set(100, 200, 50);
 dirLight.castShadow = true;
 dirLight.shadow.mapSize.width = 4096;
