@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import PartySocket from 'partysocket';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 
 // ----------------------------------------------------
 // 1. GAME STATE
@@ -12,7 +15,7 @@ const gameState = {
     dead: false,
     team: null,
     teamScores: { red: 0, blue: 0 },
-    spells: { dash: 0, shield: 0, blast: 0 },
+    spells: { dash: 0, shield: 0, blast: 0, teleport: 0 },
     dashEndTime: 0
 };
 
@@ -36,8 +39,16 @@ let lastSendTime = 0;
 let partySocket = null;
 let myTank = null;
 let buildings = [];
+let crates = [];
 let myTankYaw = 0; // Track yaw separately to avoid quaternion/Euler feedback loop
 let mobileAimInitialized = false;
+
+// Physics / Camera Smoothing
+let tankVelocity = 0;
+const ACCEL = 40;
+const DECEL = 25;
+const MAX_SPEED = 18;
+const MAX_DASH_SPEED = 45;
 
 // ---- Infinite Terrain Chunk System ----
 const CHUNK_SIZE = 64;     // world units per chunk
@@ -79,18 +90,33 @@ function terrainHeight(wx, wz) {
 // 2. THREE.JS SETUP
 // ----------------------------------------------------
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87CEEB); // Sky blue
-scene.fog = new THREE.Fog(0x87CEEB, 40, 200);
+const bgColor = 0x020205;
+scene.background = new THREE.Color(bgColor); 
+scene.fog = new THREE.Fog(bgColor, 20, 150);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-// cameraOffset is now strictly for first-person (relative to tank body)
-const cameraOffset = new THREE.Vector3(0, 2.4, 0.5);
+// cameraOffset is now for third-person follow
+const cameraOffset = new THREE.Vector3(0, 5, 12);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ReinhardToneMapping;
+renderer.toneMappingExposure = 1.0;
 document.body.appendChild(renderer.domElement);
+
+// Post-Processing (Bloom)
+const renderScene = new RenderPass(scene, camera);
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+bloomPass.threshold = 0.21;
+bloomPass.strength = 1.2;
+bloomPass.radius = 0.55;
+
+const composer = new EffectComposer(renderer);
+composer.addPass(renderScene);
+composer.addPass(bloomPass);
 
 // Raycaster for aiming
 const raycaster = new THREE.Raycaster();
@@ -103,14 +129,14 @@ const shieldBtn = document.getElementById('shield-btn');
 const blastBtn = document.getElementById('blast-btn');
 
 // Lighting
-const hemisphereLight = new THREE.HemisphereLight(0x87ceeb, 0x4a6741, 0.7); // sky blue top, dark green bottom
+const hemisphereLight = new THREE.HemisphereLight(0x111122, 0x000000, 0.6); // dark blue top
 scene.add(hemisphereLight);
 
-const dirLight = new THREE.DirectionalLight(0xfff5d0, 1.4); // warm sunlight
+const dirLight = new THREE.DirectionalLight(0x7788ff, 1.0); // cold moonlight
 dirLight.position.set(80, 150, 60);
 dirLight.castShadow = true;
-dirLight.shadow.mapSize.width = 4096;
-dirLight.shadow.mapSize.height = 4096;
+dirLight.shadow.mapSize.width = 2048;
+dirLight.shadow.mapSize.height = 2048;
 dirLight.shadow.camera.left = -120;
 dirLight.shadow.camera.right = 120;
 dirLight.shadow.camera.top = 120;
@@ -118,25 +144,26 @@ dirLight.shadow.camera.bottom = -120;
 dirLight.shadow.bias = -0.0005;
 scene.add(dirLight);
 
-// Sun halo/fill backlight
-const fillLight = new THREE.DirectionalLight(0xaad4f5, 0.3);
-fillLight.position.set(-80, 40, -60);
-scene.add(fillLight);
+// Accent lights for neon feel
+const accentLight = new THREE.PointLight(0xff00ff, 0.5, 100);
+accentLight.position.set(0, 20, 0);
+scene.add(accentLight);
 
-// Chunk material (shared, vertex-coloring)
+// Chunk material (shared, dark & reflective)
 const groundMaterial = new THREE.MeshStandardMaterial({
     vertexColors: true,
-    roughness: 0.95,
-    metalness: 0.02,
+    roughness: 0.6,
+    metalness: 0.2,
     flatShading: true
 });
 
 function terrainColor(height) {
-    if (height < 0.5) return new THREE.Color(0x5a8a3a); // flat grass
-    if (height < 4) return new THREE.Color(0x4a7a2a); // light grass
-    if (height < 8) return new THREE.Color(0x7a6040); // rocky brown
-    if (height < 14) return new THREE.Color(0x6a5535); // dark rock
-    return new THREE.Color(0xc8c8c8);                    // snow cap
+    // Dark cyber-grid palette
+    if (height < 0.5) return new THREE.Color(0x0a0a12); 
+    if (height < 4) return new THREE.Color(0x080810); 
+    if (height < 8) return new THREE.Color(0x100818); 
+    if (height < 14) return new THREE.Color(0x180820); 
+    return new THREE.Color(0x201030);                   
 }
 
 function buildChunk(cx, cz) {
@@ -208,6 +235,114 @@ const groundPlane = new THREE.Mesh(
 );
 groundPlane.rotation.x = -Math.PI / 2;
 scene.add(groundPlane);
+
+// Particle System for Explosions
+class ParticleSystem {
+    constructor(count = 200) {
+        this.count = count;
+        this.geometry = new THREE.BufferGeometry();
+        this.positions = new Float32Array(count * 3);
+        this.velocities = new Float32Array(count * 3);
+        this.lifetimes = new Float32Array(count);
+        this.geometry.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
+        this.material = new THREE.PointsMaterial({ 
+            color: 0xffffff, 
+            size: 0.25, 
+            transparent: true, 
+            opacity: 1.0, 
+            blending: THREE.AdditiveBlending 
+        });
+        this.points = new THREE.Points(this.geometry, this.material);
+        scene.add(this.points);
+        this.active = false;
+    }
+    explode(position, color = 0xff4500) {
+        for (let i = 0; i < this.count; i++) {
+            const i3 = i * 3;
+            this.positions[i3] = position.x;
+            this.positions[i3 + 1] = position.y;
+            this.positions[i3 + 2] = position.z;
+            
+            const speed = 0.1 + Math.random() * 0.5;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.random() * Math.PI;
+            
+            this.velocities[i3] = speed * Math.sin(phi) * Math.cos(theta);
+            this.velocities[i3 + 1] = speed * Math.cos(phi);
+            this.velocities[i3 + 2] = speed * Math.sin(phi) * Math.sin(theta);
+            
+            this.lifetimes[i] = 0.5 + Math.random() * 1.0;
+        }
+        this.material.color.setHex(color);
+        this.active = true;
+        this.material.opacity = 1.0;
+    }
+    update(delta) {
+        if (!this.active) return;
+        let allDead = true;
+        for (let i = 0; i < this.count; i++) {
+            if (this.lifetimes[i] > 0) {
+                allDead = false;
+                const i3 = i * 3;
+                this.positions[i3] += this.velocities[i3] * delta * 60;
+                this.positions[i3 + 1] += this.velocities[i3 + 1] * delta * 60;
+                this.positions[i3 + 2] += this.velocities[i3 + 2] * delta * 60;
+                this.lifetimes[i] -= delta;
+                
+                // Gravity-ish pull
+                this.velocities[i3 + 1] -= 0.005 * delta * 60;
+            }
+        }
+        this.geometry.attributes.position.needsUpdate = true;
+        this.material.opacity = Math.max(0, this.material.opacity - delta * 0.8);
+        if (allDead) this.active = false;
+    }
+}
+const particleSystem = new ParticleSystem();
+
+// Sound Manager
+class SoundManager {
+    constructor() {
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    playExplosion() {
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        oscillator.frequency.setValueAtTime(200, this.audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(50, this.audioContext.currentTime + 0.5);
+        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
+        oscillator.start();
+        oscillator.stop(this.audioContext.currentTime + 0.5);
+    }
+    playShoot() {
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(400, this.audioContext.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+        oscillator.start();
+        oscillator.stop(this.audioContext.currentTime + 0.1);
+    }
+    playTeleport() {
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        oscillator.frequency.setValueAtTime(1000, this.audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(2000, this.audioContext.currentTime + 0.2);
+        gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
+        oscillator.start();
+        oscillator.stop(this.audioContext.currentTime + 0.2);
+    }
+}
+const soundManager = new SoundManager();
 
 function setMobileAimCenter() {
     mouse.x = 0;
@@ -309,6 +444,7 @@ function triggerShoot() {
             type: 'shoot', x: spawnX, y: 1.8, z: spawnZ, ry: shootRy
         }));
         spawnMuzzleFlash(new THREE.Vector3(spawnX, 2.2, spawnZ));
+        soundManager.playShoot();
     }
 }
 
@@ -318,30 +454,30 @@ function triggerShoot() {
 function createTankMesh(colorHex = 0x4a7c3f) {
     const group = new THREE.Group();
 
-    const metalMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.7, metalness: 0.5 });
-    const bodyMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.8, metalness: 0.15 });
-    const darkMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 });
-    const barrelMat = new THREE.MeshStandardMaterial({ color: 0x2c2c2c, roughness: 0.4, metalness: 0.9 });
+    const metalMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.3, metalness: 0.8 });
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5, metalness: 0.7 });
+    const neonMat = new THREE.MeshStandardMaterial({ 
+        color: colorHex, 
+        emissive: colorHex, 
+        emissiveIntensity: 2.0 
+    });
+    const darkMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.9 });
+    const barrelMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.2, metalness: 0.9 });
 
-    // --- Track housings (left + right) ---
+    // --- Track housings ---
     const trackGeo = new THREE.BoxGeometry(0.55, 0.7, 4.0);
     [-1.1, 1.1].forEach(xOff => {
         const t = new THREE.Mesh(trackGeo, darkMat);
         t.position.set(xOff, 0.35, 0);
         t.castShadow = true;
         group.add(t);
-    });
 
-    // Road wheels (5 per side)
-    const wheelGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.18, 12);
-    for (let i = 0; i < 5; i++) {
-        [-1.25, 1.25].forEach(xOff => {
-            const w = new THREE.Mesh(wheelGeo, metalMat);
-            w.rotation.z = Math.PI / 2;
-            w.position.set(xOff, 0.28, -1.5 + i * 0.75);
-            group.add(w);
-        });
-    }
+        // Neon side strip
+        const stripGeo = new THREE.BoxGeometry(0.05, 0.1, 3.8);
+        const strip = new THREE.Mesh(stripGeo, neonMat);
+        strip.position.set(xOff > 0 ? 0.28 : -0.28, 0.4, 0);
+        t.add(strip);
+    });
 
     // --- Hull body ---
     const hullGeo = new THREE.BoxGeometry(2.0, 0.6, 3.6);
@@ -350,27 +486,12 @@ function createTankMesh(colorHex = 0x4a7c3f) {
     hull.castShadow = true;
     group.add(hull);
 
-    // Front glacis plate (angled)
-    const glacisGeo = new THREE.BoxGeometry(2.0, 0.5, 0.6);
-    const glacis = new THREE.Mesh(glacisGeo, bodyMat);
-    glacis.position.set(0, 0.95, -2.0);
-    glacis.rotation.x = 0.35;
-    glacis.castShadow = true;
-    group.add(glacis);
-
-    // Rear engine deck bump
-    const deckGeo = new THREE.BoxGeometry(1.8, 0.15, 1.0);
-    const deck = new THREE.Mesh(deckGeo, bodyMat);
-    deck.position.set(0, 1.2, 1.3);
-    group.add(deck);
-
-    // Engine exhaust pipes (2)
-    const pipeGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.5, 6);
-    [0.35, -0.35].forEach(xOff => {
-        const pipe = new THREE.Mesh(pipeGeo, darkMat);
-        pipe.rotation.x = Math.PI / 2;
-        pipe.position.set(xOff, 1.35, 2.0);
-        group.add(pipe);
+    // Front neon "headlights"
+    const lightGeo = new THREE.BoxGeometry(0.4, 0.1, 0.1);
+    [-0.7, 0.7].forEach(x => {
+        const light = new THREE.Mesh(lightGeo, neonMat);
+        light.position.set(x, 0.95, -1.85);
+        group.add(light);
     });
 
     // --- Turret ---
@@ -379,46 +500,39 @@ function createTankMesh(colorHex = 0x4a7c3f) {
     turretBase.position.set(0, 0, 0);
     turretBase.castShadow = true;
 
-    const turretTopGeo = new THREE.BoxGeometry(1.3, 0.25, 1.5);
-    const turretTop = new THREE.Mesh(turretTopGeo, bodyMat);
-    turretTop.position.y = 0.4;
-    turretBase.add(turretTop);
+    // Turret neon ring
+    const ringGeo = new THREE.BoxGeometry(1.62, 0.05, 1.82);
+    const ring = new THREE.Mesh(ringGeo, neonMat);
+    ring.position.y = 0.1;
+    turretBase.add(ring);
 
-    // Hatch ring
-    const hatchGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.1, 12);
-    const hatch = new THREE.Mesh(hatchGeo, metalMat);
-    hatch.position.set(-0.32, 0.55, -0.2);
-    turretBase.add(hatch);
-
-    // Antenna
-    const antennaGeo = new THREE.CylinderGeometry(0.015, 0.015, 1.2, 4);
-    const antenna = new THREE.Mesh(antennaGeo, metalMat);
-    antenna.position.set(0.52, 1.0, 0.4);
-    turretBase.add(antenna);
-
-    // --- Barrel (long + realistic) ---
-    const barrelGeo = new THREE.CylinderGeometry(0.1, 0.12, 3.2, 10);
+    // --- Barrel ---
+    const barrelGeo = new THREE.CylinderGeometry(0.1, 0.12, 3.2, 12);
     const barrel = new THREE.Mesh(barrelGeo, barrelMat);
     barrel.rotation.x = Math.PI / 2;
     barrel.position.set(0, 0.1, -2.4);
     barrel.castShadow = true;
     turretBase.add(barrel);
 
-    // Muzzle brake
-    const muzzleGeo = new THREE.CylinderGeometry(0.135, 0.1, 0.3, 8);
+    // Muzzle brake with neon tip
+    const muzzleGeo = new THREE.CylinderGeometry(0.14, 0.12, 0.4, 12);
     const muzzle = new THREE.Mesh(muzzleGeo, barrelMat);
     muzzle.rotation.x = Math.PI / 2;
     muzzle.position.set(0, 0.1, -4.0);
     turretBase.add(muzzle);
 
-    // Turret sits on top of hull
+    const tipGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.05, 12);
+    const tip = new THREE.Mesh(tipGeo, neonMat);
+    tip.rotation.x = Math.PI / 2;
+    tip.position.set(0, 0.1, -4.2);
+    turretBase.add(tip);
+
     const turretGroup = new THREE.Group();
     turretGroup.add(turretBase);
     turretGroup.position.set(0, 1.43, -0.15);
     group.add(turretGroup);
 
     group.userData.turret = turretGroup;
-
     return group;
 }
 
@@ -498,45 +612,63 @@ function spawnTree(wx, wz) {
     }
 })();
 
+// Crate helper
+function spawnCrate(wx, wz) {
+    const h = terrainHeight(wx, wz);
+    const geo = new THREE.BoxGeometry(2, 2, 2);
+    const mat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 });
+    const crate = new THREE.Mesh(geo, mat);
+    crate.position.set(wx, h + 1, wz);
+    crate.castShadow = true;
+    crate.receiveShadow = true;
+    scene.add(crate);
+    crates.push(crate);
+}
+
+// Scatter crates
+(function seedCrates() {
+    const positions = [
+        [10, 10], [-10, -10], [20, -5], [-15, 15], [0, 25], [25, 0]
+    ];
+    for (const [x, z] of positions) {
+        spawnCrate(x, z);
+    }
+})();
+
 // Muzzle flash effect
 function spawnMuzzleFlash(worldPos) {
-    const geo = new THREE.SphereGeometry(0.6, 6, 6);
-    const mat = new THREE.MeshBasicMaterial({ color: 0xffa040, transparent: true, opacity: 1.0 });
+    const geo = new THREE.SphereGeometry(0.8, 8, 8);
+    const mat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 1.0 });
     const flash = new THREE.Mesh(geo, mat);
     flash.position.copy(worldPos);
     scene.add(flash);
+
+    const light = new THREE.PointLight(0x00ffff, 5, 15);
+    light.position.copy(worldPos);
+    scene.add(light);
+
     let age = 0;
     const fadeFlash = () => {
-        age += 0.08;
-        flash.material.opacity = Math.max(0, 1 - age * 3);
-        flash.scale.setScalar(1 + age * 4);
-        if (age < 0.5) requestAnimationFrame(fadeFlash);
-        else scene.remove(flash);
+        age += 0.15;
+        flash.material.opacity = Math.max(0, 1 - age * 4);
+        flash.scale.setScalar(1 + age * 6);
+        light.intensity = Math.max(0, 5 * (1 - age * 4));
+        if (age < 0.5) {
+            requestAnimationFrame(fadeFlash);
+        } else {
+            scene.remove(flash);
+            scene.remove(light);
+            flash.geometry.dispose();
+            flash.material.dispose();
+        }
     };
     requestAnimationFrame(fadeFlash);
 }
 
 // Explosion ring on hit
 function spawnExplosion(worldPos) {
-    const colors = [0xff4500, 0xff8c00, 0xffd700];
-    colors.forEach((col, i) => {
-        const ring = new THREE.Mesh(
-            new THREE.SphereGeometry(0.5, 8, 8),
-            new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.9 })
-        );
-        ring.position.copy(worldPos);
-        ring.position.y += 0.5;
-        scene.add(ring);
-        let a = 0;
-        const anim = () => {
-            a += 0.06;
-            ring.scale.setScalar(1 + a * (3 + i));
-            ring.material.opacity = Math.max(0, 0.9 - a * 1.5);
-            if (a < 0.7) requestAnimationFrame(anim);
-            else scene.remove(ring);
-        };
-        setTimeout(() => requestAnimationFrame(anim), i * 60);
-    });
+    particleSystem.explode(worldPos);
+    soundManager.playExplosion();
 }
 
 // ----------------------------------------------------
@@ -557,9 +689,19 @@ function updateSpellUI() {
     const dashBtn = document.getElementById('buy-dash');
     const shieldBtn = document.getElementById('buy-shield');
     const blastBtn = document.getElementById('buy-blast');
+    const teleportBtn = document.getElementById('buy-teleport');
     if (dashBtn) dashBtn.innerText = `Dash x${gameState.spells.dash} (50 Coins) [Q]`;
     if (shieldBtn) shieldBtn.innerText = `Shield x${gameState.spells.shield} (100 Coins) [E]`;
     if (blastBtn) blastBtn.innerText = `Big Blast x${gameState.spells.blast} (150 Coins) [F]`;
+    if (teleportBtn) teleportBtn.innerText = `Teleport x${gameState.spells.teleport} (200 Coins) [R]`;
+}
+
+function updateLeaderboard() {
+    const list = document.getElementById('leaderboard-list');
+    if (!list) return;
+    const players = Object.values(gameState.players).filter(p => !p.dead);
+    players.sort((a, b) => b.kills - a.kills);
+    list.innerHTML = players.slice(0, 5).map(p => `<div class="leaderboard-item"><span>${p.name || 'Player'}</span><span>${p.kills || 0}</span></div>`).join('');
 }
 
 function showDeathScreen() {
@@ -616,6 +758,14 @@ function castSpell(spellId) {
 
             extraParams = { x: spawnX, y: 1.8, z: spawnZ, ry: shootRy };
         }
+        if (spellId === 'teleport' && myTank) {
+            const dir = new THREE.Vector3(0, 0, -1);
+            dir.applyQuaternion(myTank.quaternion);
+            const targetX = myTank.position.x + dir.x * 20;
+            const targetZ = myTank.position.z + dir.z * 20;
+            extraParams = { x: targetX, z: targetZ };
+            soundManager.playTeleport();
+        }
         partySocket.send(JSON.stringify({ type: 'cast_spell', spell: spellId, ...extraParams }));
     }
 }
@@ -633,6 +783,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (k === 'q') castSpell('dash');
         if (k === 'e') castSpell('shield');
         if (k === 'f') castSpell('blast');
+        if (k === 'r') castSpell('teleport');
     });
 
     window.addEventListener('keyup', (e) => {
@@ -645,6 +796,7 @@ document.addEventListener('DOMContentLoaded', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
+        composer.setSize(window.innerWidth, window.innerHeight);
         setMobileAimCenter();
     });
 
@@ -705,19 +857,32 @@ document.addEventListener('DOMContentLoaded', () => {
 function spawnClientProjectile(id, proj) {
     const size = proj.isBlast ? 1.0 : 0.3;
     const geo = new THREE.SphereGeometry(size, 8, 8);
-    const color = proj.isBlast ? 0xfeca57 : 0xff3838;
+    const color = proj.isBlast ? 0xfeca57 : (proj.team === 'red' ? 0xff4757 : 0x54a0ff);
     const mat = new THREE.MeshStandardMaterial({
         color: color,
         emissive: color,
-        emissiveIntensity: 0.8
+        emissiveIntensity: 3.0
     });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(proj.x, proj.y, proj.z);
 
+    // Trail
+    const trailGeo = new THREE.BoxGeometry(size * 0.8, size * 0.8, 3.0);
+    const trailMat = new THREE.MeshBasicMaterial({
+        color: color,
+        transparent: true,
+        opacity: 0.4
+    });
+    const trail = new THREE.Mesh(trailGeo, trailMat);
+    trail.position.z = 1.5;
+    mesh.add(trail);
+    mesh.rotation.y = proj.ry;
+
     // Attach velocity metadata
     mesh.userData = {
         vx: Math.sin(proj.ry) * (proj.isBlast ? 8 : 10),
-        vz: Math.cos(proj.ry) * (proj.isBlast ? 8 : 10)
+        vz: Math.cos(proj.ry) * (proj.isBlast ? 8 : 10),
+        team: proj.team
     };
 
     scene.add(mesh);
@@ -763,29 +928,33 @@ function animate() {
     // Local movement predictions
     if (myTank && !gameState.dead) {
         const isDashing = Date.now() < gameState.dashEndTime;
-        const moveSpeed = (isDashing ? 35 : 12) * dt;
         const rotateSpeed = 2.5 * dt;
         const mobileForward = touchControls.drive.y < -0.12;
         const mobileBackward = touchControls.drive.y > 0.12;
         const mobileLeft = touchControls.drive.x < -0.12;
         const mobileRight = touchControls.drive.x > 0.12;
 
-        let moved = false;
+        let targetVel = 0;
+        if (keys['w'] || keys['arrowup'] || mobileForward) targetVel = isDashing ? MAX_DASH_SPEED : MAX_SPEED;
+        else if (keys['s'] || keys['arrowdown'] || mobileBackward) targetVel = -MAX_SPEED;
+
+        if (tankVelocity < targetVel) {
+            tankVelocity = Math.min(targetVel, tankVelocity + ACCEL * dt);
+        } else if (tankVelocity > targetVel) {
+            tankVelocity = Math.max(targetVel, tankVelocity - DECEL * dt);
+        }
+
+        let moved = Math.abs(tankVelocity) > 0.1;
         const oldPos = myTank.position.clone();
 
-        if (keys['w'] || keys['arrowup'] || mobileForward) {
-            myTank.translateZ(-moveSpeed);
-            moved = true;
-        }
-        if (keys['s'] || keys['arrowdown'] || mobileBackward) {
-            myTank.translateZ(moveSpeed);
-            moved = true;
+        if (moved) {
+            myTank.translateZ(-tankVelocity * dt);
         }
 
         // Build collision prediction
         if (moved) {
             let hitBuilding = false;
-            const radius = 1.5;
+            const radius = 1.8;
             for (const b of buildings) {
                 if (myTank.position.x > b.x - b.width / 2 - radius && myTank.position.x < b.x + b.width / 2 + radius &&
                     myTank.position.z > b.z - b.depth / 2 - radius && myTank.position.z < b.z + b.depth / 2 + radius) {
@@ -795,16 +964,16 @@ function animate() {
             }
             if (hitBuilding) {
                 myTank.position.copy(oldPos);
-                moved = false;
+                tankVelocity *= -0.5; // bounce back slightly
             }
         }
 
         // Local World boundary enforcement
         const WORLD_LIMIT = 45;
-        if (myTank.position.x > WORLD_LIMIT) { myTank.position.x = WORLD_LIMIT; moved = true; }
-        if (myTank.position.x < -WORLD_LIMIT) { myTank.position.x = -WORLD_LIMIT; moved = true; }
-        if (myTank.position.z > WORLD_LIMIT) { myTank.position.z = WORLD_LIMIT; moved = true; }
-        if (myTank.position.z < -WORLD_LIMIT) { myTank.position.z = -WORLD_LIMIT; moved = true; }
+        if (myTank.position.x > WORLD_LIMIT) { myTank.position.x = WORLD_LIMIT; tankVelocity = 0; moved = true; }
+        if (myTank.position.x < -WORLD_LIMIT) { myTank.position.x = -WORLD_LIMIT; tankVelocity = 0; moved = true; }
+        if (myTank.position.z > WORLD_LIMIT) { myTank.position.z = WORLD_LIMIT; tankVelocity = 0; moved = true; }
+        if (myTank.position.z < -WORLD_LIMIT) { myTank.position.z = -WORLD_LIMIT; tankVelocity = 0; moved = true; }
 
         if (keys['a'] || keys['arrowleft'] || mobileLeft) {
             myTankYaw += rotateSpeed;
@@ -815,17 +984,16 @@ function animate() {
             moved = true;
         }
 
-        // First-Person Camera behavior
-        // Camera stays fixed to the tank hull (body) looking forward
-        const cameraPos = cameraOffset.clone().applyMatrix4(myTank.matrixWorld);
-        camera.position.copy(cameraPos);
-        const lookTarget = new THREE.Vector3(0, 2.4, -100).applyMatrix4(myTank.matrixWorld);
+        // Smooth Third-Person Camera follow
+        const targetCamPos = cameraOffset.clone().applyMatrix4(myTank.matrixWorld);
+        camera.position.lerp(targetCamPos, 0.1);
+        const lookTarget = new THREE.Vector3(0, 2.0, -10).applyMatrix4(myTank.matrixWorld);
         camera.lookAt(lookTarget);
 
         // ---- Terrain following: snap Y and tilt to slope ----
         snapToTerrain(myTank, myTankYaw);
 
-        // Turret Aiming
+        // Turret Aiming (Smoother)
         if (myTank.userData.turret) {
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObject(groundPlane);
@@ -833,14 +1001,18 @@ function animate() {
                 const target = intersects[0].point;
                 const dx = target.x - myTank.position.x;
                 const dz = target.z - myTank.position.z;
-                // Angle towards target. Since the barrel is at -Z relative to the turret, 
-                // we rotate it by PI (180 degrees) so -Z points at the target.
                 const globalAngle = Math.atan2(dx, dz) + Math.PI;
-                myTank.userData.turret.rotation.y = globalAngle - myTank.rotation.y;
+                const targetRot = globalAngle - myTank.rotation.y;
+                
+                // Lerp turret rotation for smoothness
+                const currentRot = myTank.userData.turret.rotation.y;
+                const diff = targetRot - currentRot;
+                const shortDiff = Math.atan2(Math.sin(diff), Math.cos(diff));
+                myTank.userData.turret.rotation.y += shortDiff * 0.15;
             }
         }
 
-        // Send network update approx 20 times a second
+        // Send network update
         timeSinceLastSend += dt;
         if (moved && partySocket && partySocket.readyState === 1 && timeSinceLastSend > 0.05) {
             partySocket.send(JSON.stringify({
@@ -859,12 +1031,10 @@ function animate() {
         const tank = otherTanks[id];
         if (tank.userData.targetPosition) {
             tank.position.lerp(tank.userData.targetPosition, 0.3);
-            // Lerp yaw stored explicitly in userData to avoid quaternion feedback
             if (tank.userData.yaw === undefined) tank.userData.yaw = tank.userData.targetRotationY;
             const diff = tank.userData.targetRotationY - tank.userData.yaw;
             const shortDiff = Math.atan2(Math.sin(diff), Math.cos(diff));
             tank.userData.yaw += shortDiff * 0.3;
-            // Snap other tanks to terrain height too
             snapToTerrain(tank, tank.userData.yaw);
         }
     }
@@ -873,17 +1043,31 @@ function animate() {
     for (const [pId, mesh] of Object.entries(activeProjectiles)) {
         mesh.position.x += mesh.userData.vx * dt;
         mesh.position.z += mesh.userData.vz * dt;
+
+        // Check collision with crates
+        for (let i = crates.length - 1; i >= 0; i--) {
+            const crate = crates[i];
+            const dist = mesh.position.distanceTo(crate.position);
+            if (dist < 1.5) {
+                scene.remove(crate);
+                crates.splice(i, 1);
+                scene.remove(mesh);
+                delete activeProjectiles[pId];
+                spawnExplosion(mesh.position);
+                break;
+            }
+        }
     }
 
-    // Update infinite terrain chunks around the player
     if (myTank) {
         updateChunks(myTank.position.x, myTank.position.z);
     }
 
-    // Draw minimap
     drawMinimap();
-
-    renderer.render(scene, camera);
+    particleSystem.update(dt);
+    
+    // Use composer for bloom rendering
+    composer.render();
 }
 
 // ----------------------------------------------------
@@ -1093,6 +1277,7 @@ function initNetwork() {
                         spawnOtherTank(id, state);
                     }
                 }
+                updateLeaderboard();
 
                 if (data.removedProjectiles) {
                     for (const pId of data.removedProjectiles) {

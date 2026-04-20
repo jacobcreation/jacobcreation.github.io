@@ -7,17 +7,6 @@
   <meta name="description" content="Battle online in Neon Tanks 3D with team scores, coins, shop upgrades, spells, and a fast arcade-style arena.">
   <title>Neon Tanks 3D - Online Multiplayer</title>
   <link rel="stylesheet" href="style.css">
-  <script src="/project-polish.js" defer></script>
-  <!-- Import Maps for Three.js -->
-  <script type="importmap">
-      {
-        "imports": {
-          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-          "partysocket": "https://unpkg.com/partysocket"
-        }
-      }
-    </script>
 </head>
 
 <body data-project-subtitle="A fast multiplayer tank arena with coins, abilities, team scoring, and neon-styled combat.">
@@ -30,6 +19,10 @@
       <div id="health-bar"></div>
     </div>
     <div id="coins-container">Coins: <span id="coin-count">0</span></div>
+    <div id="leaderboard">
+      <h3>Leaderboard</h3>
+      <div id="leaderboard-list"></div>
+    </div>
     <div id="shop-hint">Press [B] to open Shop</div>
     <div id="crosshair">
       <div class="ch-h"></div>
@@ -45,6 +38,7 @@
       <button id="buy-dash" class="spell-btn">Dash (50 Coins) [Q]</button>
       <button id="buy-shield" class="spell-btn">Shield (100 Coins) [E]</button>
       <button id="buy-blast" class="spell-btn">Big Blast (150 Coins) [F]</button>
+      <button id="buy-teleport" class="spell-btn">Teleport (200 Coins) [R]</button>
     </div>
     <button id="close-shop">Close</button>
   </div>
