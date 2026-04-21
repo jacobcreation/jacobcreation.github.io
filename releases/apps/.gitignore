@@ -1,0 +1,7 @@
+# Generated desktop release artifacts live here locally, but should not be committed.
+*.AppImage
+*.exe
+*.deb
+*.blockmap
+latest*.yml
+builder-debug.yml
