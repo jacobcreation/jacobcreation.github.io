@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Releases - JacobCreation</title>
+    <meta http-equiv="refresh" content="5;url=https://mega.nz/folder/vlJGjAbR#xWiDcOUWFnIaYxn-N5lxQA">
+    <title>Releases Moved - JacobCreation</title>
 
     <!-- Google Fonts -->
     <link rel="icon" href="/favicon.png" type="image/png" />
@@ -38,15 +39,21 @@
                 linear-gradient(135deg, var(--bg1), var(--bg2));
             display: flex;
             flex-direction: column;
+            justify-content: center;
         }
 
         header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
             padding: 14px 18px;
             backdrop-filter: blur(10px);
             background: rgba(10, 16, 32, 0.65);
             border-bottom: 1px solid rgba(255, 255, 255, 0.10);
             display: flex;
             justify-content: center;
+            z-index: 100;
         }
 
         .header-content {
@@ -70,28 +77,12 @@
             color: transparent;
         }
 
-        .nav-link {
-            color: var(--text);
-            text-decoration: none;
-            font-weight: 600;
-            background: rgba(255, 255, 255, 0.06);
-            padding: 8px 16px;
-            border-radius: 999px;
-            border: 1px solid var(--border);
-            transition: 0.2s;
-        }
-
-        .nav-link:hover {
-            background: rgba(255, 255, 255, 0.12);
-            transform: translateY(-2px);
-        }
-
         main {
-            max-width: 1100px;
-            margin: 40px auto;
+            max-width: 800px;
+            margin: 0 auto;
             padding: 0 18px;
             width: 100%;
-            flex: 1;
+            text-align: center;
         }
 
         .title-section {
@@ -100,736 +91,97 @@
 
         h1 {
             font-family: "Orbitron", sans-serif;
-            font-size: 2.5rem;
-            margin: 0;
+            font-size: 3rem;
+            margin: 0 0 10px 0;
+            background: linear-gradient(135deg, #fff, var(--blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
 
         p.subtitle {
             color: var(--muted);
-            font-size: 1.1rem;
+            font-size: 1.2rem;
+            margin-bottom: 40px;
         }
 
-        .files-container {
+        .moved-card {
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            overflow: hidden;
+            padding: 50px 30px;
             backdrop-filter: blur(8px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
         }
 
-        .file-row {
-            display: grid;
-            grid-template-columns: 2fr 3fr 1fr 1fr 1fr;
-            padding: 16px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            align-items: center;
-            transition: background 0.2s;
-        }
-
-        .file-row:hover {
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .file-row.header-row {
-            background: rgba(255, 255, 255, 0.05);
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-            color: var(--blue);
-        }
-
-        .file-name {
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .file-desc {
-            color: var(--muted);
-            font-size: 0.9rem;
-        }
-
-        .file-size,
-        .file-date {
-            font-size: 0.85rem;
-            color: var(--muted);
-        }
-
-        .btn-download {
-            justify-self: end;
-            background: var(--blue);
+        .mega-link {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--blue), var(--blue2));
             color: #0b1020;
             text-decoration: none;
-            padding: 6px 14px;
-            border-radius: 8px;
+            padding: 16px 32px;
+            border-radius: 12px;
             font-weight: 700;
-            font-size: 0.85rem;
-            transition: 0.2s;
+            font-size: 1.1rem;
+            transition: 0.3s;
+            margin: 20px 0;
+            box-shadow: 0 10px 20px rgba(45, 107, 255, 0.3);
         }
 
-        .btn-download:hover {
-            background: #fff;
-            transform: scale(1.05);
+        .mega-link:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(45, 107, 255, 0.4);
+            color: #fff;
         }
 
-        .empty-state {
-            padding: 60px;
-            text-align: center;
+        .redirect-text {
             color: var(--muted);
+            font-size: 0.9rem;
+            margin-top: 20px;
         }
 
         footer {
-            padding: 40px 20px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
             text-align: center;
             color: var(--muted);
             font-size: 0.9rem;
         }
 
         @media (max-width: 768px) {
-            .file-row {
-                grid-template-columns: 1fr auto;
-                gap: 10px;
-            }
-
-            .header-row,
-            .file-desc,
-            .file-size,
-            .file-date {
-                display: none;
-            }
-        }
-
-        /* Chat Widget Styles */
-        .chat-widget {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-
-        .chat-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--blue), var(--blue2));
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 15px rgba(78, 161, 255, 0.3);
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            color: #0b1020;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(78, 161, 255, 0.4);
-            }
-
-            70% {
-                box-shadow: 0 0 0 15px rgba(78, 161, 255, 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(78, 161, 255, 0);
-            }
-        }
-
-        .chat-btn:hover {
-            transform: scale(1.1) rotate(5deg);
-        }
-
-        .chat-btn svg {
-            width: 28px;
-            height: 28px;
-            fill: currentColor;
-        }
-
-        .chat-window {
-            position: absolute;
-            bottom: 80px;
-            right: 0;
-            width: 350px;
-            height: 480px;
-            background: rgba(15, 25, 50, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
-            opacity: 0;
-            transform: translateY(20px) scale(0.9);
-            pointer-events: none;
-            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-            transform-origin: bottom right;
-        }
-
-        .chat-window.active {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-            pointer-events: all;
-        }
-
-        .chat-header {
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .chat-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--blue);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            color: #0b1020;
-            font-size: 1.2rem;
-            flex-shrink: 0;
-        }
-
-        .chat-header-info h3 {
-            margin: 0;
-            font-size: 1rem;
-            font-family: "Orbitron", sans-serif;
-            color: #fff;
-        }
-
-        .chat-header-info p {
-            margin: 0;
-            font-size: 0.75rem;
-            color: var(--muted);
-        }
-
-        .chat-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .message {
-            max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 18px;
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-
-        .message.jacob {
-            align-self: flex-start;
-            background: rgba(255, 255, 255, 0.08);
-            color: var(--text);
-            border-bottom-left-radius: 4px;
-        }
-
-        .message.user {
-            align-self: flex-end;
-            background: var(--blue2);
-            color: #fff;
-            border-bottom-right-radius: 4px;
-        }
-
-        .chat-input-area {
-            padding: 20px;
-            display: flex;
-            gap: 10px;
-            background: rgba(0, 0, 0, 0.2);
-        }
-
-        .chat-input {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 10px 15px;
-            color: #fff;
-            outline: none;
-            font-family: inherit;
-            transition: border-color 0.2s;
-        }
-
-        .chat-input:focus {
-            border-color: var(--blue);
-        }
-
-        .chat-send-btn {
-            background: var(--blue);
-            border: none;
-            border-radius: 12px;
-            width: 42px;
-            height: 42px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s;
-        }
-
-        .chat-send-btn:hover {
-            transform: scale(1.05);
-        }
-
-        .chat-send-btn svg {
-            width: 18px;
-            height: 18px;
-            fill: #0b1020;
-        }
-
-        @media (max-width: 480px) {
-            .chat-window {
-                width: calc(100vw - 40px);
-                right: -10px;
-                bottom: 70px;
-            }
+            h1 { font-size: 2.2rem; }
         }
     </style>
-
 </head>
 
 <body>
     <header>
         <div class="header-content">
             <a href="/" class="logo">JacobCreation</a>
-            <a href="/" class="nav-link">← Back Home</a>
         </div>
     </header>
 
     <main>
         <div class="title-section">
-            <h1>Releases</h1>
-            <p class="subtitle">Latest builds and downloads from JacobCreation</p>
+            <h1>Page Moved</h1>
+            <p class="subtitle">Our releases have migrated to a new home.</p>
         </div>
 
-        <div class="files-container">
-            <div class="file-row header-row">
-                <span>Name</span>
-                <span>Description</span>
-                <span>Size</span>
-                <span>Date</span>
-                <span>Action</span>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🎮 Dustline Driver</div>
-                <div class="file-desc">3D Car Game</div>
-                <div class="file-size">~65 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/3dcargame-Dustline%20Driver-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🎮 Angry Birds</div>
-                <div class="file-desc">Classic Bird Flinging Game</div>
-                <div class="file-size">~58 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/ab-Angry%20Birds-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">ℹ️ About</div>
-                <div class="file-desc">About Application</div>
-                <div class="file-size">~52 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/about-About-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🎮 Asteroids</div>
-                <div class="file-desc">Classic Asteroids Game</div>
-                <div class="file-size">~52 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/as-Asteroids-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🎮 Block Blast</div>
-                <div class="file-desc">Block Matching Puzzle Game</div>
-                <div class="file-size">~55 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/bb-Block%20Blast-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🏀 Basketball Scoring System</div>
-                <div class="file-desc">Score Tracking for Basketball</div>
-                <div class="file-size">~51 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/bbss-BasketBall%20Scoring%20system-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🎮 Breakout</div>
-                <div class="file-desc">Classic Breakout Game</div>
-                <div class="file-size">~52 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/brkut-Breakout-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🧮 Legendary Calculator</div>
-                <div class="file-desc">Advanced Calculator Application</div>
-                <div class="file-size">~52 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/calculator-legendary%20calculator-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🚗 Car Chase</div>
-                <div class="file-desc">Car Chase Racing Game</div>
-                <div class="file-size">~60 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/cc-Car%20Chase-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🌌 Conway's Game of Life</div>
-                <div class="file-desc">Cellular Automaton Simulator</div>
-                <div class="file-size">~52 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/cgol-Conways%20Game%20of%20Life-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">💬 Chat + Minigames</div>
-                <div class="file-desc">Chat Application with Games</div>
-                <div class="file-size">~65 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/chatbot-Chat%20%2B%20Minigames-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">⏱️ Chess Clock</div>
-                <div class="file-desc">Chess Game Clock</div>
-                <div class="file-size">~52 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/chcl-Chess%20Clock-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">♟️ Chess AI</div>
-                <div class="file-desc">Chess Game with AI</div>
-                <div class="file-size">~70 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/chess-Chess%20AI-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🔄 JacobConvert</div>
-                <div class="file-desc">Unit and File Converter</div>
-                <div class="file-size">~55 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/converter-JacobConvert-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">📊 JacobAnalysis</div>
-                <div class="file-desc">Data Analysis Tool</div>
-                <div class="file-size">~60 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/cpi-JacobAnalysis-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">♟️ Chess Pairing System</div>
-                <div class="file-desc">Tournament Chess Pairing</div>
-                <div class="file-size">~68 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/cps-Chess%20Pairing%20System-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🎮 Diep.io Clone</div>
-                <div class="file-desc">Tank Battle Game</div>
-                <div class="file-size">~58 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/diepio-Diep.io%20Clone-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🎮 Flappy Bird</div>
-                <div class="file-desc">Classic Flappy Bird Game</div>
-                <div class="file-size">~52 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/flappybird-Flappy%20Bird-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">⏰ Jacob Reminder</div>
-                <div class="file-desc">Personal Reminder Application</div>
-                <div class="file-size">~62 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/JacobReminder-1.0.1.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🗺️ Jacob Maps</div>
-                <div class="file-desc">Mapping Application</div>
-                <div class="file-size">~68 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/jm-JacobMaps-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🎨 AI Meme Describer</div>
-                <div class="file-desc">Describe Images with AI</div>
-                <div class="file-size">~80 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/mg-Describe%20-%20AI%20Meme-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">💣 Minesweeper</div>
-                <div class="file-desc">Classic Minesweeper Game</div>
-                <div class="file-size">~52 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/minesweeper-Minesweeper-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🎨 Paint</div>
-                <div class="file-desc">Drawing Application</div>
-                <div class="file-size">~54 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/p-Paint-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🎹 Digital Piano Keyboard</div>
-                <div class="file-desc">Virtual Piano Instrument</div>
-                <div class="file-size">~56 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/piano-Digital%20Piano%20Keyboard-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🎮 Pac-Man</div>
-                <div class="file-desc">Classic Pac-Man Game</div>
-                <div class="file-size">~52 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/pm-PacMan-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🎮 Plants vs Zombies</div>
-                <div class="file-desc">Tower Defense Game</div>
-                <div class="file-size">~65 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/pvz-Plants%20Vs%20Zombies-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🧩 Rubik's Cube Solver</div>
-                <div class="file-desc">Cube Solving Application</div>
-                <div class="file-size">~58 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/rcs-Rubiks%20cube%20solver-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">👹 Shoot the Monster</div>
-                <div class="file-desc">Monster Shooting Game</div>
-                <div class="file-size">~60 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/shootthemonster-Shoot%20the%20monster-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🐍 Snake</div>
-                <div class="file-desc">Classic Snake Game</div>
-                <div class="file-size">~52 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/snake-Snake-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🃏 Solitaire</div>
-                <div class="file-desc">Classic Card Game</div>
-                <div class="file-size">~52 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/solitaire-Solitaire-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🌍 3D Solar System Simulator</div>
-                <div class="file-desc">Solar System Visualization</div>
-                <div class="file-size">~62 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/sss-3D%20Solar%20System%20Simulator-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">🎮 Tetris</div>
-                <div class="file-desc">Classic Tetris Game</div>
-                <div class="file-size">~52 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/Tetris-Tetris-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">⌨️ Typing Quest Spellcaster</div>
-                <div class="file-desc">Typing Speed Game</div>
-                <div class="file-size">~60 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/type-Typing%20Quest%20Spellcaster-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-            <div class="file-row">
-                <div class="file-name">📖 Wordscapes</div>
-                <div class="file-desc">Word Puzzle Game</div>
-                <div class="file-size">~58 MB</div>
-                <div class="file-date">2026-04-21</div>
-                <a href="https://github.com/jacobcreation/jacobcreation.github.io/raw/main/releases/apps/Wordscapes-Wordscapes-1.0.0.AppImage?raw=true" class="btn-download" download>Download</a>
-            </div>
-
-        </div>
-
-        <div class="chat-widget">
-            <button class="chat-btn" id="chatBtn" title="Request a new release">
-                <svg viewBox="0 0 24 24">
-                    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
-                </svg>
-            </button>
-            <div class="chat-window" id="chatWindow">
-                <div class="chat-header">
-                    <div class="chat-avatar">J</div>
-                    <div class="chat-header-info">
-                        <h3>Jacob</h3>
-                        <p>Request New Releases</p>
-                    </div>
-                </div>
-                <div class="chat-messages" id="chatMessages">
-                    <div class="message jacob">
-                        Hey there! 👋 Looking for a specific app or a new version? Let me know what you need!
-                    </div>
-                </div>
-                <div class="chat-input-area">
-                    <input type="text" class="chat-input" id="chatInput" placeholder="Type your request..." />
-                    <button class="chat-send-btn" id="chatSend">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
+        <div class="moved-card">
+            <p style="font-size: 1.1rem; line-height: 1.6;">To provide a better download experience and faster updates, all JacobCreation releases are now hosted on MEGA.</p>
+            
+            <a href="https://mega.nz/folder/vlJGjAbR#xWiDcOUWFnIaYxn-N5lxQA" class="mega-link">Go to MEGA Releases</a>
+            
+            <p class="redirect-text">Redirecting you automatically in 5 seconds...</p>
         </div>
     </main>
-
 
     <footer>
         © 2026 JacobCreation • Built by Jacob 💙
     </footer>
-
-    <script>
-        async function loadFiles() {
-            const container = document.getElementById('filesList');
-            if (!container) return; // Prevent errors if filesList doesn't exist
-
-            const loading = document.getElementById('loading');
-
-            try {
-                const response = await fetch('/releases/files.json');
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const files = await response.json();
-
-                if (files.length === 0) {
-                    if (loading) loading.textContent = 'No releases available yet.';
-                    return;
-                }
-
-                if (loading) loading.remove();
-
-                files.forEach(file => {
-                    const row = document.createElement('div');
-                    row.className = 'file-row';
-                    row.innerHTML = `
-            <div class="file-name">📦 ${file.name}</div>
-            <div class="file-desc">${file.description}</div>
-            <div class="file-size">${file.size}</div>
-            <div class="file-date">${file.date}</div>
-            <a href="${file.url}" class="btn-download" download>Download</a>
-          `;
-                    container.appendChild(row);
-                });
-            } catch (error) {
-                console.error('Error loading files:', error);
-                if (loading) loading.textContent = 'Error loading releases. Please try again later.';
-            }
-        }
-
-        // Chat Logic
-        const chatBtn = document.getElementById('chatBtn');
-        const chatWindow = document.getElementById('chatWindow');
-        const chatInput = document.getElementById('chatInput');
-        const chatSend = document.getElementById('chatSend');
-        const chatMessages = document.getElementById('chatMessages');
-
-        chatBtn.addEventListener('click', () => {
-            chatWindow.classList.toggle('active');
-            if (chatWindow.classList.contains('active')) {
-                chatInput.focus();
-            }
-        });
-
-        function addMessage(text, side) {
-            const msg = document.createElement('div');
-            msg.className = `message ${side}`;
-            msg.textContent = text;
-            chatMessages.appendChild(msg);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function handleSend() {
-            const text = chatInput.value.trim();
-            if (!text) return;
-
-            addMessage(text, 'user');
-            chatInput.value = '';
-
-            // Simulate Jacob typing
-            setTimeout(() => {
-                addMessage("Got it! I'll open your email client so you can send this request to me. Press 'Send' in Gmail! 🚀", 'jacob');
-
-                setTimeout(() => {
-                    const email = "iliganchesskid@gmail.com";
-                    const subject = encodeURIComponent("New Release Request");
-                    const body = encodeURIComponent(text);
-                    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-                }, 1500);
-            }, 800);
-        }
-
-        chatSend.addEventListener('click', handleSend);
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleSend();
-        });
-
-        // Close chat if clicking outside
-        document.addEventListener('click', (e) => {
-            if (!chatWindow.contains(e.target) && !chatBtn.contains(e.target)) {
-                chatWindow.classList.remove('active');
-            }
-        });
-
-        loadFiles();
-    </script>
-
 </body>
 
 </html>
