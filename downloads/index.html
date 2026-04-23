@@ -214,6 +214,29 @@
       padding: 36px 0 20px;
     }
 
+    .alert-notice {
+      background: rgba(255, 107, 107, 0.15);
+      border: 1px solid #ff6b6b;
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 24px;
+      text-align: center;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: #ff9b9b;
+    }
+
+    .alert-notice a {
+      color: #fff;
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+
+    .alert-notice a:hover {
+      color: var(--blue);
+    }
+
     @media (max-width: 720px) {
       main {
         margin: 28px auto 36px;
@@ -243,6 +266,11 @@
         <h1>Offline Downloads</h1>
         <p class="lede">A cleaner place to grab the Android builds. Each app is packaged as a standalone APK, so you can install them one by one without digging through a crowded list.</p>
       </section>
+
+      <div class="alert-notice">
+        ⚠️ <strong>Note:</strong> All APKs have been moved to our new hosting mirror.<br>
+        <a href="https://mega.nz/folder/5m1UAa6A#FzYMatDm60gYB8RmLVnG8g" target="_blank">Browse APKs on Mega.nz</a>
+      </div>
 
       <div class="toolbar">
         <button id="installBtn" class="btn-download">
