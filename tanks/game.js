@@ -49,12 +49,42 @@ const ACCEL = 40;
 const DECEL = 25;
 const MAX_SPEED = 18;
 const MAX_DASH_SPEED = 45;
+const TANK_HALF_LENGTH = 2.15;
+const TANK_HALF_WIDTH = 1.32;
+const TANK_CLEARANCE = 0.62;
+const WORLD_UP = new THREE.Vector3(0, 1, 0);
+const CAMERA_POSITION_LAG = 6.5;
+const CAMERA_LOOK_LAG = 9.5;
+const TERRAIN_FOLLOW_LAG = 12;
+const TERRAIN_NORMAL_SOFTEN = 0.08;
 
 // ---- Infinite Terrain Chunk System ----
 const CHUNK_SIZE = 64;     // world units per chunk
 const CHUNK_SEGS = 24;     // geometry segments per chunk
 const CHUNK_RADIUS = 3;    // how many chunks to keep loaded around the player
 const loadedChunks = {};   // key = "cx_cz"
+const loadedGroundMeshes = [];
+const cameraLookTarget = new THREE.Vector3();
+
+const terrainPalette = {
+    sand: new THREE.Color(0xcbb48b),
+    grassLow: new THREE.Color(0x87a86a),
+    grassHigh: new THREE.Color(0x587341),
+    rock: new THREE.Color(0x7c756c),
+    snow: new THREE.Color(0xf4f7fb)
+};
+
+function dampAlpha(speed, dt) {
+    return 1 - Math.exp(-speed * dt);
+}
+
+function getForwardVectorFromYaw(yaw, target = new THREE.Vector3()) {
+    return target.set(-Math.sin(yaw), 0, -Math.cos(yaw));
+}
+
+function getRightVectorFromYaw(yaw, target = new THREE.Vector3()) {
+    return target.set(Math.cos(yaw), 0, -Math.sin(yaw));
+}
 
 // Simple deterministic pseudo-noise (no external lib needed)
 function noise(x, z, seed = 17) {
@@ -90,29 +120,28 @@ function terrainHeight(wx, wz) {
 // 2. THREE.JS SETUP
 // ----------------------------------------------------
 const scene = new THREE.Scene();
-const bgColor = 0xb4d6f1; // Sky blue
+const bgColor = 0xc9e5fb;
 scene.background = new THREE.Color(bgColor); 
-scene.fog = new THREE.Fog(bgColor, 50, 250);
+scene.fog = new THREE.Fog(bgColor, 90, 340);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-// cameraOffset is now for third-person follow
-const cameraOffset = new THREE.Vector3(0, 5, 12);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ReinhardToneMapping;
-renderer.toneMappingExposure = 1.0;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.08;
 document.body.appendChild(renderer.domElement);
 
 // Post-Processing (Bloom)
 const renderScene = new RenderPass(scene, camera);
-const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.45, 0.88);
 bloomPass.threshold = 0.35;
-bloomPass.strength = 0.4;
-bloomPass.radius = 0.4;
+bloomPass.strength = 0.22;
+bloomPass.radius = 0.55;
 
 const composer = new EffectComposer(renderer);
 composer.addPass(renderScene);
@@ -129,34 +158,33 @@ const shieldBtn = document.getElementById('shield-btn');
 const blastBtn = document.getElementById('blast-btn');
 
 // Lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); // Slightly dimmer ambient
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.42);
 scene.add(ambientLight);
 
-const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.5); 
+const hemisphereLight = new THREE.HemisphereLight(0xe9f6ff, 0x3b3427, 0.9); 
 scene.add(hemisphereLight);
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 1.0); // Balanced sun intensity
-dirLight.position.set(100, 200, 50);
+const dirLight = new THREE.DirectionalLight(0xfff0ca, 1.8);
+dirLight.position.set(-120, 170, -90);
 dirLight.castShadow = true;
 dirLight.shadow.mapSize.width = 4096;
 dirLight.shadow.mapSize.height = 4096;
-dirLight.shadow.camera.left = -150;
-dirLight.shadow.camera.right = 150;
-dirLight.shadow.camera.top = 150;
-dirLight.shadow.camera.bottom = -150;
-dirLight.shadow.bias = -0.0001;
+dirLight.shadow.camera.left = -180;
+dirLight.shadow.camera.right = 180;
+dirLight.shadow.camera.top = 180;
+dirLight.shadow.camera.bottom = -180;
+dirLight.shadow.bias = -0.00018;
 scene.add(dirLight);
 
-// Accent lights (subtle cyan highlight)
-const accentLight = new THREE.PointLight(0x00ffff, 0.3, 150);
-accentLight.position.set(0, 30, 0);
+const accentLight = new THREE.PointLight(0x69d5ff, 0.28, 220);
+accentLight.position.set(0, 45, 0);
 scene.add(accentLight);
 
 // Chunk material
 const groundMaterial = new THREE.MeshStandardMaterial({
     vertexColors: true,
-    roughness: 0.8,
-    metalness: 0.1,
+    roughness: 0.94,
+    metalness: 0.03,
     flatShading: false
 });
 
@@ -175,6 +203,82 @@ gridTexture.wrapS = THREE.RepeatWrapping;
 gridTexture.wrapT = THREE.RepeatWrapping;
 gridTexture.repeat.set(CHUNK_SIZE / 4, CHUNK_SIZE / 4);
 
+const tankShadowTexture = new THREE.CanvasTexture((() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createRadialGradient(64, 64, 8, 64, 64, 60);
+    gradient.addColorStop(0, 'rgba(0, 0, 0, 0.34)');
+    gradient.addColorStop(0.55, 'rgba(0, 0, 0, 0.16)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 128, 128);
+    return canvas;
+})());
+
+function createSkyDome() {
+    const skyGeo = new THREE.SphereGeometry(720, 48, 24);
+    const skyMat = new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        uniforms: {
+            topColor: { value: new THREE.Color(0x4a9be8) },
+            horizonColor: { value: new THREE.Color(0xf4d9ac) },
+            bottomColor: { value: new THREE.Color(0xe6f4ff) },
+            sunDirection: { value: new THREE.Vector3(-0.48, 0.77, -0.42).normalize() },
+            sunColor: { value: new THREE.Color(0xffefc4) }
+        },
+        vertexShader: `
+            varying vec3 vWorldPosition;
+            void main() {
+                vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                vWorldPosition = worldPosition.xyz;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform vec3 topColor;
+            uniform vec3 horizonColor;
+            uniform vec3 bottomColor;
+            uniform vec3 sunDirection;
+            uniform vec3 sunColor;
+            varying vec3 vWorldPosition;
+
+            void main() {
+                vec3 dir = normalize(vWorldPosition);
+                float horizonBand = pow(1.0 - abs(dir.y), 3.0);
+                float topMix = smoothstep(-0.18, 0.82, dir.y);
+                vec3 sky = mix(bottomColor, topColor, topMix);
+                sky = mix(sky, horizonColor, horizonBand * 0.95);
+
+                float sunGlow = pow(max(dot(dir, normalize(sunDirection)), 0.0), 28.0);
+                float sunCore = pow(max(dot(dir, normalize(sunDirection)), 0.0), 180.0);
+                sky += sunColor * (sunGlow * 0.32 + sunCore * 0.48);
+
+                gl_FragColor = vec4(sky, 1.0);
+            }
+        `
+    });
+    return new THREE.Mesh(skyGeo, skyMat);
+}
+
+const skyDome = createSkyDome();
+scene.add(skyDome);
+
+const sunDisc = new THREE.Mesh(
+    new THREE.SphereGeometry(18, 24, 24),
+    new THREE.MeshBasicMaterial({
+        color: 0xfff1bb,
+        transparent: true,
+        opacity: 0.18,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+    })
+);
+sunDisc.position.copy(dirLight.position).setLength(285);
+scene.add(sunDisc);
+
 // Starfield Background - Disabled for daytime
 /*
 function createStarfield() {
@@ -183,13 +287,60 @@ function createStarfield() {
 createStarfield();
 */
 
-function terrainColor(height) {
-    // Natural daytime palette
-    if (height < 0.5) return new THREE.Color(0xd2b48c); // Sand
-    if (height < 4) return new THREE.Color(0x91a06d);   // Light Green
-    if (height < 10) return new THREE.Color(0x6b8e23);  // Grass Green
-    if (height < 16) return new THREE.Color(0x8b8b83);  // Rock
-    return new THREE.Color(0xffffff);                   // Snow Peak
+function terrainColor(height, slope, detail, target = new THREE.Color()) {
+    if (height < 1.2) {
+        target.lerpColors(terrainPalette.sand, terrainPalette.grassLow, THREE.MathUtils.clamp(height / 1.2, 0, 1));
+    } else if (height < 9) {
+        target.lerpColors(terrainPalette.grassLow, terrainPalette.grassHigh, THREE.MathUtils.clamp((height - 1.2) / 7.8, 0, 1));
+    } else if (height < 16) {
+        target.lerpColors(terrainPalette.grassHigh, terrainPalette.rock, THREE.MathUtils.clamp((height - 9) / 7, 0, 1));
+    } else {
+        target.lerpColors(terrainPalette.rock, terrainPalette.snow, THREE.MathUtils.clamp((height - 16) / 5, 0, 1));
+    }
+
+    if (slope < 0.86 && height > 3) {
+        target.lerp(terrainPalette.rock, THREE.MathUtils.clamp((0.86 - slope) * 2.4, 0, 0.85));
+    }
+    if (height > 15.5) {
+        target.lerp(terrainPalette.snow, THREE.MathUtils.clamp((height - 15.5) / 4, 0, 0.75));
+    }
+
+    const shade = (detail - 0.5) * 0.14 + (slope - 0.75) * 0.08;
+    target.offsetHSL(0.01 * (detail - 0.5), 0.02, shade);
+    return target;
+}
+
+function createRockCluster(seed) {
+    const rockMaterial = new THREE.MeshStandardMaterial({
+        color: 0x7e776c,
+        roughness: 0.98,
+        metalness: 0.02
+    });
+    const group = new THREE.Group();
+    const pieces = 2 + Math.floor(noise(seed, seed * 0.31, 918) * 3);
+    for (let i = 0; i < pieces; i++) {
+        const radius = 0.8 + noise(seed, i, 533) * 1.6;
+        const rock = new THREE.Mesh(new THREE.IcosahedronGeometry(radius, 0), rockMaterial);
+        rock.position.set(
+            (noise(seed, i, 672) - 0.5) * 2.8,
+            radius * 0.55,
+            (noise(seed, i, 111) - 0.5) * 2.8
+        );
+        rock.rotation.set(
+            noise(seed, i, 773) * Math.PI,
+            noise(seed, i, 174) * Math.PI,
+            noise(seed, i, 991) * Math.PI
+        );
+        rock.scale.set(
+            1 + noise(seed, i, 381) * 0.7,
+            0.65 + noise(seed, i, 274) * 0.5,
+            0.9 + noise(seed, i, 845) * 0.5
+        );
+        rock.castShadow = true;
+        rock.receiveShadow = true;
+        group.add(rock);
+    }
+    return group;
 }
 
 function buildChunk(cx, cz) {
@@ -197,6 +348,7 @@ function buildChunk(cx, cz) {
     if (loadedChunks[key]) return;
 
     const chunkGroup = new THREE.Group();
+    chunkGroup.userData.buildingData = [];
     const geo = new THREE.PlaneGeometry(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SEGS, CHUNK_SEGS);
     const pos = geo.attributes.position;
     const heights = [];
@@ -213,8 +365,15 @@ function buildChunk(cx, cz) {
     geo.computeVertexNormals();
 
     const colors = new Float32Array(pos.count * 3);
+    const normals = geo.attributes.normal;
+    const scratchColor = new THREE.Color();
     for (let i = 0; i < pos.count; i++) {
-        const c = terrainColor(heights[i]);
+        const localX = pos.getX(i);
+        const localY = pos.getY(i);
+        const wx = cx * CHUNK_SIZE + localX;
+        const wz = cz * CHUNK_SIZE + localY;
+        const detail = smoothNoise(wx * 0.05, wz * 0.05);
+        const c = terrainColor(heights[i], normals.getY(i), detail, scratchColor);
         colors[i * 3] = c.r;
         colors[i * 3 + 1] = c.g;
         colors[i * 3 + 2] = c.b;
@@ -224,6 +383,7 @@ function buildChunk(cx, cz) {
     const mesh = new THREE.Mesh(geo, groundMaterial);
     mesh.rotation.x = -Math.PI / 2;
     mesh.receiveShadow = true;
+    loadedGroundMeshes.push(mesh);
     chunkGroup.add(mesh);
     
     // Add grid overlay
@@ -231,7 +391,7 @@ function buildChunk(cx, cz) {
     const gridMat = new THREE.MeshBasicMaterial({
         map: gridTexture,
         transparent: true,
-        opacity: 0.08,
+        opacity: 0.045,
         blending: THREE.AdditiveBlending
     });
     const gridMesh = new THREE.Mesh(gridGeo, gridMat);
@@ -249,7 +409,18 @@ function buildChunk(cx, cz) {
         const buildingData = { x: cx * CHUNK_SIZE + bx, z: cz * CHUNK_SIZE + bz, width: bWidth, depth: bDepth };
         const bMesh = createBuildingMesh(buildingData);
         chunkGroup.add(bMesh);
-        buildings.push(buildingData); // Still keep in list for collision
+        buildings.push(buildingData);
+        chunkGroup.userData.buildingData.push(buildingData);
+    }
+
+    if ((Math.abs(cx) > 1 || Math.abs(cz) > 1) && noise(cx, cz, 7342) > 0.58) {
+        const rockCluster = createRockCluster(cx * 97 + cz * 131);
+        const offsetX = (noise(cx, cz, 847) - 0.5) * CHUNK_SIZE * 0.7;
+        const offsetZ = (noise(cx, cz, 921) - 0.5) * CHUNK_SIZE * 0.7;
+        const worldX = cx * CHUNK_SIZE + offsetX;
+        const worldZ = cz * CHUNK_SIZE + offsetZ;
+        rockCluster.position.set(offsetX, terrainHeight(worldX, worldZ), offsetZ);
+        chunkGroup.add(rockCluster);
     }
 
     chunkGroup.position.set(cx * CHUNK_SIZE, 0, cz * CHUNK_SIZE);
@@ -260,12 +431,12 @@ function buildChunk(cx, cz) {
 // Separate mesh creation from scene adding to support chunking
 function createBuildingMesh(b) {
     const groundY = terrainHeight(b.x, b.z);
-    const height = 15 + Math.random() * 15;
+    const height = 14 + noise(b.x * 0.11, b.z * 0.11, 906) * 18;
     const geo = new THREE.BoxGeometry(b.width, height, b.depth);
     const mat = new THREE.MeshStandardMaterial({
-        color: 0x888899,
-        roughness: 0.7,
-        metalness: 0.3
+        color: 0x6e727d,
+        roughness: 0.76,
+        metalness: 0.28
     });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(b.x - (Math.round(b.x / CHUNK_SIZE) * CHUNK_SIZE), groundY + height / 2, b.z - (Math.round(b.z / CHUNK_SIZE) * CHUNK_SIZE));
@@ -273,7 +444,13 @@ function createBuildingMesh(b) {
     mesh.receiveShadow = true;
 
     // Windows
-    const windowMat = new THREE.MeshStandardMaterial({ color: 0xccedff, emissive: 0x4488ff, emissiveIntensity: 0.5 });
+    const windowMat = new THREE.MeshStandardMaterial({
+        color: 0xd5efff,
+        emissive: 0x69a8ff,
+        emissiveIntensity: 0.75,
+        roughness: 0.2,
+        metalness: 0.45
+    });
     for (let row = 0; row < Math.floor(height/4); row++) {
         for (let col = -1; col <= 1; col += 2) {
             const wGeo = new THREE.BoxGeometry(1.5, 2, 0.1);
@@ -282,6 +459,19 @@ function createBuildingMesh(b) {
             mesh.add(win);
         }
     }
+
+    const roof = new THREE.Mesh(
+        new THREE.BoxGeometry(b.width * 0.92, 0.6, b.depth * 0.92),
+        new THREE.MeshStandardMaterial({
+            color: 0xa7acb6,
+            roughness: 0.55,
+            metalness: 0.25
+        })
+    );
+    roof.position.y = height / 2 + 0.2;
+    roof.castShadow = true;
+    mesh.add(roof);
+
     return mesh;
 }
 
@@ -301,6 +491,16 @@ function updateChunks(playerX, playerZ) {
         const [ccx, ccz] = key.split('_').map(Number);
         if (Math.abs(ccx - cx) > CHUNK_RADIUS + 1 || Math.abs(ccz - cz) > CHUNK_RADIUS + 1) {
             const mesh = loadedChunks[key];
+            if (mesh.userData.buildingData?.length) {
+                for (const data of mesh.userData.buildingData) {
+                    const index = buildings.indexOf(data);
+                    if (index !== -1) buildings.splice(index, 1);
+                }
+            }
+            mesh.traverse((child) => {
+                const groundIndex = loadedGroundMeshes.indexOf(child);
+                if (groundIndex !== -1) loadedGroundMeshes.splice(groundIndex, 1);
+            });
             scene.remove(mesh);
             
             // Recursively dispose children (grid overlay)
@@ -535,11 +735,12 @@ function bindTouchActionButton(button, onPress, onRelease = null) {
 
 function triggerShoot() {
     if (myTank && partySocket && partySocket.readyState === 1) {
-        let shootRy = myTank.rotation.y + Math.PI;
+        let shootRy = myTankYaw + Math.PI;
         let spawnX = myTank.position.x;
         let spawnZ = myTank.position.z;
 
         if (myTank.userData.turret) {
+            myTank.updateMatrixWorld(true);
             const barrelTip = new THREE.Vector3(0, 0.1, -4.3);
             barrelTip.applyMatrix4(myTank.userData.turret.matrixWorld);
             spawnX = barrelTip.x;
@@ -562,43 +763,70 @@ function triggerShoot() {
 // ----------------------------------------------------
 function createTankMesh(colorHex = 0x4a7c3f) {
     const group = new THREE.Group();
+    const visualRoot = new THREE.Group();
+    visualRoot.position.y = TANK_CLEARANCE;
+    group.add(visualRoot);
 
     const metalMat = new THREE.MeshStandardMaterial({ 
-        color: 0x333333, 
-        roughness: 0.2, 
-        metalness: 0.9,
+        color: 0x515866, 
+        roughness: 0.22, 
+        metalness: 0.88,
         envMapIntensity: 1.0 
     });
     const bodyMat = new THREE.MeshStandardMaterial({ 
-        color: 0x111111, 
-        roughness: 0.3, 
-        metalness: 0.8 
+        color: 0x181b22, 
+        roughness: 0.34, 
+        metalness: 0.72 
     });
     const neonMat = new THREE.MeshStandardMaterial({ 
         color: colorHex, 
         emissive: colorHex, 
-        emissiveIntensity: 4.0 
+        emissiveIntensity: 2.7,
+        roughness: 0.3,
+        metalness: 0.15
     });
-    const darkMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.6, metalness: 0.5 });
+    const darkMat = new THREE.MeshStandardMaterial({ color: 0x090b10, roughness: 0.72, metalness: 0.38 });
     const barrelMat = new THREE.MeshStandardMaterial({ 
-        color: 0x222222, 
-        roughness: 0.1, 
-        metalness: 1.0 
+        color: 0x2a303a, 
+        roughness: 0.12, 
+        metalness: 0.96 
     });
 
+    const shadow = new THREE.Mesh(
+        new THREE.CircleGeometry(2.65, 24),
+        new THREE.MeshBasicMaterial({
+            map: tankShadowTexture,
+            color: 0x000000,
+            transparent: true,
+            opacity: 0.38,
+            depthWrite: false
+        })
+    );
+    shadow.rotation.x = -Math.PI / 2;
+    shadow.position.y = 0.04;
+    group.add(shadow);
+
     // --- Track housings ---
-    const trackGeo = new THREE.BoxGeometry(0.55, 0.7, 4.0);
+    const trackGeo = new THREE.BoxGeometry(0.64, 0.78, 4.35);
     [-1.1, 1.1].forEach(xOff => {
         const t = new THREE.Mesh(trackGeo, darkMat);
         t.position.set(xOff, 0.35, 0);
         t.castShadow = true;
-        group.add(t);
+        visualRoot.add(t);
 
         // Neon side strip
-        const stripGeo = new THREE.BoxGeometry(0.05, 0.1, 3.8);
+        const stripGeo = new THREE.BoxGeometry(0.06, 0.12, 4.05);
         const strip = new THREE.Mesh(stripGeo, neonMat);
         strip.position.set(xOff > 0 ? 0.28 : -0.28, 0.4, 0);
         t.add(strip);
+
+        for (let i = -1.55; i <= 1.55; i += 0.78) {
+            const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.18, 18), metalMat);
+            wheel.rotation.z = Math.PI / 2;
+            wheel.position.set(0, -0.08, i);
+            wheel.castShadow = true;
+            t.add(wheel);
+        }
     });
 
     // --- Hull body ---
@@ -606,66 +834,114 @@ function createTankMesh(colorHex = 0x4a7c3f) {
     const hull = new THREE.Mesh(hullGeo, bodyMat);
     hull.position.y = 0.85;
     hull.castShadow = true;
-    group.add(hull);
+    visualRoot.add(hull);
+
+    const glacis = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.55, 1.1), bodyMat);
+    glacis.position.set(0, 1.02, -1.25);
+    glacis.rotation.x = -0.34;
+    glacis.castShadow = true;
+    visualRoot.add(glacis);
+
+    const engineDeck = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.18, 1.2), metalMat);
+    engineDeck.position.set(0, 1.18, 1.05);
+    engineDeck.castShadow = true;
+    visualRoot.add(engineDeck);
+
+    const sideSkirtGeo = new THREE.BoxGeometry(0.12, 0.38, 3.85);
+    [-1.42, 1.42].forEach((xOff) => {
+        const skirt = new THREE.Mesh(sideSkirtGeo, bodyMat);
+        skirt.position.set(xOff, 0.82, 0);
+        skirt.castShadow = true;
+        visualRoot.add(skirt);
+    });
 
     // Front neon "headlights"
     const lightGeo = new THREE.BoxGeometry(0.4, 0.1, 0.1);
     [-0.7, 0.7].forEach(x => {
         const light = new THREE.Mesh(lightGeo, neonMat);
         light.position.set(x, 0.95, -1.85);
-        group.add(light);
+        visualRoot.add(light);
     });
 
     // --- Turret ---
-    const turretBaseGeo = new THREE.BoxGeometry(1.6, 0.55, 1.8);
+    const turretBaseGeo = new THREE.BoxGeometry(1.72, 0.62, 1.95);
     const turretBase = new THREE.Mesh(turretBaseGeo, bodyMat);
     turretBase.position.set(0, 0, 0);
     turretBase.castShadow = true;
 
     // Turret neon ring
-    const ringGeo = new THREE.BoxGeometry(1.62, 0.05, 1.82);
+    const ringGeo = new THREE.BoxGeometry(1.76, 0.06, 1.98);
     const ring = new THREE.Mesh(ringGeo, neonMat);
     ring.position.y = 0.1;
     turretBase.add(ring);
 
+    const turretCap = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.7, 0.3, 18), metalMat);
+    turretCap.position.set(0, 0.34, -0.05);
+    turretCap.castShadow = true;
+    turretBase.add(turretCap);
+
     // --- Barrel ---
-    const barrelGeo = new THREE.CylinderGeometry(0.1, 0.12, 3.2, 12);
+    const barrelGeo = new THREE.CylinderGeometry(0.11, 0.14, 3.5, 16);
     const barrel = new THREE.Mesh(barrelGeo, barrelMat);
     barrel.rotation.x = Math.PI / 2;
-    barrel.position.set(0, 0.1, -2.4);
+    barrel.position.set(0, 0.12, -2.58);
     barrel.castShadow = true;
     turretBase.add(barrel);
+
+    const barrelSleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.7, 14), metalMat);
+    barrelSleeve.rotation.x = Math.PI / 2;
+    barrelSleeve.position.set(0, 0.12, -1.1);
+    turretBase.add(barrelSleeve);
 
     // Muzzle brake with neon tip
     const muzzleGeo = new THREE.CylinderGeometry(0.14, 0.12, 0.4, 12);
     const muzzle = new THREE.Mesh(muzzleGeo, barrelMat);
     muzzle.rotation.x = Math.PI / 2;
-    muzzle.position.set(0, 0.1, -4.0);
+    muzzle.position.set(0, 0.12, -4.28);
     turretBase.add(muzzle);
 
     const tipGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.05, 12);
     const tip = new THREE.Mesh(tipGeo, neonMat);
     tip.rotation.x = Math.PI / 2;
-    tip.position.set(0, 0.1, -4.2);
+    tip.position.set(0, 0.12, -4.48);
     turretBase.add(tip);
+
+    const bustle = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.4, 0.72), metalMat);
+    bustle.position.set(0, 0.03, 1.1);
+    bustle.castShadow = true;
+    turretBase.add(bustle);
+
+    const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.1, 8), metalMat);
+    antenna.position.set(-0.52, 0.75, 0.68);
+    antenna.castShadow = true;
+    turretBase.add(antenna);
+
+    const antennaTip = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 10), neonMat);
+    antennaTip.position.set(-0.52, 1.33, 0.68);
+    turretBase.add(antennaTip);
 
     const turretGroup = new THREE.Group();
     turretGroup.add(turretBase);
-    turretGroup.position.set(0, 1.43, -0.15);
-    group.add(turretGroup);
+    turretGroup.position.set(0, 1.5, -0.05);
+    visualRoot.add(turretGroup);
 
+    group.userData.visualRoot = visualRoot;
+    group.userData.shadow = shadow;
+    group.userData.surfaceNormal = new THREE.Vector3(0, 1, 0);
+    group.userData.surfaceForward = new THREE.Vector3(0, 0, -1);
+    group.userData.terrainReady = false;
     group.userData.turret = turretGroup;
     return group;
 }
 
 function spawnBuilding(b) {
     const groundY = terrainHeight(b.x, b.z);
-    const height = 12 + Math.random() * 8;
+    const height = 12 + noise(b.x * 0.17, b.z * 0.17, 1411) * 8;
     const geo = new THREE.BoxGeometry(b.width, height, b.depth);
     const mat = new THREE.MeshStandardMaterial({
-        color: 0x7a7a80,
-        roughness: 0.95,
-        metalness: 0.05
+        color: 0x767b86,
+        roughness: 0.88,
+        metalness: 0.08
     });
     const mesh = new THREE.Mesh(geo, mat);
     // Position so bottom of building sits on terrain surface
@@ -674,7 +950,15 @@ function spawnBuilding(b) {
     mesh.receiveShadow = true;
 
     // Window grid (edge geometry overlay)
-    const windowMat = new THREE.MeshStandardMaterial({ color: 0xaad4ff, roughness: 0.2, metalness: 0.4, transparent: true, opacity: 0.7 });
+    const windowMat = new THREE.MeshStandardMaterial({
+        color: 0xcaecff,
+        emissive: 0x3d73cc,
+        emissiveIntensity: 0.45,
+        roughness: 0.18,
+        metalness: 0.42,
+        transparent: true,
+        opacity: 0.8
+    });
     const winRows = Math.floor(height / 2);
     for (let row = 0; row < winRows; row++) {
         for (let col = -1; col <= 1; col += 2) {
@@ -689,6 +973,14 @@ function spawnBuilding(b) {
         }
     }
 
+    const roof = new THREE.Mesh(
+        new THREE.BoxGeometry(b.width * 0.9, 0.45, b.depth * 0.9),
+        new THREE.MeshStandardMaterial({ color: 0xadb3bd, roughness: 0.5, metalness: 0.2 })
+    );
+    roof.position.y = height / 2 + 0.18;
+    roof.castShadow = true;
+    mesh.add(roof);
+
     scene.add(mesh);
     buildings.push(b);
 }
@@ -697,8 +989,13 @@ function spawnBuilding(b) {
 const treeMeshes = [];
 function spawnTree(wx, wz) {
     const h = terrainHeight(wx, wz);
-    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c3d1e, roughness: 0.9 });
-    const leafMat = new THREE.MeshStandardMaterial({ color: 0x2d5a27, roughness: 0.9 });
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5d4023, roughness: 0.95 });
+    const leafMat = new THREE.MeshStandardMaterial({
+        color: 0x315d2f,
+        roughness: 0.92,
+        emissive: 0x102410,
+        emissiveIntensity: 0.18
+    });
     const treeGroup = new THREE.Group();
 
     const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 1.6, 7), trunkMat);
@@ -713,8 +1010,8 @@ function spawnTree(wx, wz) {
     });
 
     treeGroup.position.set(wx, h, wz);
-    treeGroup.rotation.y = Math.random() * Math.PI * 2;
-    const scale = 0.7 + Math.random() * 0.7;
+    treeGroup.rotation.y = noise(wx * 0.11, wz * 0.11, 310) * Math.PI * 2;
+    const scale = 0.75 + noise(wx * 0.07, wz * 0.07, 622) * 0.6;
     treeGroup.scale.setScalar(scale);
     treeGroup.castShadow = true;
     scene.add(treeGroup);
@@ -846,12 +1143,13 @@ function updateScoreboard() {
 function spawnOtherTank(id, state) {
     const tank = createTankMesh(state.color);
     tank.position.set(state.x, 0, state.z);
-    tank.rotation.y = state.ry;
     tank.userData = {
         ...tank.userData,
         targetPosition: new THREE.Vector3(state.x, 0, state.z),
-        targetRotationY: state.ry
+        targetRotationY: state.ry,
+        yaw: state.ry
     };
+    updateTankPose(tank, state.ry, 1 / 60, true);
     otherTanks[id] = tank;
     scene.add(tank);
 }
@@ -863,11 +1161,12 @@ function castSpell(spellId) {
 
         let extraParams = {};
         if (spellId === 'blast' && myTank) {
-            let shootRy = myTank.rotation.y + Math.PI;
+            let shootRy = myTankYaw + Math.PI;
             let spawnX = myTank.position.x;
             let spawnZ = myTank.position.z;
 
             if (myTank.userData.turret) {
+                myTank.updateMatrixWorld(true);
                 const barrelTip = new THREE.Vector3(0, 0.1, -4.3);
                 barrelTip.applyMatrix4(myTank.userData.turret.matrixWorld);
                 spawnX = barrelTip.x;
@@ -882,11 +1181,10 @@ function castSpell(spellId) {
         }
         if (spellId === 'teleport' && myTank) {
             // Use yaw for XZ direction to avoid tilting issues from terrain snapping
-            const dx = Math.sin(myTankYaw + Math.PI);
-            const dz = Math.cos(myTankYaw + Math.PI);
+            const forward = getForwardVectorFromYaw(myTankYaw);
             
-            let targetX = myTank.position.x + dx * 25;
-            let targetZ = myTank.position.z + dz * 25;
+            let targetX = myTank.position.x + forward.x * 25;
+            let targetZ = myTank.position.z + forward.z * 25;
             
             extraParams = { x: targetX, z: targetZ };
             soundManager.playTeleport();
@@ -921,6 +1219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         composer.setSize(window.innerWidth, window.innerHeight);
         setMobileAimCenter();
     });
@@ -1029,50 +1328,113 @@ function spawnClientProjectile(id, proj) {
     activeProjectiles[id] = mesh;
 }
 
-// Snap a tank group to the current terrain height and tilt it with the slope.
-function snapToTerrain(tankGroup, yaw) {
+function sampleTankTerrainFrame(tankGroup, yaw) {
     const x = tankGroup.position.x;
     const z = tankGroup.position.z;
+    const planarForward = getForwardVectorFromYaw(yaw);
+    const planarRight = getRightVectorFromYaw(yaw);
 
-    // Multi-point sampling for stability on hills
-    // Note: Mesh forward is -Z
-    const dirX = Math.sin(yaw);
-    const dirZ = Math.cos(yaw);
-    
-    const sideX = Math.cos(yaw);
-    const sideZ = -Math.sin(yaw);
-    
-    const length = 1.8; // half-length
-    const width = 1.0;  // half-width
+    function sample(forwardOffset, rightOffset) {
+        const sx = x + planarForward.x * forwardOffset + planarRight.x * rightOffset;
+        const sz = z + planarForward.z * forwardOffset + planarRight.z * rightOffset;
+        return new THREE.Vector3(sx, terrainHeight(sx, sz), sz);
+    }
 
-    // Front is at -Z (local), Back is at +Z (local)
-    const pF = { x: x - dirX * length, z: z - dirZ * length };
-    const pB = { x: x + dirX * length, z: z + dirZ * length };
-    const pR = { x: x + sideX * width, z: z + sideZ * width };
-    const pL = { x: x - sideX * width, z: z - sideZ * width };
+    const frontLeft = sample(TANK_HALF_LENGTH, -TANK_HALF_WIDTH);
+    const frontRight = sample(TANK_HALF_LENGTH, TANK_HALF_WIDTH);
+    const backLeft = sample(-TANK_HALF_LENGTH, -TANK_HALF_WIDTH);
+    const backRight = sample(-TANK_HALF_LENGTH, TANK_HALF_WIDTH);
+    const center = sample(0, 0);
 
-    const hF = terrainHeight(pF.x, pF.z);
-    const hB = terrainHeight(pB.x, pB.z);
-    const hR = terrainHeight(pR.x, pR.z);
-    const hL = terrainHeight(pL.x, pL.z);
-    const hC = terrainHeight(x, z);
+    const frontMid = frontLeft.clone().add(frontRight).multiplyScalar(0.5);
+    const backMid = backLeft.clone().add(backRight).multiplyScalar(0.5);
+    const leftMid = frontLeft.clone().add(backLeft).multiplyScalar(0.5);
+    const rightMid = frontRight.clone().add(backRight).multiplyScalar(0.5);
 
-    // Bias height to keep tracks above ground
-    const targetH = Math.max(hC, (hF + hB + hL + hR) / 4);
-    tankGroup.position.y = targetH + 0.5;
+    const slopeForward = frontMid.sub(backMid).normalize();
+    const slopeRight = rightMid.sub(leftMid).normalize();
+    const normal = new THREE.Vector3().crossVectors(slopeRight, slopeForward).normalize();
+    if (normal.y < 0) normal.multiplyScalar(-1);
+    normal.lerp(WORLD_UP, TERRAIN_NORMAL_SOFTEN).normalize();
 
-    // Vector Forward (Back to Front)
-    const vForward = new THREE.Vector3(pF.x - pB.x, hF - hB, pF.z - pB.z).normalize();
-    // Vector Right (Left to Right)
-    const vRight = new THREE.Vector3(pR.x - pL.x, hR - hL, pR.z - pL.z).normalize();
-    
-    // Normal = Right x Forward (gives Up)
-    const normal = new THREE.Vector3().crossVectors(vRight, vForward).normalize();
+    const terrainForward = planarForward.clone().projectOnPlane(normal);
+    if (terrainForward.lengthSq() < 1e-5) {
+        terrainForward.copy(planarForward);
+    }
+    terrainForward.normalize();
 
-    const up = new THREE.Vector3(0, 1, 0);
-    const alignQ = new THREE.Quaternion().setFromUnitVectors(up, normal);
-    const yawQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
-    tankGroup.quaternion.multiplyQuaternions(alignQ, yawQ);
+    const terrainRight = new THREE.Vector3().crossVectors(terrainForward, normal).normalize();
+    const backward = terrainForward.clone().multiplyScalar(-1);
+    const targetQuaternion = new THREE.Quaternion().setFromRotationMatrix(
+        new THREE.Matrix4().makeBasis(terrainRight, normal, backward)
+    );
+
+    const averageHeight = (frontLeft.y + frontRight.y + backLeft.y + backRight.y) / 4;
+    const targetHeight = Math.max(center.y, averageHeight);
+
+    return {
+        height: targetHeight,
+        normal,
+        forward: terrainForward,
+        quaternion: targetQuaternion
+    };
+}
+
+function updateTankPose(tankGroup, yaw, dt, instant = false) {
+    const visualRoot = tankGroup.userData.visualRoot || tankGroup;
+    const frame = sampleTankTerrainFrame(tankGroup, yaw);
+    const alignAlpha = instant || !tankGroup.userData.terrainReady ? 1 : dampAlpha(TERRAIN_FOLLOW_LAG, dt);
+
+    tankGroup.position.y = THREE.MathUtils.lerp(tankGroup.position.y, frame.height, alignAlpha);
+    visualRoot.position.y = TANK_CLEARANCE;
+
+    if (alignAlpha >= 1) {
+        visualRoot.quaternion.copy(frame.quaternion);
+    } else {
+        visualRoot.quaternion.slerp(frame.quaternion, alignAlpha);
+    }
+
+    if (!tankGroup.userData.surfaceNormal) tankGroup.userData.surfaceNormal = new THREE.Vector3();
+    if (!tankGroup.userData.surfaceForward) tankGroup.userData.surfaceForward = new THREE.Vector3();
+    tankGroup.userData.surfaceNormal.copy(frame.normal);
+    tankGroup.userData.surfaceForward.copy(frame.forward);
+    tankGroup.userData.yaw = yaw;
+    tankGroup.userData.terrainReady = true;
+
+    if (tankGroup.userData.shadow) {
+        const speedInfluence = Math.min(0.22, Math.abs(tankGroup.userData.speed || 0) / MAX_SPEED * 0.22);
+        tankGroup.userData.shadow.scale.setScalar(1.02 + speedInfluence);
+    }
+}
+
+function updateFollowCamera(dt) {
+    if (!myTank) return;
+
+    const normal = myTank.userData.surfaceNormal || WORLD_UP;
+    const forward = myTank.userData.surfaceForward || getForwardVectorFromYaw(myTankYaw);
+    const right = new THREE.Vector3().crossVectors(forward, normal).normalize();
+    const desiredPos = myTank.position.clone()
+        .addScaledVector(normal, 6.2)
+        .addScaledVector(forward, -13.5)
+        .addScaledVector(right, 0.4);
+    const desiredLook = myTank.position.clone()
+        .addScaledVector(normal, 2.2)
+        .addScaledVector(forward, 8.5);
+
+    desiredPos.y = Math.max(desiredPos.y, terrainHeight(desiredPos.x, desiredPos.z) + 4.5);
+
+    const positionAlpha = dampAlpha(CAMERA_POSITION_LAG, dt);
+    const lookAlpha = dampAlpha(CAMERA_LOOK_LAG, dt);
+    if (!camera.userData.followReady) {
+        camera.position.copy(desiredPos);
+        cameraLookTarget.copy(desiredLook);
+        camera.userData.followReady = true;
+    } else {
+        camera.position.lerp(desiredPos, positionAlpha);
+        cameraLookTarget.lerp(desiredLook, lookAlpha);
+    }
+    camera.up.lerp(normal, positionAlpha).normalize();
+    camera.lookAt(cameraLookTarget);
 }
 
 // ----------------------------------------------------
@@ -1101,11 +1463,14 @@ function animate() {
             tankVelocity = Math.max(targetVel, tankVelocity - DECEL * dt);
         }
 
+        myTank.userData.speed = tankVelocity;
         let moved = Math.abs(tankVelocity) > 0.1;
         const oldPos = myTank.position.clone();
 
         if (moved) {
-            myTank.translateZ(-tankVelocity * dt);
+            const forward = getForwardVectorFromYaw(myTankYaw);
+            myTank.position.x += forward.x * tankVelocity * dt;
+            myTank.position.z += forward.z * tankVelocity * dt;
         }
 
         // Build collision prediction
@@ -1134,31 +1499,29 @@ function animate() {
             moved = true;
         }
 
-        // Smooth Third-Person Camera follow
-        const targetCamPos = cameraOffset.clone().applyMatrix4(myTank.matrixWorld);
-        camera.position.lerp(targetCamPos, 0.1);
-        const lookTarget = new THREE.Vector3(0, 2.0, -10).applyMatrix4(myTank.matrixWorld);
-        camera.lookAt(lookTarget);
-
-        // ---- Terrain following: snap Y and tilt to slope ----
-        snapToTerrain(myTank, myTankYaw);
+        updateTankPose(myTank, myTankYaw, dt);
+        myTank.updateMatrixWorld(true);
+        updateFollowCamera(dt);
 
         // Turret Aiming (Smoother)
         if (myTank.userData.turret) {
             raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObject(groundPlane);
+            let intersects = raycaster.intersectObjects(loadedGroundMeshes, false);
+            if (intersects.length === 0) {
+                intersects = raycaster.intersectObject(groundPlane);
+            }
             if (intersects.length > 0) {
                 const target = intersects[0].point;
                 const dx = target.x - myTank.position.x;
                 const dz = target.z - myTank.position.z;
                 const globalAngle = Math.atan2(dx, dz) + Math.PI;
-                const targetRot = globalAngle - myTank.rotation.y;
+                const targetRot = globalAngle - myTankYaw;
                 
                 // Lerp turret rotation for smoothness
                 const currentRot = myTank.userData.turret.rotation.y;
                 const diff = targetRot - currentRot;
                 const shortDiff = Math.atan2(Math.sin(diff), Math.cos(diff));
-                myTank.userData.turret.rotation.y += shortDiff * 0.15;
+                myTank.userData.turret.rotation.y += shortDiff * 0.18;
             }
         }
 
@@ -1180,12 +1543,14 @@ function animate() {
     for (const id in otherTanks) {
         const tank = otherTanks[id];
         if (tank.userData.targetPosition) {
-            tank.position.lerp(tank.userData.targetPosition, 0.3);
+            tank.position.x = THREE.MathUtils.lerp(tank.position.x, tank.userData.targetPosition.x, 0.3);
+            tank.position.z = THREE.MathUtils.lerp(tank.position.z, tank.userData.targetPosition.z, 0.3);
             if (tank.userData.yaw === undefined) tank.userData.yaw = tank.userData.targetRotationY;
             const diff = tank.userData.targetRotationY - tank.userData.yaw;
             const shortDiff = Math.atan2(Math.sin(diff), Math.cos(diff));
             tank.userData.yaw += shortDiff * 0.3;
-            snapToTerrain(tank, tank.userData.yaw);
+            tank.userData.speed = tank.userData.targetPosition.distanceTo(tank.position) * 12;
+            updateTankPose(tank, tank.userData.yaw, dt);
         }
     }
 
@@ -1265,9 +1630,28 @@ function drawMinimap() {
     minimapCtx.arc(cx, cy, W / 2, 0, Math.PI * 2);
     minimapCtx.clip();
 
-    // Background
-    minimapCtx.fillStyle = 'rgba(10, 40, 10, 0.8)';
+    const gradient = minimapCtx.createRadialGradient(cx, cy, 12, cx, cy, W / 2);
+    gradient.addColorStop(0, 'rgba(14, 34, 58, 0.96)');
+    gradient.addColorStop(0.65, 'rgba(8, 18, 30, 0.94)');
+    gradient.addColorStop(1, 'rgba(4, 8, 14, 0.96)');
+    minimapCtx.fillStyle = gradient;
     minimapCtx.fillRect(0, 0, W, H);
+
+    minimapCtx.strokeStyle = 'rgba(125, 231, 255, 0.14)';
+    minimapCtx.lineWidth = 1;
+    for (const radius of [W * 0.18, W * 0.34, W * 0.48]) {
+        minimapCtx.beginPath();
+        minimapCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+        minimapCtx.stroke();
+    }
+
+    minimapCtx.beginPath();
+    minimapCtx.moveTo(cx, 0);
+    minimapCtx.lineTo(cx, H);
+    minimapCtx.moveTo(0, cy);
+    minimapCtx.lineTo(W, cy);
+    minimapCtx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+    minimapCtx.stroke();
 
     // Draw arena centre marker
     const arenaX = cx + (-myTank.position.x) / MINIMAP_SCALE * (W / MINIMAP_RANGE / 2);
@@ -1279,6 +1663,22 @@ function drawMinimap() {
 
     const toMapX = (wx) => cx + (wx - myTank.position.x) / MINIMAP_RANGE * W;
     const toMapZ = (wz) => cy + (wz - myTank.position.z) / MINIMAP_RANGE * H;
+
+    minimapCtx.fillStyle = 'rgba(125, 231, 255, 0.18)';
+    for (const b of buildings) {
+        if (Math.abs(b.x - myTank.position.x) > MINIMAP_RANGE || Math.abs(b.z - myTank.position.z) > MINIMAP_RANGE) continue;
+        const mx = toMapX(b.x);
+        const mz = toMapZ(b.z);
+        const mw = Math.max(3, b.width / MINIMAP_RANGE * W);
+        const md = Math.max(3, b.depth / MINIMAP_RANGE * H);
+        minimapCtx.fillRect(mx - mw / 2, mz - md / 2, mw, md);
+    }
+
+    minimapCtx.fillStyle = 'rgba(255, 214, 115, 0.86)';
+    for (const crate of crates) {
+        if (Math.abs(crate.position.x - myTank.position.x) > MINIMAP_RANGE || Math.abs(crate.position.z - myTank.position.z) > MINIMAP_RANGE) continue;
+        minimapCtx.fillRect(toMapX(crate.position.x) - 2, toMapZ(crate.position.z) - 2, 4, 4);
+    }
 
     // Other players
     for (const [id, state] of Object.entries(gameState.players)) {
@@ -1310,6 +1710,9 @@ function drawMinimap() {
     minimapCtx.closePath();
     minimapCtx.fillStyle = '#ffffff';
     minimapCtx.fill();
+    minimapCtx.strokeStyle = 'rgba(125, 231, 255, 0.45)';
+    minimapCtx.lineWidth = 1;
+    minimapCtx.stroke();
     minimapCtx.restore();
 
     minimapCtx.restore(); // End clip
@@ -1368,7 +1771,9 @@ function initNetwork() {
                     const myInitialState = data.state[data.id];
                     myTank = createTankMesh(data.myColor);
                     myTank.position.set(myInitialState.x, 0, myInitialState.z);
-                    myTank.rotation.y = myInitialState.ry;
+                    myTankYaw = myInitialState.ry;
+                    updateTankPose(myTank, myTankYaw, 1 / 60, true);
+                    camera.userData.followReady = false;
 
                     // Ensure local tank is visible (third-person)
                     myTank.traverse((child) => {
@@ -1429,6 +1834,9 @@ function initNetwork() {
                     // Reset position on full health if previously dead or health was 0
                     if (myState.health === 100 && gameState.health <= 0 && myTank) {
                         myTank.position.set(myState.x, 0, myState.z);
+                        myTankYaw = myState.ry;
+                        updateTankPose(myTank, myTankYaw, 1 / 60, true);
+                        camera.userData.followReady = false;
                     }
 
                     gameState.health = myState.health;
@@ -1449,6 +1857,9 @@ function initNetwork() {
                             hideDeathScreen();
                             if (myTank) {
                                 myTank.position.set(myState.x, 0, myState.z);
+                                myTankYaw = myState.ry;
+                                updateTankPose(myTank, myTankYaw, 1 / 60, true);
+                                camera.userData.followReady = false;
                                 myTank.visible = true;
                                 // Reset velocity to prevent sliding after respawn
                                 tankVelocity = 0;
@@ -1527,6 +1938,8 @@ function initNetwork() {
         console.warn("PartySocket library not loaded yet or failed to connect.", e);
         if (!myTank) {
             myTank = createTankMesh(0xff9ff3);
+            updateTankPose(myTank, myTankYaw, 1 / 60, true);
+            camera.userData.followReady = false;
             myTank.traverse((child) => { if (child.isMesh) child.visible = false; });
             scene.add(myTank);
         }
