@@ -15,7 +15,7 @@ function appendMessage(role, text) {
 
   const label = document.createElement("span");
   label.className = "ai-label";
-  label.textContent = role === "user" ? "🧑 You" : "🤖 AI";
+  label.textContent = role === "user" ? "🧑 You" : "🤖 AiCoder";
 
   const body = document.createElement("div");
   body.className = "ai-body";
@@ -107,7 +107,7 @@ export async function askAI(message, currentFiles) {
     }
 
     // Finished streaming. Parse for agentic JSON blocks.
-    const updateRegex = /```json\n([\s\S]*?)\n```/g;
+    const updateRegex = /```(?:json)?\s*([\s\S]*?)\s*```/g;
     let match;
     let cleanedReply = reply;
 
@@ -129,7 +129,10 @@ export async function askAI(message, currentFiles) {
     sandboxHistory.push({ role: "assistant", content: reply });
 
     if (didUpdate) {
-      setFile(document.querySelector("#tabs button.active").dataset.file);
+      const activeFile = document.querySelector("#tabs button.active").dataset.file;
+      // Prevent saveCurrentFile() from overwriting the AI's new code with the old textarea content
+      document.getElementById('code').value = files[activeFile];
+      setFile(activeFile);
       runSandbox();
     }
 
