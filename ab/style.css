@@ -6,14 +6,16 @@
     --panel: rgba(10, 25, 42, 0.72);
     --panel-strong: rgba(8, 19, 34, 0.88);
     --panel-border: rgba(255, 255, 255, 0.14);
-    --text-main: #fdf9ef;
-    --text-soft: rgba(253, 249, 239, 0.76);
+    --text-main: #eaf2ff;
+    --text-soft: rgba(234, 242, 255, 0.75);
     --accent: #ff8a1e;
     --accent-deep: #d94f04;
     --accent-soft: #ffd166;
     --success: #69db7c;
     --danger: #ff6b6b;
-    --shadow: 0 18px 40px rgba(8, 18, 31, 0.26);
+    --shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+    --border: rgba(255, 255, 255, 0.14);
+    --radius: 18px;
 }
 
 * {
@@ -29,7 +31,7 @@ body {
 }
 
 body {
-    font-family: "Nunito", sans-serif;
+    font-family: "Poppins", system-ui, -apple-system, sans-serif;
     color: var(--text-main);
     background:
         radial-gradient(circle at 15% 18%, rgba(255, 235, 126, 0.7), transparent 14%),
@@ -114,6 +116,8 @@ body {
     justify-content: space-between;
     padding: 24px;
     pointer-events: none;
+
+    top: 67px;
 }
 
 .top-bar,
@@ -132,16 +136,18 @@ body {
 .info-card,
 .controls-panel,
 .overlay-card {
-    border: 1px solid var(--panel-border);
-    box-shadow: var(--shadow);
+    width: min(540px, calc(100vw - 32px));
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.05));
+    border-radius: var(--radius);
+    padding: 36px 34px;
+    text-align: center;
 }
 
 .brand-card,
 .controls-panel,
 .info-card {
-    background: linear-gradient(180deg, rgba(17, 36, 59, 0.8), rgba(9, 20, 35, 0.84));
-    border-radius: 24px;
-    backdrop-filter: blur(10px);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.05));
+    border-radius: var(--radius);
 }
 
 .brand-card {
@@ -150,11 +156,15 @@ body {
 }
 
 .logo {
-    font-family: "Bungee", cursive;
-    font-size: clamp(1.9rem, 4vw, 3.4rem);
-    line-height: 0.92;
-    color: #fff4cc;
-    text-shadow: 0 4px 0 rgba(130, 33, 0, 0.55);
+    font-family: "Orbitron", sans-serif;
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(90deg, #1e90ff, #ff2d2d);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 14px rgba(30, 144, 255, 0.35), 0 0 14px rgba(255, 45, 45, 0.25);
 }
 
 .subtitle {
@@ -177,7 +187,7 @@ body {
 }
 
 .hud-card {
-    background: rgba(7, 19, 34, 0.72);
+    background: rgba(255, 255, 255, 0.06);
     border-radius: 18px;
     display: flex;
     flex-direction: column;
@@ -216,29 +226,30 @@ body {
     appearance: none;
     border: none;
     border-radius: 999px;
-    padding: 13px 22px;
+    padding: 10px 18px;
     font: inherit;
-    font-weight: 900;
-    color: #1f1300;
-    background: linear-gradient(180deg, #ffd166 0%, var(--accent) 100%);
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: #071122;
+    background: linear-gradient(135deg, rgba(78, 161, 255, 1), rgba(45, 107, 255, 1));
+    box-shadow: 0 10px 26px rgba(45, 107, 255, 0.30);
     cursor: pointer;
-    box-shadow: 0 10px 18px rgba(90, 32, 0, 0.24), inset 0 -3px 0 rgba(128, 46, 0, 0.22);
     transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
 
 .ui-button:hover {
-    transform: translateY(-2px) scale(1.02);
-    filter: brightness(1.04);
+    transform: translateY(-2px);
 }
 
 .ui-button:active {
-    transform: translateY(1px) scale(0.98);
+    transform: translateY(1px);
 }
 
 .ui-button.secondary {
     color: var(--text-main);
-    background: linear-gradient(180deg, rgba(72, 104, 140, 0.95) 0%, rgba(24, 47, 73, 0.95) 100%);
-    box-shadow: 0 10px 18px rgba(4, 10, 19, 0.26), inset 0 -3px 0 rgba(0, 0, 0, 0.22);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: none;
 }
 
 .info-card {
@@ -305,8 +316,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(4, 11, 20, 0.45);
-    backdrop-filter: blur(5px);
+    background: rgba(10, 16, 32, 0.65);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .overlay.hidden {
@@ -331,17 +343,21 @@ body {
 
 .overlay-card {
     width: min(540px, calc(100vw - 32px));
-    background: linear-gradient(180deg, rgba(14, 31, 50, 0.95), rgba(7, 16, 28, 0.96));
-    border-radius: 28px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.05));
+    border-radius: var(--radius);
     padding: 36px 34px;
     text-align: center;
 }
 
 .overlay-card h2 {
     margin-top: 8px;
-    font-family: "Bungee", cursive;
+    font-family: "Orbitron", sans-serif;
     font-size: clamp(1.8rem, 4vw, 2.8rem);
-    color: #fff1a8;
+    background: linear-gradient(90deg, #1e90ff, #ff2d2d);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: none;
 }
 
 .overlay-copy {
@@ -370,19 +386,20 @@ body {
 
 .level-button {
     padding: 16px;
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     background: rgba(255, 255, 255, 0.06);
     color: var(--text-main);
     text-align: left;
     cursor: pointer;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.22);
     transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
 }
 
 .level-button:hover {
-    transform: translateY(-3px);
-    border-color: rgba(255, 209, 102, 0.44);
-    background: rgba(255, 209, 102, 0.08);
+    transform: translateY(-4px);
+    border-color: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.10);
 }
 
 .level-button strong {
@@ -602,7 +619,9 @@ body {
     #ui-layer {
         padding: 16px;
         gap: 12px;
-    }
+    
+    top: 67px;
+}
 
     .top-bar,
     .bottom-bar {
@@ -627,7 +646,9 @@ body {
 
     #ui-layer {
         padding: 12px;
-    }
+    
+    top: 67px;
+}
 
     .hud-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -639,8 +660,12 @@ body {
     }
 
     .overlay-card {
-        padding: 28px 20px;
-    }
+    width: min(540px, calc(100vw - 32px));
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.05));
+    border-radius: var(--radius);
+    padding: 36px 34px;
+    text-align: center;
+}
 
     .info-card {
         padding: 14px 16px 16px;
@@ -651,14 +676,20 @@ body {
     #ui-layer {
         padding: 10px;
         gap: 10px;
-    }
+    
+    top: 67px;
+}
 
     .brand-card,
     .controls-panel,
     .info-card,
     .overlay-card {
-        border-radius: 18px;
-    }
+    width: min(540px, calc(100vw - 32px));
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.05));
+    border-radius: var(--radius);
+    padding: 36px 34px;
+    text-align: center;
+}
 
     .brand-card {
         padding: 14px 16px;
@@ -694,9 +725,12 @@ body {
     }
 
     .overlay-card {
-        width: min(100%, calc(100vw - 20px));
-        padding: 22px 16px;
-    }
+    width: min(540px, calc(100vw - 32px));
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.05));
+    border-radius: var(--radius);
+    padding: 36px 34px;
+    text-align: center;
+}
 
     .overlay-actions {
         flex-direction: column;
@@ -710,4 +744,77 @@ body {
     .mobile-actions {
         display: flex;
     }
+}
+
+/* JacobCreation Header */
+.jc-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: rgba(10, 16, 32, 0.65);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.jc-header-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.jc-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.jc-logo-badge {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #1e90ff, #ff2d2d);
+    box-shadow: 0 10px 24px rgba(30, 144, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    font-weight: 900;
+    color: white;
+}
+
+.jc-logo-text {
+    font-family: "Orbitron", sans-serif;
+    font-weight: 800;
+    font-size: 1.15rem;
+    letter-spacing: 1px;
+    background: linear-gradient(90deg, #1e90ff, #ff2d2d);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 14px rgba(30, 144, 255, 0.35), 0 0 14px rgba(255, 45, 45, 0.25);
+}
+
+.jc-back-btn {
+    text-decoration: none;
+    color: var(--text-main);
+    font-weight: 600;
+    font-size: 0.92rem;
+    padding: 9px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    transition: transform 0.18s ease, background 0.18s ease, border 0.18s ease;
+}
+
+.jc-back-btn:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.22);
 }

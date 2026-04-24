@@ -79,16 +79,11 @@ build_project() {
   # ── COPY PROJECT ───────────────────────────────────────────────────────────
   cp -r "$SRC/$folder/." "$build_dir/www/"
 
-  # ── FIX: Cordova-safe cleanup of node_modules symlinks ────────────────────
-  if [ -d "$build_dir/www/node_modules" ]; then
-    # remove broken symlinks anywhere in node_modules
-    find "$build_dir/www/node_modules" -xtype l -delete 2>/dev/null || true
-
-    # remove broken .bin symlinks (CRITICAL for nanoid crash)
-    if [ -d "$build_dir/www/node_modules/.bin" ]; then
-      find "$build_dir/www/node_modules/.bin" -xtype l -delete 2>/dev/null || true
-    fi
-  fi
+  # ── CLEANUP: Remove unnecessary files for production APK ───────────────────
+  # We remove node_modules and hidden folders (.git, .vite, etc.) to avoid
+  # Cordova platform-add issues (symlink loops) and keep the APK small.
+  find "$build_dir/www" -mindepth 1 -name "node_modules" -exec rm -rf {} +
+  find "$build_dir/www" -mindepth 1 -name ".*" -exec rm -rf {} +
 
   if [ ! -f "$build_dir/www/index.html" ]; then
     echo "  [SKIP] No index.html in $folder"

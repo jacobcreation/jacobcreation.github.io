@@ -155,7 +155,7 @@ EOF
 
     echo -e "  ${BLUE}→ Building $build_msg...${NC}"
 
-    cd "$app_dir" && npx electron-builder $build_flags -c.electronVersion=30.0.0 > "$TEMP_BUILD_DIR/build_$folder.log" 2>&1
+    cd "$app_dir" && npm_config_prefix=$HOME/.npm-global npx electron-builder $build_flags -c.electronVersion=30.0.0 > "$TEMP_BUILD_DIR/build_$folder.log" 2>&1
     local status=$?
     cd - > /dev/null
 
@@ -188,7 +188,7 @@ grep '=' "$NAMES_FILE" | grep -v '^#' > "$TEMP_BUILD_DIR/tasks.txt"
 TARGET="${1:-}"
 
 if [ -n "$TARGET" ]; then
-    grep "^$TARGET=" "$TEMP_BUILD_DIR/tasks.txt" > "$TEMP_BUILD_DIR/tasks_filtered.txt" || true
+    grep "^$TARGET *=" "$TEMP_BUILD_DIR/tasks.txt" > "$TEMP_BUILD_DIR/tasks_filtered.txt" || true
     mv "$TEMP_BUILD_DIR/tasks_filtered.txt" "$TEMP_BUILD_DIR/tasks.txt"
 fi
 
