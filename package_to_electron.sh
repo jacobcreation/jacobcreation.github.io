@@ -52,7 +52,7 @@ draw_progress_bar() {
 package_folder() {
     local folder=$1
     local real_name=$2
-    
+
     ((CURRENT_APP++))
     draw_progress_bar "$CURRENT_APP" "$TOTAL_APPS" "$real_name"
     echo ""
@@ -64,11 +64,17 @@ package_folder() {
 
     local app_dir="$TEMP_BUILD_DIR/$folder"
     mkdir -p "$app_dir"
-    rsync -a --exclude='.git' --exclude='node_modules' --exclude='.vite' --exclude='.codex' "$folder/" "$app_dir/"
+
+    rsync -a \
+      --exclude='.git' \
+      --exclude='node_modules' \
+      --exclude='.vite' \
+      --exclude='.codex' \
+      "$folder/" "$app_dir/"
 
     local pkg_name=$(echo "$folder" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
-    
-    # Create package.json for electron-builder
+
+    # package.json
     cat > "$app_dir/package.json" <<EOF
 {
   "name": "$pkg_name",
@@ -111,22 +117,21 @@ package_folder() {
 }
 EOF
 
-    # Create main.js
+    # main.js
     cat > "$app_dir/main.js" <<EOF
 const { app, BrowserWindow } = require('electron');
-const path = require('path');
 
 function createWindow() {
-  const win = new BrowserWindow({ 
-    width: 1280, 
+  const win = new BrowserWindow({
+    width: 1280,
     height: 720,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true
     }
   });
+
   win.loadFile('index.html');
-  // win.setMenu(null);
 }
 
 app.whenReady().then(createWindow);
@@ -142,27 +147,28 @@ EOF
 
     local build_flags="--linux"
     local build_msg=".deb and .AppImage"
-    
+
     if [ "$HAS_WINE" = true ]; then
         build_flags="--linux --win"
         build_msg=".deb, .AppImage, and Windows Setup"
     fi
 
     echo -e "  ${BLUE}→ Building $build_msg...${NC}"
-    
-    # Use electron-builder to build for Linux and potentially Windows
+
     cd "$app_dir" && npx electron-builder $build_flags -c.electronVersion=30.0.0 > "$TEMP_BUILD_DIR/build_$folder.log" 2>&1
     local status=$?
     cd - > /dev/null
 
     if [ $status -eq 0 ]; then
         mkdir -p "$OUTPUT_BASE/$folder"
-        # Copy relevant files from dist/
-        find "$app_dir/dist" -maxdepth 1 -name "*.deb" -exec cp {} "$OUTPUT_BASE/$folder/" \;
-        find "$app_dir/dist" -maxdepth 1 -name "*.AppImage" -exec cp {} "$OUTPUT_BASE/$folder/" \;
+
+        find "$app_dir/dist" -name "*.deb" -exec cp {} "$OUTPUT_BASE/$folder/" \;
+        find "$app_dir/dist" -name "*.AppImage" -exec cp {} "$OUTPUT_BASE/$folder/" \;
+
         if [ "$HAS_WINE" = true ]; then
-            find "$app_dir/dist" -maxdepth 1 -name "*.exe" -exec cp {} "$OUTPUT_BASE/$folder/" \;
+            find "$app_dir/dist" -name "*.exe" -exec cp {} "$OUTPUT_BASE/$folder/" \;
         fi
+
         echo -e "  ${GREEN}✔ Success! Files moved to $OUTPUT_BASE/$folder/${NC}"
     else
         echo -e "  ${RED}✖ Failed! See $TEMP_BUILD_DIR/build_$folder.log${NC}"
@@ -172,20 +178,34 @@ EOF
 }
 
 echo -e "${YELLOW}===================================================${NC}"
-echo -e "${YELLOW}       ELECTRON INSTALLER BUILDER (DEB/APPIMAGE/EXE)${NC}"
+echo -e "${YELLOW} ELECTRON INSTALLER BUILDER (DEB/APPIMAGE/EXE)${NC}"
 echo -e "${YELLOW}===================================================${NC}"
 echo -e "Reading apps from: $NAMES_FILE"
 
+# ── TASK LIST ─────────────────────────────────────────────
 grep '=' "$NAMES_FILE" | grep -v '^#' > "$TEMP_BUILD_DIR/tasks.txt"
+
+TARGET="${1:-}"
+
+if [ -n "$TARGET" ]; then
+    grep "^$TARGET=" "$TEMP_BUILD_DIR/tasks.txt" > "$TEMP_BUILD_DIR/tasks_filtered.txt" || true
+    mv "$TEMP_BUILD_DIR/tasks_filtered.txt" "$TEMP_BUILD_DIR/tasks.txt"
+fi
+
+TOTAL_APPS=$(wc -l < "$TEMP_BUILD_DIR/tasks.txt")
+CURRENT_APP=0
 
 while IFS='=' read -r folder name || [ -n "$folder" ]; do
     folder=$(echo "$folder" | xargs)
     name=$(echo "$name" | xargs)
-    [ -z "$folder" ] && [ -z "$name" ] && continue
-    if [ -n "$folder" ] && [ -n "$name" ]; then
-        package_folder "$folder" "$name"
-    fi
+
+    [ -z "$folder" ] && continue
+    [ -z "$name" ] && continue
+
+    package_folder "$folder" "$name"
+
 done < "$TEMP_BUILD_DIR/tasks.txt"
 
 rm -rf "$TEMP_BUILD_DIR"
+
 echo -e "\n${GREEN}DONE! Check $OUTPUT_BASE for your installers.${NC}"

@@ -50,7 +50,7 @@ print_progress() {
   printf '[%s] %d/%d %s\n' "$bar" "$current" "$total" "$folder"
 }
 
-# ── Function for building a single project ───────────────────────────────────
+# ── Build single project ─────────────────────────────────────────────────────
 build_project() {
   local folder="$1"
   local safe_name
@@ -58,57 +58,48 @@ build_project() {
   local pkg="com.jacobcreation.app_${safe_name}"
   local build_dir="$WORK/$safe_name"
   local real_name="$2"
-  local app_name
-  if [ -n "$real_name" ]; then
-    app_name="$real_name"
-  else
-    app_name="Project_${safe_name}"
-  fi
-
-  # Skip check disabled to force rebuild with signing
-  # if [ -f "$OUT/${safe_name}.apk" ]; then
-  #   echo "  [SKIP] $folder (Already built)"
-  #   return 0
-  # fi
+  local app_name="${real_name:-Project_${safe_name}}"
 
   echo "==> Started $folder"
 
-  # Path for logs
   local log_dir="/tmp/cordova_logs"
   mkdir -p "$log_dir"
   local log_file="$log_dir/${safe_name}.log"
 
   rm -rf "$build_dir"
-  # mkdir -p "$build_dir"  <-- REMOVED: Cordova needs to create this
 
-  # create cordova project
   if ! cordova create "$build_dir" "$pkg" "$app_name" --quiet > "$log_file" 2>&1; then
     echo "  ✗ FAILED $folder (Create error - see $log_file)"
     return 1
   fi
 
-
-
-  # copy web files
   rm -rf "$build_dir/www"
   mkdir -p "$build_dir/www"
+
+  # ── COPY PROJECT ───────────────────────────────────────────────────────────
   cp -r "$SRC/$folder/." "$build_dir/www/"
+
+  # ── FIX: Cordova-safe cleanup of node_modules symlinks ────────────────────
+  if [ -d "$build_dir/www/node_modules" ]; then
+    # remove broken symlinks anywhere in node_modules
+    find "$build_dir/www/node_modules" -xtype l -delete 2>/dev/null || true
+
+    # remove broken .bin symlinks (CRITICAL for nanoid crash)
+    if [ -d "$build_dir/www/node_modules/.bin" ]; then
+      find "$build_dir/www/node_modules/.bin" -xtype l -delete 2>/dev/null || true
+    fi
+  fi
 
   if [ ! -f "$build_dir/www/index.html" ]; then
     echo "  [SKIP] No index.html in $folder"
     return 1
   fi
 
-  local escaped_app_name
-  local escaped_folder
-  escaped_app_name=$(xml_escape "$app_name")
-  escaped_folder=$(xml_escape "$folder")
-
   cat > "$build_dir/config.xml" <<XML
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="${pkg}" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>${escaped_app_name}</name>
-    <description>${escaped_folder}</description>
+    <name>${app_name}</name>
+    <description>${folder}</description>
     <author email="jacob@jacobcreation.github.io" href="https://jacobcreation.github.io">Jacob</author>
     <content src="index.html" />
     <preference name="loglevel" value="DEBUG" />
@@ -123,46 +114,47 @@ build_project() {
 XML
 
   cd "$build_dir" || return 1
-  
+
   if ! cordova platform add android --quiet >> "$log_file" 2>&1; then
     echo "  ✗ FAILED $folder (Platform error - see $log_file)"
     return 1
   fi
-  
+
   if cordova build android --release --quiet --buildConfig="$SRC/build.json" -- --packageType=apk >> "$log_file" 2>&1; then
 
     local apk
     apk=$(find "$build_dir/platforms/android/app/build/outputs/apk/release" -name "*.apk" | head -1)
+
     if [ -n "$apk" ]; then
       cp "$apk" "$OUT/${safe_name}.apk"
       echo "  ✓ DONE $folder -> ${safe_name}.apk"
       return 0
-    else
-      # Try broader find if not in standard path
-      apk=$(find "$build_dir" -name "*.apk" | head -1)
-      if [ -n "$apk" ]; then
-        cp "$apk" "$OUT/${safe_name}.apk"
-        echo "  ✓ DONE $folder -> ${safe_name}.apk"
-        return 0
-      fi
-      echo "  ✗ FAILED $folder (No APK found - check $log_file)"
-      return 1
     fi
+
+    apk=$(find "$build_dir" -name "*.apk" | head -1)
+    if [ -n "$apk" ]; then
+      cp "$apk" "$OUT/${safe_name}.apk"
+      echo "  ✓ DONE $folder -> ${safe_name}.apk"
+      return 0
+    fi
+
+    echo "  ✗ FAILED $folder (No APK found - check $log_file)"
+    return 1
   else
     echo "  ✗ FAILED $folder (Build error - see $log_file)"
     pkill -f GradleDaemon || true
     return 1
   fi
-  pkill -f GradleDaemon || true
 }
 
 export -f build_project
 export -f xml_escape
+export -f safe_name_for_folder
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# ── MAIN ─────────────────────────────────────────────────────────────────────
 cd "$SRC" || exit 1
 
-export PROJECTS_FILE="/tmp/projects_list.txt"
+PROJECTS_FILE="/tmp/projects_list.txt"
 > "$PROJECTS_FILE"
 
 if [ ! -f "$REAL_NAMES_FILE" ]; then
@@ -177,12 +169,12 @@ while IFS= read -r line || [ -n "$line" ]; do
 
   folder=${line%%=*}
   app_name=${line#*=}
-  folder=$(printf '%s' "$folder" | sed 's/[[:space:]]*$//')
-  app_name=$(printf '%s' "$app_name" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
-  if [ -z "$folder" ] || [ -z "$app_name" ]; then
-    continue
-  fi
+  folder=$(echo "$folder" | sed 's/[[:space:]]*$//')
+  app_name=$(echo "$app_name" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+  [ -z "$folder" ] && continue
+  [ -z "$app_name" ] && continue
 
   case "$folder" in
     about|releases|downloads|node_modules|icons) continue ;;
@@ -195,58 +187,40 @@ while IFS= read -r line || [ -n "$line" ]; do
   fi
 done < "$REAL_NAMES_FILE"
 
-TOTAL=$(wc -l < "$PROJECTS_FILE")
+# ── FILTER (THIS MAKES ./build_apks.sh tanks WORK) ──────────────────────────
 TARGET_FOLDER="${1:-}"
+
+if [ -n "$TARGET_FOLDER" ]; then
+  grep -E "^${TARGET_FOLDER}[[:space:]]" "$PROJECTS_FILE" > /tmp/projects_filtered.txt || true
+  mv /tmp/projects_filtered.txt "$PROJECTS_FILE"
+fi
+
+TOTAL=$(wc -l < "$PROJECTS_FILE")
 CURRENT=0
 BUILT=0
 SKIPPED=0
 FAILED=0
 
-if [ -n "$TARGET_FOLDER" ]; then
-  MATCHED=0
-  while IFS=$'\t' read -r folder app_name; do
-    if [ "$folder" = "$TARGET_FOLDER" ]; then
-      MATCHED=1
-      print_progress 1 1 "$folder"
-      safe_name=$(safe_name_for_folder "$folder")
-      if [ -f "$OUT/${safe_name}.apk" ]; then
-        echo "  [SKIP] $folder (Already built)"
-        SKIPPED=1
-      elif build_project "$folder" "$app_name"; then
-        BUILT=1
-      else
-        FAILED=1
-      fi
-      break
-    fi
-  done < "$PROJECTS_FILE"
+echo "Found $TOTAL projects. Building sequentially..."
 
-  if [ "$MATCHED" -eq 0 ]; then
-    echo "No matching project found in $REAL_NAMES_FILE for folder: $TARGET_FOLDER"
-    exit 1
+while IFS=$'\t' read -r folder app_name; do
+  CURRENT=$((CURRENT + 1))
+  print_progress "$CURRENT" "$TOTAL" "$folder"
+
+  safe_name=$(safe_name_for_folder "$folder")
+
+  if [ -f "$OUT/${safe_name}.apk" ]; then
+    echo "  [SKIP] $folder (Already built)"
+    SKIPPED=$((SKIPPED + 1))
+    continue
   fi
-else
-  echo "Found $TOTAL projects. Building sequentially, one at a time..."
-  while IFS=$'\t' read -r folder app_name; do
-    CURRENT=$((CURRENT + 1))
-    print_progress "$CURRENT" "$TOTAL" "$folder"
-    safe_name=$(safe_name_for_folder "$folder")
 
-    if [ -f "$OUT/${safe_name}.apk" ]; then
-      echo "  [SKIP] $folder (Already built)"
-      SKIPPED=$((SKIPPED + 1))
-      continue
-    fi
-
-    if build_project "$folder" "$app_name"; then
-      BUILT=$((BUILT + 1))
-    else
-      FAILED=$((FAILED + 1))
-    fi
-  done < "$PROJECTS_FILE"
-fi
-
-
+  if build_project "$folder" "$app_name"; then
+    BUILT=$((BUILT + 1))
+  else
+    FAILED=$((FAILED + 1))
+  fi
+done < "$PROJECTS_FILE"
 
 echo ""
 echo "Summary of APKs in $OUT:"
