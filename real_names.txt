@@ -37,3 +37,4 @@ solitaire = Solitaire
 sss = 3D Solar System Simulator
 tanks = Neon Tanks 3D - Online Multiplayer
 type = Typing Quest: Spellcaster
+Sandbox = AiCoder
