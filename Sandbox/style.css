@@ -1,0 +1,106 @@
+:root {
+  --bg:#0f1220;
+  --panel:#161a2e;
+  --text:#e7eaf6;
+  --accent:#6ee7ff;
+}
+
+* { box-sizing: border-box }
+
+body {
+  margin: 0;
+  font-family: system-ui, ui-monospace, monospace;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--panel);
+}
+
+header button {
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.2);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+#tabs button.active {
+  background: rgba(110,231,255,.3);
+}
+
+main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+#editor {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255,255,255,.1);
+}
+
+textarea {
+  flex: 1;
+  background: transparent;
+  color: var(--text);
+  border: none;
+  padding: 12px;
+  font-family: ui-monospace, monospace;
+  resize: none;
+  outline: none;
+}
+
+#console {
+  height: 140px;
+  background: #0b1024;
+  font-size: 12px;
+  padding: 6px;
+  overflow: auto;
+}
+
+#preview {
+  display: flex;
+  flex-direction: column;
+}
+
+iframe {
+  flex: 1;
+  border: none;
+  background: #fff;
+}
+
+/* AI PANEL */
+#ai {
+  height: 220px;
+  background: #0b1024;
+  border-top: 1px solid rgba(255,255,255,.15);
+  display: flex;
+  flex-direction: column;
+}
+
+#aiLog {
+  flex: 1;
+  padding: 8px;
+  font-size: 13px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+#aiInput {
+  border: none;
+  padding: 8px;
+  background: #161a2e;
+  color: var(--text);
+  outline: none;
+}
