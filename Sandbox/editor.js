@@ -138,19 +138,34 @@ export function setFile(name) {
   saveCurrentFile();
   current = name;
   const ta = document.getElementById('code');
-  ta.value = files[name];
+  const ln = document.getElementById('lineNumbers');
+  const ai = document.getElementById('ai');
+
   document.querySelectorAll('#tabs button').forEach(b =>
     b.classList.toggle('active', b.dataset.file === name)
   );
-  updateLineNumbers();
-  ta.focus();
+
+  if (name === 'ai') {
+    ta.style.display = 'none';
+    ln.style.display = 'none';
+    if (ai) ai.style.display = 'flex';
+  } else {
+    ta.style.display = '';
+    ln.style.display = '';
+    if (ai) ai.style.display = 'none';
+    ta.value = files[name];
+    updateLineNumbers();
+    ta.focus();
+  }
 }
 
 export function saveCurrentFile() {
+  if (current === 'ai') return;
   files[current] = document.getElementById('code').value;
 }
 
 export function updateLineNumbers() {
+  if (current === 'ai') return;
   const ta = document.getElementById('code');
   const ln = document.getElementById('lineNumbers');
   const count = (ta.value.match(/\n/g) || []).length + 1;
@@ -170,6 +185,7 @@ function syncScroll() {
 
 // ── Formatter ────────────────────────────────────────────────────────────────
 export function formatCode() {
+  if (current === 'ai') return;
   saveCurrentFile();
   const ta = document.getElementById('code');
   const lang = current;

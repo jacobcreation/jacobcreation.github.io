@@ -22,6 +22,7 @@
         <button data-file="html" class="active">HTML</button>
         <button data-file="css">CSS</button>
         <button data-file="js">JS</button>
+        <button data-file="ai">🤖 AiCoder</button>
     </div>
 
     <div class="header-actions">
@@ -82,6 +83,27 @@
         <div id="editorArea">
             <div id="lineNumbers" aria-hidden="true"></div>
             <textarea id="code" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></textarea>
+            <div id="ai" style="display: none;">
+                <div class="panel-titlebar">
+                    <span class="panel-title">🤖 AiCoder</span>
+                    <div class="ai-shortcuts">
+                        <button class="ai-quick-btn" data-prompt="Explain my code clearly.">Explain</button>
+                        <button class="ai-quick-btn" data-prompt="Find and fix any bugs in my code.">Fix</button>
+                        <button class="ai-quick-btn" data-prompt="Suggest improvements and best practices.">Improve</button>
+                        <button class="ai-quick-btn" data-prompt="Add helpful comments to my code.">Comment</button>
+                    </div>
+                    <button id="clearAiBtn" class="btn-mini-icon" title="Clear chat">🗑</button>
+                </div>
+                <div id="aiLog">
+                    <div class="ai-bubble ai-ai">
+                        <span class="ai-label">🤖 AiCoder</span>
+                        <div class="ai-body">Hi! I can see your code. Ask me anything, or use the quick buttons above!</div>
+                    </div>
+                </div>
+                <div class="ai-input-row">
+                    <input id="aiInput" placeholder="Ask AI… (Enter to send)" />
+                </div>
+            </div>
         </div>
         <div id="consolePanel">
             <div class="panel-titlebar">
@@ -94,7 +116,7 @@
 
     <div id="resizer" title="Drag to resize"></div>
 
-    <!-- RIGHT: PREVIEW + AI -->
+    <!-- RIGHT: PREVIEW -->
     <section id="previewPane">
         <div id="previewBar">
             <span id="deviceLabel" class="device-label">Full width</span>
@@ -103,27 +125,6 @@
         </div>
         <div id="deviceWrapper">
             <iframe id="frame" title="Live preview"></iframe>
-        </div>
-        <div id="ai">
-            <div class="panel-titlebar">
-                <span class="panel-title">🤖 AiCoder</span>
-                <div class="ai-shortcuts">
-                    <button class="ai-quick-btn" data-prompt="Explain my code clearly.">Explain</button>
-                    <button class="ai-quick-btn" data-prompt="Find and fix any bugs in my code.">Fix</button>
-                    <button class="ai-quick-btn" data-prompt="Suggest improvements and best practices.">Improve</button>
-                    <button class="ai-quick-btn" data-prompt="Add helpful comments to my code.">Comment</button>
-                </div>
-                <button id="clearAiBtn" class="btn-mini-icon" title="Clear chat">🗑</button>
-            </div>
-            <div id="aiLog">
-                <div class="ai-bubble ai-ai">
-                    <span class="ai-label">🤖 AiCoder</span>
-                    <div class="ai-body">Hi! I can see your code. Ask me anything, or use the quick buttons above!</div>
-                </div>
-            </div>
-            <div class="ai-input-row">
-                <input id="aiInput" placeholder="Ask AI… (Enter to send)" />
-            </div>
         </div>
     </section>
 </main>
