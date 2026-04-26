@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEON ARENA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <h1 class="neon-text">NEON ARENA</h1>
+            <div id="game-stats">
+                <span>Gold: <span id="gold-value">0</span> 🪙</span>
+                <span>Round: <span id="round-value">1</span></span>
+            </div>
+        </header>
+
+        <main>
+            <div id="grid-container">
+                <!-- Grid will be generated here -->
+            </div>
+
+            <div id="sidebar">
+                <div id="shop-container">
+                    <h3>SHOP</h3>
+                    <div id="shop-items"></div>
+                    <button id="reroll-btn">Reroll (2 🪙)</button>
+                </div>
+
+                <div id="controls">
+                    <button id="start-battle-btn" class="primary-btn">START BATTLE</button>
+                </div>
+            </div>
+        </main>
+
+        <div id="overlay" class="hidden">
+            <div id="overlay-content">
+                <h2 id="result-text">VICTORY</h2>
+                <button id="next-round-btn">CONTINUE</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/game.js"></script>
+</body>
+</html>

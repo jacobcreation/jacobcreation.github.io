@@ -103,22 +103,29 @@ export function initEditor() {
     // Enter inside brackets: add indented line
     if (e.key === 'Enter') {
       const { selectionStart: s, selectionEnd: end, value: v } = ta;
-      if (s === end) {
-        const OPEN_CLOSE = { '(': ')', '[': ']', '{': '}' };
-        if (OPEN_CLOSE[v[s - 1]] === v[s]) {
-          e.preventDefault();
-          // Get current line indentation
-          const lineStart = v.lastIndexOf('\n', s - 1) + 1;
-          const indentMatch = v.substring(lineStart).match(/^(\s*)/);
-          const indent = indentMatch ? indentMatch[1] : '';
-          const newText = '\n' + indent + '  \n' + indent;
-          ta.value = v.substring(0, s) + newText + v.substring(end);
-          ta.setSelectionRange(s + indent.length + 3, s + indent.length + 3);
-          files[current] = ta.value;
-          updateLineNumbers();
-          return;
+      e.preventDefault();
+      
+      const lineStart = v.lastIndexOf('\n', s - 1) + 1;
+      const indentMatch = v.substring(lineStart, s).match(/^(\s*)/);
+      let indent = indentMatch ? indentMatch[1] : '';
+
+      const OPEN_CLOSE = { '(': ')', '[': ']', '{': '}' };
+      
+      if (s === end && OPEN_CLOSE[v[s - 1]] === v[s]) {
+        const newText = '\n' + indent + '  \n' + indent;
+        ta.value = v.substring(0, s) + newText + v.substring(end);
+        ta.setSelectionRange(s + indent.length + 3, s + indent.length + 3);
+      } else {
+        if (s > 0 && (v[s - 1] === '{' || v[s - 1] === '[' || v[s - 1] === '(')) {
+          indent += '  ';
         }
+        const newText = '\n' + indent;
+        ta.value = v.substring(0, s) + newText + v.substring(end);
+        ta.setSelectionRange(s + newText.length, s + newText.length);
       }
+      files[current] = ta.value;
+      updateLineNumbers();
+      return;
     }
   });
 

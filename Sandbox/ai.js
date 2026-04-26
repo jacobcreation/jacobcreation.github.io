@@ -75,6 +75,7 @@ export async function askAI(message, currentFiles) {
     const decoder = new TextDecoder();
     let reply = "";
     let didUpdate = false;
+    let buffer = "";
 
     aiBubble.classList.remove("ai-thinking");
 
@@ -82,8 +83,9 @@ export async function askAI(message, currentFiles) {
       const { done, value } = await reader.read();
       if (done) break;
       
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n');
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
       
       for (const line of lines) {
         if (line.startsWith('data: ') && line.trim() !== 'data: [DONE]') {
@@ -104,6 +106,15 @@ export async function askAI(message, currentFiles) {
           } catch (e) {}
         }
       }
+    }
+
+    if (buffer.startsWith('data: ') && buffer.trim() !== 'data: [DONE]') {
+      try {
+        const data = JSON.parse(buffer.slice(6));
+        if (data.response) {
+          reply += data.response;
+        }
+      } catch (e) {}
     }
 
     // Finished streaming. Parse for agentic JSON blocks.
@@ -131,7 +142,9 @@ export async function askAI(message, currentFiles) {
     if (didUpdate) {
       const activeFile = document.querySelector("#tabs button.active").dataset.file;
       // Prevent saveCurrentFile() from overwriting the AI's new code with the old textarea content
-      document.getElementById('code').value = files[activeFile];
+      if (activeFile !== 'ai') {
+        document.getElementById('code').value = files[activeFile];
+      }
       setFile(activeFile);
       runSandbox();
     }
