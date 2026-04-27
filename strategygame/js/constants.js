@@ -7,9 +7,9 @@ export const UNIT_TYPES = {
         hp: 150,
         damage: 10,
         range: 1,
-        speed: 1, // Attacks every X ticks
+        speed: 1,
         cost: 3,
-        color: '#00f3ff', // Cyan
+        color: '#00f3ff',
         icon: '🛡️'
     },
     ASSASSIN: {
@@ -19,7 +19,7 @@ export const UNIT_TYPES = {
         range: 1,
         speed: 1,
         cost: 4,
-        color: '#ff00ff', // Magenta
+        color: '#ff00ff',
         icon: '🗡️'
     },
     RANGER: {
@@ -29,13 +29,15 @@ export const UNIT_TYPES = {
         range: 3,
         speed: 1,
         cost: 3,
-        color: '#39ff14', // Lime
+        color: '#39ff14',
         icon: '🏹'
     }
 };
 
-export const INITIAL_GOLD = 10;
-export const WIN_GOLD = 5;
-export const LOSS_GOLD = 2;
+export const INITIAL_GOLD = 20;       // More starting gold
+export const ROUND_INCOME = 5;        // Gold per round
+export const WIN_GOLD = 6;
+export const LOSS_GOLD = 3;
 export const REROLL_COST = 2;
-export const SHOP_SIZE = 3;
+export const SHOP_SIZE = 4;           // One extra shop slot
+export const SCOUT_DURATION = 3000;   // ms to view enemy before placing
