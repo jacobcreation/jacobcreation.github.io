@@ -3,49 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEON ARENA</title>
+    <title>Neon Arena Command</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="game-container">
-        <header>
-            <h1 class="neon-text">NEON ARENA</h1>
-            <div id="game-stats">
-                <span>Gold: <span id="gold-value">0</span> 🪙</span>
-                <span>Round: <span id="round-value">1</span></span>
+    <div id="app-shell">
+        <header class="topbar">
+            <div class="brand-block">
+                <p class="eyebrow">TACTICAL AUTO-BATTLER</p>
+                <h1>NEON ARENA COMMAND</h1>
+                <p id="phase-callout" class="phase-callout"></p>
+            </div>
+
+            <div class="hud-grid">
+                <article class="stat-card">
+                    <span class="stat-label">Gold</span>
+                    <strong id="gold-value">0</strong>
+                </article>
+                <article class="stat-card">
+                    <span class="stat-label">Round</span>
+                    <strong id="round-value">1</strong>
+                </article>
+                <article class="stat-card">
+                    <span class="stat-label">Phase</span>
+                    <strong id="phase-value">Scout</strong>
+                </article>
+                <article class="stat-card">
+                    <span class="stat-label">Battle Speed</span>
+                    <strong id="speed-value">1x</strong>
+                </article>
+            </div>
+
+            <div class="speed-controls">
+                <button class="speed-btn" data-speed="1" type="button">1x</button>
+                <button class="speed-btn" data-speed="2" type="button">2x</button>
+                <button class="speed-btn" data-speed="3" type="button">3x</button>
             </div>
         </header>
 
-        <!-- Scout phase banner -->
-        <div id="scout-banner" class="hidden">
-            <span>👁️ SCOUTING ENEMY — Study their formation!</span>
-            <span id="scout-timer">3</span>s
-        </div>
-
-        <main>
-            <div id="grid-container">
-                <!-- Grid will be generated here -->
+        <section id="phase-banner" class="phase-banner" data-tone="scout">
+            <div>
+                <p id="banner-title" class="banner-title">Scout the hostile formation</p>
+                <p id="banner-sub" class="banner-sub">Enemy positions are revealed before prep. Study lanes and threat order.</p>
             </div>
+            <div class="phase-countdown">
+                <span class="countdown-label">Scout Timer</span>
+                <strong id="scout-timer">5s</strong>
+            </div>
+        </section>
 
-            <div id="sidebar">
-                <div id="shop-container">
-                    <h3>SHOP</h3>
-                    <div id="shop-items"></div>
-                    <button id="reroll-btn">Reroll (2 🪙)</button>
+        <main class="workspace">
+            <aside class="column left-column">
+                <section class="panel-card">
+                    <div class="panel-title-row">
+                        <h2>Command</h2>
+                        <span id="phase-pill" class="phase-pill">SCOUT</span>
+                    </div>
+                    <p id="prep-instructions" class="support-text"></p>
+                    <div class="button-stack">
+                        <button id="skip-scout-btn" class="accent-btn hidden" type="button">End Scout</button>
+                        <button id="start-battle-btn" class="primary-btn" type="button">Start Battle</button>
+                        <button id="pause-battle-btn" type="button">Pause Battle</button>
+                    </div>
+                </section>
+
+                <section class="panel-card">
+                    <div class="panel-title-row">
+                        <h2>Enemy Intel</h2>
+                        <span class="team-tag enemy">ENEMY</span>
+                    </div>
+                    <div id="enemy-summary" class="summary-grid"></div>
+                    <div id="enemy-roster" class="roster-list"></div>
+                </section>
+
+                <section class="panel-card log-card">
+                    <div class="panel-title-row">
+                        <h2>Battle Log</h2>
+                        <span id="log-status" class="badge-subtle">Recent</span>
+                    </div>
+                    <div id="battle-log" class="battle-log"></div>
+                </section>
+            </aside>
+
+            <section class="board-column">
+                <div class="board-topline">
+                    <div class="zone-chip enemy">Hostile Formation</div>
+                    <div class="board-legend">
+                        <span><i class="legend-swatch enemy"></i> Enemy unit</span>
+                        <span><i class="legend-swatch player"></i> Ally unit</span>
+                        <span><i class="legend-swatch accent"></i> Unit class accent</span>
+                    </div>
+                    <div class="zone-chip player">Your Formation</div>
                 </div>
 
-                <div id="controls">
-                    <button id="skip-scout-btn" class="hidden scout-btn">DONE SCOUTING ▶</button>
-                    <button id="start-battle-btn" class="primary-btn">START BATTLE</button>
+                <div id="grid-shell" class="grid-shell">
+                    <div class="board-zone-label enemy-label">HOSTILE SIDE</div>
+                    <div class="board-divider"></div>
+                    <div class="board-zone-label player-label">ALLY SIDE</div>
+                    <div id="grid-container"></div>
                 </div>
-            </div>
+
+                <div class="board-bottomline">
+                    <div id="cell-info" class="info-panel compact"></div>
+                    <div id="action-hint" class="info-panel compact"></div>
+                </div>
+            </section>
+
+            <aside class="column right-column">
+                <section class="panel-card">
+                    <div class="panel-title-row">
+                        <h2>Your Squad</h2>
+                        <span class="team-tag player">ALLY</span>
+                    </div>
+                    <div id="player-summary" class="summary-grid"></div>
+                    <div class="button-row">
+                        <button id="auto-arrange-btn" type="button">Auto Arrange</button>
+                        <button id="sell-unit-btn" type="button">Sell Selected</button>
+                    </div>
+                </section>
+
+                <section class="panel-card inspector-card">
+                    <div class="panel-title-row">
+                        <h2>Inspector</h2>
+                        <span id="inspector-badge" class="badge-subtle">No Selection</span>
+                    </div>
+                    <div id="unit-inspector"></div>
+                </section>
+
+                <section class="panel-card shop-card">
+                    <div class="panel-title-row">
+                        <h2>Reinforcement Shop</h2>
+                        <button id="lock-shop-btn" class="ghost-btn" type="button">Lock Shop</button>
+                    </div>
+                    <p class="support-text">Select a recruit card, then click an empty ally tile to deploy it onto the board.</p>
+                    <div class="shop-toolbar">
+                        <button id="reroll-btn" type="button">Reroll (2)</button>
+                        <span id="shop-status" class="badge-subtle">5 offers available</span>
+                    </div>
+                    <div id="shop-items" class="shop-grid"></div>
+                </section>
+            </aside>
         </main>
 
         <div id="overlay" class="hidden">
             <div id="overlay-content">
-                <h2 id="result-text">VICTORY</h2>
+                <p class="overlay-kicker">Round Complete</p>
+                <h2 id="result-text">Victory</h2>
                 <p id="result-sub"></p>
-                <button id="next-round-btn">CONTINUE</button>
+                <div id="overlay-summary" class="overlay-summary"></div>
+                <button id="next-round-btn" class="primary-btn" type="button">Continue</button>
             </div>
         </div>
     </div>
