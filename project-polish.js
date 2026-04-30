@@ -1,4 +1,12 @@
 (function () {
+  const hasViewportMeta = !!document.querySelector('meta[name="viewport"]');
+  if (!hasViewportMeta) {
+    const viewportMeta = document.createElement("meta");
+    viewportMeta.name = "viewport";
+    viewportMeta.content = "width=device-width, initial-scale=1, viewport-fit=cover";
+    document.head.appendChild(viewportMeta);
+  }
+
   if (!document.body || document.getElementById("jacob-project-dock")) {
     return;
   }
@@ -16,6 +24,25 @@
 
   const style = document.createElement("style");
   style.textContent = `
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    img, video, svg, iframe, canvas {
+      max-width: 100%;
+    }
+
+    canvas {
+      height: auto;
+      touch-action: manipulation;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
     #jacob-project-dock {
       position: fixed;
       z-index: 2147483000;
@@ -179,6 +206,26 @@
     }
   `;
   document.head.appendChild(style);
+
+  const fitWideCanvases = () => {
+    const viewportWidth = window.innerWidth;
+    document.querySelectorAll("canvas").forEach((canvas) => {
+      const rect = canvas.getBoundingClientRect();
+      const naturalWidth = canvas.width || rect.width;
+      if (!naturalWidth) {
+        return;
+      }
+
+      const maxWidth = Math.max(220, viewportWidth - 24);
+      if (naturalWidth > maxWidth) {
+        canvas.style.width = `${maxWidth}px`;
+        canvas.style.height = "auto";
+      }
+    });
+  };
+
+  fitWideCanvases();
+  window.addEventListener("resize", fitWideCanvases, { passive: true });
 
   const dock = document.createElement("aside");
   dock.id = "jacob-project-dock";

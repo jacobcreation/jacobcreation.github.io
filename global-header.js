@@ -1,10 +1,29 @@
 (function () {
+  const hasViewportMeta = !!document.querySelector('meta[name="viewport"]');
+  if (!hasViewportMeta) {
+    const viewportMeta = document.createElement("meta");
+    viewportMeta.name = "viewport";
+    viewportMeta.content = "width=device-width, initial-scale=1, viewport-fit=cover";
+    document.head.appendChild(viewportMeta);
+  }
+
   // 1. Inject CSS
   const style = document.createElement('style');
   style.textContent = `
     /* Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap');
+
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    img, video, svg, iframe, canvas {
+      max-width: 100%;
+      height: auto;
+    }
 
     #jacob-global-header {
       position: fixed; /* Fixed to stay on top */
@@ -84,6 +103,8 @@
       display: flex;
       gap: 10px;
       align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
     .jacob-nav a {
@@ -108,12 +129,38 @@
 
     /* Mobile Responsive */
     @media (max-width: 600px) {
+      .jacob-header-container {
+        padding: 0 12px;
+      }
+
       .jacob-logo-text {
         font-size: 1rem;
       }
+
       .jacob-nav a {
         font-size: 0.85rem;
-        padding: 8px 12px;
+        padding: 7px 10px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      #jacob-global-header {
+        height: 58px;
+      }
+
+      .jacob-logo-badge {
+        width: 32px;
+        height: 32px;
+        font-size: 17px;
+      }
+
+      .jacob-nav {
+        gap: 6px;
+      }
+
+      .jacob-nav a {
+        font-size: 0.78rem;
+        padding: 6px 8px;
       }
     }
   `;
