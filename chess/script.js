@@ -314,6 +314,7 @@ function onEngineMessage(event) {
     }
 }
 
+var lastInfoUpdate = 0;
 function handleEngineInfo(line) {
     if (!state.engineTask) {
         return;
@@ -323,19 +324,26 @@ function handleEngineInfo(line) {
     var scoreMatch = line.match(/\bscore\s+(cp|mate)\s+(-?\d+)/);
     var pvMatch = line.match(/\bpv\s+(.+)/);
 
+    var now = Date.now();
+    var shouldUpdateUi = (now - lastInfoUpdate > 100);
+
     if (depthMatch) {
         state.engineDepthText = depthMatch[1];
-        ui.engineDepth.text(state.engineDepthText);
+        if (shouldUpdateUi) ui.engineDepth.text(state.engineDepthText);
     }
 
     if (scoreMatch) {
         state.engineEvalText = formatEngineScore(scoreMatch[1], parseInt(scoreMatch[2], 10), state.engineTask.fen);
-        ui.engineEval.text(state.engineEvalText);
+        if (shouldUpdateUi) ui.engineEval.text(state.engineEvalText);
     }
 
     if (pvMatch) {
         state.bestLineText = formatPvLine(state.engineTask.fen, pvMatch[1]);
-        ui.bestLine.text(state.bestLineText || 'Line unavailable.');
+        if (shouldUpdateUi) ui.bestLine.text(state.bestLineText || 'Line unavailable.');
+    }
+
+    if (shouldUpdateUi) {
+        lastInfoUpdate = now;
     }
 }
 
