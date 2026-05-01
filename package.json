@@ -3,5 +3,8 @@
     "eslint-plugin-html": "^8.1.4",
     "express": "^5.2.1",
     "puppeteer": "^24.40.0"
+  },
+  "dependencies": {
+    "wrangler": "^4.86.0"
   }
 }

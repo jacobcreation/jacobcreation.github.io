@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Science Quiz 2024 – AI Powered</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- ========== HOME SCREEN ========== -->
+    <div id="home-screen" class="screen active">
+        <div class="home-bg-circles">
+            <div class="circle c1"></div>
+            <div class="circle c2"></div>
+            <div class="circle c3"></div>
+        </div>
+        <div class="home-content">
+            <div class="home-logo">🔬</div>
+            <h1 class="home-title">Science Quiz</h1>
+            <p class="home-subtitle">AI Powered · 2024</p>
+            <div class="menu-buttons">
+                <button class="menu-btn primary-menu-btn" id="play-now-btn">
+                    <span class="menu-icon">▶</span> Play Now
+                </button>
+                <button class="menu-btn" id="select-subject-btn">
+                    <span class="menu-icon">📋</span> Select Subject
+                </button>
+                <button class="menu-btn" id="leaderboard-btn">
+                    <span class="menu-icon">🏆</span> Leaderboard
+                </button>
+                <button class="menu-btn" id="achievements-btn">
+                    <span class="menu-icon">🎖️</span> Achievements
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== SUBJECT SCREEN ========== -->
+    <div id="subject-screen" class="screen">
+        <div class="screen-header">
+            <button class="back-btn" data-target="home-screen">← Back</button>
+            <h2>Select Subject</h2>
+            <div></div>
+        </div>
+        <div class="subject-list" id="subject-list">
+            <!-- Injected by JS -->
+        </div>
+        <button class="start-game-btn" id="start-game-btn" disabled>
+            Start Quiz →
+        </button>
+    </div>
+
+    <!-- ========== LOADING SCREEN ========== -->
+    <div id="loading-screen" class="screen">
+        <div class="loading-inner">
+            <div class="quiz-spinner" id="loading-spinner"></div>
+            <p class="loading-text" id="loading-text">Generating question…</p>
+            <p class="retry-countdown hidden" id="retry-countdown"></p>
+        </div>
+    </div>
+
+    <!-- ========== QUIZ SCREEN ========== -->
+    <div id="quiz-screen" class="screen">
+        <div class="quiz-top-bar">
+            <div class="quiz-progress-info">
+                <span class="q-counter" id="q-counter">Question 1/10</span>
+            </div>
+            <div class="timer-box" id="timer-box">
+                <span id="timer-val">30</span>s
+            </div>
+        </div>
+        <div class="quiz-progress-bar">
+            <div class="quiz-progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="quiz-body">
+            <p class="quiz-subject-tag" id="quiz-subject-tag">Science</p>
+            <h2 class="quiz-question" id="quiz-question">Loading…</h2>
+            <div class="quiz-options" id="quiz-options">
+                <!-- Injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== FEEDBACK SCREEN ========== -->
+    <div id="feedback-screen" class="screen">
+        <div class="feedback-inner">
+            <div class="feedback-icon" id="feedback-icon">✅</div>
+            <h2 class="feedback-label" id="feedback-label">Correct!</h2>
+            <div class="feedback-answer-box">
+                <p class="feedback-answer-title">Correct Answer:</p>
+                <p class="feedback-correct-answer" id="feedback-correct-answer">–</p>
+            </div>
+            <p class="feedback-explanation" id="feedback-explanation">–</p>
+            <button class="next-q-btn" id="next-q-btn">Next Question →</button>
+        </div>
+    </div>
+
+    <!-- ========== RESULT SCREEN ========== -->
+    <div id="result-screen" class="screen">
+        <div class="result-inner">
+            <div class="result-badge" id="result-badge">🥇</div>
+            <h2 class="result-rank" id="result-rank">Gold!</h2>
+            <div class="result-score-box">
+                <span class="result-score" id="result-score">8/10</span>
+            </div>
+            <div class="result-stats">
+                <div class="result-stat">
+                    <div class="stat-value" id="stat-accuracy">80%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+                <div class="result-stat">
+                    <div class="stat-value" id="stat-correct">8</div>
+                    <div class="stat-label">Correct</div>
+                </div>
+                <div class="result-stat">
+                    <div class="stat-value" id="stat-wrong">2</div>
+                    <div class="stat-label">Wrong</div>
+                </div>
+            </div>
+            <div class="result-name-input-row" id="result-name-row">
+                <input type="text" id="player-name-input" placeholder="Enter your name" maxlength="18">
+                <button class="save-score-btn" id="save-score-btn">Save</button>
+            </div>
+            <div class="result-buttons">
+                <button class="result-btn retry-btn" id="result-retry-btn">Retry</button>
+                <button class="result-btn home-result-btn" id="result-home-btn">Home</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== LEADERBOARD SCREEN ========== -->
+    <div id="leaderboard-screen" class="screen">
+        <div class="screen-header">
+            <button class="back-btn" data-target="home-screen">← Back</button>
+            <h2>Leaderboard</h2>
+            <div></div>
+        </div>
+        <div class="leaderboard-list" id="leaderboard-list">
+            <!-- Injected by JS -->
+        </div>
+    </div>
+
+    <!-- ========== ACHIEVEMENTS SCREEN ========== -->
+    <div id="achievements-screen" class="screen">
+        <div class="screen-header">
+            <button class="back-btn" data-target="home-screen">← Back</button>
+            <h2>Achievements</h2>
+            <div></div>
+        </div>
+        <div class="achievements-list" id="achievements-list">
+            <!-- Injected by JS -->
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

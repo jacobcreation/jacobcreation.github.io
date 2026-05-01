@@ -18,3 +18,4 @@ Untitled-1.txt
 # JavaScript dependencies and caches
 node_modules/
 .vite/
+quiz/worker/
