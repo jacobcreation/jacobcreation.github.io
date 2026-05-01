@@ -329,17 +329,14 @@ function handleEngineInfo(line) {
 
     if (depthMatch) {
         state.engineDepthText = depthMatch[1];
-        if (shouldUpdateUi) ui.engineDepth.text(state.engineDepthText);
     }
 
     if (scoreMatch) {
         state.engineEvalText = formatEngineScore(scoreMatch[1], parseInt(scoreMatch[2], 10), state.engineTask.fen);
-        if (shouldUpdateUi) ui.engineEval.text(state.engineEvalText);
     }
 
     if (pvMatch) {
         state.bestLineText = formatPvLine(state.engineTask.fen, pvMatch[1]);
-        if (shouldUpdateUi) ui.bestLine.text(state.bestLineText || 'Line unavailable.');
     }
 
     if (shouldUpdateUi) {
