@@ -41,6 +41,7 @@
 
     button, input, select, textarea {
       font: inherit;
+      min-height: 44px;
     }
 
     #jacob-project-dock {

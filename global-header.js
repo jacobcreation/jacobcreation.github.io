@@ -25,6 +25,11 @@
       height: auto;
     }
 
+    button, input, select, textarea {
+      font: inherit;
+      min-height: 44px;
+    }
+
     #jacob-global-header {
       position: fixed; /* Fixed to stay on top */
       top: 0;
@@ -121,67 +126,107 @@
       font-family: "Poppins", sans-serif;
     }
 
-    .jacob-nav a:hover {
+    .jacob-nav a:hover, .jacob-nav a:focus {
       transform: translateY(-2px);
       background: rgba(255, 255, 255, 0.15);
       border-color: rgba(255, 255, 255, 0.3);
+      outline: none;
+    }
+
+    .jacob-menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: #eaf2ff;
+      font-size: 1.6rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      transition: transform 0.2s ease;
     }
 
     /* Mobile Responsive */
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
       .jacob-header-container {
-        padding: 0 12px;
+        flex-wrap: wrap;
+        padding: 10px 16px;
       }
 
-      .jacob-logo-text {
-        font-size: 1rem;
+      .jacob-menu-toggle {
+        display: block;
+      }
+
+      .jacob-nav {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        gap: 8px;
+        padding-top: 10px;
+      }
+
+      .jacob-nav.active {
+        display: flex;
       }
 
       .jacob-nav a {
-        font-size: 0.85rem;
-        padding: 7px 10px;
+        width: 100%;
+        text-align: center;
+        padding: 12px 16px;
+        font-size: 1rem;
+        border-radius: 12px;
+      }
+
+      #jacob-global-header {
+        height: auto;
+        min-height: 58px;
       }
     }
 
     @media (max-width: 480px) {
-      #jacob-global-header {
-        height: 58px;
-      }
-
       .jacob-logo-badge {
         width: 32px;
         height: 32px;
         font-size: 17px;
       }
-
-      .jacob-nav {
-        gap: 6px;
-      }
-
-      .jacob-nav a {
-        font-size: 0.78rem;
-        padding: 6px 8px;
-      }
     }
-  `;
+  \`;
   document.head.appendChild(style);
 
   // 2. Inject HTML
   const header = document.createElement('header');
   header.id = "jacob-global-header";
-  header.innerHTML = `
+  header.innerHTML = \`
     <div class="jacob-header-container">
       <a href="/index.html" class="jacob-logo">
         <span class="jacob-logo-badge">J</span>
         <span class="jacob-logo-text">JacobCreation</span>
       </a>
 
-      <nav class="jacob-nav">
+      <button class="jacob-menu-toggle" id="jacobMobileMenuToggle" aria-label="Toggle navigation">
+        ☰
+      </button>
+
+      <nav class="jacob-nav" id="jacobMainNav">
         <a href="https://jacobcreation.github.io/about/">About</a>
         <a href="https://jacobcreation.github.io/downloads/">🎮 Play Offline</a>
         <a href="https://jacobcreation.github.io/releases/">🚀 Releases</a>
       </nav>
     </div>
-  `;
+  \`;
   document.body.prepend(header);
+
+  // 3. Setup Toggle Logic
+  const menuToggle = document.getElementById('jacobMobileMenuToggle');
+  const mainNav = document.getElementById('jacobMainNav');
+  if (menuToggle && mainNav) {
+    menuToggle.addEventListener('click', () => {
+      mainNav.classList.toggle('active');
+      if (mainNav.classList.contains('active')) {
+        menuToggle.textContent = '✕';
+        menuToggle.setAttribute('aria-expanded', 'true');
+      } else {
+        menuToggle.textContent = '☰';
+        menuToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
 })();

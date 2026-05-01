@@ -18,6 +18,7 @@ const SUBJECTS = [
     { emoji: '🎵', name: 'Music',             desc: 'Artists, albums, genres' },
     { emoji: '⚽', name: 'Sports',            desc: 'World sports & athletes' },
     { emoji: '🌐', name: 'Geography',         desc: 'Countries, capitals, landmarks' },
+    { emoji: '🧮', name: 'Mathematics',       desc: 'Logic, numbers, and equations' },
 ];
 
 const ACHIEVEMENTS_DEF = [

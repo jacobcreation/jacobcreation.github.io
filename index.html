@@ -55,6 +55,7 @@
                 linear-gradient(135deg, var(--bg1), var(--bg2));
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
         }
 
         /* Header */
@@ -116,11 +117,24 @@
                 0 0 14px rgba(255, 45, 45, 0.25);
         }
 
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1.6rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            z-index: 1001;
+            transition: transform 0.2s ease;
+        }
+
         nav {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
             justify-content: flex-end;
+            align-items: center;
         }
 
         nav a {
@@ -135,10 +149,11 @@
             transition: transform 0.18s ease, background 0.18s ease, border 0.18s ease;
         }
 
-        nav a:hover {
+        nav a:hover, nav a:focus {
             transform: translateY(-2px);
             background: rgba(255, 255, 255, 0.10);
             border-color: rgba(255, 255, 255, 0.22);
+            outline: none;
         }
 
         /* Main */
@@ -276,6 +291,7 @@
             align-items: center;
             gap: 10px;
             padding: 10px 12px;
+            min-height: 44px;
             border-radius: 14px;
             border: 1px solid rgba(255, 255, 255, 0.14);
             background: rgba(255, 255, 255, 0.06);
@@ -374,12 +390,69 @@
                 grid-template-columns: 1fr;
             }
 
+            .header-container {
+                flex-wrap: wrap;
+                padding: 12px 16px;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            nav {
+                display: none;
+                width: 100%;
+                flex-direction: column;
+                gap: 8px;
+                padding-top: 12px;
+            }
+
+            nav.active {
+                display: flex;
+            }
+
             nav a {
-                padding: 8px 12px;
+                padding: 12px 16px;
+                text-align: center;
+                font-size: 1rem;
+                width: 100%;
+                border-radius: 12px;
             }
 
             .hero h1 {
                 font-size: 1.9rem;
+            }
+            
+            .hero p {
+                font-size: 0.95rem;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+                justify-content: center;
+                padding: 14px;
+            }
+
+            .search-wrap {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search {
+                width: 100%;
+            }
+
+            .pill {
+                text-align: center;
+            }
+
+            .link-group {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             }
         }
     </style>
@@ -393,7 +466,11 @@
                 <span class="logo-text">JacobCreation</span>
             </div>
 
-            <nav>
+            <button class="menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation">
+                ☰
+            </button>
+
+            <nav id="mainNav">
                 <a href="/about">About</a>
                 <a href="/downloads/">🎮 Play Offline (Mobile)</a>
                 <a href="/releases/">🚀 Desktop App Releases</a>
@@ -544,6 +621,21 @@
         // init counts
         projectCount.textContent = cards.length;
         countPill.textContent = `${cards.length} projects`;
+
+        // Mobile Menu Toggle
+        const menuToggle = document.getElementById('mobileMenuToggle');
+        const mainNav = document.getElementById('mainNav');
+
+        menuToggle.addEventListener('click', () => {
+            mainNav.classList.toggle('active');
+            if (mainNav.classList.contains('active')) {
+                menuToggle.textContent = '✕';
+                menuToggle.setAttribute('aria-expanded', 'true');
+            } else {
+                menuToggle.textContent = '☰';
+                menuToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
     </script>
 
     <script>
