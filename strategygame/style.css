@@ -612,6 +612,8 @@ button:disabled {
     width: min(100%, 840px);
     border-radius: 34px;
     padding: 44px 18px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(13, 30, 41, 0.94)),
         linear-gradient(130deg, rgba(103, 212, 255, 0.14), transparent 40%);
@@ -650,6 +652,7 @@ button:disabled {
 #grid-container {
     position: relative;
     width: 100%;
+    min-width: 384px;
     aspect-ratio: 1;
     display: grid;
     grid-template-columns: repeat(var(--grid-size), 1fr);

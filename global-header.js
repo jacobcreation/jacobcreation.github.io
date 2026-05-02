@@ -20,12 +20,17 @@
       -webkit-text-size-adjust: 100%;
     }
 
+    body {
+      padding-top: 68px !important;
+      box-sizing: border-box !important;
+    }
+
     img, video, svg, iframe, canvas {
       max-width: 100%;
       height: auto;
     }
 
-    button, input, select, textarea {
+    button, input, select, textarea, .btn, .button, [role="button"] {
       font: inherit;
       min-height: 44px;
     }
@@ -118,6 +123,10 @@
       font-weight: 600;
       font-size: 0.92rem;
       padding: 9px 14px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       border-radius: 999px;
       border: 1px solid rgba(255, 255, 255, 0.14);
       background: rgba(255, 255, 255, 0.06);
@@ -141,6 +150,10 @@
       font-size: 1.6rem;
       cursor: pointer;
       padding: 4px 8px;
+      min-width: 44px;
+      min-height: 44px;
+      align-items: center;
+      justify-content: center;
       transition: transform 0.2s ease;
     }
 
@@ -152,7 +165,7 @@
       }
 
       .jacob-menu-toggle {
-        display: block;
+        display: flex;
       }
 
       .jacob-nav {
@@ -178,6 +191,10 @@
       #jacob-global-header {
         height: auto;
         min-height: 58px;
+      }
+      
+      body {
+        padding-top: 58px !important;
       }
     }
 
