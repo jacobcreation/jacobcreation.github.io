@@ -367,77 +367,6 @@
       position: relative;
     }
 
-    /* Modal Styling */
-    #upgradeModal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(4px);
-      z-index: 2000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .modal-content {
-      background: var(--bg1);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      width: 100%;
-      max-width: 440px;
-      padding: 24px;
-      box-shadow: var(--shadow);
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      position: relative;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .modal-header h3 {
-      margin: 0;
-      font-size: 1.25rem;
-      font-family: "Orbitron", sans-serif;
-      background: linear-gradient(90deg, var(--blue), #ff2d2d);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .close-icon {
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--text);
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    textarea.upgrade-input {
-      width: 100%;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px;
-      color: var(--text);
-      font-family: inherit;
-      resize: none;
-      min-height: 100px;
-    }
-
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-    }
-
     .pill {
       padding: 8px 16px;
       border-radius: 999px;
@@ -451,16 +380,6 @@
 
     .pill:hover {
       background: var(--card2);
-    }
-
-    .primary {
-      background: linear-gradient(135deg, var(--blue), var(--blue2));
-      color: #071122;
-      border: none;
-      padding: 8px 20px;
-      border-radius: 999px;
-      font-weight: 700;
-      cursor: pointer;
     }
 
     footer {
@@ -535,7 +454,6 @@
                 <button class="mem-mini-btn" type="button" id="downloadMemBtn">⬇️</button>
                 <button class="mem-mini-btn" type="button" id="uploadMemBtn">⬆️</button>
                 <button class="mem-mini-btn" type="button" id="uploadImgBtn">🖼️</button>
-                <button class="mem-mini-btn" type="button" id="upgradeBtn">🛠️</button>
 
                 <input type="file" id="memFileInput" accept="application/json" style="display:none;">
                 <input type="file" id="imgFileInput" accept="image/*" style="display:none;">
@@ -589,25 +507,6 @@
     © 2026 JacobCreation • Built by Jacob 💙
   </footer>
 
-  <!-- Needs Upgrades Modal -->
-  <!-- Needs Upgrades Modal (Populated) -->
-  <div id="upgradeModal" style="display:none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>✨ Request Feature</h3>
-        <button id="upgradeClose" class="close-icon">&times;</button>
-      </div>
-      <p style="margin:0; color:var(--muted); font-size:0.9em;">
-        Found a bug or have a cool idea? Let us know!
-      </p>
-      <textarea id="upgradeText" class="upgrade-input" rows="4" placeholder="I wish the chatbot could..."></textarea>
-      <div class="modal-actions">
-        <button id="upgradeCancel" class="pill">Cancel</button>
-        <button id="upgradeSend" class="primary">Send Request</button>
-      </div>
-    </div>
-  </div>
-
   <!-- <script> STARTS HERE -->
 
 
@@ -629,6 +528,11 @@
     const dlBtn = document.getElementById("downloadMemBtn");
     const ulBtn = document.getElementById("uploadMemBtn");
     const memFile = document.getElementById("memFileInput");
+
+    const imgBtn = document.getElementById("uploadImgBtn");
+    const imgFile = document.getElementById("imgFileInput");
+
+    let currentImage = null; // Store pending image upload
 
     // ---------------------------------------------------------
     //  SESSION MANAGEMENT
@@ -658,11 +562,19 @@
     // ---------------------------------------------------------
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const msg = chatText.value.trim();
-      if (!msg) return;
+      let msg = chatText.value.trim();
+      
+      if (!msg && !currentImage) return;
+      if (!msg && currentImage) {
+          msg = "Please analyze this image.";
+      }
 
       // 1. Show User Message
-      addBubble(msg, "user");
+      if (currentImage) {
+        addBubble("🖼️ [Image attached]\n" + msg, "user");
+      } else {
+        addBubble(msg, "user");
+      }
       chatText.value = "";
 
       // 2. Show Typing Indicator
@@ -674,15 +586,22 @@
 
       try {
         // 3. Send to Worker
-        const res = await fetch(ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        const payload = {
             action: "chat",
             site: SITE_NAME,
             sessionId: getSessionId(),
             message: msg
-          })
+        };
+
+        if (currentImage) {
+            payload.image = currentImage;
+            currentImage = null; // Clear after sending
+        }
+
+        const res = await fetch(ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
         });
 
         if (!res.ok) throw new Error("Network response was not ok");
@@ -740,6 +659,28 @@
     // UPLOAD PREPARATIONS
     ulBtn.addEventListener("click", () => {
       memFile.click(); // Trigger hidden file input
+    });
+
+    // IMAGE UPLOAD LOGIC
+    imgBtn.addEventListener("click", () => {
+      imgFile.click();
+    });
+
+    imgFile.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64String = event.target.result.split(',')[1];
+        currentImage = {
+          mimeType: file.type,
+          data: base64String
+        };
+        addBubble("Image attached! Type a message to ask about it. 🖼️", "bot");
+      };
+      reader.readAsDataURL(file);
+      imgFile.value = ""; // Reset
     });
 
     // UPLOAD EXECUTION
