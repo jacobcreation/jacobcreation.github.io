@@ -695,6 +695,7 @@
     let engine = null;
     let engineReady = false;
     let engineSearching = false;
+    let queuedFen = null;
     let latestPv = new Map();
     let currentSearchFen = "";
     let autoAnalyzeTimer = null;
@@ -922,17 +923,15 @@
 
     function stopAnalysis(status = "Analysis stopped.") {
       if (!engine || !engineReady) return;
-      postEngine("stop");
-      engineSearching = false;
+      queuedFen = null;
+      if (engineSearching) {
+        postEngine("stop");
+      }
       setStatus(status);
     }
 
-    function analyzePosition() {
-      if (!engineReady) {
-        setStatus("Engine not ready yet.");
-        return;
-      }
-      currentSearchFen = chess.fen();
+    function startSearch(fen) {
+      currentSearchFen = fen;
       latestPv.clear();
       bestMoveUci = "";
       renderPvLines();
@@ -941,12 +940,25 @@
       $("depthText") && ($("depthText").textContent = "—");
       $("nodesText") && ($("nodesText").textContent = "—");
       applyEngineOptions();
-      postEngine("stop");
-      postEngine("ucinewgame");
-      postEngine(`position fen ${currentSearchFen}`);
+      postEngine(`position fen ${fen}`);
       postEngine(infiniteAnalyzeEnabled() ? "go infinite" : `go depth ${getDepth()}`);
       engineSearching = true;
       setStatus(infiniteAnalyzeEnabled() ? "Analyzing (infinite)..." : `Analyzing depth ${getDepth()}...`);
+    }
+
+    function analyzePosition() {
+      if (!engineReady) {
+        setStatus("Engine not ready yet.");
+        return;
+      }
+      const newFen = chess.fen();
+      if (engineSearching) {
+        queuedFen = newFen;
+        postEngine("stop");
+        setStatus("Stopping engine...");
+        return;
+      }
+      startSearch(newFen);
     }
 
     function maybeAutoAnalyze(delayMs = 120) {
@@ -1010,7 +1022,14 @@
           const bm = line.match(/^bestmove\s+([a-h][1-8][a-h][1-8][qrbn]?)/)?.[1] || "";
           bestMoveUci = bm;
           drawBestMoveArrow(bestMoveUci);
-          setStatus("Analysis complete.");
+          
+          if (queuedFen) {
+            const fen = queuedFen;
+            queuedFen = null;
+            startSearch(fen);
+          } else {
+            setStatus("Analysis complete.");
+          }
           return;
         }
 
