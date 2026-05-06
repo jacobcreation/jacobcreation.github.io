@@ -44,6 +44,7 @@ let difficulty       = 1;
 let timerInterval    = null;
 let timeLeft         = TIMER_SECONDS;
 let streak           = 0;
+let questionsBuffer  = [];
 
 // ============================================================
 //  SCREEN ROUTER
@@ -132,8 +133,7 @@ function toggleSubject(el, name) {
 // ============================================================
 function startGame() {
     resetGame();
-    showScreen('loading-screen');
-    fetchQuestion();
+    fetchAllQuestions();
 }
 
 function resetGame() {
@@ -143,12 +143,13 @@ function resetGame() {
     history        = [];
     difficulty     = 1;
     streak         = 0;
+    questionsBuffer = [];
     stopTimer();
 }
 
-async function fetchQuestion() {
+async function fetchAllQuestions() {
     showScreen('loading-screen');
-    setLoadingState('Generating question…', false);
+    setLoadingState('Generating quiz batch…', false);
 
     try {
         const res = await fetch(WORKER_URL, {
@@ -158,20 +159,40 @@ async function fetchQuestion() {
                 difficulty: Math.round(difficulty),
                 history,
                 topics: selectedSubjects.length ? selectedSubjects : SUBJECTS.map(s => s.name),
+                count: TOTAL_QUESTIONS
             })
         });
 
         const data = await res.json();
         if (!res.ok || data.error) throw new Error(data.error || 'Server error');
-        if (!data.question || !data.options || !data.answer) throw new Error('Invalid data from AI');
+        
+        if (data.questions && Array.isArray(data.questions)) {
+            questionsBuffer = data.questions;
+        } else if (data.question) {
+            // Fallback for single question response
+            questionsBuffer = [data];
+        } else {
+            throw new Error('Invalid data from AI');
+        }
 
-        history.push(data.question);
-        if (history.length > 20) history.shift();
+        if (questionsBuffer.length === 0) throw new Error('No questions received');
 
-        renderQuestion(data);
+        // Start the first question
+        loadNextQuestionFromBuffer();
     } catch (err) {
-        alert('Error loading question: ' + err.message + '\n\nReturning to home.');
+        alert('Error loading questions: ' + err.message + '\n\nReturning to home.');
         showScreen('home-screen');
+    }
+}
+
+function loadNextQuestionFromBuffer() {
+    const nextQ = questionsBuffer[questionNumber]; // questionNumber starts at 0
+    if (nextQ) {
+        history.push(nextQ.question);
+        if (history.length > 20) history.shift();
+        renderQuestion(nextQ);
+    } else {
+        showResult();
     }
 }
 
@@ -262,7 +283,8 @@ function selectAnswer(btn, chosen, correct, explanation) {
         correctCount++;
         streak++;
 
-        // Difficulty ramp
+        // Difficulty ramp (Note: applies if we were fetching dynamically, 
+        // for batch fetch it's pre-determined but we keep the state)
         if (difficulty < 10) difficulty = Math.min(10, difficulty + 0.5);
 
         // Achievement: speed
@@ -319,10 +341,11 @@ function nextQuestion() {
     if (questionNumber >= TOTAL_QUESTIONS) {
         showResult();
     } else {
-        showScreen('loading-screen');
-        fetchQuestion();
+        // No loading screen needed! Just load from buffer
+        loadNextQuestionFromBuffer();
     }
 }
+
 
 // ============================================================
 //  RESULT
