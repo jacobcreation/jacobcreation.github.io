@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Neon Snake Arena</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+:root {
+    --primary: #00f2ff;
+    --secondary: #7000ff;
+    --accent: #ff007a;
+    --bg-dark: #05070a;
+    --panel-glass: rgba(255, 255, 255, 0.03);
+    --border-glass: rgba(255, 255, 255, 0.1);
+    --text-main: #e0e6ed;
+    --font-main: 'Outfit', sans-serif;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #05070a;
+    background-image: 
+        radial-gradient(circle at 20% 30%, rgba(0, 242, 255, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(112, 0, 255, 0.1) 0%, transparent 40%),
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 50px 50px, 50px 50px;
+    font-family: var(--font-main);
+    color: var(--text-main);
+}
+
+canvas {
+    display: block;
+    filter: contrast(1.1) brightness(1.1);
+}
+
+#ui-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+}
+
+.glass-panel {
+    background: var(--panel-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+#stats {
+    width: fit-content;
+    padding: 12px 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+#stats span {
+    color: var(--primary);
+    font-weight: 800;
+    font-size: 1.2em;
+    text-shadow: 0 0 10px var(--primary);
+}
+
+#leaderboard {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 240px;
+    padding: 16px;
+}
+
+#leaderboard h3 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-main);
+    opacity: 0.7;
+    border-bottom: 1px solid var(--border-glass);
+    padding-bottom: 8px;
+}
+
+.lb-entry {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.lb-entry .name { opacity: 0.9; }
+.lb-entry .score { font-weight: 600; color: var(--primary); }
+.lb-entry.is-me { color: var(--primary); font-weight: 800; }
+
+#menu {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 5, 8, 0.85);
+    backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+#menu.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.menu-content {
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+}
+
+h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    letter-spacing: -2px;
+    background: linear-gradient(to right, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 20px rgba(0, 242, 255, 0.3));
+}
+
+p.subtitle {
+    font-size: 1rem;
+    opacity: 0.6;
+    margin-bottom: 2.5rem;
+}
+
+.input-group {
+    margin-bottom: 2rem;
+}
+
+input[type="text"] {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    padding: 14px 20px;
+    color: white;
+    font-family: inherit;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+input[type="text"]:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(0, 242, 255, 0.1);
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: #000;
+    border: none;
+    border-radius: 12px;
+    padding: 16px 40px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+    pointer-events: all;
+}
+
+.btn-primary:hover {
+    transform: scale(1.05) translateY(-2px);
+    box-shadow: 0 0 30px rgba(0, 242, 255, 0.6);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+#minimap {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    width: 150px;
+    height: 150px;
+    border: 1px solid var(--border-glass);
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+#kill-feed {
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 8px;
+}
+
+.kill-msg {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.4);
+    animation: slideIn 0.3s ease forwards;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+</style>
+</head>
+<body>
+
+<div id="menu">
+    <div class="menu-content">
+        <h1>NEON ARENA</h1>
+        <p class="subtitle">High-intensity tactical snake combat.</p>
+        <div class="input-group">
+            <input type="text" id="playerName" placeholder="ENTER YOUR CALLSIGN..." maxlength="12">
+        </div>
+        <button class="btn-primary" onclick="startGame()">INITIATE COMBAT</button>
+    </div>
+</div>
+
+<div id="ui-layer">
+    <div id="stats" class="glass-panel">
+        SCORE: <span id="scoreVal">0</span>
+    </div>
+    
+    <div id="leaderboard" class="glass-panel">
+        <h3>Leaderboard</h3>
+        <div id="lb-list"></div>
+    </div>
+
+    <div id="kill-feed"></div>
+
+    <div id="minimap" class="glass-panel">
+        <canvas id="minimap-canvas"></canvas>
+    </div>
+</div>
+
+<canvas id="game"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let W, H;
+function resize(){
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resize);
+resize();
+
+let mouse = {x: W/2, y: H/2};
+window.addEventListener("mousemove", e=>{
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+});
+
+const rand = (a,b)=>Math.random()*(b-a)+a;
+
+class Snake {
+    constructor(x, y, color, isPlayer = false, name = "AI") {
+        this.x = x;
+        this.y = y;
+        this.angle = Math.random() * Math.PI * 2;
+        this.baseSpeed = isPlayer ? 3 : 2.5;
+        this.speed = this.baseSpeed;
+        this.length = 20;
+        this.trail = [];
+        this.color = color;
+        this.isPlayer = isPlayer;
+        this.alive = true;
+        this.name = name;
+        this.isBoosting = false;
+        this.boostCooldown = 0;
+        
+        // Initialize trail
+        for(let i=0; i<this.length; i++) {
+            this.trail.push({x, y});
+        }
+    }
+
+    update() {
+        if (!this.alive) return;
+
+        let tx, ty;
+
+        if (this.isPlayer) {
+            tx = mouse.x + camera.x;
+            ty = mouse.y + camera.y;
+            
+            // Speed boost on click or space
+            this.isBoosting = (mouse.down || keys[" "]) && this.length > 15;
+            if(this.isBoosting) {
+                this.speed = this.baseSpeed * 1.8;
+                if(frameCount % 5 === 0) {
+                    this.length -= 0.5;
+                    // Leave "energy" behind
+                    foods.push(new Food(this.trail[0].x, this.trail[0].y, true));
+                }
+            } else {
+                this.speed = this.baseSpeed;
+            }
+        } else {
+            // Advanced AI
+            this.updateAI();
+            tx = this.targetX;
+            ty = this.targetY;
+        }
+
+        let dx = tx - this.x;
+        let dy = ty - this.y;
+        let targetAngle = Math.atan2(dy, dx);
+        
+        // Smooth rotation
+        let diff = targetAngle - this.angle;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        this.angle += diff * 0.1;
+
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed;
+
+        // World boundaries
+        const margin = 50;
+        if(this.x < -WORLD_SIZE + margin) this.angle = 0;
+        if(this.x > WORLD_SIZE - margin) this.angle = Math.PI;
+        if(this.y < -WORLD_SIZE + margin) this.angle = Math.PI/2;
+        if(this.y > WORLD_SIZE - margin) this.angle = -Math.PI/2;
+
+        this.trail.push({ x: this.x, y: this.y });
+        while (this.trail.length > this.length) {
+            this.trail.shift();
+        }
+
+        if (this.isPlayer) {
+            camera.x += (this.x - W / 2 - camera.x) * 0.1;
+            camera.y += (this.y - H / 2 - camera.y) * 0.1;
+        }
+        
+        this.checkCollisions();
+    }
+
+    updateAI() {
+        // Simple but effective AI: Avoid others, go for food
+        let avoidDx = 0;
+        let avoidDy = 0;
+        let detectRange = 100;
+
+        // Avoid other snakes' trails
+        for(let s of snakes) {
+            if(!s.alive) continue;
+            for(let i=0; i<s.trail.length; i+=5) {
+                let p = s.trail[i];
+                let d = dist(this.x, this.y, p.x, p.y);
+                if(d < detectRange && d > 0) {
+                    avoidDx += (this.x - p.x) / d;
+                    avoidDy += (this.y - p.y) / d;
+                }
+            }
+        }
+
+        if(Math.abs(avoidDx) > 0.1 || Math.abs(avoidDy) > 0.1) {
+            this.targetX = this.x + avoidDx * 100;
+            this.targetY = this.y + avoidDy * 100;
+        } else {
+            // Go for food
+            let closest = null;
+            let minD = 500;
+            for(let f of foods) {
+                let d = dist(this.x, this.y, f.x, f.y);
+                if(d < minD) {
+                    minD = d;
+                    closest = f;
+                }
+            }
+            if(closest) {
+                this.targetX = closest.x;
+                this.targetY = closest.y;
+            } else {
+                this.targetX = this.x + Math.cos(this.angle) * 100;
+                this.targetY = this.y + Math.sin(this.angle) * 100;
+            }
+        }
+    }
+
+    checkCollisions() {
+        // Food collision
+        for (let i = foods.length - 1; i >= 0; i--) {
+            let f = foods[i];
+            if (dist(this.x, this.y, f.x, f.y) < 20 + f.size) {
+                this.length += f.value;
+                if(this.isPlayer) score += f.value * 10;
+                foods.splice(i, 1);
+                if(!f.isStatic) spawnFood(); 
+            }
+        }
+
+        // Snake collision (head to trail)
+        // Add safety delay (don't die in first 2 seconds)
+        if (frameCount < 120 && this.isPlayer) return;
+
+        for(let s of snakes) {
+            if(!s.alive) continue;
+            // Disable self-collision for player (can't die if touching own trail)
+            if(s === this) continue;
+            
+            let trailToCheck = s.trail;
+            
+            for(let i=0; i<trailToCheck.length; i+=2) {
+                let p = trailToCheck[i];
+                if(dist(this.x, this.y, p.x, p.y) < 10) {
+                    this.die(s);
+                    return;
+                }
+            }
+        }
+    }
+
+    die(killer) {
+        if (!this.alive) return;
+        this.alive = false;
+        if(this.isPlayer) {
+            setTimeout(() => {
+                document.getElementById("menu").classList.remove("hidden");
+                running = false;
+            }, 2000);
+        }
+        
+        addKillMsg(killer.name, this.name);
+        
+        // Turn into food
+        for(let i=0; i<this.trail.length; i+=3) {
+            foods.push(new Food(this.trail[i].x, this.trail[i].y, true, 2));
+        }
+        
+        // Respawn AI
+        if(!this.isPlayer) {
+            setTimeout(() => {
+                let index = snakes.indexOf(this);
+                if(index !== -1) {
+                    snakes[index] = spawnAI();
+                }
+            }, 3000);
+        }
+    }
+
+    draw() {
+        if (!this.alive) return;
+        
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        
+        // Shadow/Glow
+        ctx.shadowBlur = this.isBoosting ? 20 : 10;
+        ctx.shadowColor = this.color;
+        
+        // Draw trail
+        for(let i=1; i<this.trail.length; i++) {
+            let p1 = this.trail[i-1];
+            let p2 = this.trail[i];
+            let size = (i / this.trail.length) * 12 + 4;
+            
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = size;
+            ctx.beginPath();
+            ctx.moveTo(p1.x - camera.x, p1.y - camera.y);
+            ctx.lineTo(p2.x - camera.x, p2.y - camera.y);
+            ctx.stroke();
+        }
+        
+        // Head
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(this.x - camera.x, this.y - camera.y, 8, 0, Math.PI*2);
+        ctx.fill();
+        
+        ctx.shadowBlur = 0;
+        
+        // Name
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.font = "10px Outfit";
+        ctx.textAlign = "center";
+        ctx.fillText(this.name, this.x - camera.x, this.y - camera.y - 20);
+    }
+}
+
+class Food {
+    constructor(x, y, isStatic = false, value = 1) {
+        this.x = x || rand(-WORLD_SIZE, WORLD_SIZE);
+        this.y = y || rand(-WORLD_SIZE, WORLD_SIZE);
+        this.size = isStatic ? 4 : 3;
+        this.value = value;
+        this.isStatic = isStatic;
+        this.color = isStatic ? `hsl(${rand(0, 360)}, 100%, 70%)` : "#00f2ff";
+    }
+
+    draw() {
+        if (this.x < camera.x - 100 || this.x > camera.x + W + 100 ||
+            this.y < camera.y - 100 || this.y > camera.y + H + 100) return;
+
+        ctx.fillStyle = this.color;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x - camera.x, this.y - camera.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+}
+
+const WORLD_SIZE = 3000;
+const minimapCanvas = document.getElementById("minimap-canvas");
+const mctx = minimapCanvas.getContext("2d");
+
+let snakes = [];
+let foods = [];
+let camera = { x: 0, y: 0 };
+let score = 0;
+let running = false;
+let frameCount = 0;
+let keys = {};
+let player = null;
+
+window.addEventListener("keydown", e => keys[e.key] = true);
+window.addEventListener("keyup", e => keys[e.key] = false);
+window.addEventListener("mousedown", () => mouse.down = true);
+window.addEventListener("mouseup", () => mouse.down = false);
+
+function spawnAI() {
+    const names = ["VIPER", "COBRA", "PYTHON", "ZODIAC", "XENON", "NEON", "GHOST", "BLADE", "REAPER", "SHADOW"];
+    return new Snake(
+        rand(-WORLD_SIZE, WORLD_SIZE),
+        rand(-WORLD_SIZE, WORLD_SIZE),
+        `hsl(${rand(180, 300)}, 100%, 60%)`,
+        false,
+        names[Math.floor(Math.random() * names.length)] + "_" + Math.floor(Math.random() * 99)
+    );
+}
+
+function spawnFood() {
+    foods.push(new Food());
+}
+
+function addKillMsg(killer, victim) {
+    const feed = document.getElementById("kill-feed");
+    const msg = document.createElement("div");
+    msg.className = "kill-msg glass-panel";
+    msg.innerHTML = `<span style="color:#00f2ff">${killer}</span> terminated <span style="color:#ff007a">${victim}</span>`;
+    feed.appendChild(msg);
+    setTimeout(() => msg.remove(), 4000);
+}
+
+function startGame() {
+    const nameInput = document.getElementById("playerName").value || "RECON";
+    document.getElementById("menu").classList.add("hidden");
+    
+    running = true;
+    score = 0;
+    frameCount = 0;
+    camera = { x: 0, y: 0 };
+    
+    player = new Snake(0, 0, "#00f2ff", true, nameInput);
+    snakes = [player];
+    for (let i = 0; i < 15; i++) snakes.push(spawnAI());
+
+    foods = [];
+    for (let i = 0; i < 400; i++) foods.push(new Food());
+    
+    // Add background dust for movement reference
+    dust = [];
+    for(let i=0; i<100; i++) {
+        dust.push({
+            x: Math.random() * W,
+            y: Math.random() * H,
+            s: Math.random() * 2
+        });
+    }
+
+    loop();
+}
+
+let dust = [];
+
+function drawDust() {
+    ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+    for(let d of dust) {
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.s, 0, Math.PI*2);
+        ctx.fill();
+    }
+}
+
+function dist(x1, y1, x2, y2) {
+    return Math.hypot(x1 - x2, y1 - y2);
+}
+
+function updateLeaderboard() {
+    const list = document.getElementById("lb-list");
+    const sorted = [...snakes].filter(s => s.alive).sort((a, b) => b.length - a.length).slice(0, 8);
+    
+    list.innerHTML = sorted.map((s, i) => `
+        <div class="lb-entry ${s === player ? 'is-me' : ''}">
+            <span class="name">${i + 1}. ${s.name}</span>
+            <span class="score">${Math.floor(s.length * 10)}</span>
+        </div>
+    `).join("");
+}
+
+function drawBackground() {
+    const gridSize = 120;
+    
+    // Primary Grid (Darker)
+    ctx.strokeStyle = "rgba(0, 242, 255, 0.05)";
+    ctx.lineWidth = 1;
+    
+    let startX = -camera.x % gridSize;
+    let startY = -camera.y % gridSize;
+    
+    ctx.beginPath();
+    for (let x = startX; x < W; x += gridSize) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+    }
+    for (let y = startY; y < H; y += gridSize) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+    }
+    ctx.stroke();
+
+    // Secondary Accent Grid (Smaller)
+    const smallGrid = 40;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.02)";
+    ctx.beginPath();
+    for (let x = -camera.x % smallGrid; x < W; x += smallGrid) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+    }
+    for (let y = -camera.y % smallGrid; y < H; y += smallGrid) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+    }
+    ctx.stroke();
+
+    // World border (Glowing)
+    ctx.strokeStyle = "#ff007a";
+    ctx.lineWidth = 10;
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = "#ff007a";
+    ctx.strokeRect(-WORLD_SIZE - camera.x, -WORLD_SIZE - camera.y, WORLD_SIZE * 2, WORLD_SIZE * 2);
+    ctx.shadowBlur = 0;
+}
+
+function drawMinimap() {
+    const size = 150;
+    minimapCanvas.width = size;
+    minimapCanvas.height = size;
+    
+    mctx.fillStyle = "rgba(0,0,0,0.5)";
+    mctx.fillRect(0, 0, size, size);
+    
+    const scale = size / (WORLD_SIZE * 2);
+    const offset = size / 2;
+    
+    // Draw food
+    mctx.fillStyle = "rgba(255,255,255,0.2)";
+    for(let i=0; i<foods.length; i+=5) {
+        let f = foods[i];
+        mctx.fillRect(f.x * scale + offset, f.y * scale + offset, 1, 1);
+    }
+    
+    // Draw snakes
+    for(let s of snakes) {
+        if(!s.alive) continue;
+        mctx.fillStyle = s.color;
+        mctx.fillRect(s.x * scale + offset, s.y * scale + offset, 2, 2);
+    }
+}
+
+function loop() {
+    if (!running) return;
+    frameCount++;
+
+    ctx.fillStyle = "#05070a";
+    ctx.fillRect(0, 0, W, H);
+
+    drawDust();
+    drawBackground();
+
+    for (let f of foods) f.draw();
+
+    for (let s of snakes) {
+        s.update();
+        s.draw();
+    }
+
+    document.getElementById("scoreVal").innerText = Math.floor(score);
+
+    updateLeaderboard();
+    drawMinimap();
+
+    requestAnimationFrame(loop);
+}
+</script>
+
+</body>
+</html>

@@ -64,6 +64,12 @@
             align-items: flex-start;
         }
 
+        #hud-left {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
         #score-display {
             font-size: 36px;
             font-weight: 700;
@@ -72,6 +78,14 @@
             letter-spacing: 2px;
         }
         
+        #level-display {
+            font-size: 24px;
+            font-weight: 700;
+            color: #f0f;
+            text-shadow: 0 0 10px #f0f;
+            letter-spacing: 1px;
+        }
+
         #coins-display {
             font-size: 36px;
             font-weight: 700;
@@ -186,8 +200,9 @@
 
         <div id="ui-layer">
             <div id="top-hud">
-                <div style="display: flex; gap: 30px;">
+                <div id="hud-left">
                     <div id="score-display">SCORE: 0</div>
+                    <div id="level-display">LEVEL: 1 (0/20 KILLS)</div>
                     <div id="coins-display">COINS: 0</div>
                 </div>
                 <div id="cooldowns">
@@ -202,8 +217,15 @@
             <!-- Start Menu -->
             <div id="start-screen" class="screen">
                 <h1>Neon Overdrive</h1>
-                <p>WASD to Move &bull; Mouse to Aim &bull; Click to Shoot <br><br> SHIFT to Dash &bull; Keys 1-4 to Buy/Use Spells with Coins</p>
+                <p>WASD to Move &bull; Mouse to Aim &bull; Click to Shoot <br><br> SHIFT to Dash &bull; Keys 1-4 to Buy/Use Spells with Coins <br><br> P to Pause</p>
                 <button id="start-btn">Initialize</button>
+            </div>
+
+            <!-- Pause Menu -->
+            <div id="pause-screen" class="screen hidden">
+                <h1>PAUSED</h1>
+                <p>System Interrupted</p>
+                <button id="resume-btn">Resume</button>
             </div>
 
             <!-- Game Over Menu -->
@@ -289,10 +311,10 @@
                 let dx = 0;
                 let dy = 0;
 
-                if (keys['w'] || keys['W']) dy -= 1;
-                if (keys['s'] || keys['S']) dy += 1;
-                if (keys['a'] || keys['A']) dx -= 1;
-                if (keys['d'] || keys['D']) dx += 1;
+                if (keys['w'] || keys['W'] || keys['ArrowUp']) dy -= 1;
+                if (keys['s'] || keys['S'] || keys['ArrowDown']) dy += 1;
+                if (keys['a'] || keys['A'] || keys['ArrowLeft']) dx -= 1;
+                if (keys['d'] || keys['D'] || keys['ArrowRight']) dx += 1;
 
                 if (dx !== 0 && dy !== 0) {
                     const length = Math.sqrt(dx * dx + dy * dy);
@@ -301,6 +323,7 @@
                 }
 
                 const now = performance.now();
+                const moveDt = dt / 16.66; // Normalize to 60fps
 
                 // Natural Health Regeneration
                 if (this.health < this.maxHealth && this.health > 0) {
@@ -326,21 +349,22 @@
                     if (this.dashTime <= 0) {
                         this.isDashing = false;
                     } else {
-                        this.x += this.dashDx * this.dashSpeed;
-                        this.y += this.dashDy * this.dashSpeed;
+                        this.x += this.dashDx * this.dashSpeed * moveDt;
+                        this.y += this.dashDy * this.dashSpeed * moveDt;
                         // Trail effect
                         if (Math.random() > 0.3) {
                             game.particles.push(new Particle(this.x, this.y, this.color, 0.5, 0.05, 0));
                         }
                     }
                 } else {
-                    this.x += dx * this.speed;
-                    this.y += dy * this.speed;
+                    this.x += dx * this.speed * moveDt;
+                    this.y += dy * this.speed * moveDt;
                 }
 
-                // Constrain to canvas bounds
-                this.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.x));
-                this.y = Math.max(this.radius, Math.min(canvas.height - this.radius, this.y));
+                // Constrain to canvas bounds - improved with small buffer to prevent sub-pixel sticking
+                const buffer = 1;
+                this.x = Math.max(this.radius + buffer, Math.min(canvas.width - this.radius - buffer, this.x));
+                this.y = Math.max(this.radius + buffer, Math.min(canvas.height - this.radius - buffer, this.y));
             }
 
             draw(ctx) {
@@ -406,11 +430,22 @@
                 this.fireRate = 450; 
                 this.lastShot = performance.now();
                 this.target = null;
-                this.lifeTime = 10000; // Lives for 10 seconds
+                // Clones now stay forever
             }
 
             update(dt, game) {
-                this.lifeTime -= dt;
+                // Separation: avoid overlapping with other allies
+                game.allies.forEach(other => {
+                    if (other === this) return;
+                    const d = distance(this.x, this.y, other.x, other.y);
+                    const minSep = this.radius + other.radius + 15;
+                    if (d < minSep) {
+                        const angle = Math.atan2(this.y - other.y, this.x - other.x);
+                        const force = (minSep - d) * 0.1;
+                        this.x += Math.cos(angle) * force;
+                        this.y += Math.sin(angle) * force;
+                    }
+                });
 
                 // Target acquisition
                 if (!this.target || this.target.health <= 0 || !game.enemies.includes(this.target)) {
@@ -656,11 +691,14 @@
 
                 this.ui = {
                     startScreen: document.getElementById('start-screen'),
+                    pauseScreen: document.getElementById('pause-screen'),
                     gameOverScreen: document.getElementById('game-over-screen'),
                     scoreDisplay: document.getElementById('score-display'),
+                    levelDisplay: document.getElementById('level-display'),
                     coinsDisplay: document.getElementById('coins-display'),
                     finalScore: document.getElementById('final-score'),
                     startBtn: document.getElementById('start-btn'),
+                    resumeBtn: document.getElementById('resume-btn'),
                     restartBtn: document.getElementById('restart-btn')
                 };
 
@@ -687,6 +725,11 @@
                 this.score = 0;
                 this.coins = 0;
                 this.state = 'menu';
+                this.paused = false;
+
+                this.level = 1;
+                this.killsInLevel = 0;
+                this.killsRequired = 20;
 
                 this.lastTime = 0;
                 this.enemySpawnTimer = 0;
@@ -702,7 +745,7 @@
                 // Reset Spells - All start locked except dash
                 this.spells = {
                     nova:   { key: '1', cost: 5, unlocked: false, cooldown: 8000, lastUse: -8000, active: false, name: 'NOVA' },
-                    shield: { key: '2', cost: 10, unlocked: false, cooldown: 15000, lastUse: -15000, duration: 5000, timeActive: 0, active: false, name: 'SHIELD' },
+                    shield: { key: '2', cost: 10, unlocked: false, cooldown: 15000, lastUse: -15000, hits: 0, maxHits: 10, active: false, name: 'SHIELD' },
                     clones: { key: '3', cost: 15, unlocked: false, cooldown: 18000, lastUse: -18000, active: false, name: 'CLONES' },
                     freeze: { key: '4', cost: 25, unlocked: false, cooldown: 22000, lastUse: -22000, duration: 6000, timeActive: 0, active: false, name: 'FREEZE' }
                 };
@@ -714,8 +757,16 @@
             bindEvents() {
                 window.addEventListener('keydown', e => {
                     this.keys[e.key] = true;
+                    if ((e.key === 'p' || e.key === 'P' || e.key === 'Escape') && this.state === 'playing') {
+                        this.togglePause();
+                    }
+                    // Prevent scrolling with arrows
+                    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                        e.preventDefault();
+                    }
                 });
                 window.addEventListener('keyup', e => this.keys[e.key] = false);
+                window.addEventListener('blur', () => this.keys = {});
 
                 this.canvas.addEventListener('mousemove', e => {
                     const rect = this.canvas.getBoundingClientRect();
@@ -723,10 +774,13 @@
                     this.mouse.y = e.clientY - rect.top;
                 });
 
-                this.canvas.addEventListener('mousedown', () => this.mouse.isDown = true);
+                this.canvas.addEventListener('mousedown', () => {
+                    if (this.state === 'playing' && !this.paused) this.mouse.isDown = true;
+                });
                 window.addEventListener('mouseup', () => this.mouse.isDown = false);
 
                 this.ui.startBtn.addEventListener('click', () => this.start());
+                this.ui.resumeBtn.addEventListener('click', () => this.togglePause());
                 this.ui.restartBtn.addEventListener('click', () => {
                     this.ui.restartBtn.style.transform = 'scale(0.95)';
                     setTimeout(() => this.ui.restartBtn.style.transform = 'none', 100);
@@ -734,12 +788,25 @@
                 });
             }
 
+            togglePause() {
+                this.paused = !this.paused;
+                if (this.paused) {
+                    this.ui.pauseScreen.classList.remove('hidden');
+                } else {
+                    this.ui.pauseScreen.classList.add('hidden');
+                    this.lastTime = performance.now(); // Prevent large dt jump
+                    requestAnimationFrame((time) => this.loop(time));
+                }
+            }
+
             start() {
                 this.reset();
                 this.state = 'playing';
                 this.ui.startScreen.classList.add('hidden');
+                this.ui.pauseScreen.classList.add('hidden');
                 this.ui.gameOverScreen.classList.add('hidden');
                 this.updateScore(0);
+                this.updateLevelUI();
                 this.updateCoinsUI();
 
                 // Initial 5 clones
@@ -763,6 +830,27 @@
             updateScore(points) {
                 this.score += points;
                 this.ui.scoreDisplay.textContent = `SCORE: ${this.score}`;
+            }
+
+            updateLevelUI() {
+                this.ui.levelDisplay.textContent = `LEVEL: ${this.level} (${this.killsInLevel}/${this.killsRequired} KILLS)`;
+            }
+
+            levelUp() {
+                this.level++;
+                this.killsInLevel = 0;
+                this.killsRequired = Math.floor(this.killsRequired * 1.5);
+                
+                // Difficulty increase
+                this.spawnInterval = Math.max(200, this.spawnInterval * 0.85);
+                this.enemySpeedMult += 0.15;
+                this.enemyHealthMult += 0.25;
+
+                this.triggerShake(500, 20);
+                this.createExplosion(this.player.x, this.player.y, '#f0f', 50, 3);
+                
+                // Flash message effect could be added here
+                this.updateLevelUI();
             }
 
             updateCoinsUI() {
@@ -796,7 +884,10 @@
                         el.textContent = `${spell.key}: BUY ${spell.name} (${spell.cost}C)`;
                     } else {
                         const isReady = now - spell.lastUse > spell.cooldown;
-                        if (isReady) {
+                        if (spell.active && key === 'shield') {
+                            el.className = 'indicator';
+                            el.textContent = `${spell.key}: SHIELD HP: ${spell.hits}`;
+                        } else if (isReady) {
                             el.className = 'indicator';
                             el.textContent = `${spell.key}: ${spell.name}`;
                         } else {
@@ -861,7 +952,7 @@
             }
 
             update(dt) {
-                if (this.state !== 'playing') return;
+                if (this.state !== 'playing' || this.paused) return;
 
                 const now = performance.now();
 
@@ -887,7 +978,7 @@
                                     this.triggerShake(300, 5);
                                 }
                                 else if (key === 'shield') {
-                                    spell.active = true; spell.timeActive = spell.duration;
+                                    spell.active = true; spell.hits = spell.maxHits;
                                     this.triggerShake(100, 3);
                                 }
                             }
@@ -899,10 +990,6 @@
                 if (this.spells.freeze.active) {
                     this.spells.freeze.timeActive -= dt;
                     if (this.spells.freeze.timeActive <= 0) this.spells.freeze.active = false;
-                }
-                if (this.spells.shield.active) {
-                    this.spells.shield.timeActive -= dt;
-                    if (this.spells.shield.timeActive <= 0) this.spells.shield.active = false;
                 }
 
                 this.updateUI();
@@ -924,10 +1011,6 @@
                 for (let i = this.allies.length - 1; i >= 0; i--) {
                     const ally = this.allies[i];
                     ally.update(dt, this);
-                    if (ally.lifeTime <= 0) {
-                        this.createExplosion(ally.x, ally.y, ally.color, 15, 1);
-                        this.allies.splice(i, 1);
-                    }
                 }
 
                 // Nova Visual Effects Expansion
@@ -973,15 +1056,26 @@
                     const dist = distance(enemy.x, enemy.y, this.player.x, this.player.y);
                     if (dist < enemy.radius + this.player.radius - 4) {
                         if (performance.now() - enemy.lastAttack > enemy.attackRate) {
-                            if (!this.player.isDashing && !this.spells.shield.active) {
-                                this.player.health -= enemy.damage;
-                                enemy.lastAttack = performance.now();
-                                this.createExplosion(this.player.x, this.player.y, '#f00', 15, 1.5);
-                                this.triggerShake(200, 10);
+                            if (!this.player.isDashing) {
+                                if (this.spells.shield.active) {
+                                    this.spells.shield.hits--;
+                                    enemy.lastAttack = performance.now();
+                                    this.createExplosion(this.player.x, this.player.y, '#0ff', 10, 1);
+                                    this.triggerShake(100, 5);
+                                    if (this.spells.shield.hits <= 0) {
+                                        this.spells.shield.active = false;
+                                        this.createExplosion(this.player.x, this.player.y, '#0ff', 30, 2);
+                                    }
+                                } else {
+                                    this.player.health -= enemy.damage;
+                                    enemy.lastAttack = performance.now();
+                                    this.createExplosion(this.player.x, this.player.y, '#f00', 15, 1.5);
+                                    this.triggerShake(200, 10);
 
-                                if (this.player.health <= 0) {
-                                    this.createExplosion(this.player.x, this.player.y, this.player.color, 60, 2);
-                                    this.gameOver();
+                                    if (this.player.health <= 0) {
+                                        this.createExplosion(this.player.x, this.player.y, this.player.color, 60, 2);
+                                        this.gameOver();
+                                    }
                                 }
                             }
                         }
@@ -1003,6 +1097,14 @@
                         this.createExplosion(enemy.x, enemy.y, enemy.color, 25, 1.2);
                         this.updateScore(enemy.scoreValue);
                         
+                        // Level progression
+                        this.killsInLevel++;
+                        if (this.killsInLevel >= this.killsRequired) {
+                            this.levelUp();
+                        } else {
+                            this.updateLevelUI();
+                        }
+
                         // Automatic coins
                         let coinAmount = enemy.type === 'tank' ? 6 : (enemy.type === 'fast' ? 2 : 1);
                         this.coins += coinAmount;
@@ -1012,19 +1114,11 @@
                     }
                 }
 
-                // Spawning & Scaling
+                // Spawning
                 this.enemySpawnTimer += dt;
                 if (this.enemySpawnTimer > this.spawnInterval) {
                     this.spawnEnemy();
                     this.enemySpawnTimer = 0;
-                }
-
-                this.difficultyTimer += dt;
-                if (this.difficultyTimer > 8000) {
-                    this.spawnInterval = Math.max(300, this.spawnInterval * 0.9);
-                    this.enemySpeedMult += 0.05;
-                    this.enemyHealthMult += 0.1;
-                    this.difficultyTimer = 0;
                 }
             }
 
@@ -1097,7 +1191,7 @@
             }
 
             loop(currentTime) {
-                if (this.state !== 'playing') {
+                if (this.state !== 'playing' || this.paused) {
                     this.draw();
                     return;
                 }
