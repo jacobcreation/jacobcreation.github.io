@@ -149,7 +149,7 @@ function resetGame() {
 
 async function fetchAllQuestions() {
     showScreen('loading-screen');
-    setLoadingState('Generating quiz batch…', false);
+    setLoadingState('Generating quiz batch...', false);
 
     try {
         const res = await fetch(WORKER_URL, {
@@ -178,19 +178,57 @@ async function fetchAllQuestions() {
         if (questionsBuffer.length === 0) throw new Error('No questions received');
 
         // Start the first question
-        loadNextQuestionFromBuffer();
+        await loadNextQuestionFromBuffer();
     } catch (err) {
         alert('Error loading questions: ' + err.message + '\n\nReturning to home.');
         showScreen('home-screen');
     }
 }
 
-function loadNextQuestionFromBuffer() {
-    const nextQ = questionsBuffer[questionNumber]; // questionNumber starts at 0
-    if (nextQ) {
+async function loadNextQuestionFromBuffer() {
+    // If we have the question in buffer, use it
+    if (questionsBuffer && questionsBuffer[questionNumber]) {
+        const nextQ = questionsBuffer[questionNumber];
         history.push(nextQ.question);
         if (history.length > 20) history.shift();
         renderQuestion(nextQ);
+    } 
+    // If buffer exhausted but we still need more questions to reach TOTAL_QUESTIONS
+    else if (questionNumber < TOTAL_QUESTIONS) {
+        showScreen('loading-screen');
+        setLoadingState('Fetching next question...', false);
+        
+        try {
+            const res = await fetch(WORKER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    difficulty: Math.round(difficulty),
+                    history,
+                    topics: selectedSubjects.length ? selectedSubjects : SUBJECTS.map(s => s.name),
+                    count: 1
+                })
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) throw new Error(data.error || 'Server error');
+            
+            let newQ;
+            if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
+                newQ = data.questions[0];
+            } else if (data.question) {
+                newQ = data;
+            } else {
+                throw new Error('Invalid data from AI');
+            }
+            
+            questionsBuffer[questionNumber] = newQ;
+            history.push(newQ.question);
+            if (history.length > 20) history.shift();
+            renderQuestion(newQ);
+        } catch (err) {
+            alert('Error loading next question: ' + err.message + '\n\nShowing results so far.');
+            showResult();
+        }
     } else {
         showResult();
     }
@@ -337,12 +375,12 @@ function showFeedback(isCorrect, correctAnswer, explanation) {
 // ============================================================
 //  NEXT QUESTION / END GAME
 // ============================================================
-function nextQuestion() {
+async function nextQuestion() {
     if (questionNumber >= TOTAL_QUESTIONS) {
         showResult();
     } else {
-        // No loading screen needed! Just load from buffer
-        loadNextQuestionFromBuffer();
+        // No loading screen needed if in buffer! 
+        await loadNextQuestionFromBuffer();
     }
 }
 
