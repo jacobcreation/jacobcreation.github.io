@@ -7,6 +7,7 @@
     <meta name="description" content="Fight through a fantasy typing challenge, cast spells, track accuracy and WPM, and survive waves of words in Typing Quest." />
     <title>Typing Quest: Spellcaster - JacobCreation</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Orbitron:wght@600;800&family=Bangers&display=swap" rel="stylesheet">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
         :root {
             --bg-dark: #050a18;
@@ -535,7 +536,8 @@
             <input type="text" id="main-input" placeholder="Summon the words..." autocomplete="off" />
         </div>
 
-        <div id="controls">
+        <div id="controls" style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+            <div class="cf-turnstile" data-sitekey="0x4AAAAAADKK6nZsvohFh7HB" data-theme="dark"></div>
             <button id="start-btn" class="primary-btn" onclick="startGame()">Begin Quest</button>
         </div>
     </main>
@@ -657,6 +659,10 @@
         };
 
         async function startGame() {
+            if (typeof turnstile !== 'undefined' && !turnstile.getResponse()) {
+                alert("Please complete the Turnstile challenge! 🛡️");
+                return;
+            }
             // Reset State
             state = {
                 wordsList: [],

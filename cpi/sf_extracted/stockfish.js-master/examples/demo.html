@@ -10,6 +10,7 @@
     <script src="js/bootstrap.min.js"></script>
     <script src="js/chess.min.js"></script>
     <script src="js/chessboard-0.3.0.min.js"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <title>Stockfish.js</title>
   </head>
   <body>
@@ -62,6 +63,12 @@
           <div class="form-group">
             <label for="color" class="control-label col-xs-4 col-sm-6 col-md-4"></label>
             <div class="col-xs-4 col-sm-6 col-md-4">
+              <div class="cf-turnstile" data-sitekey="0x4AAAAAADKK6nZsvohFh7HB" data-theme="light"></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="color" class="control-label col-xs-4 col-sm-6 col-md-4"></label>
+            <div class="col-xs-4 col-sm-6 col-md-4">
               <button type="button" class="btn btn-primary" onclick="newGame()">New Game</button>
             </div>
           </div>
@@ -91,6 +98,10 @@
         var game = engineGame();
     
         newGame = function newGame() {
+            if (typeof turnstile !== 'undefined' && !turnstile.getResponse()) {
+                alert("Please complete the Turnstile challenge! 🛡️");
+                return;
+            }
             var baseTime = parseFloat($('#timeBase').val()) * 60;
             var inc = parseFloat($('#timeInc').val());
             var skill = parseInt($('#skillLevel').val());

@@ -18,6 +18,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
 
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
   <style>
     :root {
       --bg1: #0b1020;
@@ -473,8 +475,9 @@
         <!-- THIS IS THE IMPORTANT PART -->
         <!-- NO FORM. ONLY DIV. -->
         <!-- Fixed: Changed div to form and added ID expected by JS -->
-        <form class="chat-input" id="chatForm">
+        <form class="chat-input" id="chatForm" style="flex-wrap: wrap;">
           <input id="chatText" type="text" placeholder="Type your message..." autocomplete="off" />
+          <div class="cf-turnstile" data-sitekey="0x4AAAAAADKK6nZsvohFh7HB" data-theme="dark" style="margin-bottom: 10px; width: 100%;"></div>
           <button class="btn-send" type="submit" id="sendBtn">Send</button>
         </form>
 
@@ -563,6 +566,12 @@
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       let msg = chatText.value.trim();
+
+      const turnstileResponse = turnstile.getResponse();
+      if (!turnstileResponse) {
+        addBubble("Please complete the Turnstile challenge! 🛡️", "bot");
+        return;
+      }
       
       if (!msg && !currentImage) return;
       if (!msg && currentImage) {
@@ -590,7 +599,8 @@
             action: "chat",
             site: SITE_NAME,
             sessionId: getSessionId(),
-            message: msg
+            message: msg,
+            cf_turnstile_response: turnstileResponse
         };
 
         if (currentImage) {
@@ -612,11 +622,14 @@
         typingDiv.remove();
         addBubble(data.reply || "I'm not sure what to say.");
 
+        // Reset turnstile for next message
+        turnstile.reset();
+
       } catch (err) {
         console.error(err);
         typingDiv.remove();
-        addBubble("Error connecting to brain. 🧠�", "bot");
         addBubble("Error connecting to brain. 🧠", "bot");
+        if (typeof turnstile !== 'undefined') turnstile.reset();
       }
     });
 

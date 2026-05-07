@@ -1394,6 +1394,12 @@ window.addEventListener("keyup", (event) => {
 
 navForm.addEventListener("submit", (event) => {
   event.preventDefault();
+
+  if (typeof turnstile !== 'undefined' && !turnstile.getResponse()) {
+    statusPill.textContent = "Please complete the Turnstile challenge! 🛡️";
+    return;
+  }
+
   const query = navSearchEl.value.trim();
   if (!query) {
     clearNavigation();

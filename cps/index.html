@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
 
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
   <style>
     :root {
       --bg1: #0b1020;
@@ -293,6 +295,7 @@
     <div class="card">
       <h2>Tournament Setup</h2>
       <input id="tournamentName" placeholder="Tournament Name">
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAADKK6nZsvohFh7HB" data-theme="dark" style="margin-top: 15px;"></div>
       <div class="controls">
         <button onclick="start('swiss')">Swiss</button>
         <button class="secondary" onclick="start('rr')">Round Robin</button>
@@ -308,6 +311,7 @@
       <div class="controls">
         <input id="pName" placeholder="Player name">
         <input id="pRating" type="number" placeholder="Rating">
+        <div class="cf-turnstile" id="turnstile-add-player" data-sitekey="0x4AAAAAADKK6nZsvohFh7HB" data-theme="dark"></div>
         <button onclick="addPlayer()">Add</button>
         <input type="file" id="fileInput" accept=".csv,.txt">
         <button class="secondary" onclick="loadFile()">Upload</button>
@@ -414,16 +418,25 @@
 
     /* Start */
     function start(m) {
+      if (typeof turnstile !== 'undefined' && !turnstile.getResponse()) {
+        alert("Please complete the Turnstile challenge! 🛡️");
+        return;
+      }
       MODE = m;
       TOURNAMENT = tournamentName.value || "Tournament";
       title.textContent = `${TOURNAMENT} (${m === "swiss" ? "Swiss" : "Round Robin"})`;
       modeScreen.classList.add("hidden");
       tournamentScreen.classList.remove("hidden");
       saveData();
+      if (typeof turnstile !== 'undefined') turnstile.reset();
     }
 
     /* Players */
     function addPlayer() {
+      if (typeof turnstile !== 'undefined' && !turnstile.getResponse()) {
+        alert("Please complete the Turnstile challenge! 🛡️");
+        return;
+      }
       if (!pName.value.trim()) return;
       if (players.some(p => p.name.toLowerCase() === pName.value.toLowerCase())) return;
       players.push({
