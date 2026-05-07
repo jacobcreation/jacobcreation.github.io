@@ -1,1 +1,1 @@
-var IS_ASYNCIFY=1;
+var IS_ASYNCIFY = 1;

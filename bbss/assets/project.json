@@ -1,1 +1,657 @@
-{"targets":[{"isStage":true,"name":"Stage","variables":{"=;IJt-o6A{Q89Q?5Y,}l":["Player 1 name","gfj"],"bL4tHQdFl+f?ITDq[zPB":["Player 2 name","dty"],"@vZ=YZ~nq_$s*0@)z[[D":["ps1",-1],"k|5,v[vavUyw,f~@D7mI":["ps2",0]},"lists":{},"broadcasts":{},"blocks":{},"comments":{},"currentCostume":1,"costumes":[{"name":"Copilot_20260112_2","bitmapResolution":2,"dataFormat":"png","assetId":"57a66541bcfe6918c371de890ed4f041","md5ext":"57a66541bcfe6918c371de890ed4f041.png","rotationCenterX":0,"rotationCenterY":0},{"name":"Copilot_20260112_200103","bitmapResolution":1,"dataFormat":"svg","assetId":"3bc9e490d3c8d4ff25478c528ae3e280","md5ext":"3bc9e490d3c8d4ff25478c528ae3e280.svg","rotationCenterX":240.0000000000001,"rotationCenterY":180}],"sounds":[{"name":"pop","assetId":"83a9787d4cb6f3b7632b4ddfebf74367","dataFormat":"wav","format":"","rate":48000,"sampleCount":1124,"md5ext":"83a9787d4cb6f3b7632b4ddfebf74367.wav"}],"volume":100,"layerOrder":0,"tempo":60,"videoTransparency":50,"videoState":"on","textToSpeechLanguage":null},{"isStage":false,"name":"manager","variables":{},"lists":{},"broadcasts":{},"blocks":{"q":{"opcode":"event_whenflagclicked","next":"i","parent":null,"inputs":{},"fields":{},"topLevel":true},"j":{"opcode":"data_setvariableto","next":"k","parent":"i","inputs":{"VALUE":[1,[10,""]]},"fields":{"VARIABLE":["Player 1 name","=;IJt-o6A{Q89Q?5Y,}l"]}},"k":{"opcode":"data_setvariableto","next":"l","parent":"j","inputs":{"VALUE":[1,[10,""]]},"fields":{"VARIABLE":["Player 2 name","bL4tHQdFl+f?ITDq[zPB"]}},"l":{"opcode":"data_setvariableto","next":"m","parent":"k","inputs":{"VALUE":[1,[10,"0"]]},"fields":{"VARIABLE":["ps1","@vZ=YZ~nq_$s*0@)z[[D"]}},"m":{"opcode":"data_setvariableto","next":"n","parent":"l","inputs":{"VALUE":[1,[10,"0"]]},"fields":{"VARIABLE":["ps2","k|5,v[vavUyw,f~@D7mI"]}},"n":{"opcode":"sensing_askandwait","next":"h","parent":"m","inputs":{"QUESTION":[1,[10,"What's the name of player 1?"]]},"fields":{}},"h":{"opcode":"data_setvariableto","next":"o","parent":"n","inputs":{"VALUE":[3,"r",[10,"0"]]},"fields":{"VARIABLE":["Player 1 name","=;IJt-o6A{Q89Q?5Y,}l"]}},"r":{"opcode":"sensing_answer","next":null,"parent":"h","inputs":{},"fields":{}},"o":{"opcode":"sensing_askandwait","next":"p","parent":"h","inputs":{"QUESTION":[1,[10,"What's the name of player 2?"]]},"fields":{}},"p":{"opcode":"data_setvariableto","next":null,"parent":"o","inputs":{"VALUE":[3,"s",[10,"0"]]},"fields":{"VARIABLE":["Player 2 name","bL4tHQdFl+f?ITDq[zPB"]}},"s":{"opcode":"sensing_answer","next":null,"parent":"p","inputs":{},"fields":{}},"i":{"opcode":"sensing_setdragmode","next":"j","parent":"q","inputs":{},"fields":{"DRAG_MODE":["not draggable",null]}}},"comments":{},"currentCostume":0,"costumes":[{"name":"costume1","bitmapResolution":1,"dataFormat":"svg","assetId":"e4eb6b998de8fc9acebc1084e220f3ab","md5ext":"e4eb6b998de8fc9acebc1084e220f3ab.svg","rotationCenterX":15.5,"rotationCenterY":22.78690232321165}],"sounds":[{"name":"pop","assetId":"83a9787d4cb6f3b7632b4ddfebf74367","dataFormat":"wav","format":"","rate":48000,"sampleCount":1124,"md5ext":"83a9787d4cb6f3b7632b4ddfebf74367.wav"}],"volume":100,"layerOrder":1,"visible":true,"x":-5,"y":-137,"size":100,"direction":90,"draggable":false,"rotationStyle":"all around"},{"isStage":false,"name":"up1","variables":{},"lists":{},"broadcasts":{},"blocks":{"d":{"opcode":"event_whenthisspriteclicked","next":"a","parent":null,"inputs":{},"fields":{},"topLevel":true},"a":{"opcode":"sensing_askandwait","next":"b","parent":"d","inputs":{"QUESTION":[1,[10,"How much points do you want to add to player 1?"]]},"fields":{}},"e":{"opcode":"event_whenflagclicked","next":"c","parent":null,"inputs":{},"fields":{},"topLevel":true},"c":{"opcode":"control_forever","next":null,"parent":"e","inputs":{"SUBSTACK":[2,"t"]},"fields":{}},"t":{"opcode":"motion_gotoxy","next":null,"parent":"c","inputs":{"X":[1,[4,"-163"]],"Y":[1,[4,"-64"]]},"fields":{}},"b":{"opcode":"data_changevariableby","next":null,"parent":"a","inputs":{"VALUE":[3,"f",[4,"1"]]},"fields":{"VARIABLE":["ps1","@vZ=YZ~nq_$s*0@)z[[D"]}},"f":{"opcode":"sensing_answer","next":null,"parent":"b","inputs":{},"fields":{}}},"comments":{},"currentCostume":0,"costumes":[{"name":"costume1","bitmapResolution":1,"dataFormat":"svg","assetId":"917930127651454f290f423ca39ab675","md5ext":"917930127651454f290f423ca39ab675.svg","rotationCenterX":11.018749999999983,"rotationCenterY":13.979166984558105}],"sounds":[{"name":"pop","assetId":"83a9787d4cb6f3b7632b4ddfebf74367","dataFormat":"wav","format":"","rate":48000,"sampleCount":1124,"md5ext":"83a9787d4cb6f3b7632b4ddfebf74367.wav"}],"volume":100,"layerOrder":2,"visible":true,"x":-163,"y":-64,"size":100,"direction":90,"draggable":false,"rotationStyle":"all around"},{"isStage":false,"name":"up2","variables":{},"lists":{},"broadcasts":{},"blocks":{"d":{"opcode":"event_whenthisspriteclicked","next":"a","parent":null,"inputs":{},"fields":{},"topLevel":true},"a":{"opcode":"sensing_askandwait","next":"b","parent":"d","inputs":{"QUESTION":[1,[10,"How much points do you want to add to player 2?"]]},"fields":{}},"b":{"opcode":"data_changevariableby","next":null,"parent":"a","inputs":{"VALUE":[3,"f",[4,"1"]]},"fields":{"VARIABLE":["ps2","k|5,v[vavUyw,f~@D7mI"]}},"f":{"opcode":"sensing_answer","next":null,"parent":"b","inputs":{},"fields":{}},"e":{"opcode":"event_whenflagclicked","next":"c","parent":null,"inputs":{},"fields":{},"topLevel":true},"c":{"opcode":"control_forever","next":null,"parent":"e","inputs":{"SUBSTACK":[2,"u"]},"fields":{}},"u":{"opcode":"motion_gotoxy","next":null,"parent":"c","inputs":{"X":[1,[4,"116"]],"Y":[1,[4,"-64"]]},"fields":{}}},"comments":{},"currentCostume":0,"costumes":[{"name":"costume1","bitmapResolution":1,"dataFormat":"svg","assetId":"917930127651454f290f423ca39ab675","md5ext":"917930127651454f290f423ca39ab675.svg","rotationCenterX":11.018749999999983,"rotationCenterY":13.979166984558105}],"sounds":[{"name":"pop","assetId":"83a9787d4cb6f3b7632b4ddfebf74367","dataFormat":"wav","format":"","rate":48000,"sampleCount":1124,"md5ext":"83a9787d4cb6f3b7632b4ddfebf74367.wav"}],"volume":100,"layerOrder":3,"visible":true,"x":116,"y":-64,"size":100,"direction":90,"draggable":false,"rotationStyle":"all around"},{"isStage":false,"name":"down1","variables":{},"lists":{},"broadcasts":{},"blocks":{"e":{"opcode":"event_whenflagclicked","next":"c","parent":null,"inputs":{},"fields":{},"topLevel":true},"c":{"opcode":"control_forever","next":null,"parent":"e","inputs":{"SUBSTACK":[2,"v"]},"fields":{}},"v":{"opcode":"motion_gotoxy","next":null,"parent":"c","inputs":{"X":[1,[4,"-163"]],"Y":[1,[4,"-87"]]},"fields":{}},"d":{"opcode":"event_whenthisspriteclicked","next":"a","parent":null,"inputs":{},"fields":{},"topLevel":true},"a":{"opcode":"sensing_askandwait","next":"b","parent":"d","inputs":{"QUESTION":[1,[10,"How much points do you want to take away from player 1?"]]},"fields":{}},"b":{"opcode":"data_changevariableby","next":null,"parent":"a","inputs":{"VALUE":[3,"g",[4,"1"]]},"fields":{"VARIABLE":["ps1","@vZ=YZ~nq_$s*0@)z[[D"]}},"f":{"opcode":"sensing_answer","next":null,"parent":"g","inputs":{},"fields":{}},"g":{"opcode":"operator_subtract","next":null,"parent":"b","inputs":{"NUM1":[1,[4,""]],"NUM2":[3,"f",[4,""]]},"fields":{}}},"comments":{},"currentCostume":0,"costumes":[{"name":"costume1","bitmapResolution":1,"dataFormat":"svg","assetId":"326c47838ef6cd4d5fad67002e9efe60","md5ext":"326c47838ef6cd4d5fad67002e9efe60.svg","rotationCenterX":15.75,"rotationCenterY":14.479166984558105}],"sounds":[{"name":"pop","assetId":"83a9787d4cb6f3b7632b4ddfebf74367","dataFormat":"wav","format":"","rate":48000,"sampleCount":1124,"md5ext":"83a9787d4cb6f3b7632b4ddfebf74367.wav"}],"volume":100,"layerOrder":4,"visible":true,"x":-163,"y":-87,"size":100,"direction":90,"draggable":false,"rotationStyle":"all around"},{"isStage":false,"name":"down2","variables":{},"lists":{},"broadcasts":{},"blocks":{"e":{"opcode":"event_whenflagclicked","next":"c","parent":null,"inputs":{},"fields":{},"topLevel":true},"c":{"opcode":"control_forever","next":null,"parent":"e","inputs":{"SUBSTACK":[2,"w"]},"fields":{}},"w":{"opcode":"motion_gotoxy","next":null,"parent":"c","inputs":{"X":[1,[4,"116"]],"Y":[1,[4,"-87"]]},"fields":{}},"d":{"opcode":"event_whenthisspriteclicked","next":"a","parent":null,"inputs":{},"fields":{},"topLevel":true},"a":{"opcode":"sensing_askandwait","next":"b","parent":"d","inputs":{"QUESTION":[1,[10,"How much points do you want to take away from player 2?"]]},"fields":{}},"b":{"opcode":"data_changevariableby","next":null,"parent":"a","inputs":{"VALUE":[3,"g",[4,"1"]]},"fields":{"VARIABLE":["ps1","@vZ=YZ~nq_$s*0@)z[[D"]}},"g":{"opcode":"operator_subtract","next":null,"parent":"b","inputs":{"NUM1":[1,[4,""]],"NUM2":[3,"f",[4,""]]},"fields":{}},"f":{"opcode":"sensing_answer","next":null,"parent":"g","inputs":{},"fields":{}}},"comments":{},"currentCostume":0,"costumes":[{"name":"costume1","bitmapResolution":1,"dataFormat":"svg","assetId":"326c47838ef6cd4d5fad67002e9efe60","md5ext":"326c47838ef6cd4d5fad67002e9efe60.svg","rotationCenterX":15.75,"rotationCenterY":14.479166984558105}],"sounds":[{"name":"pop","assetId":"83a9787d4cb6f3b7632b4ddfebf74367","dataFormat":"wav","format":"","rate":48000,"sampleCount":1124,"md5ext":"83a9787d4cb6f3b7632b4ddfebf74367.wav"}],"volume":100,"layerOrder":5,"visible":true,"x":116,"y":-87,"size":100,"direction":90,"draggable":false,"rotationStyle":"all around"}],"monitors":[{"id":"=;IJt-o6A{Q89Q?5Y,}l","mode":"default","opcode":"data_variable","params":{"VARIABLE":"Player 1 name"},"spriteName":null,"value":0,"width":0,"height":0,"x":10,"y":103,"visible":true,"sliderMin":0,"sliderMax":100,"isDiscrete":true},{"id":"bL4tHQdFl+f?ITDq[zPB","mode":"default","opcode":"data_variable","params":{"VARIABLE":"Player 2 name"},"spriteName":null,"value":0,"width":0,"height":0,"x":288,"y":105,"visible":true,"sliderMin":0,"sliderMax":100,"isDiscrete":true},{"id":"@vZ=YZ~nq_$s*0@)z[[D","mode":"large","opcode":"data_variable","params":{"VARIABLE":"ps1"},"spriteName":null,"value":0,"width":0,"height":0,"x":52,"y":178,"visible":true,"sliderMin":0,"sliderMax":100,"isDiscrete":true},{"id":"k|5,v[vavUyw,f~@D7mI","mode":"large","opcode":"data_variable","params":{"VARIABLE":"ps2"},"spriteName":null,"value":0,"width":0,"height":0,"x":331,"y":180,"visible":true,"sliderMin":0,"sliderMax":100,"isDiscrete":true}],"extensions":[],"meta":{"semver":"3.0.0"}}
+{
+	"targets": [
+		{
+			"isStage": true,
+			"name": "Stage",
+			"variables": {
+				"=;IJt-o6A{Q89Q?5Y,}l": ["Player 1 name", "gfj"],
+				"bL4tHQdFl+f?ITDq[zPB": ["Player 2 name", "dty"],
+				"@vZ=YZ~nq_$s*0@)z[[D": ["ps1", -1],
+				"k|5,v[vavUyw,f~@D7mI": ["ps2", 0]
+			},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {},
+			"comments": {},
+			"currentCostume": 1,
+			"costumes": [
+				{
+					"name": "Copilot_20260112_2",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "57a66541bcfe6918c371de890ed4f041",
+					"md5ext": "57a66541bcfe6918c371de890ed4f041.png",
+					"rotationCenterX": 0,
+					"rotationCenterY": 0
+				},
+				{
+					"name": "Copilot_20260112_200103",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "3bc9e490d3c8d4ff25478c528ae3e280",
+					"md5ext": "3bc9e490d3c8d4ff25478c528ae3e280.svg",
+					"rotationCenterX": 240.0000000000001,
+					"rotationCenterY": 180
+				}
+			],
+			"sounds": [
+				{
+					"name": "pop",
+					"assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 1124,
+					"md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 0,
+			"tempo": 60,
+			"videoTransparency": 50,
+			"videoState": "on",
+			"textToSpeechLanguage": null
+		},
+		{
+			"isStage": false,
+			"name": "manager",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"q": {
+					"opcode": "event_whenflagclicked",
+					"next": "i",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"j": {
+					"opcode": "data_setvariableto",
+					"next": "k",
+					"parent": "i",
+					"inputs": { "VALUE": [1, [10, ""]] },
+					"fields": { "VARIABLE": ["Player 1 name", "=;IJt-o6A{Q89Q?5Y,}l"] }
+				},
+				"k": {
+					"opcode": "data_setvariableto",
+					"next": "l",
+					"parent": "j",
+					"inputs": { "VALUE": [1, [10, ""]] },
+					"fields": { "VARIABLE": ["Player 2 name", "bL4tHQdFl+f?ITDq[zPB"] }
+				},
+				"l": {
+					"opcode": "data_setvariableto",
+					"next": "m",
+					"parent": "k",
+					"inputs": { "VALUE": [1, [10, "0"]] },
+					"fields": { "VARIABLE": ["ps1", "@vZ=YZ~nq_$s*0@)z[[D"] }
+				},
+				"m": {
+					"opcode": "data_setvariableto",
+					"next": "n",
+					"parent": "l",
+					"inputs": { "VALUE": [1, [10, "0"]] },
+					"fields": { "VARIABLE": ["ps2", "k|5,v[vavUyw,f~@D7mI"] }
+				},
+				"n": {
+					"opcode": "sensing_askandwait",
+					"next": "h",
+					"parent": "m",
+					"inputs": { "QUESTION": [1, [10, "What's the name of player 1?"]] },
+					"fields": {}
+				},
+				"h": {
+					"opcode": "data_setvariableto",
+					"next": "o",
+					"parent": "n",
+					"inputs": { "VALUE": [3, "r", [10, "0"]] },
+					"fields": { "VARIABLE": ["Player 1 name", "=;IJt-o6A{Q89Q?5Y,}l"] }
+				},
+				"r": {
+					"opcode": "sensing_answer",
+					"next": null,
+					"parent": "h",
+					"inputs": {},
+					"fields": {}
+				},
+				"o": {
+					"opcode": "sensing_askandwait",
+					"next": "p",
+					"parent": "h",
+					"inputs": { "QUESTION": [1, [10, "What's the name of player 2?"]] },
+					"fields": {}
+				},
+				"p": {
+					"opcode": "data_setvariableto",
+					"next": null,
+					"parent": "o",
+					"inputs": { "VALUE": [3, "s", [10, "0"]] },
+					"fields": { "VARIABLE": ["Player 2 name", "bL4tHQdFl+f?ITDq[zPB"] }
+				},
+				"s": {
+					"opcode": "sensing_answer",
+					"next": null,
+					"parent": "p",
+					"inputs": {},
+					"fields": {}
+				},
+				"i": {
+					"opcode": "sensing_setdragmode",
+					"next": "j",
+					"parent": "q",
+					"inputs": {},
+					"fields": { "DRAG_MODE": ["not draggable", null] }
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "costume1",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "e4eb6b998de8fc9acebc1084e220f3ab",
+					"md5ext": "e4eb6b998de8fc9acebc1084e220f3ab.svg",
+					"rotationCenterX": 15.5,
+					"rotationCenterY": 22.78690232321165
+				}
+			],
+			"sounds": [
+				{
+					"name": "pop",
+					"assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 1124,
+					"md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 1,
+			"visible": true,
+			"x": -5,
+			"y": -137,
+			"size": 100,
+			"direction": 90,
+			"draggable": false,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "up1",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"d": {
+					"opcode": "event_whenthisspriteclicked",
+					"next": "a",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"a": {
+					"opcode": "sensing_askandwait",
+					"next": "b",
+					"parent": "d",
+					"inputs": {
+						"QUESTION": [
+							1,
+							[10, "How much points do you want to add to player 1?"]
+						]
+					},
+					"fields": {}
+				},
+				"e": {
+					"opcode": "event_whenflagclicked",
+					"next": "c",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"c": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "e",
+					"inputs": { "SUBSTACK": [2, "t"] },
+					"fields": {}
+				},
+				"t": {
+					"opcode": "motion_gotoxy",
+					"next": null,
+					"parent": "c",
+					"inputs": { "X": [1, [4, "-163"]], "Y": [1, [4, "-64"]] },
+					"fields": {}
+				},
+				"b": {
+					"opcode": "data_changevariableby",
+					"next": null,
+					"parent": "a",
+					"inputs": { "VALUE": [3, "f", [4, "1"]] },
+					"fields": { "VARIABLE": ["ps1", "@vZ=YZ~nq_$s*0@)z[[D"] }
+				},
+				"f": {
+					"opcode": "sensing_answer",
+					"next": null,
+					"parent": "b",
+					"inputs": {},
+					"fields": {}
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "costume1",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "917930127651454f290f423ca39ab675",
+					"md5ext": "917930127651454f290f423ca39ab675.svg",
+					"rotationCenterX": 11.018749999999983,
+					"rotationCenterY": 13.979166984558105
+				}
+			],
+			"sounds": [
+				{
+					"name": "pop",
+					"assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 1124,
+					"md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 2,
+			"visible": true,
+			"x": -163,
+			"y": -64,
+			"size": 100,
+			"direction": 90,
+			"draggable": false,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "up2",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"d": {
+					"opcode": "event_whenthisspriteclicked",
+					"next": "a",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"a": {
+					"opcode": "sensing_askandwait",
+					"next": "b",
+					"parent": "d",
+					"inputs": {
+						"QUESTION": [
+							1,
+							[10, "How much points do you want to add to player 2?"]
+						]
+					},
+					"fields": {}
+				},
+				"b": {
+					"opcode": "data_changevariableby",
+					"next": null,
+					"parent": "a",
+					"inputs": { "VALUE": [3, "f", [4, "1"]] },
+					"fields": { "VARIABLE": ["ps2", "k|5,v[vavUyw,f~@D7mI"] }
+				},
+				"f": {
+					"opcode": "sensing_answer",
+					"next": null,
+					"parent": "b",
+					"inputs": {},
+					"fields": {}
+				},
+				"e": {
+					"opcode": "event_whenflagclicked",
+					"next": "c",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"c": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "e",
+					"inputs": { "SUBSTACK": [2, "u"] },
+					"fields": {}
+				},
+				"u": {
+					"opcode": "motion_gotoxy",
+					"next": null,
+					"parent": "c",
+					"inputs": { "X": [1, [4, "116"]], "Y": [1, [4, "-64"]] },
+					"fields": {}
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "costume1",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "917930127651454f290f423ca39ab675",
+					"md5ext": "917930127651454f290f423ca39ab675.svg",
+					"rotationCenterX": 11.018749999999983,
+					"rotationCenterY": 13.979166984558105
+				}
+			],
+			"sounds": [
+				{
+					"name": "pop",
+					"assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 1124,
+					"md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 3,
+			"visible": true,
+			"x": 116,
+			"y": -64,
+			"size": 100,
+			"direction": 90,
+			"draggable": false,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "down1",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"e": {
+					"opcode": "event_whenflagclicked",
+					"next": "c",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"c": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "e",
+					"inputs": { "SUBSTACK": [2, "v"] },
+					"fields": {}
+				},
+				"v": {
+					"opcode": "motion_gotoxy",
+					"next": null,
+					"parent": "c",
+					"inputs": { "X": [1, [4, "-163"]], "Y": [1, [4, "-87"]] },
+					"fields": {}
+				},
+				"d": {
+					"opcode": "event_whenthisspriteclicked",
+					"next": "a",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"a": {
+					"opcode": "sensing_askandwait",
+					"next": "b",
+					"parent": "d",
+					"inputs": {
+						"QUESTION": [
+							1,
+							[10, "How much points do you want to take away from player 1?"]
+						]
+					},
+					"fields": {}
+				},
+				"b": {
+					"opcode": "data_changevariableby",
+					"next": null,
+					"parent": "a",
+					"inputs": { "VALUE": [3, "g", [4, "1"]] },
+					"fields": { "VARIABLE": ["ps1", "@vZ=YZ~nq_$s*0@)z[[D"] }
+				},
+				"f": {
+					"opcode": "sensing_answer",
+					"next": null,
+					"parent": "g",
+					"inputs": {},
+					"fields": {}
+				},
+				"g": {
+					"opcode": "operator_subtract",
+					"next": null,
+					"parent": "b",
+					"inputs": { "NUM1": [1, [4, ""]], "NUM2": [3, "f", [4, ""]] },
+					"fields": {}
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "costume1",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "326c47838ef6cd4d5fad67002e9efe60",
+					"md5ext": "326c47838ef6cd4d5fad67002e9efe60.svg",
+					"rotationCenterX": 15.75,
+					"rotationCenterY": 14.479166984558105
+				}
+			],
+			"sounds": [
+				{
+					"name": "pop",
+					"assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 1124,
+					"md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 4,
+			"visible": true,
+			"x": -163,
+			"y": -87,
+			"size": 100,
+			"direction": 90,
+			"draggable": false,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "down2",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"e": {
+					"opcode": "event_whenflagclicked",
+					"next": "c",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"c": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "e",
+					"inputs": { "SUBSTACK": [2, "w"] },
+					"fields": {}
+				},
+				"w": {
+					"opcode": "motion_gotoxy",
+					"next": null,
+					"parent": "c",
+					"inputs": { "X": [1, [4, "116"]], "Y": [1, [4, "-87"]] },
+					"fields": {}
+				},
+				"d": {
+					"opcode": "event_whenthisspriteclicked",
+					"next": "a",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"a": {
+					"opcode": "sensing_askandwait",
+					"next": "b",
+					"parent": "d",
+					"inputs": {
+						"QUESTION": [
+							1,
+							[10, "How much points do you want to take away from player 2?"]
+						]
+					},
+					"fields": {}
+				},
+				"b": {
+					"opcode": "data_changevariableby",
+					"next": null,
+					"parent": "a",
+					"inputs": { "VALUE": [3, "g", [4, "1"]] },
+					"fields": { "VARIABLE": ["ps1", "@vZ=YZ~nq_$s*0@)z[[D"] }
+				},
+				"g": {
+					"opcode": "operator_subtract",
+					"next": null,
+					"parent": "b",
+					"inputs": { "NUM1": [1, [4, ""]], "NUM2": [3, "f", [4, ""]] },
+					"fields": {}
+				},
+				"f": {
+					"opcode": "sensing_answer",
+					"next": null,
+					"parent": "g",
+					"inputs": {},
+					"fields": {}
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "costume1",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "326c47838ef6cd4d5fad67002e9efe60",
+					"md5ext": "326c47838ef6cd4d5fad67002e9efe60.svg",
+					"rotationCenterX": 15.75,
+					"rotationCenterY": 14.479166984558105
+				}
+			],
+			"sounds": [
+				{
+					"name": "pop",
+					"assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 1124,
+					"md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 5,
+			"visible": true,
+			"x": 116,
+			"y": -87,
+			"size": 100,
+			"direction": 90,
+			"draggable": false,
+			"rotationStyle": "all around"
+		}
+	],
+	"monitors": [
+		{
+			"id": "=;IJt-o6A{Q89Q?5Y,}l",
+			"mode": "default",
+			"opcode": "data_variable",
+			"params": { "VARIABLE": "Player 1 name" },
+			"spriteName": null,
+			"value": 0,
+			"width": 0,
+			"height": 0,
+			"x": 10,
+			"y": 103,
+			"visible": true,
+			"sliderMin": 0,
+			"sliderMax": 100,
+			"isDiscrete": true
+		},
+		{
+			"id": "bL4tHQdFl+f?ITDq[zPB",
+			"mode": "default",
+			"opcode": "data_variable",
+			"params": { "VARIABLE": "Player 2 name" },
+			"spriteName": null,
+			"value": 0,
+			"width": 0,
+			"height": 0,
+			"x": 288,
+			"y": 105,
+			"visible": true,
+			"sliderMin": 0,
+			"sliderMax": 100,
+			"isDiscrete": true
+		},
+		{
+			"id": "@vZ=YZ~nq_$s*0@)z[[D",
+			"mode": "large",
+			"opcode": "data_variable",
+			"params": { "VARIABLE": "ps1" },
+			"spriteName": null,
+			"value": 0,
+			"width": 0,
+			"height": 0,
+			"x": 52,
+			"y": 178,
+			"visible": true,
+			"sliderMin": 0,
+			"sliderMax": 100,
+			"isDiscrete": true
+		},
+		{
+			"id": "k|5,v[vavUyw,f~@D7mI",
+			"mode": "large",
+			"opcode": "data_variable",
+			"params": { "VARIABLE": "ps2" },
+			"spriteName": null,
+			"value": 0,
+			"width": 0,
+			"height": 0,
+			"x": 331,
+			"y": 180,
+			"visible": true,
+			"sliderMin": 0,
+			"sliderMax": 100,
+			"isDiscrete": true
+		}
+	],
+	"extensions": [],
+	"meta": { "semver": "3.0.0" }
+}

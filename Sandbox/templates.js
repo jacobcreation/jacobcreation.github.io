@@ -1,20 +1,20 @@
 // ── Starter Templates ────────────────────────────────────────────────────────
 export const TEMPLATES = [
-  {
-    id: 'blank',
-    title: 'Blank',
-    emoji: '📄',
-    desc: 'Empty slate',
-    html: '<!DOCTYPE html>\n<html>\n<head>\n  <style></style>\n</head>\n<body>\n\n</body>\n</html>',
-    css: '',
-    js: '',
-  },
-  {
-    id: 'hello',
-    title: 'Hello World',
-    emoji: '👋',
-    desc: 'Classic starter',
-    html: `<!DOCTYPE html>
+	{
+		id: "blank",
+		title: "Blank",
+		emoji: "📄",
+		desc: "Empty slate",
+		html: "<!DOCTYPE html>\n<html>\n<head>\n  <style></style>\n</head>\n<body>\n\n</body>\n</html>",
+		css: "",
+		js: "",
+	},
+	{
+		id: "hello",
+		title: "Hello World",
+		emoji: "👋",
+		desc: "Classic starter",
+		html: `<!DOCTYPE html>
 <html>
 <head>
   <style>
@@ -35,15 +35,15 @@ export const TEMPLATES = [
   <h1>Hello, World! 👋</h1>
 </body>
 </html>`,
-    css: '',
-    js: `console.log('Hello, World!');`,
-  },
-  {
-    id: 'counter',
-    title: 'Counter',
-    emoji: '🔢',
-    desc: 'Click counter button',
-    html: `<!DOCTYPE html>
+		css: "",
+		js: `console.log('Hello, World!');`,
+	},
+	{
+		id: "counter",
+		title: "Counter",
+		emoji: "🔢",
+		desc: "Click counter button",
+		html: `<!DOCTYPE html>
 <html>
 <head>
   <style>
@@ -58,20 +58,20 @@ export const TEMPLATES = [
   <button onclick="increment()">Click me!</button>
 </body>
 </html>`,
-    css: '',
-    js: `let n = 0;
+		css: "",
+		js: `let n = 0;
 function increment() {
   n++;
   document.getElementById('count').textContent = n;
   console.log('Count:', n);
 }`,
-  },
-  {
-    id: 'clock',
-    title: 'Live Clock',
-    emoji: '🕐',
-    desc: 'Real-time digital clock',
-    html: `<!DOCTYPE html>
+	},
+	{
+		id: "clock",
+		title: "Live Clock",
+		emoji: "🕐",
+		desc: "Real-time digital clock",
+		html: `<!DOCTYPE html>
 <html>
 <head>
   <style>
@@ -83,8 +83,8 @@ function increment() {
   <div id="clock">00:00:00</div>
 </body>
 </html>`,
-    css: '',
-    js: `function tick() {
+		css: "",
+		js: `function tick() {
   const now = new Date();
   const pad = n => String(n).padStart(2, '0');
   document.getElementById('clock').textContent =
@@ -92,13 +92,13 @@ function increment() {
 }
 tick();
 setInterval(tick, 1000);`,
-  },
-  {
-    id: 'todo',
-    title: 'To-Do List',
-    emoji: '✅',
-    desc: 'Add & check off tasks',
-    html: `<!DOCTYPE html>
+	},
+	{
+		id: "todo",
+		title: "To-Do List",
+		emoji: "✅",
+		desc: "Add & check off tasks",
+		html: `<!DOCTYPE html>
 <html>
 <head>
   <style>
@@ -123,8 +123,8 @@ setInterval(tick, 1000);`,
   <ul id="list"></ul>
 </body>
 </html>`,
-    css: '',
-    js: `function add() {
+		css: "",
+		js: `function add() {
   const inp = document.getElementById('inp');
   const text = inp.value.trim();
   if (!text) return;
@@ -142,13 +142,13 @@ setInterval(tick, 1000);`,
   document.getElementById('list').appendChild(li);
   console.log('Added:', text);
 }`,
-  },
-  {
-    id: 'canvas',
-    title: 'Canvas Sketch',
-    emoji: '🎨',
-    desc: 'Draw on a canvas',
-    html: `<!DOCTYPE html>
+	},
+	{
+		id: "canvas",
+		title: "Canvas Sketch",
+		emoji: "🎨",
+		desc: "Draw on a canvas",
+		html: `<!DOCTYPE html>
 <html>
 <head>
   <style>
@@ -170,8 +170,8 @@ setInterval(tick, 1000);`,
   <canvas id="c"></canvas>
 </body>
 </html>`,
-    css: '',
-    js: `const c = document.getElementById('c');
+		css: "",
+		js: `const c = document.getElementById('c');
 const ctx = c.getContext('2d');
 c.width = Math.min(window.innerWidth - 40, 700);
 c.height = Math.min(window.innerHeight - 80, 500);
@@ -198,13 +198,13 @@ function clearCanvas() {
   ctx.fillRect(0,0,c.width,c.height);
   ctx.beginPath();
 }`,
-  },
-  {
-    id: 'animation',
-    title: 'CSS Animation',
-    emoji: '✨',
-    desc: 'Bouncing gradient balls',
-    html: `<!DOCTYPE html>
+	},
+	{
+		id: "animation",
+		title: "CSS Animation",
+		emoji: "✨",
+		desc: "Bouncing gradient balls",
+		html: `<!DOCTYPE html>
 <html>
 <head>
   <style>
@@ -224,8 +224,8 @@ function clearCanvas() {
 </head>
 <body></body>
 </html>`,
-    css: '',
-    js: `const colors = ['#4ea1ff','#ff2d2d','#ffd97d','#7de8c8','#b0a5ff'];
+		css: "",
+		js: `const colors = ['#4ea1ff','#ff2d2d','#ffd97d','#7de8c8','#b0a5ff'];
 function spawn() {
   const ball = document.createElement('div');
   ball.className = 'ball';
@@ -244,13 +244,13 @@ function spawn() {
 }
 setInterval(spawn, 300);
 spawn();`,
-  },
-  {
-    id: 'api',
-    title: 'Fetch API',
-    emoji: '🌐',
-    desc: 'Fetch data from an API',
-    html: `<!DOCTYPE html>
+	},
+	{
+		id: "api",
+		title: "Fetch API",
+		emoji: "🌐",
+		desc: "Fetch data from an API",
+		html: `<!DOCTYPE html>
 <html>
 <head>
   <style>
@@ -267,8 +267,8 @@ spawn();`,
   <div id="out">Click the button…</div>
 </body>
 </html>`,
-    css: '',
-    js: `async function fetchUser() {
+		css: "",
+		js: `async function fetchUser() {
   document.getElementById('out').textContent = 'Loading…';
   try {
     const res = await fetch('https://randomuser.me/api/');
@@ -285,5 +285,5 @@ spawn();`,
     console.error(e);
   }
 }`,
-  },
+	},
 ];

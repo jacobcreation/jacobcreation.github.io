@@ -1,515 +1,516 @@
 :root {
-    --bg-color: #f2fbff;
-    --grid-color: #cddbec;
-    --ui-bg: rgba(0, 0, 0, 0.4);
-    --ui-text: #ffffff;
-    --accent: #00e676;
-    --danger: #f44336;
-    --tank-blue: #00b0ff;
-    --tank-red: #ff5252;
-    
-    /* Stats Colors */
-    --stat-regen: #fbc02d;
-    --stat-maxhealth: #e91e63;
-    --stat-bodydamage: #9c27b0;
-    --stat-bulletspeed: #03a9f4;
-    --stat-bulletpen: #00bcd4;
-    --stat-bulletdam: #f44336;
-    --stat-reload: #8bc34a;
-    --stat-movespeed: #009688;
+	--bg-color: #f2fbff;
+	--grid-color: #cddbec;
+	--ui-bg: rgba(0, 0, 0, 0.4);
+	--ui-text: #ffffff;
+	--accent: #00e676;
+	--danger: #f44336;
+	--tank-blue: #00b0ff;
+	--tank-red: #ff5252;
+
+	/* Stats Colors */
+	--stat-regen: #fbc02d;
+	--stat-maxhealth: #e91e63;
+	--stat-bodydamage: #9c27b0;
+	--stat-bulletspeed: #03a9f4;
+	--stat-bulletpen: #00bcd4;
+	--stat-bulletdam: #f44336;
+	--stat-reload: #8bc34a;
+	--stat-movespeed: #009688;
 }
 
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Outfit', sans-serif;
-    user-select: none;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	font-family: "Outfit", sans-serif;
+	user-select: none;
 }
 
-body, html {
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    background-color: #333;
-    touch-action: manipulation;
+body,
+html {
+	width: 100vw;
+	height: 100vh;
+	overflow: hidden;
+	background-color: #333;
+	touch-action: manipulation;
 }
 
 #game-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
+	position: relative;
+	width: 100%;
+	height: 100%;
 }
 
 #game-canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-    background-color: var(--bg-color);
+	display: block;
+	width: 100%;
+	height: 100%;
+	background-color: var(--bg-color);
 }
 
 #ui-layer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none; /* Let clicks pass through except on UI elements */
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none; /* Let clicks pass through except on UI elements */
 }
 
 .ui-panel {
-    background-color: var(--ui-bg);
-    color: var(--ui-text);
-    padding: 15px;
-    border-radius: 8px;
-    backdrop-filter: blur(4px);
-    pointer-events: auto;
+	background-color: var(--ui-bg);
+	color: var(--ui-text);
+	padding: 15px;
+	border-radius: 8px;
+	backdrop-filter: blur(4px);
+	pointer-events: auto;
 }
 
 /* Leaderboard */
 #leaderboard {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 200px;
+	position: absolute;
+	top: 20px;
+	right: 20px;
+	width: 200px;
 }
 
 #leaderboard h3 {
-    text-align: center;
-    margin-bottom: 10px;
-    font-size: 16px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    padding-bottom: 5px;
+	text-align: center;
+	margin-bottom: 10px;
+	font-size: 16px;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+	padding-bottom: 5px;
 }
 
 #leaderboard-list {
-    list-style: none;
-    font-size: 14px;
+	list-style: none;
+	font-size: 14px;
 }
 
 #leaderboard-list li {
-    margin: 5px 0;
-    display: flex;
-    justify-content: space-between;
+	margin: 5px 0;
+	display: flex;
+	justify-content: space-between;
 }
 
 /* Server Info */
 #server-info {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: rgba(0,0,0,0.5);
-    font-weight: 600;
-    font-size: 14px;
+	position: absolute;
+	top: 20px;
+	left: 50%;
+	transform: translateX(-50%);
+	color: rgba(0, 0, 0, 0.5);
+	font-weight: 600;
+	font-size: 14px;
 }
 
 /* Progress Bar */
 #player-progress {
-    position: absolute;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 400px;
-    text-align: center;
-    color: var(--ui-text);
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+	position: absolute;
+	bottom: 30px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 400px;
+	text-align: center;
+	color: var(--ui-text);
+	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 #level-display {
-    font-size: 20px;
-    font-weight: 800;
-    margin-bottom: 5px;
+	font-size: 20px;
+	font-weight: 800;
+	margin-bottom: 5px;
 }
 
 #exp-bar-container {
-    width: 100%;
-    height: 20px;
-    background-color: rgba(0,0,0,0.5);
-    border-radius: 10px;
-    border: 2px solid rgba(0,0,0,0.8);
-    overflow: hidden;
+	width: 100%;
+	height: 20px;
+	background-color: rgba(0, 0, 0, 0.5);
+	border-radius: 10px;
+	border: 2px solid rgba(0, 0, 0, 0.8);
+	overflow: hidden;
 }
 
 #exp-bar {
-    width: 0%;
-    height: 100%;
-    background-color: #ffeb3b;
-    transition: width 0.2s ease-out;
+	width: 0%;
+	height: 100%;
+	background-color: #ffeb3b;
+	transition: width 0.2s ease-out;
 }
 
 /* Upgrades */
 #upgrades-container {
-    position: absolute;
-    bottom: 30px;
-    left: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    pointer-events: auto;
+	position: absolute;
+	bottom: 30px;
+	left: 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	pointer-events: auto;
 }
 
 #upgrade-points-display {
-    color: var(--ui-text);
-    font-weight: 800;
-    font-size: 24px;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-    display: none; /* hidden when 0 */
+	color: var(--ui-text);
+	font-weight: 800;
+	font-size: 24px;
+	text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+	display: none; /* hidden when 0 */
 }
 
 .upgrade-list {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
 }
 
 .upgrade-item {
-    display: flex;
-    align-items: center;
-    width: 250px;
-    height: 30px;
-    background-color: rgba(0,0,0,0.5);
-    border-radius: 15px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.1s;
+	display: flex;
+	align-items: center;
+	width: 250px;
+	height: 30px;
+	background-color: rgba(0, 0, 0, 0.5);
+	border-radius: 15px;
+	overflow: hidden;
+	cursor: pointer;
+	transition: transform 0.1s;
 }
 
 .upgrade-item:hover {
-    transform: scale(1.02);
+	transform: scale(1.02);
 }
 
 .upgrade-btn {
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    color: white;
-    background-color: rgba(0,0,0,0.3);
-    font-size: 18px;
+	width: 30px;
+	height: 30px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 800;
+	color: white;
+	background-color: rgba(0, 0, 0, 0.3);
+	font-size: 18px;
 }
 
 .upgrade-name {
-    flex: 1;
-    padding-left: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    color: white;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+	flex: 1;
+	padding-left: 10px;
+	font-size: 14px;
+	font-weight: 600;
+	color: white;
+	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 .upgrade-bars {
-    display: flex;
-    gap: 2px;
-    padding-right: 10px;
+	display: flex;
+	gap: 2px;
+	padding-right: 10px;
 }
 
 .upgrade-bar-tick {
-    width: 8px;
-    height: 14px;
-    background-color: rgba(255,255,255,0.2);
-    border-radius: 2px;
+	width: 8px;
+	height: 14px;
+	background-color: rgba(255, 255, 255, 0.2);
+	border-radius: 2px;
 }
 
 .upgrade-bar-tick.filled {
-    background-color: #fff;
+	background-color: #fff;
 }
 
 /* Minimap */
 #minimap-container {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    width: 150px;
-    height: 150px;
-    padding: 5px;
-    background-color: rgba(0,0,0,0.3);
-    border: 2px solid rgba(0,0,0,0.5);
+	position: absolute;
+	bottom: 20px;
+	right: 20px;
+	width: 150px;
+	height: 150px;
+	padding: 5px;
+	background-color: rgba(0, 0, 0, 0.3);
+	border: 2px solid rgba(0, 0, 0, 0.5);
 }
 
 #minimap {
-    width: 100%;
-    height: 100%;
-    background-color: rgba(255,255,255,0.1);
+	width: 100%;
+	height: 100%;
+	background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Screens */
 .overlay-screen {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.8);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    z-index: 100;
-    pointer-events: auto;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.8);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	z-index: 100;
+	pointer-events: auto;
 }
 
 .hidden {
-    display: none !important;
+	display: none !important;
 }
 
 .overlay-screen h1 {
-    font-size: 64px;
-    margin-bottom: 20px;
-    text-shadow: 0 0 20px rgba(255,255,255,0.5);
+	font-size: 64px;
+	margin-bottom: 20px;
+	text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
 }
 
 .overlay-screen p {
-    font-size: 24px;
-    margin-bottom: 30px;
-    color: #ccc;
+	font-size: 24px;
+	margin-bottom: 30px;
+	color: #ccc;
 }
 
 .overlay-screen input {
-    padding: 15px 20px;
-    font-size: 24px;
-    border-radius: 30px;
-    border: none;
-    outline: none;
-    text-align: center;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+	padding: 15px 20px;
+	font-size: 24px;
+	border-radius: 30px;
+	border: none;
+	outline: none;
+	text-align: center;
+	margin-bottom: 20px;
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .overlay-screen button {
-    padding: 15px 40px;
-    font-size: 24px;
-    font-weight: 800;
-    background-color: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 30px;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(0, 230, 118, 0.4);
-    transition: all 0.2s;
+	padding: 15px 40px;
+	font-size: 24px;
+	font-weight: 800;
+	background-color: var(--accent);
+	color: white;
+	border: none;
+	border-radius: 30px;
+	cursor: pointer;
+	box-shadow: 0 4px 15px rgba(0, 230, 118, 0.4);
+	transition: all 0.2s;
 }
 
 .overlay-screen button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 230, 118, 0.6);
+	transform: translateY(-2px);
+	box-shadow: 0 6px 20px rgba(0, 230, 118, 0.6);
 }
 
 .overlay-screen button:active {
-    transform: translateY(1px);
+	transform: translateY(1px);
 }
 
 #mobile-controls {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    bottom: calc(12px + env(safe-area-inset-bottom));
-    z-index: 20;
-    display: none;
-    align-items: end;
-    justify-content: space-between;
-    pointer-events: none;
+	position: absolute;
+	left: 12px;
+	right: 12px;
+	bottom: calc(12px + env(safe-area-inset-bottom));
+	z-index: 20;
+	display: none;
+	align-items: end;
+	justify-content: space-between;
+	pointer-events: none;
 }
 
 .touch-stick,
 .touch-fire-button {
-    pointer-events: auto;
+	pointer-events: auto;
 }
 
 .mobile-actions {
-    display: flex;
-    align-items: end;
-    gap: 14px;
+	display: flex;
+	align-items: end;
+	gap: 14px;
 }
 
 .touch-stick-base {
-    position: relative;
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.35);
-    border: 1px solid rgba(255,255,255,0.14);
-    backdrop-filter: blur(8px);
+	position: relative;
+	width: 120px;
+	height: 120px;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.35);
+	border: 1px solid rgba(255, 255, 255, 0.14);
+	backdrop-filter: blur(8px);
 }
 
 .touch-stick-knob {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 54px;
-    height: 54px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.88);
-    transform: translate(-50%, -50%);
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 54px;
+	height: 54px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.88);
+	transform: translate(-50%, -50%);
 }
 
 .touch-stick--aim .touch-stick-knob {
-    background: rgba(0, 176, 255, 0.92);
+	background: rgba(0, 176, 255, 0.92);
 }
 
 .touch-fire-button {
-    min-width: 88px;
-    min-height: 88px;
-    border: none;
-    border-radius: 50%;
-    background: rgba(244, 67, 54, 0.92);
-    color: #fff;
-    font: inherit;
-    font-weight: 800;
-    box-shadow: 0 10px 24px rgba(0,0,0,0.32);
+	min-width: 88px;
+	min-height: 88px;
+	border: none;
+	border-radius: 50%;
+	background: rgba(244, 67, 54, 0.92);
+	color: #fff;
+	font: inherit;
+	font-weight: 800;
+	box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
 }
 
 .touch-fire-button.is-active {
-    transform: scale(0.96);
+	transform: scale(0.96);
 }
 
 @media (max-width: 900px) {
-    #leaderboard {
-        top: 12px;
-        right: 12px;
-        width: 170px;
-        padding: 12px;
-    }
+	#leaderboard {
+		top: 12px;
+		right: 12px;
+		width: 170px;
+		padding: 12px;
+	}
 
-    #server-info {
-        top: 14px;
-        font-size: 12px;
-    }
+	#server-info {
+		top: 14px;
+		font-size: 12px;
+	}
 
-    #player-progress {
-        bottom: 18px;
-        width: min(360px, calc(100% - 190px));
-    }
+	#player-progress {
+		bottom: 18px;
+		width: min(360px, calc(100% - 190px));
+	}
 
-    #upgrades-container {
-        bottom: 18px;
-        left: 12px;
-        max-width: min(250px, calc(100% - 24px));
-    }
+	#upgrades-container {
+		bottom: 18px;
+		left: 12px;
+		max-width: min(250px, calc(100% - 24px));
+	}
 
-    .upgrade-list {
-        max-height: 42vh;
-        overflow: auto;
-    }
+	.upgrade-list {
+		max-height: 42vh;
+		overflow: auto;
+	}
 
-    #minimap-container {
-        right: 12px;
-        bottom: 12px;
-        width: 120px;
-        height: 120px;
-    }
+	#minimap-container {
+		right: 12px;
+		bottom: 12px;
+		width: 120px;
+		height: 120px;
+	}
 }
 
 @media (max-width: 640px) {
-    #mobile-controls {
-        display: flex;
-    }
+	#mobile-controls {
+		display: flex;
+	}
 
-    #leaderboard {
-        width: 145px;
-        max-height: 34vh;
-        overflow: auto;
-    }
+	#leaderboard {
+		width: 145px;
+		max-height: 34vh;
+		overflow: auto;
+	}
 
-    #leaderboard h3 {
-        font-size: 13px;
-    }
+	#leaderboard h3 {
+		font-size: 13px;
+	}
 
-    #leaderboard-list {
-        font-size: 12px;
-    }
+	#leaderboard-list {
+		font-size: 12px;
+	}
 
-    #server-info {
-        top: 74px;
-        left: 12px;
-        right: 12px;
-        transform: none;
-        text-align: left;
-        color: rgba(0,0,0,0.6);
-    }
+	#server-info {
+		top: 74px;
+		left: 12px;
+		right: 12px;
+		transform: none;
+		text-align: left;
+		color: rgba(0, 0, 0, 0.6);
+	}
 
-    #player-progress {
-        left: 12px;
-        right: 12px;
-        bottom: 12px;
-        width: auto;
-        transform: none;
-    }
+	#player-progress {
+		left: 12px;
+		right: 12px;
+		bottom: 12px;
+		width: auto;
+		transform: none;
+	}
 
-    #level-display {
-        font-size: 16px;
-    }
+	#level-display {
+		font-size: 16px;
+	}
 
-    #exp-bar-container {
-        height: 16px;
-    }
+	#exp-bar-container {
+		height: 16px;
+	}
 
-    #upgrades-container {
-        left: 12px;
-        right: 12px;
-        bottom: 54px;
-        max-width: none;
-    }
+	#upgrades-container {
+		left: 12px;
+		right: 12px;
+		bottom: 54px;
+		max-width: none;
+	}
 
-    .upgrade-list {
-        gap: 6px;
-        max-height: 26vh;
-    }
+	.upgrade-list {
+		gap: 6px;
+		max-height: 26vh;
+	}
 
-    .upgrade-item {
-        width: 100%;
-        height: 34px;
-    }
+	.upgrade-item {
+		width: 100%;
+		height: 34px;
+	}
 
-    .upgrade-name {
-        font-size: 13px;
-    }
+	.upgrade-name {
+		font-size: 13px;
+	}
 
-    #minimap-container {
-        top: 12px;
-        bottom: auto;
-        width: 88px;
-        height: 88px;
-        padding: 4px;
-    }
+	#minimap-container {
+		top: 12px;
+		bottom: auto;
+		width: 88px;
+		height: 88px;
+		padding: 4px;
+	}
 
-    .overlay-screen {
-        padding: 20px;
-        text-align: center;
-    }
+	.overlay-screen {
+		padding: 20px;
+		text-align: center;
+	}
 
-    .overlay-screen h1 {
-        font-size: 40px;
-    }
+	.overlay-screen h1 {
+		font-size: 40px;
+	}
 
-    .overlay-screen p {
-        font-size: 18px;
-        margin-bottom: 20px;
-    }
+	.overlay-screen p {
+		font-size: 18px;
+		margin-bottom: 20px;
+	}
 
-    .overlay-screen input,
-    .overlay-screen button {
-        width: min(280px, 100%);
-        font-size: 18px;
-        padding: 14px 18px;
-    }
+	.overlay-screen input,
+	.overlay-screen button {
+		width: min(280px, 100%);
+		font-size: 18px;
+		padding: 14px 18px;
+	}
 
-    .touch-stick-base {
-        width: 108px;
-        height: 108px;
-    }
+	.touch-stick-base {
+		width: 108px;
+		height: 108px;
+	}
 
-    .touch-stick-knob {
-        width: 48px;
-        height: 48px;
-    }
+	.touch-stick-knob {
+		width: 48px;
+		height: 48px;
+	}
 
-    .touch-fire-button {
-        min-width: 78px;
-        min-height: 78px;
-    }
+	.touch-fire-button {
+		min-width: 78px;
+		min-height: 78px;
+	}
 }

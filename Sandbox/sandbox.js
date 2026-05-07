@@ -3,11 +3,11 @@ import { files } from "./editor.js";
 export const LIBRARIES = []; // Array of URL strings to inject
 
 export function runSandbox() {
-  const frame = document.getElementById("frame");
-  const consoleEl = document.getElementById("console");
-  consoleEl.innerHTML = "";
+	const frame = document.getElementById("frame");
+	const consoleEl = document.getElementById("console");
+	consoleEl.innerHTML = "";
 
-  const consoleShim = `
+	const consoleShim = `
 <script>
 (function() {
   function serialize(val) {
@@ -100,12 +100,12 @@ export function runSandbox() {
 })();
 <\/script>`;
 
-  let libsHtml = LIBRARIES.map(url => {
-    if (url.endsWith(".css")) return `<link rel="stylesheet" href="${url}">`;
-    return `<script src="${url}"><\/script>`;
-  }).join("\n");
+	let libsHtml = LIBRARIES.map((url) => {
+		if (url.endsWith(".css")) return `<link rel="stylesheet" href="${url}">`;
+		return `<script src="${url}"><\/script>`;
+	}).join("\n");
 
-  frame.srcdoc = `<!DOCTYPE html>
+	frame.srcdoc = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
