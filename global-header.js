@@ -157,6 +157,62 @@
       transition: transform 0.2s ease;
     }
 
+    /* Turnstile Overlay */
+    #turnstile-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 16, 32, 0.95);
+      backdrop-filter: blur(20px);
+      z-index: 2147483647;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: "Poppins", sans-serif;
+      color: #eaf2ff;
+      text-align: center;
+      padding: 20px;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    #turnstile-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .turnstile-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 40px;
+      border-radius: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .turnstile-card h2 {
+      font-family: "Orbitron", sans-serif;
+      margin-bottom: 10px;
+      font-size: 1.5rem;
+      background: linear-gradient(90deg, #1e90ff, #ff2d2d);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .turnstile-card p {
+      color: rgba(234, 242, 255, 0.7);
+      margin-bottom: 30px;
+      font-size: 0.95rem;
+    }
+
+    #turnstile-container {
+      display: flex;
+      justify-content: center;
+      min-height: 65px;
+    }
+
     /* Mobile Responsive */
     @media (max-width: 768px) {
       .jacob-header-container {
@@ -198,52 +254,102 @@
       }
     }
 
-    @media (max-width: 480px) {
-      .jacob-logo-badge {
-        width: 32px;
-        height: 32px;
-        font-size: 17px;
-      }
+    /* Hide redundant in-page Turnstile widgets */
+    .cf-turnstile {
+      display: none !important;
     }
-  \`;
+  `;
   document.head.appendChild(style);
 
-  // 2. Inject HTML
-  const header = document.createElement('header');
-  header.id = "jacob-global-header";
-  header.innerHTML = \`
-    <div class="jacob-header-container">
-      <a href="/index.html" class="jacob-logo">
-        <span class="jacob-logo-badge">J</span>
-        <span class="jacob-logo-text">JacobCreation</span>
-      </a>
+  // 2. Inject HTML (Header)
+  // ... rest of header code ...
+  if (!document.getElementById('jacob-global-header')) {
+    const header = document.createElement('header');
+    header.id = "jacob-global-header";
+    header.innerHTML = `
+      <div class="jacob-header-container">
+        <a href="/index.html" class="jacob-logo">
+          <span class="jacob-logo-badge">J</span>
+          <span class="jacob-logo-text">JacobCreation</span>
+        </a>
 
-      <button class="jacob-menu-toggle" id="jacobMobileMenuToggle" aria-label="Toggle navigation">
-        ☰
-      </button>
+        <button class="jacob-menu-toggle" id="jacobMobileMenuToggle" aria-label="Toggle navigation">
+          ☰
+        </button>
 
-      <nav class="jacob-nav" id="jacobMainNav">
-        <a href="https://jacobcreation.github.io/about/">About</a>
-        <a href="https://jacobcreation.github.io/downloads/">🎮 Play Offline</a>
-        <a href="https://jacobcreation.github.io/releases/">🚀 Releases</a>
-      </nav>
-    </div>
-  \`;
-  document.body.prepend(header);
+        <nav class="jacob-nav" id="jacobMainNav">
+          <a href="https://jacobcreation.github.io/about/">About</a>
+          <a href="https://jacobcreation.github.io/downloads/">🎮 Play Offline</a>
+          <a href="https://jacobcreation.github.io/releases/">🚀 Releases</a>
+        </nav>
+      </div>
+    `;
+    document.body.prepend(header);
 
-  // 3. Setup Toggle Logic
-  const menuToggle = document.getElementById('jacobMobileMenuToggle');
-  const mainNav = document.getElementById('jacobMainNav');
-  if (menuToggle && mainNav) {
-    menuToggle.addEventListener('click', () => {
-      mainNav.classList.toggle('active');
-      if (mainNav.classList.contains('active')) {
-        menuToggle.textContent = '✕';
-        menuToggle.setAttribute('aria-expanded', 'true');
-      } else {
-        menuToggle.textContent = '☰';
-        menuToggle.setAttribute('aria-expanded', 'false');
-      }
-    });
+    // Setup Toggle Logic
+    const menuToggle = document.getElementById('jacobMobileMenuToggle');
+    const mainNav = document.getElementById('jacobMainNav');
+    if (menuToggle && mainNav) {
+      menuToggle.addEventListener('click', () => {
+        mainNav.classList.toggle('active');
+        if (mainNav.classList.contains('active')) {
+          menuToggle.textContent = '✕';
+          menuToggle.setAttribute('aria-expanded', 'true');
+        } else {
+          menuToggle.textContent = '☰';
+          menuToggle.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
   }
+
+  // 3. Turnstile Logic
+  function initTurnstile() {
+    if (sessionStorage.getItem('jacob_turnstile_passed') === 'true') {
+      return;
+    }
+
+    // Create Overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'turnstile-overlay';
+    overlay.innerHTML = `
+      <div class="turnstile-card">
+        <div class="jacob-logo" style="justify-content: center; margin-bottom: 20px;">
+          <span class="jacob-logo-badge">J</span>
+          <span class="jacob-logo-text">JacobCreation</span>
+        </div>
+        <h2>Security Check</h2>
+        <p>Please complete the verification to access the app.</p>
+        <div id="turnstile-container"></div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Inject Turnstile Script
+    const script = document.createElement('script');
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback";
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+
+    window.onloadTurnstileCallback = function () {
+      turnstile.render('#turnstile-container', {
+        sitekey: '0x4AAAAAADKK6nZsvohFh7HB', // Production Key
+        callback: function (token) {
+          console.log(`Challenge Success`);
+          sessionStorage.setItem('jacob_turnstile_passed', 'true');
+          overlay.classList.add('hidden');
+          setTimeout(() => overlay.remove(), 500);
+        },
+      });
+    };
+  }
+
+  // Run Turnstile check
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTurnstile);
+  } else {
+    initTurnstile();
+  }
+
 })();
