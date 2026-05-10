@@ -11,12 +11,12 @@
 
   <title>Chat + Minigames - JacobCreation</title>
 
-  <!-- ✅ Favicon setup -->
   <link rel="icon" href="/favicon.png" type="image/png" />
 
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <style>
     :root {
@@ -38,6 +38,61 @@
       box-sizing: border-box;
     }
 
+    #turnstile-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: var(--bg1);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+      backdrop-filter: blur(10px);
+    }
+    .ts-box {
+      background: var(--card);
+      padding: 30px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .ts-box h2 {
+      margin-top: 0;
+      color: var(--blue);
+      font-family: "Orbitron", sans-serif;
+    }
+    .ts-box p {
+      color: var(--muted);
+      margin-bottom: 20px;
+      font-size: 0.95rem;
+    }
+    .tiny-note {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+    .btn-start {
+      margin-top: 20px;
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+      color: #071122;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 30px;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+      animation: bubbleIn 0.3s ease-out;
+    }
+
     body {
       margin: 0;
       font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -51,7 +106,6 @@
       flex-direction: column;
     }
 
-    /* Header */
     header {
       position: sticky;
       top: 0;
@@ -135,7 +189,6 @@
       border-color: rgba(255, 255, 255, 0.22);
     }
 
-    /* Main */
     main {
       padding: 28px 18px 60px;
       width: 100%;
@@ -154,7 +207,6 @@
       width: 100%;
     }
 
-    /* Panels */
     .chat-panel,
     .game-panel {
       border-radius: var(--radius);
@@ -176,26 +228,28 @@
       width: 660px;
     }
 
-    /* Chat Elements */
+    /* ─── Chat Header ─── */
     .chat-header {
-      padding: 16px;
+      padding: 12px 14px;
       border-bottom: 1px solid var(--border);
       background: rgba(255, 255, 255, 0.03);
       display: flex;
-      gap: 12px;
+      gap: 10px;
       flex-shrink: 0;
+      align-items: flex-start;
     }
 
     .chat-avatar {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
       background: var(--card2);
       display: grid;
       place-items: center;
-      font-size: 22px;
+      font-size: 20px;
       border: 1px solid var(--border);
       flex-shrink: 0;
+      margin-top: 2px;
     }
 
     .chat-header-right {
@@ -203,49 +257,80 @@
       min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 5px;
     }
 
+    /* Top row: name + action buttons side by side */
     .chat-title-row {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: 6px;
     }
 
     .chat-title strong {
-      font-size: 1rem;
+      font-size: 0.95rem;
       color: var(--text);
       display: block;
-    }
-
-    .chat-subtitle {
-      font-size: 0.8rem;
-      color: var(--muted);
+      white-space: nowrap;
     }
 
     .mem-actions {
       display: flex;
-      gap: 6px;
+      gap: 4px;
+      flex-shrink: 0;
     }
 
     .mem-mini-btn {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       display: grid;
       place-items: center;
       border: 1px solid var(--border);
       background: var(--card);
       color: var(--text);
-      border-radius: 8px;
-      font-size: 14px;
+      border-radius: 7px;
+      font-size: 13px;
       cursor: pointer;
       transition: all 0.2s ease;
     }
 
     .mem-mini-btn:hover {
       background: var(--card2);
-      transform: translateY(-2px);
+      transform: translateY(-1px);
+    }
+
+    /* Model select row sits below title row */
+    .model-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .model-select {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-size: 0.7rem;
+      outline: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+      max-width: 100%;
+    }
+
+    .model-select:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--blue);
+      color: var(--text);
+    }
+
+    .tiny-note {
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.3;
     }
 
     .chat-body {
@@ -325,7 +410,6 @@
       transform: scale(1.03);
     }
 
-    /* Game Elements */
     .game-tabs {
       display: flex;
       background: rgba(255, 255, 255, 0.03);
@@ -393,19 +477,11 @@
     }
 
     @keyframes bubbleIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px) scale(0.95);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
+      from { opacity: 0; transform: translateY(10px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     @media (max-width: 1080px) {
-
       .chat-panel,
       .game-panel {
         width: 100%;
@@ -420,6 +496,34 @@
 </head>
 
 <body>
+
+  <div id="turnstile-overlay">
+    <div class="ts-box">
+      <h2>Security Check</h2>
+      <p id="ts-status">Verifying your connection before proceeding to the app...</p>
+      <div id="turnstile-widget"></div>
+      <button class="btn-start" id="startAppBtn">Enter App ✨</button>
+    </div>
+  </div>
+
+  <script>
+    const PROD_SITEKEY = "0x4AAAAAADKK6nZsvohFh7HB";
+    const TEST_SITEKEY = "1x00000000000000000000AA";
+    
+    const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    const activeSitekey = isLocal ? TEST_SITEKEY : PROD_SITEKEY;
+
+    window.onloadTurnstileCallback = function () {
+        turnstile.render('#turnstile-widget', {
+            sitekey: activeSitekey,
+            theme: 'dark',
+            callback: function(token) {
+                window.onTurnstileSuccess(token);
+            },
+        });
+    };
+  </script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback" async defer></script>
 
   <header>
     <div class="header-container">
@@ -444,24 +548,49 @@
           <div class="chat-avatar">🤝</div>
 
           <div class="chat-header-right">
+            <!-- Row 1: Name + action buttons -->
             <div class="chat-title-row">
               <div class="chat-title">
-                <strong>Friendly Helper</strong>
-                <div class="chat-subtitle">Ask anything—I'll answer kindly.</div>
+                <strong>JacobBot AI</strong>
               </div>
-
               <div class="mem-actions">
-                <button class="mem-mini-btn" type="button" id="downloadMemBtn">⬇️</button>
-                <button class="mem-mini-btn" type="button" id="uploadMemBtn">⬆️</button>
-                <button class="mem-mini-btn" type="button" id="uploadImgBtn">🖼️</button>
-
+                <button class="mem-mini-btn" type="button" id="clearChatBtn" title="Clear Chat">🗑️</button>
+                <button class="mem-mini-btn" type="button" id="downloadMemBtn" title="Download Memory">⬇️</button>
+                <button class="mem-mini-btn" type="button" id="uploadMemBtn" title="Upload Memory">⬆️</button>
+                <button class="mem-mini-btn" type="button" id="uploadImgBtn" title="Attach Image">🖼️</button>
                 <input type="file" id="memFileInput" accept="application/json" style="display:none;">
                 <input type="file" id="imgFileInput" accept="image/*" style="display:none;">
               </div>
             </div>
 
+            <!-- Row 2: Model selector -->
+            <div class="model-row">
+              <select id="modelSelect" class="model-select">
+                <optgroup label="Llama Series (Meta)">
+                  <option value="@cf/meta/llama-3.1-8b-instruct" selected>Llama 3.1 8B (Default)</option>
+                  <option value="@cf/meta/llama-3.2-3b-instruct">Llama 3.2 3B (Fast)</option>
+                  <option value="@cf/meta/llama-3.2-1b-instruct">Llama 3.2 1B (Tiny)</option>
+                  <option value="@cf/meta/llama-3.1-70b-instruct">Llama 3.1 70B (Smart but slow)</option>
+                </optgroup>
+                <optgroup label="Google Gemma">
+                  <option value="@cf/google/gemma-7b-it">Gemma 7B</option>
+                  <option value="@cf/google/gemma-2b-it-lora">Gemma 2B</option>
+                </optgroup>
+                <optgroup label="Mistral / Mixtral">
+                  <option value="@cf/mistral/mistral-7b-instruct-v0.1">Mistral 7B v0.1</option>
+                  <option value="@cf/mistral/mistral-7b-instruct-v0.2">Mistral 7B v0.2</option>
+                </optgroup>
+                <optgroup label="Specialized">
+                  <option value="@cf/qwen/qwen1.5-7b-chat-awq">Qwen 1.5 7B (Multilingual)</option>
+                  <option value="@cf/deepseek-ai/deepseek-math-7b-instruct">DeepSeek Math</option>
+                  <option value="@cf/microsoft/phi-2">Microsoft Phi-2</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <!-- Row 3: Note -->
             <div class="tiny-note">
-              ⚠️ I can read your image NOW 👀 but after refresh I won’t remember the image itself 🙂
+              ⚠️ I can read your image NOW 👀 but after refresh I won't remember it 🙂
             </div>
           </div>
         </header>
@@ -470,12 +599,8 @@
           <div class="bubble bot">Hi! How can I help today?</div>
         </div>
 
-        <!-- THIS IS THE IMPORTANT PART -->
-        <!-- NO FORM. ONLY DIV. -->
-        <!-- Fixed: Changed div to form and added ID expected by JS -->
-        <form class="chat-input" id="chatForm" style="flex-wrap: wrap;">
+        <form class="chat-input" id="chatForm">
           <input id="chatText" type="text" placeholder="Type your message..." autocomplete="off" />
-          <div class="cf-turnstile" data-sitekey="0x4AAAAAADKK6nZsvohFh7HB" data-theme="dark" style="margin-bottom: 10px; width: 100%;"></div>
           <button class="btn-send" type="submit" id="sendBtn">Send</button>
         </form>
 
@@ -508,23 +633,13 @@
     © 2026 JacobCreation • Built by Jacob 💙
   </footer>
 
-  <!-- <script> STARTS HERE -->
-
-
   <script>
-    // ---------------------------------------------------------
-    //  CONFIGURATION
-    // ---------------------------------------------------------
-    const ENDPOINT = "https://chatbot-ai.b4rjxr9lk.workers.dev/"; // Correct with subdomain
+    const ENDPOINT = "https://chatbot-ai.b4rjxr9lk.workers.dev/";
     const SITE_NAME = "jacobcreation";
 
-    // ---------------------------------------------------------
-    //  DOM ELEMENTS
-    // ---------------------------------------------------------
     const chatBody = document.getElementById("chatBody");
-    const chatForm = document.getElementById("chatForm"); // The form element
-    const chatText = document.getElementById("chatText"); // The input
-    // const sendId = document.getElementById("sendBtn");
+    const chatForm = document.getElementById("chatForm");
+    const chatText = document.getElementById("chatText");
 
     const dlBtn = document.getElementById("downloadMemBtn");
     const ulBtn = document.getElementById("uploadMemBtn");
@@ -532,12 +647,29 @@
 
     const imgBtn = document.getElementById("uploadImgBtn");
     const imgFile = document.getElementById("imgFileInput");
+    const clearBtn = document.getElementById("clearChatBtn");
 
-    let currentImage = null; // Store pending image upload
+    let currentImage = null;
 
-    // ---------------------------------------------------------
-    //  SESSION MANAGEMENT
-    // ---------------------------------------------------------
+    window.onTurnstileSuccess = function(token) {
+        const status = document.getElementById("ts-status");
+        const startBtn = document.getElementById("startAppBtn");
+        if (status) status.textContent = "Security check passed! Ready to go.";
+        if (startBtn) startBtn.style.display = "block";
+    };
+
+    document.getElementById("startAppBtn").addEventListener("click", () => {
+        const overlay = document.getElementById("turnstile-overlay");
+        overlay.style.opacity = "0";
+        setTimeout(() => {
+            overlay.style.visibility = "hidden";
+            loadHistory();
+        }, 500);
+        
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    });
+
     function getSessionId() {
       let id = localStorage.getItem("jc_session");
       if (!id) {
@@ -547,36 +679,72 @@
       return id;
     }
 
-    // ---------------------------------------------------------
-    //  UI HELPERS
-    // ---------------------------------------------------------
-    function addBubble(text, who = "bot") {
+    function addBubble(text, who = "bot", typing = false) {
       const div = document.createElement("div");
       div.className = `bubble ${who}`;
-      div.innerText = text; // Safer than textContent for basic text
-      chatBody.appendChild(div);
+      
+      if (who === "bot") {
+          if (typing) {
+              div.innerHTML = "";
+              chatBody.appendChild(div);
+              let i = 0;
+              const words = text.split(" ");
+              const interval = setInterval(() => {
+                  if (i < words.length) {
+                      div.innerHTML = marked.parse(words.slice(0, i + 1).join(" "));
+                      div.querySelectorAll("p").forEach(p => p.style.margin = "0 0 10px 0");
+                      chatBody.scrollTop = chatBody.scrollHeight;
+                      i++;
+                  } else {
+                      clearInterval(interval);
+                  }
+              }, 40);
+          } else {
+              div.innerHTML = marked.parse(text);
+              div.querySelectorAll("p").forEach(p => p.style.margin = "0 0 10px 0");
+              chatBody.appendChild(div);
+          }
+      } else {
+          div.innerText = text;
+          chatBody.appendChild(div);
+      }
+      
       chatBody.scrollTop = chatBody.scrollHeight;
+      return div;
     }
 
-    // ---------------------------------------------------------
-    //  CHAT LOGIC
-    // ---------------------------------------------------------
+    async function loadHistory() {
+        try {
+            const res = await fetch(ENDPOINT, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "download", sessionId: getSessionId() })
+            });
+            const data = await res.json();
+            if (data.history && data.history.length > 0) {
+                chatBody.innerHTML = "";
+                data.history.forEach(m => {
+                    addBubble(m.content, m.role === "assistant" ? "bot" : "user", false);
+                });
+            }
+        } catch (e) {
+            console.error("Failed to load history:", e);
+        }
+    }
+
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       let msg = chatText.value.trim();
 
-      const turnstileResponse = turnstile.getResponse();
+      const turnstileResponse = window.turnstile ? window.turnstile.getResponse() : null;
       if (!turnstileResponse) {
-        addBubble("Please complete the Turnstile challenge! 🛡️", "bot");
+        addBubble("Verifying connection, please try again in a moment... 🛡️", "bot");
         return;
       }
       
       if (!msg && !currentImage) return;
-      if (!msg && currentImage) {
-          msg = "Please analyze this image.";
-      }
+      if (!msg && currentImage) msg = "Please analyze this image.";
 
-      // 1. Show User Message
       if (currentImage) {
         addBubble("🖼️ [Image attached]\n" + msg, "user");
       } else {
@@ -584,7 +752,6 @@
       }
       chatText.value = "";
 
-      // 2. Show Typing Indicator
       const typingDiv = document.createElement("div");
       typingDiv.className = "bubble bot";
       typingDiv.textContent = "Thinking... 💭";
@@ -592,18 +759,19 @@
       chatBody.scrollTop = chatBody.scrollHeight;
 
       try {
-        // 3. Send to Worker
+        const modelSelect = document.getElementById("modelSelect");
         const payload = {
             action: "chat",
             site: SITE_NAME,
             sessionId: getSessionId(),
             message: msg,
+            model: modelSelect ? modelSelect.value : "@cf/meta/llama-3.1-8b-instruct",
             cf_turnstile_response: turnstileResponse
         };
 
         if (currentImage) {
             payload.image = currentImage;
-            currentImage = null; // Clear after sending
+            currentImage = null;
         }
 
         const res = await fetch(ENDPOINT, {
@@ -612,42 +780,50 @@
           body: JSON.stringify(payload)
         });
 
-        if (!res.ok) throw new Error("Network response was not ok");
-
         const data = await res.json();
 
-        // 4. Remove Typing & Show Reply
-        typingDiv.remove();
-        addBubble(data.reply || "I'm not sure what to say.");
+        if (!res.ok) throw new Error(data.error || "Network response was not ok");
 
-        // Reset turnstile for next message
-        turnstile.reset();
+        typingDiv.remove();
+        if (data.reply) {
+            addBubble(data.reply, "bot", true);
+        } else {
+            addBubble("I'm not sure what to say.");
+        }
 
       } catch (err) {
         console.error(err);
         typingDiv.remove();
-        addBubble("Error connecting to brain. 🧠", "bot");
-        if (typeof turnstile !== 'undefined') turnstile.reset();
+        addBubble("Error: " + err.message + " 🧠", "bot");
       }
     });
 
-    // ---------------------------------------------------------
-    //  MEMORY MANAGEMENT (Download/Upload)
-    // -----------------------------------------    // -------- Download Memory --------
+    clearBtn.addEventListener("click", async () => {
+        if (!confirm("Clear chat history?")) return;
+        try {
+            await fetch(ENDPOINT, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "clear", sessionId: getSessionId() })
+            });
+            chatBody.innerHTML = "";
+            addBubble("Memory cleared! Starting fresh. ✨");
+            if (typeof turnstile !== 'undefined') turnstile.reset();
+        } catch (e) {
+            console.error(e);
+            addBubble("Failed to clear chat history from server.");
+        }
+    });
+
     dlBtn.addEventListener("click", async () => {
       try {
         const res = await fetch(ENDPOINT, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "download", // Matching worker
-            sessionId: getSessionId()
-          })
+          body: JSON.stringify({ action: "download", sessionId: getSessionId() })
         });
 
         const data = await res.json();
-        // Worker returns { history: [], facts: {} }
-        // Create downloadable JSON file
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
 
@@ -667,15 +843,8 @@
       }
     });
 
-    // UPLOAD PREPARATIONS
-    ulBtn.addEventListener("click", () => {
-      memFile.click(); // Trigger hidden file input
-    });
-
-    // IMAGE UPLOAD LOGIC
-    imgBtn.addEventListener("click", () => {
-      imgFile.click();
-    });
+    ulBtn.addEventListener("click", () => { memFile.click(); });
+    imgBtn.addEventListener("click", () => { imgFile.click(); });
 
     imgFile.addEventListener("change", (e) => {
       const file = e.target.files[0];
@@ -684,17 +853,13 @@
       const reader = new FileReader();
       reader.onload = (event) => {
         const base64String = event.target.result.split(',')[1];
-        currentImage = {
-          mimeType: file.type,
-          data: base64String
-        };
+        currentImage = { mimeType: file.type, data: base64String };
         addBubble("Image attached! Type a message to ask about it. 🖼️", "bot");
       };
       reader.readAsDataURL(file);
-      imgFile.value = ""; // Reset
+      imgFile.value = "";
     });
 
-    // UPLOAD EXECUTION
     memFile.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -703,16 +868,15 @@
       reader.onload = async (event) => {
         try {
           const jsonContent = JSON.parse(event.target.result);
-
           addBubble("Uploading memory... 📤");
 
           const res = await fetch(ENDPOINT, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              action: "upload", // Matching worker
+              action: "upload",
               sessionId: getSessionId(),
-              history: jsonContent.history || [] // Worker expects 'history' array
+              history: jsonContent.history || []
             })
           });
 
@@ -729,75 +893,48 @@
       };
 
       reader.readAsText(file);
-      // Reset input so you can upload same file again if needed
       memFile.value = "";
     });
 
-    // ---------------------------------------------------------
-    //  GAME TAB SWITCHING
-    // ---------------------------------------------------------
-    // Simple Tab Switching Logic
     const gameTabsContainer = document.getElementById("gameTabs");
     const gameArea = document.getElementById("gameArea");
 
     gameTabsContainer.addEventListener("click", (e) => {
       if (e.target.tagName !== "BUTTON") return;
 
-      // 1. Update Active Tab
-      const buttons = gameTabsContainer.querySelectorAll("button");
-      buttons.forEach(b => b.classList.remove("active"));
+      gameTabsContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
       e.target.classList.add("active");
 
-      // 2. Load Content based on Game Name
-      const gameName = e.target.getAttribute("data-game");
-      loadGameContent(gameName);
+      loadGameContent(e.target.getAttribute("data-game"));
     });
 
     function loadGameContent(gameName) {
-      gameArea.innerHTML = ""; // Clear current game
+      gameArea.innerHTML = "";
 
       switch (gameName) {
         case "clicker":
-          gameArea.innerHTML = `
-            <iframe src="https://scratch.mit.edu/projects/891171793/embed" 
-              style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
+          gameArea.innerHTML = `<iframe src="https://scratch.mit.edu/projects/891171793/embed" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
           break;
-
         case "chess":
-          gameArea.innerHTML = `
-            <iframe src="/chess/index.html" 
-              style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
+          gameArea.innerHTML = `<iframe src="/chess/index.html" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
           break;
-
         case "tetris":
-          gameArea.innerHTML = `
-            <iframe src="/Tetris/index.html" 
-              style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
+          gameArea.innerHTML = `<iframe src="/Tetris/index.html" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
           break;
-
         case "snake":
-          // Assuming you have a snake game at /snake/index.html
-          gameArea.innerHTML = `
-            <iframe src="/snake/index.html" 
-              style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
+          gameArea.innerHTML = `<iframe src="/snake/index.html" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
           break;
-
         case "pong":
           initPongGame();
           break;
-
         case "memory":
           initMemoryGame();
           break;
-
         default:
           gameArea.innerHTML = "Select a game to play!";
       }
     }
 
-    // ---------------------------------------------------------
-    //  EMBEDDED PONG GAME
-    // ---------------------------------------------------------
     function initPongGame() {
       gameArea.innerHTML = `
         <div style="position:relative; width:100%; height:100%; display:flex; flex-direction:column; align-items:center;">
@@ -811,8 +948,7 @@
       const ctx = canvas.getContext("2d");
       const scoreDisplay = document.getElementById("pongScore");
 
-      let p1Score = 0;
-      let p2Score = 0;
+      let p1Score = 0, p2Score = 0;
 
       const ball = { x: 250, y: 150, radius: 7, dx: 4, dy: 4, speed: 4 };
       const p1 = { x: 10, y: 125, w: 10, h: 50 };
@@ -843,16 +979,18 @@
         p1.y = e.clientY - rect.top - p1.h / 2;
       });
 
+      function collision(b, p) {
+        p.top = p.y; p.bottom = p.y + p.h; p.left = p.x; p.right = p.x + p.w;
+        b.top = b.y - b.radius; b.bottom = b.y + b.radius; b.left = b.x - b.radius; b.right = b.x + b.radius;
+        return b.right > p.left && b.bottom > p.top && b.left < p.right && b.top < p.bottom;
+      }
+
       function update() {
         ball.x += ball.dx;
         ball.y += ball.dy;
 
-        // Wall collision
-        if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
-          ball.dy = -ball.dy;
-        }
+        if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) ball.dy = -ball.dy;
 
-        // Paddle collision
         let player = (ball.x < canvas.width / 2) ? p1 : p2;
         if (collision(ball, player)) {
           let collidePoint = ball.y - (player.y + player.h / 2);
@@ -864,47 +1002,22 @@
           ball.speed += 0.2;
         }
 
-        // AI Paddle
         p2.y += (ball.y - (p2.y + p2.h / 2)) * 0.1;
 
-        // Score
-        if (ball.x - ball.radius < 0) {
-          p2Score++;
-          resetBall();
-        } else if (ball.x + ball.radius > canvas.width) {
-          p1Score++;
-          resetBall();
-        }
+        if (ball.x - ball.radius < 0) { p2Score++; resetBall(); }
+        else if (ball.x + ball.radius > canvas.width) { p1Score++; resetBall(); }
         scoreDisplay.innerText = `${p1Score} : ${p2Score}`;
       }
 
-      function collision(b, p) {
-        p.top = p.y;
-        p.bottom = p.y + p.h;
-        p.left = p.x;
-        p.right = p.x + p.w;
-
-        b.top = b.y - b.radius;
-        b.bottom = b.y + b.radius;
-        b.left = b.x - b.radius;
-        b.right = b.x + b.radius;
-
-        return b.right > p.left && b.bottom > p.top && b.left < p.right && b.top < p.bottom;
-      }
-
       function render() {
-        drawRect(0, 0, canvas.width, canvas.height, "#000"); // Clear
+        drawRect(0, 0, canvas.width, canvas.height, "#000");
         drawRect(p1.x, p1.y, p1.w, p1.h, "#fff");
         drawRect(p2.x, p2.y, p2.w, p2.h, "#fff");
-        drawCircle(ball.x, ball.y, ball.radius, varToHex('--blue') || "#4ea1ff");
-      }
-
-      function varToHex(variable) {
-        return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+        drawCircle(ball.x, ball.y, ball.radius, getComputedStyle(document.documentElement).getPropertyValue('--blue').trim() || "#4ea1ff");
       }
 
       function game() {
-        if (!document.getElementById("pongCanvas")) return; // Stop if tab changed
+        if (!document.getElementById("pongCanvas")) return;
         update();
         render();
         requestAnimationFrame(game);
@@ -912,9 +1025,6 @@
       game();
     }
 
-    // ---------------------------------------------------------
-    //  EMBEDDED MEMORY GAME
-    // ---------------------------------------------------------
     function initMemoryGame() {
       gameArea.innerHTML = '';
 
@@ -932,31 +1042,23 @@
 
       document.getElementById('restartMemBtn').addEventListener('click', initMemoryGame);
 
-      const icons = ["🍎", "🍎", "🍌", "🍌", "🍇", "🍇", "🍉", "🍉", "🍒", "🍒", "🥝", "🥝", "🍍", "🍍", "🥭", "🥭"];
+      const icons = ["🍎","🍎","🍌","🍌","🍇","🍇","🍉","🍉","🍒","🍒","🥝","🥝","🍍","🍍","🥭","🥭"];
 
-      // Shuffle
       for (let i = icons.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [icons[i], icons[j]] = [icons[j], icons[i]];
       }
 
-      let flippedCards = [];
-      let matchedCount = 0;
+      let flippedCards = [], matchedCount = 0;
 
       icons.forEach((icon, idx) => {
         const card = document.createElement("div");
-        card.style.cssText = `
-          background: var(--card2); height: 80px; border-radius: 12px; 
-          display: flex; align-items: center; justify-content: center; 
-          font-size: 2rem; cursor: pointer; user-select: none; transition: transform 0.2s;
-          border: 1px solid var(--border);
-        `;
+        card.style.cssText = `background:var(--card2); height:80px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:2rem; cursor:pointer; user-select:none; transition:transform 0.2s; border:1px solid var(--border);`;
         card.dataset.val = icon;
         card.dataset.idx = idx;
-        card.innerText = "❓"; // Face down
+        card.innerText = "❓";
 
         card.addEventListener("click", () => {
-          // Logic: Check if card is flipped or matched
           if (card.innerText !== "❓" || flippedCards.length >= 2) return;
 
           card.innerText = icon;
@@ -967,21 +1069,16 @@
           if (flippedCards.length === 2) {
             const [c1, c2] = flippedCards;
             if (c1.dataset.val === c2.dataset.val) {
-              // Match
               c1.style.background = "rgba(45, 107, 255, 0.2)";
               c2.style.background = "rgba(45, 107, 255, 0.2)";
-              flippedCards = []; // Reset flipped array
+              flippedCards = [];
               matchedCount += 2;
-
-              if (matchedCount === icons.length) {
-                setTimeout(() => alert("You Won! 🎉"), 500);
-              }
+              if (matchedCount === icons.length) setTimeout(() => alert("You Won! 🎉"), 500);
             } else {
-              // No Match
               setTimeout(() => {
                 c1.innerText = "❓"; c1.style.background = "var(--card2)"; c1.style.transform = "scale(1)";
                 c2.innerText = "❓"; c2.style.background = "var(--card2)"; c2.style.transform = "scale(1)";
-                flippedCards = []; // Reset flipped array
+                flippedCards = [];
               }, 800);
             }
           }
@@ -993,7 +1090,7 @@
 
   </script>
 
-<script src="/global-header.js"></script>
+<script src="../global-header.js"></script>
 </body>
 
 </html>
