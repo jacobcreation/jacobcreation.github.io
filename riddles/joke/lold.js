@@ -9,6 +9,7 @@ class LOLD {
 		this.threshold = options.threshold || 15;
 		this.sensitivity = options.sensitivity || 0.5;
 		this.onLaugh = options.onLaugh || (() => {});
+		this.onVolumeChange = options.onVolumeChange || null;
 
 		this.audioContext = null;
 		this.analyser = null;
@@ -16,27 +17,24 @@ class LOLD {
 		this.dataArray = null;
 		this.isListening = false;
 		this.laughDetected = false;
+		this.animationFrameId = null;
 
 		// Pulse detection for rhythmic laughter
-		this.lastVolumes = [];
-		this.pulseCount = 0;
 		this.lastPulseTime = 0;
+		this.pulseCount = 0;
 	}
 
 	async start() {
+		if (this.audioContext) return true;
 		try {
 			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-			this.audioContext = new (
-				window.AudioContext || window.webkitAudioContext
-			)();
+			this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
 			this.analyser = this.audioContext.createAnalyser();
 			this.microphone = this.audioContext.createMediaStreamSource(stream);
 			this.microphone.connect(this.analyser);
 
 			this.analyser.fftSize = 256;
 			this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-			this.isListening = true;
-			this.tick();
 			return true;
 		} catch (err) {
 			console.error("LOLD: Microphone access denied", err);
@@ -45,59 +43,70 @@ class LOLD {
 	}
 
 	stop() {
-		this.isListening = false;
-		if (this.audioContext) this.audioContext.close();
+		this.setListening(false);
+		if (this.audioContext) {
+			this.audioContext.close();
+			this.audioContext = null;
+		}
 	}
 
 	setListening(val) {
 		this.isListening = val;
-		this.laughDetected = false;
 		if (val) {
+			this.laughDetected = false;
 			this.pulseCount = 0;
 			this.lastPulseTime = 0;
+			if (!this.animationFrameId) {
+				this.tick();
+			}
+		} else {
+			if (this.animationFrameId) {
+				cancelAnimationFrame(this.animationFrameId);
+				this.animationFrameId = null;
+			}
 		}
 	}
 
 	tick() {
-		if (!this.isListening) {
-			requestAnimationFrame(() => this.tick());
-			return;
-		}
+		if (!this.isListening) return;
 
 		this.analyser.getByteFrequencyData(this.dataArray);
 
-		// 1. Calculate Average Volume
 		let sum = 0;
+		let max = 0;
 		for (let i = 0; i < this.dataArray.length; i++) {
 			sum += this.dataArray[i];
+			if (this.dataArray[i] > max) max = this.dataArray[i];
 		}
 		let average = sum / this.dataArray.length;
 
-		// 2. Pulse Detection (Looking for 'ha ha ha' rhythmic spikes)
+		// Advanced Pulse Detection (Looking for 'ha ha ha')
 		const now = Date.now();
 		if (average > this.threshold) {
-			if (now - this.lastPulseTime > 100 && now - this.lastPulseTime < 600) {
+			const timeDiff = now - this.lastPulseTime;
+			if (timeDiff > 80 && timeDiff < 500) {
 				this.pulseCount++;
-			} else if (now - this.lastPulseTime >= 600) {
+			} else if (timeDiff >= 500) {
 				this.pulseCount = 1;
 			}
 			this.lastPulseTime = now;
 		}
 
-		// 3. Trigger Laughter
-		// Detect either a loud burst or a rhythmic sequence (soft laughter)
+		// Trigger Laughter: Rhythmic pulses or sudden sharp sound
 		const rhythmicLaugh = this.pulseCount >= 3;
 		const loudLaugh = average > this.threshold * 2.5;
+		const peakLaugh = max > 200; // Sudden sharp peak
 
-		if ((rhythmicLaugh || loudLaugh) && !this.laughDetected) {
+		if ((rhythmicLaugh || loudLaugh || peakLaugh) && !this.laughDetected) {
 			this.laughDetected = true;
 			this.onLaugh(average);
 		}
 
-		// Update debug view if requested
-		if (this.onVolumeChange) this.onVolumeChange(average);
+		if (this.onVolumeChange) {
+			this.onVolumeChange(average, max);
+		}
 
-		requestAnimationFrame(() => this.tick());
+		this.animationFrameId = requestAnimationFrame(() => this.tick());
 	}
 }
 
