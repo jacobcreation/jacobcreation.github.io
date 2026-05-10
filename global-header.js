@@ -309,40 +309,63 @@
       return;
     }
 
+    // Check if script is already present to avoid CORS/Duplicate errors
+    const existingScript = document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]');
+    
     // Create Overlay
-    const overlay = document.createElement('div');
-    overlay.id = 'turnstile-overlay';
-    overlay.innerHTML = `
-      <div class="turnstile-card">
-        <div class="jacob-logo" style="justify-content: center; margin-bottom: 20px;">
-          <span class="jacob-logo-badge">J</span>
-          <span class="jacob-logo-text">JacobCreation</span>
+    if (!document.getElementById('turnstile-overlay')) {
+      const overlay = document.createElement('div');
+      overlay.id = 'turnstile-overlay';
+      overlay.innerHTML = `
+        <div class="turnstile-card">
+          <div class="jacob-logo" style="justify-content: center; margin-bottom: 20px;">
+            <span class="jacob-logo-badge">J</span>
+            <span class="jacob-logo-text">JacobCreation</span>
+          </div>
+          <h2>Security Check</h2>
+          <p>Please complete the verification to access the app.</p>
+          <div id="turnstile-container"></div>
         </div>
-        <h2>Security Check</h2>
-        <p>Please complete the verification to access the app.</p>
-        <div id="turnstile-container"></div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
+      `;
+      document.body.appendChild(overlay);
+    }
 
-    // Inject Turnstile Script
-    const script = document.createElement('script');
-    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback";
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
-
-    window.onloadTurnstileCallback = function () {
-      turnstile.render('#turnstile-container', {
-        sitekey: '0x4AAAAAADKK6nZsvohFh7HB', // Production Key
-        callback: function (token) {
-          console.log(`Challenge Success`);
-          sessionStorage.setItem('jacob_turnstile_passed', 'true');
-          overlay.classList.add('hidden');
-          setTimeout(() => overlay.remove(), 500);
-        },
-      });
+    const renderWidget = () => {
+      if (window.turnstile) {
+        turnstile.render('#turnstile-container', {
+          sitekey: '0x4AAAAAADKK6nZsvohFh7HB',
+          callback: function (token) {
+            console.log(`Global Challenge Success`);
+            sessionStorage.setItem('jacob_turnstile_passed', 'true');
+            const overlay = document.getElementById('turnstile-overlay');
+            if (overlay) {
+              overlay.classList.add('hidden');
+              setTimeout(() => overlay.remove(), 500);
+            }
+          },
+        });
+      }
     };
+
+    if (window.turnstile) {
+      renderWidget();
+    } else if (!existingScript) {
+      // Inject Turnstile Script only if missing
+      const script = document.createElement('script');
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.async = true;
+      script.defer = true;
+      script.onload = renderWidget;
+      document.head.appendChild(script);
+    } else {
+      // Script exists but turnstile not ready yet
+      const checkInterval = setInterval(() => {
+        if (window.turnstile) {
+          clearInterval(checkInterval);
+          renderWidget();
+        }
+      }, 100);
+    }
   }
 
   // Run Turnstile check
@@ -353,3 +376,4 @@
   }
 
 })();
+
