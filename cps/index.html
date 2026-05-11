@@ -145,11 +145,26 @@
       border-radius: 12px;
       border: 1px solid var(--border);
       font-size: 15px;
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.08);
       color: var(--text);
       font-family: inherit;
       outline: none;
       transition: all 0.2s ease;
+    }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23eaf2ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 40px;
+    }
+
+    select option {
+      background-color: #161f35;
+      color: #eaf2ff;
+      padding: 10px;
     }
 
     input::placeholder {
@@ -159,7 +174,8 @@
     input:focus,
     select:focus {
       border-color: var(--blue);
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 0 0 3px rgba(78, 161, 255, 0.15);
     }
 
     button {
@@ -170,7 +186,7 @@
       border: none;
       box-shadow: 0 4px 15px rgba(45, 107, 255, 0.2);
     }
-
+/* ... rest of CSS (lines 174-280 kept similar) ... */
     button:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(45, 107, 255, 0.3);
@@ -395,17 +411,47 @@
         tournamentScreen.classList.remove("hidden");
         title.textContent = `${TOURNAMENT} (${MODE === "swiss" ? "Swiss" : "Round Robin"})`;
       }
-      if (ROUND > 0) {
-        roundTitle.textContent = `${TOURNAMENT} — Round ${ROUND}`;
-      }
-
+      updateRoundTitle();
       render();
       if (OPEN || ROUND > 0) renderPairings();
-      if (!OPEN && ROUND > 0) document.querySelectorAll(".result-col select").forEach(s => s.disabled = true);
+    }
+
+    function updateRoundTitle() {
+      if (ROUND > 0) {
+        roundTitle.textContent = `${TOURNAMENT} — Round ${ROUND} ${OPEN ? "(In Progress)" : "(Finalized)"}`;
+      } else {
+        roundTitle.textContent = "";
+      }
+    }
+
+    function pushHistory() {
+      history.push(JSON.stringify({
+        players: JSON.parse(JSON.stringify(players)),
+        pairings: JSON.parse(JSON.stringify(pairings)),
+        ROUND,
+        OPEN
+      }));
+      if (history.length > 50) history.shift();
     }
 
     function updateResult(i, val) {
-      pairings[i].res = val;
+      const p = pairings[i];
+      p.res = val;
+
+      if (!OPEN) {
+        // Editing a finalized round
+        const w = p.a, b = p.b;
+        const wIdx = w.opp.lastIndexOf(b.id);
+        const bIdx = b.opp.lastIndexOf(w.id);
+
+        if (wIdx !== -1 && bIdx !== -1) {
+          const scores = { "1-0": [1, 0], "0-1": [0, 1], "0.5": [0.5, 0.5], "": [0, 0] };
+          const [wScore, bScore] = scores[val] || [0, 0];
+          w.results[wIdx] = wScore;
+          b.results[bIdx] = bScore;
+          recalculateStandings();
+        }
+      }
       saveData();
     }
 
@@ -421,7 +467,6 @@
       modeScreen.classList.add("hidden");
       tournamentScreen.classList.remove("hidden");
       saveData();
-
     }
 
     /* Players */
@@ -485,9 +530,9 @@
       if (MODE !== "swiss") return;
       if (OPEN) return alert("Finalize current round first");
 
-      history.push(JSON.stringify({ players, ROUND }));
+      pushHistory();
       ROUND++; OPEN = true; pairings = [];
-      roundTitle.textContent = `${TOURNAMENT} — Round ${ROUND}`;
+      updateRoundTitle();
 
       let pool = [...players].sort((a, b) => b.score - a.score || b.rating - a.rating);
       let bye = null;
@@ -511,6 +556,7 @@
       }
 
       renderPairings();
+      recalculateStandings();
       saveData();
     }
 
@@ -536,7 +582,7 @@
         </tr>`;
       });
 
-      const byePlayer = players.find(p => !pairings.some(m => m.a.id === p.id || m.b.id === p.id));
+      const byePlayer = players.find(p => !pairings.some(m => m.a.id === p.id || m.b.id === p.id) && p.opp.length === ROUND);
       if (byePlayer) {
         pairingsEl.innerHTML += `
         <tr>
@@ -551,28 +597,35 @@
       if (!OPEN) return;
       if (pairings.some(p => !p.res)) return alert("Missing results");
 
+      pushHistory();
+
       pairings.forEach(p => {
         const w = p.a, b = p.b;
         w.opp.push(b.id);
         b.opp.push(w.id);
 
         if (p.res === "1-0") {
-          w.score++; w.results.push(1); b.results.push(0);
-        }
-        if (p.res === "0-1") {
-          b.score++; b.results.push(1); w.results.push(0);
-        }
-        if (p.res === "0.5") {
-          w.score += 0.5; b.score += 0.5;
+          w.results.push(1); b.results.push(0);
+        } else if (p.res === "0-1") {
+          b.results.push(1); w.results.push(0);
+        } else if (p.res === "0.5") {
           w.results.push(0.5); b.results.push(0.5);
         }
       });
 
-      calculateTieBreaks();
-      document.querySelectorAll(".result-col select").forEach(s => s.disabled = true);
       OPEN = false;
-      render();
+      updateRoundTitle();
+      recalculateStandings();
       saveData();
+    }
+
+    /* Recalculate */
+    function recalculateStandings() {
+      players.forEach(p => {
+        p.score = p.results.reduce((a, b) => a + (b || 0), 0);
+      });
+      calculateTieBreaks();
+      render();
     }
 
     /* Tie-breaks */
@@ -584,7 +637,7 @@
           const o = players.find(x => x.id === oid);
           const os = o ? o.score : 0;
           oppScores.push(os);
-          sb += os * p.results[i];
+          sb += os * (p.results[i] || 0);
         });
 
         p.bh = oppScores.reduce((a, b) => a + b, 0);
@@ -624,10 +677,19 @@
       if (!history.length) return;
       const h = JSON.parse(history.pop());
       players = h.players;
+      pairings = h.pairings;
       ROUND = h.ROUND;
-      OPEN = false;
-      calculateTieBreaks();
-      render();
+      OPEN = h.OPEN;
+
+      // Restore references
+      pairings.forEach(p => {
+        p.a = players.find(x => x.id === p.a.id);
+        p.b = players.find(x => x.id === p.b.id);
+      });
+
+      updateRoundTitle();
+      recalculateStandings();
+      renderPairings();
       saveData();
     }
 
