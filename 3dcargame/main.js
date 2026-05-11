@@ -1770,8 +1770,8 @@ window.addEventListener("keyup", (event) => {
 navForm.addEventListener("submit", (event) => {
 	event.preventDefault();
 
-	if (typeof turnstile !== "undefined" && !turnstile.getResponse()) {
-		statusPill.textContent = "Please complete the Turnstile challenge! 🛡️";
+	if (sessionStorage.getItem('jacob_turnstile_passed') !== 'true') {
+		statusPill.textContent = "Please complete the Security Check overlay first! 🛡️";
 		return;
 	}
 

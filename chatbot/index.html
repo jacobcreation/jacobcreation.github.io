@@ -38,60 +38,6 @@
       box-sizing: border-box;
     }
 
-    #turnstile-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: var(--bg1);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.5s ease, visibility 0.5s ease;
-      backdrop-filter: blur(10px);
-    }
-    .ts-box {
-      background: var(--card);
-      padding: 30px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .ts-box h2 {
-      margin-top: 0;
-      color: var(--blue);
-      font-family: "Orbitron", sans-serif;
-    }
-    .ts-box p {
-      color: var(--muted);
-      margin-bottom: 20px;
-      font-size: 0.95rem;
-    }
-    .tiny-note {
-      font-size: 0.72rem;
-      color: var(--muted);
-      line-height: 1.3;
-    }
-    .btn-start {
-      margin-top: 20px;
-      background: linear-gradient(135deg, var(--blue), var(--blue2));
-      color: #071122;
-      border: none;
-      border-radius: 12px;
-      padding: 12px 30px;
-      font-weight: 700;
-      cursor: pointer;
-      display: none;
-      animation: bubbleIn 0.3s ease-out;
-    }
-
     body {
       margin: 0;
       font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -497,35 +443,6 @@
 
 <body>
 
-  <div id="turnstile-overlay">
-    <div class="ts-box">
-      <h2>Security Check</h2>
-      <p id="ts-status">Verifying your connection before proceeding to the app...</p>
-      <div id="turnstile-widget"></div>
-      <button class="btn-start" id="startAppBtn">Enter App ✨</button>
-    </div>
-  </div>
-
-  <script>
-    const PROD_SITEKEY = "0x4AAAAAADKK6nZsvohFh7HB";
-    const TEST_SITEKEY = "1x00000000000000000000AA";
-    
-    const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-    const activeSitekey = isLocal ? TEST_SITEKEY : PROD_SITEKEY;
-
-    window.onloadTurnstileCallback = function () {
-        turnstile.render('#turnstile-widget', {
-            sitekey: activeSitekey,
-            theme: 'dark',
-            callback: function(token) {
-                window.onTurnstileSuccess(token);
-            },
-        });
-    };
-  </script>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback" async defer></script>
-
-
   <main>
     <div class="container">
 
@@ -646,24 +563,30 @@
 
     let currentImage = null;
 
-    window.onTurnstileSuccess = function(token) {
-        const status = document.getElementById("ts-status");
-        const startBtn = document.getElementById("startAppBtn");
-        if (status) status.textContent = "Security check passed! Ready to go.";
-        if (startBtn) startBtn.style.display = "block";
-    };
+    // Force a fresh Turnstile challenge for the chatbot backend
+    sessionStorage.removeItem('jacob_turnstile_passed');
+    sessionStorage.removeItem('jacob_turnstile_token');
+    window.jacob_turnstile_token = null;
 
-    document.getElementById("startAppBtn").addEventListener("click", () => {
-        const overlay = document.getElementById("turnstile-overlay");
-        overlay.style.opacity = "0";
-        setTimeout(() => {
-            overlay.style.visibility = "hidden";
-            loadHistory();
-        }, 500);
-        
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+    // The global-header.js handles the overlay and token. 
+    // We just wait for it or check if it's already passed.
+    function checkInitialState() {
+      if (sessionStorage.getItem('jacob_turnstile_passed') === 'true') {
+        loadHistory();
+      }
+    }
+
+    window.addEventListener('jacobTurnstilePassed', (e) => {
+      console.log("Chatbot detected global turnstile pass");
+      loadHistory();
     });
+
+    // Run initial check
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', checkInitialState);
+    } else {
+      checkInitialState();
+    }
 
     function getSessionId() {
       let id = localStorage.getItem("jc_session");
@@ -731,9 +654,9 @@
       e.preventDefault();
       let msg = chatText.value.trim();
 
-      const turnstileResponse = window.turnstile ? window.turnstile.getResponse() : null;
+      const turnstileResponse = window.jacob_turnstile_token || sessionStorage.getItem('jacob_turnstile_token');
       if (!turnstileResponse) {
-        addBubble("Verifying connection, please try again in a moment... 🛡️", "bot");
+        addBubble("Security check required. Please refresh or wait for the verification overlay. 🛡️", "bot");
         return;
       }
       
@@ -803,7 +726,6 @@
             });
             chatBody.innerHTML = "";
             addBubble("Memory cleared! Starting fresh. ✨");
-            if (typeof turnstile !== 'undefined') turnstile.reset();
         } catch (e) {
             console.error(e);
             addBubble("Failed to clear chat history from server.");

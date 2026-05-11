@@ -2,11 +2,12 @@
 <html lang="en">
 
 <head>
+    <script>sessionStorage.removeItem("jacob_turnstile_passed");</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI Meme Generator</title>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
     <style>
         *,
         *::before,
@@ -512,7 +513,7 @@
             <label class="input-label" for="prompt">Your meme idea</label>
             <div class="input-row" style="flex-wrap: wrap;">
                 <input id="prompt" type="text" placeholder='e.g. "cat avoiding mondays"' maxlength="200" />
-                <div class="cf-turnstile" data-sitekey="0x4AAAAAADKK6nZsvohFh7HB" data-theme="dark" data-compact="true" style="margin-top: 10px; width: 100%;"></div>
+
                 <button id="genBtn" onclick="generate()">Generate ✦</button>
             </div>
         </div>
@@ -589,7 +590,7 @@
         }
 
         async function generate() {
-            if (typeof turnstile !== 'undefined' && !turnstile.getResponse()) {
+            if (sessionStorage.getItem('jacob_turnstile_passed') !== 'true') {
                 const errorMsg = document.getElementById('errorMsg');
                 errorMsg.textContent = 'Please complete the Turnstile challenge! 🛡️';
                 errorMsg.style.display = 'block';

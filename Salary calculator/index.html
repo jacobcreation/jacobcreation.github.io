@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <script>sessionStorage.removeItem("jacob_turnstile_passed");</script>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#000000">
 
@@ -9,7 +10,7 @@
   <title>Salary Calculator (2025 Official + Prototype Style)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Estimate weekly, monthly, and annual pay with overtime, holidays, night differential, bonuses, and allowance support.">
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -300,7 +301,7 @@
         </div>
       </div>
 
-      <div class="cf-turnstile" data-sitekey="0x4AAAAAADKK6nZsvohFh7HB" data-theme="light" style="margin-top: 20px;"></div>
+
 
       <div class="btns">
         <button type="submit">Calculate</button>
@@ -376,9 +377,9 @@
     document.getElementById("salaryForm").addEventListener("submit", function (e) {
       e.preventDefault();
 
-      const turnstileResponse = typeof turnstile !== 'undefined' ? turnstile.getResponse() : true;
-      if (!turnstileResponse) {
-        alert("Please complete the Turnstile challenge! 🛡️");
+      const turnstilePassed = sessionStorage.getItem('jacob_turnstile_passed') === 'true';
+      if (!turnstilePassed) {
+        alert("Please complete the Security Check overlay first! 🛡️");
         return;
       }
 

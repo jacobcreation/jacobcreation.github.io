@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>sessionStorage.removeItem("jacob_turnstile_passed");</script>
 <meta charset="UTF-8">
 <title>Neon Snake Arena</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
 
@@ -233,7 +234,7 @@ input[type="text"]:focus {
         <div class="input-group">
             <input type="text" id="playerName" placeholder="ENTER YOUR CALLSIGN..." maxlength="12">
         </div>
-        <div class="cf-turnstile" data-sitekey="0x4AAAAAADKK6nZsvohFh7HB" data-theme="dark" style="margin-bottom: 20px;"></div>
+
         <button class="btn-primary" onclick="startGame()">INITIATE COMBAT</button>
     </div>
 </div>
@@ -571,7 +572,7 @@ function addKillMsg(killer, victim) {
 }
 
 function startGame() {
-    if (typeof turnstile !== 'undefined' && !turnstile.getResponse()) {
+    if (sessionStorage.getItem('jacob_turnstile_passed') !== 'true') {
         alert("Please complete the Turnstile challenge! 🛡️");
         return;
     }

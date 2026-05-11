@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <script>sessionStorage.removeItem("jacob_turnstile_passed");</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Fight through a fantasy typing challenge, cast spells, track accuracy and WPM, and survive waves of words in Typing Quest." />
@@ -536,7 +537,7 @@
         </div>
 
         <div id="controls" style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
-            <div class="cf-turnstile" data-sitekey="0x4AAAAAADKK6nZsvohFh7HB" data-theme="dark"></div>
+
             <button id="start-btn" class="primary-btn" onclick="startGame()">Begin Quest</button>
         </div>
     </main>
@@ -658,8 +659,8 @@
         };
 
         async function startGame() {
-            if (typeof turnstile !== 'undefined' && !turnstile.getResponse()) {
-                alert("Please complete the Turnstile challenge! 🛡️");
+            if (sessionStorage.getItem('jacob_turnstile_passed') !== 'true') {
+                alert("Please complete the Security Check overlay first! 🛡️");
                 return;
             }
             // Reset State

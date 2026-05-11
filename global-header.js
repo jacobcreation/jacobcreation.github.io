@@ -253,11 +253,6 @@
         padding-top: 58px !important;
       }
     }
-
-    /* Hide redundant in-page Turnstile widgets */
-    .cf-turnstile {
-      display: none !important;
-    }
   `;
   document.head.appendChild(style);
 
@@ -278,9 +273,9 @@
         </button>
 
         <nav class="jacob-nav" id="jacobMainNav">
-          <a href="https://jacobcreation.github.io/about/">About</a>
-          <a href="https://jacobcreation.github.io/downloads/">🎮 Play Offline</a>
-          <a href="https://jacobcreation.github.io/releases/">🚀 Releases</a>
+          <a href="/about/">About</a>
+          <a href="/downloads/">🎮 Play Offline</a>
+          <a href="/releases/">🚀 Releases</a>
         </nav>
       </div>
     `;
@@ -332,16 +327,27 @@
 
     const renderWidget = () => {
       if (window.turnstile) {
+        const PROD_SITEKEY = '0x4AAAAAADKK6nZsvohFh7HB';
+        const TEST_SITEKEY = '1x00000000000000000000AA';
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const activeSitekey = isLocal ? TEST_SITEKEY : PROD_SITEKEY;
+
         turnstile.render('#turnstile-container', {
-          sitekey: '0x4AAAAAADKK6nZsvohFh7HB',
+          sitekey: activeSitekey,
           callback: function (token) {
             console.log(`Global Challenge Success`);
             sessionStorage.setItem('jacob_turnstile_passed', 'true');
+            sessionStorage.setItem('jacob_turnstile_token', token);
+            window.jacob_turnstile_token = token;
+            
             const overlay = document.getElementById('turnstile-overlay');
             if (overlay) {
               overlay.classList.add('hidden');
               setTimeout(() => overlay.remove(), 500);
             }
+
+            // Dispatch event for pages waiting for turnstile
+            window.dispatchEvent(new CustomEvent('jacobTurnstilePassed', { detail: { token } }));
           },
         });
       }
