@@ -58,112 +58,6 @@
             overflow-x: hidden;
         }
 
-        /* Header */
-        header {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-            background: rgba(10, 16, 32, 0.65);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.10);
-        }
-
-        .header-container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 14px 18px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 800;
-            letter-spacing: 0.2px;
-            font-size: 1.15rem;
-            white-space: nowrap;
-        }
-
-        /* Badge */
-        .logo-badge {
-            width: 38px;
-            height: 38px;
-            display: grid;
-            place-items: center;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #1e90ff, #ff2d2d);
-            box-shadow: 0 10px 24px rgba(30, 144, 255, 0.25);
-            border: 1px solid rgba(255, 255, 255, 0.20);
-            font-weight: 900;
-            color: white;
-        }
-
-        /* Text Logo (Blue + Red gradient) */
-        .logo-text {
-            font-family: "Orbitron", sans-serif;
-            font-weight: 800;
-            font-size: 1.15rem;
-            letter-spacing: 1px;
-            background: linear-gradient(90deg, #1e90ff, #ff2d2d);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow:
-                0 0 14px rgba(30, 144, 255, 0.35),
-                0 0 14px rgba(255, 45, 45, 0.25);
-        }
-
-        .menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--text);
-            font-size: 1.6rem;
-            cursor: pointer;
-            padding: 4px 8px;
-            min-width: 44px;
-            min-height: 44px;
-            align-items: center;
-            justify-content: center;
-            z-index: 1001;
-            transition: transform 0.2s ease;
-        }
-
-        nav {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-            align-items: center;
-        }
-
-        nav a {
-            text-decoration: none;
-            color: var(--text);
-            font-weight: 600;
-            font-size: 0.92rem;
-            padding: 9px 14px;
-            min-height: 44px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            background: rgba(255, 255, 255, 0.06);
-            transition: transform 0.18s ease, background 0.18s ease, border 0.18s ease;
-        }
-
-        nav a:hover, nav a:focus {
-            transform: translateY(-2px);
-            background: rgba(255, 255, 255, 0.10);
-            border-color: rgba(255, 255, 255, 0.22);
-            outline: none;
-        }
-
         /* Main */
         main {
             max-width: 1100px;
@@ -400,35 +294,6 @@
                 grid-template-columns: 1fr;
             }
 
-            .header-container {
-                flex-wrap: wrap;
-                padding: 12px 16px;
-            }
-
-            .menu-toggle {
-                display: flex;
-            }
-
-            nav {
-                display: none;
-                width: 100%;
-                flex-direction: column;
-                gap: 8px;
-                padding-top: 12px;
-            }
-
-            nav.active {
-                display: flex;
-            }
-
-            nav a {
-                padding: 12px 16px;
-                text-align: center;
-                font-size: 1rem;
-                width: 100%;
-                border-radius: 12px;
-            }
-
             .hero h1 {
                 font-size: 1.9rem;
             }
@@ -469,25 +334,6 @@
 </head>
 
 <body>
-    <header id="jacob-global-header">
-        <div class="header-container">
-            <div class="logo">
-                <span class="logo-badge">J</span>
-                <span class="logo-text">JacobCreation</span>
-            </div>
-
-            <button class="menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation">
-                ☰
-            </button>
-
-            <nav id="mainNav">
-                <a href="/about">About</a>
-                <a href="/downloads/">🎮 Play Offline (Mobile)</a>
-                <a href="/releases/">🚀 Desktop App Releases</a>
-            </nav>
-        </div>
-    </header>
-
     <main>
         <!-- HERO -->
         <section class="hero" aria-label="Welcome">
@@ -632,20 +478,6 @@
         projectCount.textContent = cards.length;
         countPill.textContent = `${cards.length} projects`;
 
-        // Mobile Menu Toggle
-        const menuToggle = document.getElementById('mobileMenuToggle');
-        const mainNav = document.getElementById('mainNav');
-
-        menuToggle.addEventListener('click', () => {
-            mainNav.classList.toggle('active');
-            if (mainNav.classList.contains('active')) {
-                menuToggle.textContent = '✕';
-                menuToggle.setAttribute('aria-expanded', 'true');
-            } else {
-                menuToggle.textContent = '☰';
-                menuToggle.setAttribute('aria-expanded', 'false');
-            }
-        });
     </script>
 
     <script>
