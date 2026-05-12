@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 
 <head>
+    <meta charset="UTF-8">
     <script>sessionStorage.removeItem("jacob_turnstile_passed");</script>
   <link rel="icon" href="/favicon.png" type="image/png" />
 
@@ -186,7 +187,7 @@
       border: none;
       box-shadow: 0 4px 15px rgba(45, 107, 255, 0.2);
     }
-/* ... rest of CSS (lines 174-280 kept similar) ... */
+
     button:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(45, 107, 255, 0.3);
@@ -263,49 +264,101 @@
 
     /* Print */
     @media print {
+      @page {
+        margin: 1.5cm;
+      }
       body {
-        background: #fff;
-        color: #000;
+        background: white !important;
+        color: black !important;
+        display: block;
+        font-family: "Times New Roman", Times, serif !important;
       }
-
-      header,
-      .controls,
-      .card:not(.print-round) {
-        display: none
+      header, .controls, .danger, #modeScreen, .logo-badge, #standings-card-regular, .result-col, .remove-col {
+        display: none !important;
       }
-
+      .wrapper {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+      }
       .card {
-        background: #fff;
-        border: 1px solid #000;
-        box-shadow: none;
-        color: #000;
+        border: 1px solid #000 !important;
+        padding: 30px !important;
+        margin: 0 0 30px 0 !important;
+        background: white !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        page-break-inside: avoid;
       }
-
-      .result-col {
-        display: none
+      .card h2, .card h3 {
+        color: black !important;
+        border-bottom: 1px solid #000;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-align: center;
       }
-
-      th,
+      .table-wrap {
+        overflow-x: visible !important;
+        border: none !important;
+        border-radius: 0 !important;
+      }
+      table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        background: transparent !important;
+        border: 1px solid #000 !important;
+      }
+      th {
+        background: #eee !important;
+        color: black !important;
+        border: 1px solid #000 !important;
+        font-weight: bold !important;
+        padding: 10px !important;
+        text-transform: uppercase !important;
+      }
       td {
-        border: 1px solid #000;
-        font-size: 14px;
-        padding: 8px;
-        color: #000;
+        border: 1px solid #000 !important;
+        color: black !important;
+        padding: 10px !important;
+      }
+      tr:hover td {
+        background: transparent !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      #finalStandingsCard {
+        display: block !important;
+      }
+      #pairingsCard.no-print {
+        display: none !important;
       }
     }
+
+    .print-only { display: none; }
   </style>
 </head>
 
 <body>
+  <script src="../global-header.js"></script>
 
 
   <!-- MODE SELECT -->
   <div id="modeScreen" class="wrapper">
     <div class="card">
       <h2>Tournament Setup</h2>
-      <input id="tournamentName" placeholder="Tournament Name">
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <input id="tournamentName" placeholder="Tournament Name">
+        <input id="maxRoundsInput" type="number" placeholder="Number of Rounds" min="1" value="5">
+      </div>
 
-      <div class="controls">
+      <div class="controls" style="margin-top: 20px;">
         <button onclick="start('swiss')">Swiss</button>
         <button class="secondary" onclick="start('rr')">Round Robin</button>
       </div>
@@ -315,27 +368,51 @@
   <!-- TOURNAMENT -->
   <div id="tournamentScreen" class="wrapper hidden">
 
-    <div class="card">
+    <div class="card no-print">
       <h2 id="title"></h2>
       <div class="controls">
         <input id="pName" placeholder="Player name">
         <input id="pRating" type="number" placeholder="Rating">
 
         <button onclick="addPlayer()">Add</button>
-        <input type="file" id="fileInput" accept=".csv,.txt">
-        <button class="secondary" onclick="loadFile()">Upload</button>
-        <button onclick="nextRound()">Next Round</button>
-        <button class="secondary" onclick="finalize()">Finalize</button>
+        <input type="file" id="fileInput" accept=".csv,.txt" style="display:none">
+        <button class="secondary" onclick="document.getElementById('fileInput').click()">Upload CSV</button>
+        <button onclick="nextRound()" id="nextRoundBtn">Next Round</button>
+        <button class="secondary" onclick="finalize()" id="finalizeBtn">Finalize Round</button>
+        <button class="secondary" onclick="printCurrent()">🖨 Print</button>
+        <button class="secondary" onclick="exportTRF()">📤 TRF</button>
         <button class="secondary" onclick="undo()">Undo</button>
-        <button class="secondary" onclick="printCurrentRound()">🖨 Print Current Round</button>
-        <button class="secondary" onclick="exportTRF()">📤 Export Chess-Results (TRF)</button>
         <button class="danger" onclick="resetAll()">Reset</button>
       </div>
     </div>
 
-    <!-- Standings -->
-    <div class="card">
-      <h3>Standings</h3>
+    <!-- Final Standings (Visible after tournament ends or in print) -->
+    <div id="finalStandingsCard" class="card hidden">
+      <h2 style="text-align: center;">🏆 Final Standings 🏆</h2>
+      <div class="table-wrap">
+        <table id="finalStandingsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Rating</th>
+              <th>Score</th>
+              <th>BH</th>
+              <th>SB</th>
+            </tr>
+          </thead>
+          <tbody id="finalStandingsBody"></tbody>
+        </table>
+      </div>
+      <div class="print-only" style="margin-top: 40px; display: flex; justify-content: space-between;">
+        <div>Date: _________________</div>
+        <div>Arbiter: _________________</div>
+      </div>
+    </div>
+
+    <!-- Regular Standings -->
+    <div class="card no-print" id="standings-card-regular">
+      <h3>Current Standings</h3>
       <div class="table-wrap">
         <table>
           <thead>
@@ -344,10 +421,7 @@
               <th>Name</th>
               <th>Rating</th>
               <th>Score</th>
-              <th>BH</th>
-              <th>BH-1</th>
-              <th>SB</th>
-              <th>Remove</th>
+              <th class="remove-col">Action</th>
             </tr>
           </thead>
           <tbody id="standings"></tbody>
@@ -356,7 +430,7 @@
     </div>
 
     <!-- Pairings -->
-    <div class="card print-round">
+    <div class="card print-round" id="pairingsCard">
       <h3 id="roundTitle"></h3>
       <div class="table-wrap">
         <table>
@@ -371,19 +445,22 @@
           <tbody id="pairings"></tbody>
         </table>
       </div>
+      <div class="print-only" style="margin-top: 30px; font-size: 0.8rem; color: #666;">
+        Tournament: <span class="print-tournament-name"></span> | Round: <span class="print-round-num"></span>
+      </div>
     </div>
 
   </div>
 
   <script>
     const STORAGE_KEY = "cps_data_v1";
-    let MODE = null, ROUND = 0, OPEN = false;
+    let MODE = null, ROUND = 0, MAX_ROUNDS = 5, OPEN = false, FINISHED = false;
     let players = [], pairings = [], history = [];
     let TOURNAMENT = "Tournament";
 
     /* Persistence */
     function saveData() {
-      const data = { players, pairings, history, MODE, ROUND, OPEN, TOURNAMENT };
+      const data = { players, pairings, history, MODE, ROUND, MAX_ROUNDS, OPEN, FINISHED, TOURNAMENT };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
 
@@ -396,7 +473,9 @@
       history = data.history;
       MODE = data.MODE;
       ROUND = data.ROUND;
+      MAX_ROUNDS = data.MAX_ROUNDS || 5;
       OPEN = data.OPEN;
+      FINISHED = data.FINISHED || false;
       TOURNAMENT = data.TOURNAMENT;
 
       // Fix object references in pairings
@@ -411,17 +490,22 @@
         tournamentScreen.classList.remove("hidden");
         title.textContent = `${TOURNAMENT} (${MODE === "swiss" ? "Swiss" : "Round Robin"})`;
       }
-      updateRoundTitle();
-      render();
-      if (OPEN || ROUND > 0) renderPairings();
+      
+      if (FINISHED) {
+        showFinalStandings();
+      } else {
+        updateRoundTitle();
+        render();
+        if (OPEN || ROUND > 0) renderPairings();
+      }
     }
 
     function updateRoundTitle() {
-      if (ROUND > 0) {
-        roundTitle.textContent = `${TOURNAMENT} — Round ${ROUND} ${OPEN ? "(In Progress)" : "(Finalized)"}`;
-      } else {
-        roundTitle.textContent = "";
-      }
+      const displayTitle = `${TOURNAMENT} — Round ${ROUND}`;
+      roundTitle.textContent = ROUND > 0 ? `${displayTitle} ${OPEN ? "(In Progress)" : "(Finalized)"}` : "";
+      
+      document.querySelectorAll(".print-tournament-name").forEach(el => el.textContent = TOURNAMENT);
+      document.querySelectorAll(".print-round-num").forEach(el => el.textContent = ROUND);
     }
 
     function pushHistory() {
@@ -429,9 +513,38 @@
         players: JSON.parse(JSON.stringify(players)),
         pairings: JSON.parse(JSON.stringify(pairings)),
         ROUND,
-        OPEN
+        OPEN,
+        FINISHED
       }));
       if (history.length > 50) history.shift();
+    }
+
+    function undo() {
+      if (!history.length) return;
+      const h = JSON.parse(history.pop());
+      players = h.players;
+      pairings = h.pairings;
+      ROUND = h.ROUND;
+      OPEN = h.OPEN;
+      FINISHED = h.FINISHED || false;
+
+      // Restore references
+      pairings.forEach(p => {
+        p.a = players.find(x => x.id === p.a.id);
+        p.b = players.find(x => x.id === p.b.id);
+      });
+
+      if (!FINISHED) {
+        finalStandingsCard.classList.add("hidden");
+        pairingsCard.classList.remove("no-print");
+        nextRoundBtn.classList.remove("hidden");
+        finalizeBtn.classList.remove("hidden");
+      }
+
+      updateRoundTitle();
+      recalculateStandings();
+      renderPairings();
+      saveData();
     }
 
     function updateResult(i, val) {
@@ -463,6 +576,7 @@
       }
       MODE = m;
       TOURNAMENT = tournamentName.value || "Tournament";
+      MAX_ROUNDS = parseInt(maxRoundsInput.value) || 5;
       title.textContent = `${TOURNAMENT} (${m === "swiss" ? "Swiss" : "Round Robin"})`;
       modeScreen.classList.add("hidden");
       tournamentScreen.classList.remove("hidden");
@@ -499,8 +613,8 @@
       saveData();
     }
 
-    function loadFile() {
-      const f = fileInput.files[0];
+    function loadFile(e) {
+      const f = e.target.files[0];
       if (!f) return;
       const r = new FileReader();
       r.onload = () => {
@@ -524,11 +638,14 @@
       };
       r.readAsText(f);
     }
+    
+    document.getElementById('fileInput').addEventListener('change', loadFile);
 
     /* Swiss */
     function nextRound() {
       if (MODE !== "swiss") return;
       if (OPEN) return alert("Finalize current round first");
+      if (ROUND >= MAX_ROUNDS) return alert("Tournament already reached max rounds!");
 
       pushHistory();
       ROUND++; OPEN = true; pairings = [];
@@ -616,7 +733,44 @@
       OPEN = false;
       updateRoundTitle();
       recalculateStandings();
+      
+      if (ROUND >= MAX_ROUNDS) {
+        FINISHED = true;
+        showFinalStandings();
+      }
+      
       saveData();
+    }
+
+    function showFinalStandings() {
+      FINISHED = true;
+      finalStandingsCard.classList.remove("hidden");
+      pairingsCard.classList.add("no-print"); // Hide pairings from print in final view
+      
+      // Hide round control buttons
+      nextRoundBtn.classList.add("hidden");
+      finalizeBtn.classList.add("hidden");
+
+      const sorted = [...players].sort((a, b) =>
+        b.score - a.score ||
+        b.bh - a.bh ||
+        b.sb - a.sb ||
+        b.rating - a.rating
+      );
+
+      finalStandingsBody.innerHTML = "";
+      sorted.forEach((p, i) => {
+        finalStandingsBody.innerHTML += `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${p.name}</td>
+            <td>${p.rating}</td>
+            <td>${p.score}</td>
+            <td>${p.bh.toFixed(2)}</td>
+            <td>${p.sb.toFixed(2)}</td>
+          </tr>
+        `;
+      });
     }
 
     /* Recalculate */
@@ -654,8 +808,6 @@
       [...players].sort((a, b) =>
         b.score - a.score ||
         b.bh - a.bh ||
-        b.bh1 - a.bh1 ||
-        b.sb - a.sb ||
         b.rating - a.rating
       ).forEach((p, i) => {
         standings.innerHTML += `
@@ -664,38 +816,13 @@
       <td>${p.name}</td>
       <td>${p.rating}</td>
       <td>${p.score}</td>
-      <td>${p.bh.toFixed(2)}</td>
-      <td>${p.bh1.toFixed(2)}</td>
-      <td>${p.sb.toFixed(2)}</td>
-      <td><button class="danger" onclick="removePlayer('${p.id}')">🗑</button></td>
+      <td class="remove-col"><button class="danger" onclick="removePlayer('${p.id}')">🗑</button></td>
     </tr>`;
       });
     }
 
-    /* Undo */
-    function undo() {
-      if (!history.length) return;
-      const h = JSON.parse(history.pop());
-      players = h.players;
-      pairings = h.pairings;
-      ROUND = h.ROUND;
-      OPEN = h.OPEN;
-
-      // Restore references
-      pairings.forEach(p => {
-        p.a = players.find(x => x.id === p.a.id);
-        p.b = players.find(x => x.id === p.b.id);
-      });
-
-      updateRoundTitle();
-      recalculateStandings();
-      renderPairings();
-      saveData();
-    }
-
     /* Print */
-    function printCurrentRound() {
-      if (!ROUND) return alert("No round yet");
+    function printCurrent() {
       window.print();
     }
 
@@ -727,11 +854,9 @@
     loadData();
   </script>
 
-  <script src="../global-header.js"></script>
-
   <script>
     if ("serviceWorker" in navigator) {
-      navigator.worker.register("/service-worker.js");
+      navigator.serviceWorker.register("/service-worker.js");
     }
   </script>
 
