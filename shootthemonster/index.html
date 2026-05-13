@@ -2,6 +2,10 @@
 <!-- Created with https://packager.turbowarp.org/ -->
 <html>
 <head>
+    <!-- Cache Busting Meta Tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <!-- We only include this to explicitly loosen the CSP of various packager environments. It does not provide any security. -->
@@ -173,7 +177,7 @@
     </details>
   </div>
 
-  <script src="script.js"></script>
+  <script>(function(){const v=Date.now();document.write('<script src="script.js?v='+v+'"><\/script>');})();</script>
   <script>
     const appElement = document.getElementById('app');
     const launchScreen = document.getElementById('launch');
@@ -427,6 +431,6 @@
     };
     run().catch(handleError);
   </script>
-<script src="/global-header.js"></script>
+<script>(function(){const v=Date.now();document.write('<script src="/global-header.js?v='+v+'"><\/script>');})();</script>
 </body>
 </html>

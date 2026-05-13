@@ -17,6 +17,11 @@
 
     <title>JacobCreation - Jacob's website</title>
 
+    <!-- Cache Busting Meta Tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <!-- ✅ Favicon setup -->
     <link rel="icon" href="/favicon.png" type="image/png" />
 
@@ -486,7 +491,7 @@
         }
     </script>
 
-    <script src="/global-header.js"></script>
+    <script>(function(){const v=Date.now();document.write('<script src="/global-header.js?v='+v+'"><\/script>');})();</script>
 </body>
 
 </html>

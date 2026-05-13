@@ -2,7 +2,10 @@
 <html lang="en">
 
 <head>
-    <script>sessionStorage.removeItem("jacob_turnstile_passed");</script>
+    <!-- Cache Busting Meta Tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#000000">
 
@@ -377,12 +380,6 @@
     document.getElementById("salaryForm").addEventListener("submit", function (e) {
       e.preventDefault();
 
-      const turnstilePassed = sessionStorage.getItem('jacob_turnstile_passed') === 'true';
-      if (!turnstilePassed) {
-        alert("Please complete the Security Check overlay first! 🛡️");
-        return;
-      }
-
       const rate = parseFloat(document.getElementById("hourly").value) || 0;
       const regH = parseFloat(document.getElementById("regularHours").value) || 0;
       const otH = parseFloat(document.getElementById("overtimeHours").value) || 0;
@@ -510,7 +507,7 @@
     // Print
     document.getElementById("printBtn").addEventListener("click", () => window.print());
   </script>
-  <script src="../global-header.js"></script>
+  <script>(function(){const v=Date.now();document.write('<script src="../global-header.js?v='+v+'"><\/script>');})();</script>
 
   <script>
     if ("serviceWorker" in navigator) {

@@ -1,13 +1,16 @@
 (function () {
-  const hasViewportMeta = !!document.querySelector('meta[name="viewport"]');
-  if (!hasViewportMeta) {
-    const viewportMeta = document.createElement("meta");
+  // 0. Ensure Viewport Meta Tag is set for mobile friendliness
+  let viewportMeta = document.querySelector('meta[name="viewport"]');
+  if (!viewportMeta) {
+    viewportMeta = document.createElement("meta");
     viewportMeta.name = "viewport";
-    viewportMeta.content = "width=device-width, initial-scale=1, viewport-fit=cover";
+    viewportMeta.content = "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5";
     document.head.appendChild(viewportMeta);
+  } else if (!viewportMeta.content.includes("width=device-width")) {
+    viewportMeta.content = "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5";
   }
 
-  // 1. Inject CSS
+  // 1. Inject Global CSS
   const style = document.createElement('style');
   style.textContent = `
     /* Google Fonts */
@@ -157,62 +160,6 @@
       transition: transform 0.2s ease;
     }
 
-    /* Turnstile Overlay */
-    #turnstile-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(11, 16, 32, 0.95);
-      backdrop-filter: blur(20px);
-      z-index: 2147483647;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-family: "Poppins", sans-serif;
-      color: #eaf2ff;
-      text-align: center;
-      padding: 20px;
-      transition: opacity 0.5s ease, visibility 0.5s ease;
-    }
-
-    #turnstile-overlay.hidden {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    .turnstile-card {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 40px;
-      border-radius: 24px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-      max-width: 400px;
-      width: 100%;
-    }
-
-    .turnstile-card h2 {
-      font-family: "Orbitron", sans-serif;
-      margin-bottom: 10px;
-      font-size: 1.5rem;
-      background: linear-gradient(90deg, #1e90ff, #ff2d2d);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .turnstile-card p {
-      color: rgba(234, 242, 255, 0.7);
-      margin-bottom: 30px;
-      font-size: 0.95rem;
-    }
-
-    #turnstile-container {
-      display: flex;
-      justify-content: center;
-      min-height: 65px;
-    }
-
     /* Mobile Responsive */
     @media (max-width: 768px) {
       .jacob-header-container {
@@ -256,8 +203,13 @@
   `;
   document.head.appendChild(style);
 
+  // 1b. Inject external Mobile Friendly CSS
+  const mobileLink = document.createElement('link');
+  mobileLink.rel = 'stylesheet';
+  mobileLink.href = '/mobile-friendly.css?v=' + Date.now();
+  document.head.appendChild(mobileLink);
+
   // 2. Inject HTML (Header)
-  // ... rest of header code ...
   if (!document.getElementById('jacob-global-header')) {
     const header = document.createElement('header');
     header.id = "jacob-global-header";
@@ -298,88 +250,4 @@
     }
   }
 
-  // 3. Turnstile Logic
-  function initTurnstile() {
-    if (sessionStorage.getItem('jacob_turnstile_passed') === 'true') {
-      return;
-    }
-
-    // Check if script is already present to avoid CORS/Duplicate errors
-    const existingScript = document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]');
-    
-    // Create Overlay
-    if (!document.getElementById('turnstile-overlay')) {
-      const overlay = document.createElement('div');
-      overlay.id = 'turnstile-overlay';
-      overlay.innerHTML = `
-        <div class="turnstile-card">
-          <div class="jacob-logo" style="justify-content: center; margin-bottom: 20px;">
-            <span class="jacob-logo-badge">J</span>
-            <span class="jacob-logo-text">JacobCreation</span>
-          </div>
-          <h2>Security Check</h2>
-          <p>Please complete the verification to access the app.</p>
-          <div id="turnstile-container"></div>
-        </div>
-      `;
-      document.body.appendChild(overlay);
-    }
-
-    const renderWidget = () => {
-      if (window.turnstile) {
-        const PROD_SITEKEY = '0x4AAAAAADKK6nZsvohFh7HB';
-        const TEST_SITEKEY = '1x00000000000000000000AA';
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const activeSitekey = isLocal ? TEST_SITEKEY : PROD_SITEKEY;
-
-        turnstile.render('#turnstile-container', {
-          sitekey: activeSitekey,
-          callback: function (token) {
-            console.log(`Global Challenge Success`);
-            sessionStorage.setItem('jacob_turnstile_passed', 'true');
-            sessionStorage.setItem('jacob_turnstile_token', token);
-            window.jacob_turnstile_token = token;
-            
-            const overlay = document.getElementById('turnstile-overlay');
-            if (overlay) {
-              overlay.classList.add('hidden');
-              setTimeout(() => overlay.remove(), 500);
-            }
-
-            // Dispatch event for pages waiting for turnstile
-            window.dispatchEvent(new CustomEvent('jacobTurnstilePassed', { detail: { token } }));
-          },
-        });
-      }
-    };
-
-    if (window.turnstile) {
-      renderWidget();
-    } else if (!existingScript) {
-      // Inject Turnstile Script only if missing
-      const script = document.createElement('script');
-      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-      script.async = true;
-      script.defer = true;
-      script.onload = renderWidget;
-      document.head.appendChild(script);
-    } else {
-      // Script exists but turnstile not ready yet
-      const checkInterval = setInterval(() => {
-        if (window.turnstile) {
-          clearInterval(checkInterval);
-          renderWidget();
-        }
-      }, 100);
-    }
-  }
-
-  // Run Turnstile check
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initTurnstile);
-  } else {
-    initTurnstile();
-  }
-
 })();
-

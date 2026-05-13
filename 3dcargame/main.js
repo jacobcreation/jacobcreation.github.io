@@ -1770,11 +1770,6 @@ window.addEventListener("keyup", (event) => {
 navForm.addEventListener("submit", (event) => {
 	event.preventDefault();
 
-	if (sessionStorage.getItem('jacob_turnstile_passed') !== 'true') {
-		statusPill.textContent = "Please complete the Security Check overlay first! 🛡️";
-		return;
-	}
-
 	const query = navSearchEl.value.trim();
 	if (!query) {
 		clearNavigation();

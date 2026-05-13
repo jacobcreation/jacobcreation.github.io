@@ -2,6 +2,10 @@
 <html lang="en">
 
 <head>
+    <!-- Cache Busting Meta Tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#000000">
 
@@ -563,30 +567,7 @@
 
     let currentImage = null;
 
-    // Force a fresh Turnstile challenge for the chatbot backend
-    sessionStorage.removeItem('jacob_turnstile_passed');
-    sessionStorage.removeItem('jacob_turnstile_token');
-    window.jacob_turnstile_token = null;
-
-    // The global-header.js handles the overlay and token. 
-    // We just wait for it or check if it's already passed.
-    function checkInitialState() {
-      if (sessionStorage.getItem('jacob_turnstile_passed') === 'true') {
-        loadHistory();
-      }
-    }
-
-    window.addEventListener('jacobTurnstilePassed', (e) => {
-      console.log("Chatbot detected global turnstile pass");
-      loadHistory();
-    });
-
-    // Run initial check
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', checkInitialState);
-    } else {
-      checkInitialState();
-    }
+    loadHistory();
 
     function getSessionId() {
       let id = localStorage.getItem("jc_session");
@@ -654,12 +635,6 @@
       e.preventDefault();
       let msg = chatText.value.trim();
 
-      const turnstileResponse = window.jacob_turnstile_token || sessionStorage.getItem('jacob_turnstile_token');
-      if (!turnstileResponse) {
-        addBubble("Security check required. Please refresh or wait for the verification overlay. 🛡️", "bot");
-        return;
-      }
-      
       if (!msg && !currentImage) return;
       if (!msg && currentImage) msg = "Please analyze this image.";
 
@@ -683,8 +658,7 @@
             site: SITE_NAME,
             sessionId: getSessionId(),
             message: msg,
-            model: modelSelect ? modelSelect.value : "@cf/meta/llama-3.1-8b-instruct",
-            cf_turnstile_response: turnstileResponse
+            model: modelSelect ? modelSelect.value : "@cf/meta/llama-3.1-8b-instruct"
         };
 
         if (currentImage) {
@@ -1007,7 +981,7 @@
 
   </script>
 
-<script src="../global-header.js"></script>
+<script>(function(){const v=Date.now();document.write('<script src="../global-header.js?v='+v+'"><\/script>');})();</script>
 </body>
 
 </html>

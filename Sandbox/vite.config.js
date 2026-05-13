@@ -8,4 +8,13 @@ export default {
 			port: 5173,
 		},
 	},
+	build: {
+		rollupOptions: {
+			output: {
+				entryFileNames: "[name].[hash].js",
+				chunkFileNames: "[name].[hash].js",
+				assetFileNames: "[name].[hash].[ext]",
+			},
+		},
+	},
 };
