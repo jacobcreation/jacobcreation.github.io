@@ -36,6 +36,63 @@
     button, input, select, textarea, .btn, .button, [role="button"] {
       font: inherit;
       min-height: 44px;
+      transition: all 0.2s ease;
+    }
+
+    /* Premium Scrollbar for Desktop */
+    @media (min-width: 769px) {
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0a1120;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        border: 2px solid #0a1120;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
+    }
+
+    /* Global Dark Theme Dropdowns Fix */
+    select {
+      background: #1a2235;
+      color: #eaf2ff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      appearance: auto;
+      outline: none;
+    }
+
+    select:focus {
+      border-color: #4ea1ff;
+      box-shadow: 0 0 0 3px rgba(78, 161, 255, 0.2);
+    }
+
+    option {
+      background: #1a2235;
+      color: #eaf2ff;
+      padding: 10px;
+    }
+
+    /* Improved Desktop Layout */
+    @media (min-width: 769px) {
+      .jacob-nav a {
+        padding: 8px 18px;
+        font-size: 0.95rem;
+      }
+      
+      button:hover, .btn:hover, a.btn:hover, .card-link:hover {
+        filter: brightness(1.1);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+      }
     }
 
     #jacob-global-header {
