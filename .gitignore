@@ -19,3 +19,6 @@ Untitled-1.txt
 node_modules/
 .vite/
 quiz/worker/
+
+#tmp files
+cloudflare_worker/
