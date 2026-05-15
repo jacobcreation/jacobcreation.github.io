@@ -507,7 +507,7 @@
         <header>
             <div class="logo-badge">
                 <span class="logo-dot"></span>
-                Powered by Pollinations AI
+                Powered by SarcasmDiffusion
             </div>
             <h1>AI <span>Meme</span> Generator</h1>
             <p class="subtitle">Type an idea. Get a meme. Go viral (maybe).</p>
@@ -549,19 +549,20 @@
 
         <div class="history-section" id="histSection">
             <div class="history-header">
-                <span class="history-title">Recent memes</span>
+                <span class="history-title">Recent memes (session only)</span>
                 <button class="clear-btn" onclick="clearHistory()">clear all</button>
             </div>
             <div class="hist-grid" id="histGrid"></div>
         </div>
 
         <footer>
-            Built with <a href="https://pollinations.ai" target="_blank">Pollinations AI</a> — free, no API key needed
+            Built with <a href="https://huggingface.co/Ricardouchub/SarcasmDiffusion" target="_blank">SarcasmDiffusion</a> — Private & Secure
         </footer>
 
     </div>
 
     <script>
+        const WORKER_URL = 'https://meme-generator.b4rjxr9lk.workers.dev';
         let currentUrl = '';
         let currentPrompt = '';
         let currentEnhanced = '';
@@ -623,7 +624,7 @@
             if (saveHist) saveToHistory(url, rawPrompt);
         }
 
-        function doGenerate(rawPrompt) {
+        async function doGenerate(rawPrompt) {
             const btn = document.getElementById('genBtn');
             const spinnerWrap = document.getElementById('spinnerWrap');
             const placeholder = document.getElementById('placeholder');
@@ -643,24 +644,44 @@
             currentPrompt = rawPrompt;
             const enhanced = enhancePrompt(rawPrompt);
             currentEnhanced = enhanced;
+            const seed = Math.floor(Math.random() * 2147483647);
 
-            const seed = Math.floor(Math.random() * 99999);
-            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhanced)}?width=800&height=600&seed=${seed}&nologo=true`;
-            currentUrl = url;
+            try {
+                const response = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        prompt: enhanced,
+                        seed: seed
+                    }),
+                });
 
-            // Probe with a hidden Image() to detect load/error,
-            // then display via CSS background-image which bypasses OpaqueResponseBlocking
-            const probe = new Image();
-            probe.referrerPolicy = 'no-referrer';
-            probe.onload = () => showMeme(url, enhanced, rawPrompt, true);
-            probe.onerror = function() {
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || `Status ${response.status}`);
+                }
+
+                const blob = await response.blob();
+                
+                // Revoke old URL to avoid memory leaks
+                if (currentUrl && currentUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(currentUrl);
+                }
+                
+                const url = URL.createObjectURL(blob);
+                currentUrl = url;
+                
+                showMeme(url, enhanced, rawPrompt, true);
+            } catch (err) {
+                console.error(err);
                 spinnerWrap.style.display = 'none';
                 placeholder.style.display = 'block';
-                errorMsg.textContent = '⚠ Could not generate meme. Check your internet connection or try a different prompt.';
+                errorMsg.textContent = `⚠ Error: ${err.message}`;
                 errorMsg.style.display = 'block';
                 btn.disabled = false;
-            };
-            probe.src = url;
+            }
         }
 
         function downloadMeme() {
