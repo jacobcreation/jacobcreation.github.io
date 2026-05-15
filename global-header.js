@@ -282,6 +282,7 @@
         </button>
 
         <nav class="jacob-nav" id="jacobMainNav">
+          <a href="/index.html#projects">Projects</a>
           <a href="/about/">About</a>
           <a href="/downloads/">🎮 Play Offline</a>
           <a href="/releases/">🚀 Releases</a>
