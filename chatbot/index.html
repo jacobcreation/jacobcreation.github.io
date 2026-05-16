@@ -486,7 +486,7 @@
                   <option value="groq/mixtral-8x7b-32768">Mixtral 8x7B (Groq)</option>
                 </optgroup>
                 <optgroup label="Cerebras (Inference Speed King)">
-                  <option value="cerebras/llama3.1-70b">Llama 3.1 70B (Cerebras)</option>
+                  <option value="cerebras/llama-3.3-70b">Llama 3.3 70B (Cerebras)</option>
                   <option value="cerebras/llama3.1-8b">Llama 3.1 8B (Cerebras)</option>
                 </optgroup>
                 <optgroup label="Google Gemini / Gemma">
@@ -539,7 +539,7 @@
 
         <div class="game-area" id="gameArea">
           <div id="clicker" style="width:100%; height:100%;">
-            <iframe src="https://jacobcreation.github.io/clicker" style="width:100%; height:100%; border:none;"
+            <iframe src="https://jacobcreation.github.io/clicker/" style="width:100%; height:100%; border:none;"
               allowfullscreen>
             </iframe>
           </div>
@@ -808,16 +808,16 @@
 
       switch (gameName) {
         case "clicker":
-          gameArea.innerHTML = `<iframe src="https://jacobcreation.github.io/clicker" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
+          gameArea.innerHTML = `<iframe src="https://jacobcreation.github.io/clicker/" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
           break;
         case "chess":
-          gameArea.innerHTML = `<iframe src="/chess/index.html" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
+          gameArea.innerHTML = `<iframe src="https://jacobcreation.github.io/chess/" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
           break;
         case "tetris":
-          gameArea.innerHTML = `<iframe src="/Tetris/index.html" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
+          gameArea.innerHTML = `<iframe src="https://jacobcreation.github.io/Tetris/" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
           break;
         case "snake":
-          gameArea.innerHTML = `<iframe src="/snake/index.html" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
+          gameArea.innerHTML = `<iframe src="https://jacobcreation.github.io/snake/" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
           break;
         case "pong":
           initPongGame();
@@ -985,11 +985,7 @@
 
   </script>
 
-<script>(function(){const v=Date.now();document.write('<script src="../global-header.js?v='+v+'"><\/script>');})();</script>
-</body>
-
-</html>
-
+  <script>(function(){const v=Date.now();document.write('<script src="../global-header.js?v='+v+'"><\/script>');})();</script>
 </body>
 
 </html>

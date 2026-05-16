@@ -538,11 +538,36 @@
             <div class="model-row">
                 <label class="input-label" for="modelSelect">Model</label>
                 <select id="modelSelect">
-                    <option value="black-forest-labs/FLUX.1-schnell">⚡ FLUX.1-schnell — fast & sharp</option>
-                    <option value="stabilityai/stable-diffusion-xl-base-1.0">🎨 Stable Diffusion XL — detailed</option>
-                    <option value="runwayml/stable-diffusion-v1-5">🖼 Stable Diffusion v1.5 — classic</option>
-                    <option value="Lykon/dreamshaper-8">✨ DreamShaper 8 — artistic</option>
-                    <option value="prompthero/openjourney-v4">🌌 OpenJourney v4 — Midjourney style</option>
+                    <optgroup label="⚡ FLUX">
+                        <option value="black-forest-labs/FLUX.1-schnell">FLUX.1 Schnell — fast & sharp</option>
+                        <option value="black-forest-labs/FLUX.1-dev">FLUX.1 Dev — balanced quality</option>
+                        <option value="fal/FLUX.2-dev-Turbo">FLUX.2 Dev Turbo — turbo speed</option>
+                        <option value="black-forest-labs/FLUX.2-klein-9B">FLUX.2 Klein 9B — lightweight</option>
+                        <option value="black-forest-labs/FLUX.1-Fill-dev">FLUX.1 Fill Dev — inpainting</option>
+                        <option value="black-forest-labs/FLUX.1-Redux-dev">FLUX.1 Redux Dev — style variation</option>
+                    </optgroup>
+                    <optgroup label="🎨 Stable Diffusion">
+                        <option value="stabilityai/stable-diffusion-xl-base-1.0">SDXL Base 1.0 — detailed</option>
+                        <option value="stabilityai/sdxl-turbo">SDXL Turbo — fast</option>
+                        <option value="stabilityai/stable-diffusion-3-medium-diffusers">SD3 Medium — latest gen</option>
+                        <option value="stabilityai/stable-diffusion-2-1">SD 2.1 — improved</option>
+                        <option value="runwayml/stable-diffusion-v1-5">SD v1.5 — classic</option>
+                        <option value="runwayml/stable-diffusion-inpainting">SD Inpainting — edit & fill</option>
+                    </optgroup>
+                    <optgroup label="✨ Anime / Illustration">
+                        <option value="Lykon/dreamshaper-8">DreamShaper 8 — artistic</option>
+                        <option value="prompthero/openjourney-v4">OpenJourney v4 — Midjourney style</option>
+                        <option value="cagliostrolab/animagine-xl-3.1">Animagine XL 3.1 — anime</option>
+                        <option value="stablediffusionapi/anything-v5">Anything V5 — anime</option>
+                        <option value="gsdf/Counterfeit-V2.5">Counterfeit V2.5 — anime</option>
+                        <option value="WarriorMama777/OrangeMixs">OrangeMixs — illustration</option>
+                        <option value="SeeSee21/Z-Anime">Z-Anime — anime</option>
+                    </optgroup>
+                    <optgroup label="🧪 Experimental">
+                        <option value="SeeSee21/Z-Image-Turbo-AIO">Z-Image Turbo AIO — all-in-one</option>
+                        <option value="NucleusAI/Nucleus-Image">Nucleus Image — experimental</option>
+                        <option value="Qwen/Qwen-Image">Qwen Image — text rendering</option>
+                    </optgroup>
                 </select>
             </div>
 
@@ -690,6 +715,15 @@
                     }),
                 });
 
+                if (response.status === 429) {
+                    const data = await response.json();
+                    spinnerWrap.style.display = 'none';
+                    placeholder.style.display = 'block';
+                    errorMsg.textContent = data.error;
+                    errorMsg.style.display = 'block';
+                    btn.disabled = false;
+                    return;
+                }
                 if (!response.ok) {
                     const errorText = await response.text();
                     throw new Error(errorText || `Status ${response.status}`);
