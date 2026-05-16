@@ -166,6 +166,41 @@
             border-color: var(--accent);
         }
 
+        /* Model selector */
+        .model-row {
+            margin-bottom: 12px;
+        }
+
+        #modelSelect {
+            width: 100%;
+            background: var(--surface2);
+            border: 0.5px solid var(--border2);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: var(--font-body);
+            font-size: 13px;
+            padding: 10px 14px;
+            min-height: 44px;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+            transition: border-color 0.2s;
+        }
+
+        #modelSelect:focus {
+            border-color: var(--accent);
+        }
+
+        #modelSelect option {
+            background: #1f1f1f;
+            color: var(--text);
+        }
+
         #genBtn {
             background: var(--accent);
             color: #000;
@@ -463,27 +498,13 @@
         }
 
         @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.3;
-            }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
 
         @keyframes blink {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.4;
-            }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
 
         /* Responsive */
@@ -507,17 +528,27 @@
         <header>
             <div class="logo-badge">
                 <span class="logo-dot"></span>
-                Powered by SarcasmDiffusion
+                AI Meme Generator
             </div>
             <h1>AI <span>Meme</span> Generator</h1>
             <p class="subtitle">Type an idea. Get a meme. Go viral (maybe).</p>
         </header>
 
         <div class="input-card">
+            <div class="model-row">
+                <label class="input-label" for="modelSelect">Model</label>
+                <select id="modelSelect">
+                    <option value="black-forest-labs/FLUX.1-schnell">⚡ FLUX.1-schnell — fast & sharp</option>
+                    <option value="stabilityai/stable-diffusion-xl-base-1.0">🎨 Stable Diffusion XL — detailed</option>
+                    <option value="runwayml/stable-diffusion-v1-5">🖼 Stable Diffusion v1.5 — classic</option>
+                    <option value="Lykon/dreamshaper-8">✨ DreamShaper 8 — artistic</option>
+                    <option value="prompthero/openjourney-v4">🌌 OpenJourney v4 — Midjourney style</option>
+                </select>
+            </div>
+
             <label class="input-label" for="prompt">Your meme idea</label>
             <div class="input-row" style="flex-wrap: wrap;">
                 <input id="prompt" type="text" placeholder='e.g. "cat avoiding mondays"' maxlength="200" />
-
                 <button id="genBtn" onclick="generate()">Generate ✦</button>
             </div>
         </div>
@@ -556,7 +587,7 @@
         </div>
 
         <footer>
-            Built with <a href="https://huggingface.co/Ricardouchub/SarcasmDiffusion" target="_blank">SarcasmDiffusion</a> — Private & Secure
+            Powered by <a href="https://huggingface.co" target="_blank">HuggingFace</a> — Private & Secure
         </footer>
 
     </div>
@@ -566,6 +597,7 @@
         let currentUrl = '';
         let currentPrompt = '';
         let currentEnhanced = '';
+        let currentModel = '';
 
         const spinnerMessages = [
             'Cooking something cursed...',
@@ -642,6 +674,7 @@
             spinnerLabel.textContent = spinnerMessages[Math.floor(Math.random() * spinnerMessages.length)];
 
             currentPrompt = rawPrompt;
+            currentModel = document.getElementById('modelSelect').value;
             const enhanced = enhancePrompt(rawPrompt);
             currentEnhanced = enhanced;
             const seed = Math.floor(Math.random() * 2147483647);
@@ -649,12 +682,11 @@
             try {
                 const response = await fetch(WORKER_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         prompt: enhanced,
-                        seed: seed
+                        seed: seed,
+                        model: currentModel,
                     }),
                 });
 
@@ -665,7 +697,6 @@
 
                 const blob = await response.blob();
                 
-                // Revoke old URL to avoid memory leaks
                 if (currentUrl && currentUrl.startsWith('blob:')) {
                     URL.revokeObjectURL(currentUrl);
                 }
@@ -710,11 +741,7 @@
             try {
                 hist = JSON.parse(localStorage.getItem('meme_history') || '[]');
             } catch (e) {}
-            hist.unshift({
-                url,
-                prompt,
-                ts: Date.now()
-            });
+            hist.unshift({ url, prompt, ts: Date.now() });
             hist = hist.slice(0, 10);
             try {
                 localStorage.setItem('meme_history', JSON.stringify(hist));
@@ -748,9 +775,7 @@
         }
 
         function clearHistory() {
-            try {
-                localStorage.removeItem('meme_history');
-            } catch (e) {}
+            try { localStorage.removeItem('meme_history'); } catch (e) {}
             document.getElementById('histSection').style.display = 'none';
             document.getElementById('histGrid').innerHTML = '';
         }
@@ -759,7 +784,6 @@
             if (e.key === 'Enter') generate();
         });
 
-        // Load history on start
         (function init() {
             let hist = [];
             try {
@@ -767,7 +791,6 @@
             } catch (e) {}
             if (hist.length) renderHistory(hist);
 
-            // Pre-fill from URL ?p= param
             const params = new URLSearchParams(window.location.search);
             if (params.get('p')) {
                 document.getElementById('prompt').value = params.get('p');
