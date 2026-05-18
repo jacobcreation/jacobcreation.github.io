@@ -1,492 +1,668 @@
 <!DOCTYPE html>
-<!-- Created with https://packager.turbowarp.org/ -->
-<html>
-
+<html lang="en">
 <head>
-    <!-- Cache Busting Meta Tags -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#000000">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pac-Man</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <!-- We only include this to explicitly loosen the CSP of various packager environments. It does not provide any security. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:">
-  <title>PacMan</title>
-  <style>
-    body {
-      color: #ffffff;
-      font-family: sans-serif;
-      overflow: hidden;
-      margin: 0;
-      padding: 0;
-    }
-
-    :root,
-    body.is-fullscreen {
-      background-color: #000000;
-    }
-
-    [hidden] {
-      display: none !important;
-    }
-
-    h1 {
-      font-weight: normal;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-
-    #app,
-    #loading,
-    #error,
-    #launch {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    .screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      cursor: default;
-      user-select: none;
-      -webkit-user-select: none;
-      background-color: #000000;
-    }
-
-    #launch {
-      background-color: rgba(0, 0, 0, 0.7);
-      cursor: pointer;
-    }
-
-    .green-flag {
-      width: 80px;
-      height: 80px;
-      padding: 16px;
-      border-radius: 100%;
-      background: rgba(255, 255, 255, 0.75);
-      border: 3px solid hsla(0, 100%, 100%, 1);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      box-sizing: border-box;
-    }
-
-    #loading {}
-
-    .progress-bar-outer {
-      border: 1px solid currentColor;
-      height: 10px;
-      width: 200px;
-      max-width: 200px;
-    }
-
-    .progress-bar-inner {
-      height: 100%;
-      width: 0;
-      background-color: currentColor;
-    }
-
-    .loading-text,
-    noscript {
-      font-weight: normal;
-      font-size: 36px;
-      margin: 0 0 16px;
-    }
-
-    .loading-image {
-      margin: 0 0 16px;
-    }
-
-    #error-message,
-    #error-stack {
-      font-family: monospace;
-      max-width: 600px;
-      white-space: pre-wrap;
-      user-select: text;
-      -webkit-user-select: text;
-    }
-
-    #error-stack {
-      text-align: left;
-      max-height: 200px;
-      overflow: auto;
-    }
-
-    .control-button {
-      width: 2rem;
-      height: 2rem;
-      padding: 0.375rem;
-      margin-top: 0.5rem;
-      margin-bottom: 0.5rem;
-      user-select: none;
-      -webkit-user-select: none;
-      cursor: pointer;
-      border: 0;
-      border-radius: 4px;
-    }
-
-    .control-button-highlight:hover {
-      background: #ff4c4c26;
-    }
-
-    .control-button-highlight.active {
-      background: #ff4c4c59;
-    }
-
-    .fullscreen-button {
-      background: white;
-    }
-
-    .standalone-fullscreen-button {
-      position: absolute;
-      top: 0;
-      right: 0;
-      background-color: rgba(0, 0, 0, 0.5);
-      border-radius: 0 0 0 4px;
-      padding: 4px;
-      cursor: pointer;
-    }
-
-    .sc-canvas {
-      cursor: auto;
-    }
-
-    .sc-monitor-root[data-opcode^="data_"] .sc-monitor-value-color {
-      background-color: #ff8c1a;
-    }
-
-    .sc-monitor-row-value-outer {
-      background-color: #fc662c;
-    }
-
-    .sc-monitor-row-value-editing .sc-monitor-row-value-outer {
-      background-color: #e25b27;
-    }
-  </style>
-  <meta name="theme-color" content="#000000">
-
-</head>
-
-<body>
-  <div id="app"></div>
-
-  <div id="launch" class="screen" hidden title="Click to start">
-    <div class="green-flag">
-      <svg viewBox="0 0 16.63 17.5" width="42" height="44">
-        <defs>
-          <style>
-            .cls-1,
-            .cls-2 {
-              fill: #4cbf56;
-              stroke: #45993d;
-              stroke-linecap: round;
-              stroke-linejoin: round;
-            }
-
-            .cls-2 {
-              stroke-width: 1.5px;
-            }
-          </style>
-        </defs>
-        <path class="cls-1"
-          d="M.75,2A6.44,6.44,0,0,1,8.44,2h0a6.44,6.44,0,0,0,7.69,0V12.4a6.44,6.44,0,0,1-7.69,0h0a6.44,6.44,0,0,0-7.69,0" />
-        <line class="cls-2" x1="0.75" y1="16.75" x2="0.75" y2="0.75" />
-      </svg>
-    </div>
-  </div>
-
-  <div id="loading" class="screen">
-    <noscript>Enable JavaScript</noscript>
-
-
-    <div class="progress-bar-outer">
-      <div class="progress-bar-inner" id="loading-inner"></div>
-    </div>
-  </div>
-
-  <div id="error" class="screen" hidden>
-    <h1>Error</h1>
-    <details>
-      <summary id="error-message"></summary>
-      <p id="error-stack"></p>
-    </details>
-  </div>
-
-  <script>(function(){const v=Date.now();document.write('<script src="script.js?v='+v+'"><\/script>');})();</script>
-  <script>
-    const appElement = document.getElementById('app');
-    const launchScreen = document.getElementById('launch');
-    const loadingScreen = document.getElementById('loading');
-    const loadingInner = document.getElementById('loading-inner');
-    const errorScreen = document.getElementById('error');
-    const errorScreenMessage = document.getElementById('error-message');
-    const errorScreenStack = document.getElementById('error-stack');
-
-    const handleError = (error) => {
-      console.error(error);
-      if (!errorScreen.hidden) return;
-      errorScreen.hidden = false;
-      errorScreenMessage.textContent = '' + error;
-      let debug = error && error.stack || 'no stack';
-      debug += '\nUser agent: ' + navigator.userAgent;
-      errorScreenStack.textContent = debug;
-    };
-    const setProgress = (progress) => {
-      if (loadingInner) loadingInner.style.width = progress * 100 + '%';
-    };
-    const interpolate = (a, b, t) => a + t * (b - a);
-
-    try {
-      setProgress(0.1);
-
-      const scaffolding = new Scaffolding.Scaffolding();
-      scaffolding.width = 480;
-      scaffolding.height = 360;
-      scaffolding.resizeMode = "preserve-ratio";
-      scaffolding.editableLists = false;
-      scaffolding.usePackagedRuntime = true;
-      scaffolding.setup();
-      scaffolding.appendTo(appElement);
-
-      const vm = scaffolding.vm;
-      window.scaffolding = scaffolding;
-      window.vm = scaffolding.vm;
-      window.Scratch = {
-        vm,
-        renderer: vm.renderer,
-        audioEngine: vm.runtime.audioEngine,
-        bitmapAdapter: vm.runtime.v2BitmapAdapter,
-        videoProvider: vm.runtime.ioDevices.video.provider
-      };
-
-      scaffolding.setUsername("player####".replace(/#/g, () => Math.floor(Math.random() * 10)));
-      scaffolding.setAccentColor("#ff4c4c");
-
-      try {
-        ;
-      } catch (error) {
-        console.error(error);
-      }
-
-      const greenFlagButton = document.createElement('img');
-      greenFlagButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16.63 17.5"><path d="M.75 2a6.44 6.44 0 017.69 0h0a6.44 6.44 0 007.69 0v10.4a6.44 6.44 0 01-7.69 0h0a6.44 6.44 0 00-7.69 0" fill="#4cbf56" stroke="#45993d" stroke-linecap="round" stroke-linejoin="round"/><path stroke-width="1.5" fill="#4cbf56" stroke="#45993d" stroke-linecap="round" stroke-linejoin="round" d="M.75 16.75v-16"/></svg>');
-      greenFlagButton.className = 'control-button control-button-highlight green-flag-button';
-      greenFlagButton.draggable = false;
-      greenFlagButton.addEventListener('click', () => {
-        scaffolding.greenFlag();
-      });
-      scaffolding.addEventListener('PROJECT_RUN_START', () => {
-        greenFlagButton.classList.add('active');
-      });
-      scaffolding.addEventListener('PROJECT_RUN_STOP', () => {
-        greenFlagButton.classList.remove('active');
-      });
-      scaffolding.addControlButton({
-        element: greenFlagButton,
-        where: 'top-left'
-      });
-
-      const pauseButton = document.createElement('img');
-      pauseButton.className = 'control-button control-button-highlight pause-button';
-      pauseButton.draggable = false;
-      let isPaused = false;
-      pauseButton.addEventListener('click', () => {
-        vm.setPaused(!isPaused);
-      });
-      const updatePause = () => {
-        if (isPaused) {
-          pauseButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg width="16" height="16" viewBox="0 0 4.2333332 4.2333335" xmlns="http://www.w3.org/2000/svg"><path d="m3.95163484 2.02835365-1.66643921.9621191-1.66643913.96211911V.10411543l1.66643922.9621191z" fill="#ffae00"/></svg>');
-        } else {
-          pauseButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg width="16" height="16" viewBox="0 0 4.2333332 4.2333335" xmlns="http://www.w3.org/2000/svg"><g fill="#ffae00"><path d="M.389.19239126h1.2631972v3.8485508H.389zM2.5810001.19239126h1.2631972v3.8485508H2.5810001z"/></g></svg>');
-        }
-      };
-      vm.runtime.on('RUNTIME_PAUSED', () => {
-        isPaused = true;
-        updatePause();
-      });
-      vm.runtime.on('RUNTIME_UNPAUSED', () => {
-        isPaused = false;
-        updatePause();
-      });
-      updatePause();
-      scaffolding.addControlButton({
-        element: pauseButton,
-        where: 'top-left'
-      });
-
-      const stopAllButton = document.createElement('img');
-      stopAllButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 14"><path fill="#ec5959" stroke="#b84848" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M4.3.5h5.4l3.8 3.8v5.4l-3.8 3.8H4.3L.5 9.7V4.3z"/></svg>');
-      stopAllButton.className = 'control-button control-button-highlight stop-all-button';
-      stopAllButton.draggable = false;
-      stopAllButton.addEventListener('click', () => {
-        scaffolding.stopAll();
-      });
-      scaffolding.addControlButton({
-        element: stopAllButton,
-        where: 'top-left'
-      });
-
-      if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
-        let isFullScreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
-        const fullscreenButton = document.createElement('img');
-        fullscreenButton.draggable = false;
-        fullscreenButton.className = 'control-button fullscreen-button';
-        fullscreenButton.addEventListener('click', () => {
-          if (isFullScreen) {
-            if (document.exitFullscreen) {
-              document.exitFullscreen();
-            } else if (document.webkitExitFullscreen) {
-              document.webkitExitFullscreen();
-            }
-          } else {
-            if (document.body.requestFullscreen) {
-              document.body.requestFullscreen();
-            } else if (document.body.webkitRequestFullscreen) {
-              document.body.webkitRequestFullscreen();
-            }
-          }
-        });
-        const otherControlsExist = true;
-        const fillColor = otherControlsExist ? '#575E75' : '#ffffff';
-        const updateFullScreen = () => {
-          isFullScreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
-          document.body.classList.toggle('is-fullscreen', isFullScreen);
-          if (isFullScreen) {
-            fullscreenButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><g fill="' + fillColor + '" fill-rule="evenodd"><path d="M12.662 3.65l.89.891 3.133-2.374a.815.815 0 011.15.165.819.819 0 010 .986L15.467 6.46l.867.871c.25.25.072.664-.269.664L12.388 8A.397.397 0 0112 7.611V3.92c0-.341.418-.514.662-.27M7.338 16.35l-.89-.89-3.133 2.374a.817.817 0 01-1.15-.166.819.819 0 010-.985l2.37-3.143-.87-.871a.387.387 0 01.27-.664L7.612 12a.397.397 0 01.388.389v3.692a.387.387 0 01-.662.27M7.338 3.65l-.89.891-3.133-2.374a.815.815 0 00-1.15.165.819.819 0 000 .986l2.37 3.142-.87.871a.387.387 0 00.27.664L7.612 8A.397.397 0 008 7.611V3.92a.387.387 0 00-.662-.27M12.662 16.35l.89-.89 3.133 2.374a.817.817 0 001.15-.166.819.819 0 000-.985l-2.368-3.143.867-.871a.387.387 0 00-.269-.664L12.388 12a.397.397 0 00-.388.389v3.692c0 .342.418.514.662.27"/></g></svg>');
-          } else {
-            fullscreenButton.src = 'data:image/svg+xml,' + encodeURIComponent('<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><g fill="' + fillColor + '" fill-rule="evenodd"><path d="M16.338 7.35l-.89-.891-3.133 2.374a.815.815 0 01-1.15-.165.819.819 0 010-.986l2.368-3.142-.867-.871a.387.387 0 01.269-.664L16.612 3a.397.397 0 01.388.389V7.08a.387.387 0 01-.662.27M3.662 12.65l.89.89 3.133-2.374a.817.817 0 011.15.166.819.819 0 010 .985l-2.37 3.143.87.871c.248.25.071.664-.27.664L3.388 17A.397.397 0 013 16.611V12.92c0-.342.418-.514.662-.27M3.662 7.35l.89-.891 3.133 2.374a.815.815 0 001.15-.165.819.819 0 000-.986L6.465 4.54l.87-.871a.387.387 0 00-.27-.664L3.388 3A.397.397 0 003 3.389V7.08c0 .341.418.514.662.27M16.338 12.65l-.89.89-3.133-2.374a.817.817 0 00-1.15.166.819.819 0 000 .985l2.368 3.143-.867.871a.387.387 0 00.269.664l3.677.005a.397.397 0 00.388-.389V12.92a.387.387 0 00-.662-.27"/></g></svg>');
-          }
-        };
-        updateFullScreen();
-        document.addEventListener('fullscreenchange', updateFullScreen);
-        document.addEventListener('webkitfullscreenchange', updateFullScreen);
-        if (otherControlsExist) {
-          fullscreenButton.className = 'control-button fullscreen-button';
-          scaffolding.addControlButton({
-            element: fullscreenButton,
-            where: 'top-right'
-          });
-        } else {
-          fullscreenButton.className = 'standalone-fullscreen-button';
-          document.body.appendChild(fullscreenButton);
-        }
-      }
-
-      vm.setTurboMode(false);
-      if (vm.setInterpolation) vm.setInterpolation(true);
-      if (vm.setFramerate) vm.setFramerate(30);
-      if (vm.renderer.setUseHighQualityRender) vm.renderer.setUseHighQualityRender(false);
-      if (vm.setRuntimeOptions) vm.setRuntimeOptions({
-        fencing: true,
-        miscLimits: false,
-        maxClones: 9999999999,
-      });
-      if (vm.setCompilerOptions) vm.setCompilerOptions({
-        enabled: true,
-        warpTimer: false
-      });
-      if (vm.renderer.setMaxTextureDimension) vm.renderer.setMaxTextureDimension(2048);
-
-      // enforcePrivacy threat model only makes sense in the editor
-      if (vm.runtime.setEnforcePrivacy) vm.runtime.setEnforcePrivacy(false);
-
-      if (typeof ScaffoldingAddons !== 'undefined') {
-        ScaffoldingAddons.run(scaffolding, { "gamepad": true, "pointerlock": false, "specialCloudBehaviors": false, "unsafeCloudBehaviors": false, "pause": true });
-      }
-
-      scaffolding.setExtensionSecurityManager({
-        getSandboxMode: () => 'unsandboxed',
-        canLoadExtensionFromProject: () => true
-      });
-      for (const extension of []) {
-        vm.extensionManager.loadExtensionURL(extension);
-      }
-
-    } catch (e) {
-      handleError(e);
-    }
-  </script>
-
-
-  <script>
-    const getProjectData = (function () {
-      const storage = scaffolding.storage;
-      storage.onprogress = (total, loaded) => {
-        setProgress(interpolate(0.2, 0.98, loaded / total));
-      };
-
-      storage.addWebStore(
-        [
-          storage.AssetType.ImageVector,
-          storage.AssetType.ImageBitmap,
-          storage.AssetType.Sound,
-          storage.AssetType.Font
-        ].filter(i => i),
-        (asset) => new URL('./assets/' + asset.assetId + '.' + asset.dataFormat, location).href
-      );
-      return () => new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.onload = () => {
-          resolve(xhr.response);
-        };
-        xhr.onerror = () => {
-          if (location.protocol === 'file:') {
-            reject(new Error('Zip environment must be used on a website, not on a local file. To fix this error, use the "Plain HTML" environment instead.'));
-          } else {
-            reject(new Error('Request to load project data failed.'));
-          }
-        };
-        xhr.onprogress = (e) => {
-          if (e.lengthComputable) {
-            setProgress(interpolate(0.1, 0.2, e.loaded / e.total));
-          }
-        };
-        xhr.responseType = 'arraybuffer';
-        xhr.open('GET', "./assets/project.json");
-        xhr.send();
-      });
-    })();
-  </script>
-  <script>
-    const run = async () => {
-      const projectData = await getProjectData();
-      await scaffolding.loadProject(projectData);
-      setProgress(1);
-      loadingScreen.hidden = true;
-      if (false) {
-        scaffolding.start();
-      } else {
-        launchScreen.hidden = false;
-        launchScreen.addEventListener('click', () => {
-          launchScreen.hidden = true;
-          scaffolding.start();
-        });
-        launchScreen.focus();
-      }
-    };
-    run().catch(handleError);
-  </script>
-  <script>(function(){const v=Date.now();document.write('<script src="../global-header.js?v='+v+'"><\/script>');})();</script>
-
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/service-worker.js");
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { 
+  background: #000; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  min-height: 100vh; 
+  font-family: 'Press Start 2P', cursive;
+  overflow: hidden;
+  color: #fff;
 }
+
+.game-container { 
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 100vw;
+  max-height: 100vh;
+}
+
+.header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 20px;
+  font-size: 14px;
+}
+
+.score-label { color: #fdff00; }
+.lives-label { color: #ff0000; }
+
+canvas { 
+  border: 4px solid #2121de; 
+  background: #000; 
+  display: block; 
+  box-shadow: 0 0 20px rgba(33, 33, 222, 0.5);
+  max-width: 95vw;
+  max-height: 70vh;
+  object-fit: contain;
+}
+
+.overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  text-align: center;
+  border: 2px solid #2121de;
+  z-index: 10;
+  width: 80%;
+}
+
+.overlay h2 { margin-bottom: 20px; font-size: 18px; color: #ff0; }
+.overlay p { font-size: 12px; line-height: 1.5; margin-bottom: 20px; }
+
+button { 
+  background: #2121de; 
+  color: #fff; 
+  border: 2px solid #fff; 
+  padding: 12px 24px; 
+  font-size: 14px; 
+  cursor: pointer; 
+  font-family: 'Press Start 2P', cursive;
+  transition: all 0.2s;
+}
+button:hover { background: #fff; color: #2121de; }
+
+/* Mobile Controls */
+.controls {
+  display: none;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+  width: 180px;
+  height: 180px;
+}
+
+.control-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid #2121de;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+  color: #fff;
+  user-select: none;
+}
+
+.btn-up { grid-column: 2; grid-row: 1; }
+.btn-left { grid-column: 1; grid-row: 2; }
+.btn-right { grid-column: 3; grid-row: 2; }
+.btn-down { grid-column: 2; grid-row: 3; }
+
+@media (max-width: 768px) {
+  .controls { display: grid; }
+  .header { font-size: 10px; }
+  .overlay h2 { font-size: 14px; }
+  .overlay p { font-size: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="game-container">
+  <div class="header">
+    <div class="score-label">SCORE: <span id="score">0</span></div>
+    <div class="lives-label">LIVES: <span id="lives">3</span></div>
+  </div>
+  
+  <canvas id="gameCanvas"></canvas>
+  
+  <div id="startOverlay" class="overlay">
+    <h2>PAC-MAN</h2>
+    <p>USE ARROWS OR SWIPE TO MOVE<br>EAT ALL DOTS TO WIN</p>
+    <button id="startBtn">START GAME</button>
+  </div>
+
+  <div id="gameOverOverlay" class="overlay" style="display: none;">
+    <h2 id="gameOverTitle">GAME OVER</h2>
+    <p>FINAL SCORE: <span id="finalScore">0</span></p>
+    <button id="restartBtn">RESTART</button>
+  </div>
+
+  <div class="controls">
+    <div class="control-btn btn-up" data-dir="up">▲</div>
+    <div class="control-btn btn-left" data-dir="left">◀</div>
+    <div class="control-btn btn-right" data-dir="right">▶</div>
+    <div class="control-btn btn-down" data-dir="down">▼</div>
+  </div>
+</div>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const livesEl = document.getElementById('lives');
+const startOverlay = document.getElementById('startOverlay');
+const gameOverOverlay = document.getElementById('gameOverOverlay');
+const finalScoreEl = document.getElementById('finalScore');
+const gameOverTitle = document.getElementById('gameOverTitle');
+
+const TILE = 20;
+const COLS = 28;
+const ROWS = 31;
+canvas.width = COLS * TILE;
+canvas.height = ROWS * TILE;
+
+// Map: 0=dot, 1=wall, 2=empty, 3=energizer
+const MAP_TEMPLATE = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+  [1,3,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,3,1],
+  [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1],
+  [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1],
+  [1,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1],
+  [1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1],
+  [1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1],
+  [1,1,1,1,1,1,0,1,1,0,1,1,1,2,2,1,1,1,0,1,1,0,1,1,1,1,1,1],
+  [1,1,1,1,1,1,0,1,1,0,1,2,2,2,2,2,2,1,0,1,1,0,1,1,1,1,1,1],
+  [2,2,2,2,2,2,0,0,0,0,1,2,2,2,2,2,2,1,0,0,0,0,2,2,2,2,2,2],
+  [1,1,1,1,1,1,0,1,1,0,1,2,2,2,2,2,2,1,0,1,1,0,1,1,1,1,1,1],
+  [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
+  [1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1],
+  [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
+  [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+  [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+  [1,3,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,3,1],
+  [1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,0,1,1,1],
+  [1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,0,1,1,1],
+  [1,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1],
+  [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1],
+  [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+];
+
+let MAP = [];
+const DIRS = {
+  up: { x: 0, y: -1, angle: Math.PI * 1.5 },
+  down: { x: 0, y: 1, angle: Math.PI * 0.5 },
+  left: { x: -1, y: 0, angle: Math.PI },
+  right: { x: 1, y: 0, angle: 0 }
+};
+
+let score = 0, lives = 3, running = false, level = 1;
+let pacman, ghosts = [], frightenedTimer = 0, ghostModeTimer = 0, ghostMode = 'scatter';
+let animationId;
+let lastTime = 0;
+const FPS = 60;
+const frameInterval = 1000 / FPS;
+
+class Entity {
+  constructor(x, y, speed, color) {
+    this.x = x;
+    this.y = y;
+    this.speed = speed;
+    this.dir = 'left';
+    this.nextDir = 'left';
+    this.radius = TILE / 2 - 2;
+    this.color = color;
+  }
+
+  getTileX() { return Math.floor(this.x / TILE); }
+  getTileY() { return Math.floor(this.y / TILE); }
+
+  snapToCenter() {
+    this.x = this.getTileX() * TILE + TILE / 2;
+    this.y = this.getTileY() * TILE + TILE / 2;
+  }
+
+  isCrossingCenter() {
+    const cx = this.getTileX() * TILE + TILE / 2;
+    const cy = this.getTileY() * TILE + TILE / 2;
+    const dx = DIRS[this.dir].x;
+    const dy = DIRS[this.dir].y;
+
+    if (dx !== 0) {
+      return (dx > 0 && this.x <= cx && this.x + this.speed >= cx) || 
+             (dx < 0 && this.x >= cx && this.x - this.speed <= cx);
+    }
+    if (dy !== 0) {
+      return (dy > 0 && this.y <= cy && this.y + this.speed >= cy) || 
+             (dy < 0 && this.y >= cy && this.y - this.speed <= cy);
+    }
+    return false;
+  }
+}
+
+class Pacman extends Entity {
+  constructor() {
+    super(13.5 * TILE, 23 * TILE, 2.0, '#ffff00');
+    this.mouth = 0;
+    this.mouthOpen = true;
+  }
+
+  update() {
+    const tx = this.getTileX();
+    const ty = this.getTileY();
+
+    // Check for turns or stops at tile center
+    if (this.isCrossingCenter()) {
+      if (canMove(tx, ty, this.nextDir)) {
+        this.snapToCenter();
+        this.dir = this.nextDir;
+      } else if (!canMove(tx, ty, this.dir)) {
+        this.snapToCenter();
+        return;
+      }
+    }
+
+    this.x += DIRS[this.dir].x * this.speed;
+    this.y += DIRS[this.dir].y * this.speed;
+
+    // Wrap around
+    if (this.x < 0) this.x = canvas.width;
+    if (this.x > canvas.width) this.x = 0;
+
+    // Eat items
+    const ntx = this.getTileX();
+    const nty = this.getTileY();
+    if (MAP[nty][ntx] === 0) {
+      MAP[nty][ntx] = 2;
+      score += 10;
+      scoreEl.textContent = score;
+    } else if (MAP[nty][ntx] === 3) {
+      MAP[nty][ntx] = 2;
+      score += 50;
+      scoreEl.textContent = score;
+      startFrightened();
+    }
+
+    // Mouth animation
+    if (this.mouthOpen) this.mouth += 0.1;
+    else this.mouth -= 0.1;
+    if (this.mouth >= 0.4 || this.mouth <= 0) this.mouthOpen = !this.mouthOpen;
+  }
+
+  draw() {
+    const angle = DIRS[this.dir].angle;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y);
+    ctx.arc(this.x, this.y, this.radius + 2, angle + this.mouth, angle + Math.PI * 2 - this.mouth);
+    ctx.lineTo(this.x, this.y);
+    ctx.fill();
+  }
+}
+
+class Ghost extends Entity {
+  constructor(x, y, color, name, scatterTarget, houseDelay) {
+    super(x * TILE + TILE/2, y * TILE + TILE/2, 1.8, color);
+    this.startX = x * TILE + TILE/2;
+    this.startY = y * TILE + TILE/2;
+    this.name = name;
+    this.scatterTarget = scatterTarget;
+    this.state = 'house';
+    this.houseDelay = houseDelay;
+    this.timer = 0;
+    this.dir = 'up';
+  }
+
+  update() {
+    if (this.state === 'house') {
+      this.timer++;
+      this.y += Math.sin(this.timer * 0.1) * 0.5;
+      if (this.timer > this.houseDelay) this.state = 'exiting';
+      return;
+    }
+
+    if (this.state === 'exiting') {
+      const targetX = 13.5 * TILE;
+      const targetY = 11 * TILE + TILE/2;
+      const dx = targetX - this.x;
+      const dy = targetY - this.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < this.speed) {
+        this.x = targetX; this.y = targetY;
+        this.state = 'active'; this.dir = 'left';
+      } else {
+        this.x += (dx / dist) * this.speed;
+        this.y += (dy / dist) * this.speed;
+      }
+      return;
+    }
+
+    if (this.state === 'eaten') {
+      const targetX = 13.5 * TILE;
+      const targetY = 14 * TILE + TILE/2;
+      const dx = targetX - this.x;
+      const dy = targetY - this.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 5) { this.state = 'exiting'; this.speed = 1.8; }
+      else { this.x += (dx/dist) * 5; this.y += (dy/dist) * 5; }
+      return;
+    }
+
+    if (this.isCrossingCenter()) {
+      this.snapToCenter();
+      const possibleDirs = ['up', 'down', 'left', 'right'].filter(d => {
+        if (d === getOppositeDir(this.dir)) return false;
+        return canMove(this.getTileX(), this.getTileY(), d);
+      });
+
+      if (possibleDirs.length > 0) {
+        const target = this.getTarget();
+        let bestDir = possibleDirs[0];
+        let minDist = Infinity;
+        
+        possibleDirs.forEach(d => {
+          const nx = this.getTileX() + DIRS[d].x;
+          const ny = this.getTileY() + DIRS[d].y;
+          const dist = Math.hypot(nx - target.x, ny - target.y);
+          if (dist < minDist) { minDist = dist; bestDir = d; }
+        });
+        
+        if (this.state === 'frightened') {
+          bestDir = possibleDirs[Math.floor(Math.random() * possibleDirs.length)];
+        }
+        this.dir = bestDir;
+      }
+    }
+
+    const s = this.state === 'frightened' ? this.speed * 0.6 : this.speed;
+    this.x += DIRS[this.dir].x * s;
+    this.y += DIRS[this.dir].y * s;
+
+    if (this.x < 0) this.x = canvas.width;
+    if (this.x > canvas.width) this.x = 0;
+
+    const dist = Math.hypot(this.x - pacman.x, this.y - pacman.y);
+    if (dist < TILE * 0.8) {
+      if (this.state === 'frightened') {
+        this.state = 'eaten';
+        this.speed = 4;
+        score += 200;
+        scoreEl.textContent = score;
+      } else if (this.state === 'active') {
+        die();
+      }
+    }
+  }
+
+  getTarget() {
+    if (this.state === 'frightened') return { x: Math.random() * COLS, y: Math.random() * ROWS };
+    if (ghostMode === 'scatter') return this.scatterTarget;
+    
+    // Chase logic
+    switch(this.name) {
+      case 'Blinky': return { x: pacman.getTileX(), y: pacman.getTileY() };
+      case 'Pinky': return { 
+        x: pacman.getTileX() + DIRS[pacman.dir].x * 4, 
+        y: pacman.getTileY() + DIRS[pacman.dir].y * 4 
+      };
+      case 'Inky': {
+        const bx = ghosts[0].getTileX();
+        const by = ghosts[0].getTileY();
+        const tx = pacman.getTileX() + DIRS[pacman.dir].x * 2;
+        const ty = pacman.getTileY() + DIRS[pacman.dir].y * 2;
+        return { x: tx + (tx - bx), y: ty + (ty - by) };
+      }
+      case 'Clyde': {
+        const dist = Math.hypot(this.getTileX() - pacman.getTileX(), this.getTileY() - pacman.getTileY());
+        return dist > 8 ? { x: pacman.getTileX(), y: pacman.getTileY() } : this.scatterTarget;
+      }
+    }
+    return { x: 0, y: 0 };
+  }
+
+  draw() {
+    const r = this.radius + 2;
+    ctx.fillStyle = this.state === 'frightened' ? (frightenedTimer < 100 && Math.floor(frightenedTimer/10)%2 ? '#fff' : '#2121ff') : (this.state === 'eaten' ? 'rgba(255,255,255,0.2)' : this.color);
+    
+    if (this.state !== 'eaten') {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y - 2, r, Math.PI, 0, false);
+        ctx.lineTo(this.x + r, this.y + r);
+        for (let i = 0; i < 3; i++) {
+            const bx = this.x + r - (i * 2 + 1) * (r * 2 / 6);
+            ctx.quadraticCurveTo(bx, this.y + r + 4, bx - r * 2 / 6, this.y + r);
+        }
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    // Eyes
+    if (this.state !== 'frightened' || this.state === 'eaten') {
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.ellipse(this.x - 4, this.y - 4, 3, 4, 0, 0, Math.PI * 2);
+      ctx.ellipse(this.x + 4, this.y - 4, 3, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#000';
+      const ex = DIRS[this.dir].x * 2;
+      const ey = DIRS[this.dir].y * 2;
+      ctx.beginPath();
+      ctx.arc(this.x - 4 + ex, this.y - 4 + ey, 1.5, 0, Math.PI * 2);
+      ctx.arc(this.x + 4 + ex, this.y - 4 + ey, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+function canMove(tx, ty, dir) {
+  const nx = tx + DIRS[dir].x;
+  const ny = ty + DIRS[dir].y;
+  if (nx < 0 || nx >= COLS) return true; // Allow wrap around
+  if (ny < 0 || ny >= ROWS) return false;
+  return MAP[ny][nx] !== 1;
+}
+
+function getOppositeDir(dir) {
+  const opp = { up: 'down', down: 'up', left: 'right', right: 'left' };
+  return opp[dir];
+}
+
+function initGame() {
+  MAP = MAP_TEMPLATE.map(row => [...row]);
+  score = 0;
+  lives = 3;
+  level = 1;
+  scoreEl.textContent = score;
+  livesEl.textContent = lives;
+  resetLevel();
+}
+
+function resetLevel() {
+  pacman = new Pacman();
+  ghosts = [
+    new Ghost(13.5, 11, '#ff0000', 'Blinky', { x: 25, y: -2 }, 0),
+    new Ghost(13.5, 14, '#ffb8ff', 'Pinky', { x: 2, y: -2 }, 60),
+    new Ghost(11.5, 14, '#00ffff', 'Inky', { x: 27, y: 31 }, 180),
+    new Ghost(15.5, 14, '#ffb852', 'Clyde', { x: 0, y: 31 }, 300)
+  ];
+  frightenedTimer = 0;
+  ghostModeTimer = 0;
+  ghostMode = 'scatter';
+}
+
+function startFrightened() {
+  frightenedTimer = 420; // 7 seconds at 60fps
+  ghosts.forEach(g => {
+    if (g.state === 'active') g.state = 'frightened';
+  });
+}
+
+function die() {
+  lives--;
+  livesEl.textContent = lives;
+  running = false;
+  if (lives <= 0) {
+    showGameOver(false);
+  } else {
+    setTimeout(() => {
+      resetLevel();
+      running = true;
+    }, 1000);
+  }
+}
+
+function showGameOver(win) {
+  running = false;
+  cancelAnimationFrame(animationId);
+  gameOverOverlay.style.display = 'block';
+  gameOverTitle.textContent = win ? "YOU WIN!" : "GAME OVER";
+  gameOverTitle.style.color = win ? "#0f0" : "#f00";
+  finalScoreEl.textContent = score;
+}
+
+function update() {
+  if (!running) return;
+
+  pacman.update();
+  ghosts.forEach(g => g.update());
+
+  // Timers
+  if (frightenedTimer > 0) {
+    frightenedTimer--;
+    if (frightenedTimer === 0) {
+      ghosts.forEach(g => { if (g.state === 'frightened') g.state = 'active'; });
+    }
+  }
+
+  ghostModeTimer++;
+  if (ghostModeTimer > 1200) { // Switch every 20s
+    ghostMode = ghostMode === 'scatter' ? 'chase' : 'scatter';
+    ghostModeTimer = 0;
+  }
+
+  // Check win
+  const dots = MAP.flat().filter(t => t === 0 || t === 3).length;
+  if (dots === 0) {
+    showGameOver(true);
+  }
+}
+
+function draw(time) {
+  if (!lastTime) lastTime = time;
+  const delta = time - lastTime;
+
+  if (delta >= frameInterval) {
+    lastTime = time - (delta % frameInterval);
+
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Maze
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const t = MAP[r][c];
+        if (t === 1) {
+          ctx.strokeStyle = '#2121de';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(c * TILE + 2, r * TILE + 2, TILE - 4, TILE - 4);
+        } else if (t === 0) {
+          ctx.fillStyle = '#ffb8ae';
+          ctx.beginPath();
+          ctx.arc(c * TILE + TILE / 2, r * TILE + TILE / 2, 2, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (t === 3) {
+          if (Math.floor(Date.now() / 200) % 2) {
+            ctx.fillStyle = '#ffb8ae';
+            ctx.beginPath();
+            ctx.arc(c * TILE + TILE / 2, r * TILE + TILE / 2, 6, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+    }
+
+    ghosts.forEach(g => g.draw());
+    pacman.draw();
+    update();
+  }
+  animationId = requestAnimationFrame(draw);
+}
+
+// Controls
+function handleInput(dir) {
+  if (!running) return;
+  pacman.nextDir = dir;
+}
+
+window.addEventListener('keydown', e => {
+  const keys = {
+    ArrowUp: 'up', w: 'up',
+    ArrowDown: 'down', s: 'down',
+    ArrowLeft: 'left', a: 'left',
+    ArrowRight: 'right', d: 'right'
+  };
+  if (keys[e.key]) {
+    handleInput(keys[e.key]);
+    e.preventDefault();
+  }
+});
+
+// Touch & Mobile
+let touchStart = null;
+canvas.addEventListener('touchstart', e => {
+  touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  if (!touchStart) return;
+  const dx = e.touches[0].clientX - touchStart.x;
+  const dy = e.touches[0].clientY - touchStart.y;
+  if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
+    if (Math.abs(dx) > Math.abs(dy)) handleInput(dx > 0 ? 'right' : 'left');
+    else handleInput(dy > 0 ? 'down' : 'up');
+    touchStart = null;
+  }
+  e.preventDefault();
+}, { passive: false });
+
+document.querySelectorAll('.control-btn').forEach(btn => {
+  btn.addEventListener('touchstart', e => {
+    handleInput(btn.dataset.dir);
+    e.preventDefault();
+  });
+  btn.addEventListener('mousedown', () => handleInput(btn.dataset.dir));
+});
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  startOverlay.style.display = 'none';
+  initGame();
+  running = true;
+  draw();
+});
+
+document.getElementById('restartBtn').addEventListener('click', () => {
+  gameOverOverlay.style.display = 'none';
+  initGame();
+  running = true;
+});
+
+// Initial Maze Draw
+MAP = MAP_TEMPLATE.map(row => [...row]);
+pacman = new Pacman();
+ghosts = [
+  new Ghost(13.5, 11, '#ff0000', 'Blinky', { x: 25, y: -2 }, 0),
+  new Ghost(13.5, 14, '#ffb8ff', 'Pinky', { x: 2, y: -2 }, 60),
+  new Ghost(11.5, 14, '#00ffff', 'Inky', { x: 27, y: 31 }, 180),
+  new Ghost(15.5, 14, '#ffb852', 'Clyde', { x: 0, y: 31 }, 300)
+];
+draw();
+running = false;
 </script>
-
+    <script>(function(){const v=Date.now();document.write('<script src="/global-header.js?v='+v+'"><\/script>');})();</script>
 </body>
-
 </html>
