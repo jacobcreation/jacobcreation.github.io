@@ -367,6 +367,7 @@
 
             <div class="actions">
                 <button class="btn btn-primary" id="translateBtn">Translate</button>
+                <button class="btn btn-ghost" id="recordBtn">🎤 Record</button>
                 <button class="btn btn-ghost" id="clearBtn">Clear</button>
                 <button class="btn btn-danger" id="copyBtn">Copy Result</button>
             </div>
@@ -424,8 +425,81 @@
         const status = document.getElementById("status");
         const sourceCount = document.getElementById("sourceCount");
         const outputCount = document.getElementById("outputCount");
+        const recordBtn = document.getElementById("recordBtn");
 
         let isTranslating = false;
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+
+        recordBtn.addEventListener("click", async () => {
+            if (isRecording) {
+                mediaRecorder.stop();
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    isRecording = false;
+                    recordBtn.textContent = "🎤 Record";
+                    recordBtn.classList.remove("btn-danger");
+                    recordBtn.classList.add("btn-ghost");
+                    
+                    await transcribeAudio(audioBlob);
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                recordBtn.textContent = "⏹ Stop";
+                recordBtn.classList.remove("btn-ghost");
+                recordBtn.classList.add("btn-danger");
+                setStatus("Recording...");
+
+            } catch (err) {
+                setStatus("Microphone access denied or not available.", true);
+                console.error(err);
+            }
+        });
+
+        async function transcribeAudio(blob) {
+            setStatus("Transcribing...");
+            try {
+                const res = await fetch(WORKER_URL, {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": blob.type,
+                        "X-Source-Lang": sourceLang.value 
+                    },
+                    body: blob,
+                });
+
+                if (!res.ok) {
+                    const err = await res.text();
+                    throw new Error(err || `HTTP ${res.status}`);
+                }
+
+                const data = await res.json();
+                sourceText.value = data.result;
+                updateCharCounts();
+                setStatus("Transcription complete!");
+                
+                // Automatically translate after transcription
+                translateBtn.click();
+            } catch (e) {
+                setStatus("Transcription error: " + e.message, true);
+            }
+        }
 
         function populateSelects() {
             LANGUAGES.forEach(l => {
