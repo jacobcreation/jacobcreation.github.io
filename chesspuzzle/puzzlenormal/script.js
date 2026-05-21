@@ -89,60 +89,21 @@ function clearHighlights() {
     $('.square-55d63').removeClass('highlight-move highlight-hint');
 }
 
-function getFolderPath(rating) {
-    let lower = Math.floor(rating / 100) * 100;
-    if (lower < 300) lower = 300;
-    if (lower > 3300) lower = 3300;
-    let upper = lower + 100;
-    return `../puzzlelist/${lower}-${upper}/puzzles.csv`;
-}
-
 async function loadRandomPuzzle() {
     statusEl.text('Fetching puzzle...');
-    const path = getFolderPath(userRating);
     
     try {
-        // 1. Get file size
-        const headResponse = await fetch(path, { method: 'HEAD' });
-        const fileSize = parseInt(headResponse.headers.get('content-length'));
+        const themeQuery = currentThemeFilter === 'all' ? '' : `&theme=${currentThemeFilter}`;
+        const response = await fetch(`https://puzzle-gen.b4rjxr9lk.workers.dev/api/puzzle?rating=${userRating}${themeQuery}`);
         
-        let attempts = 0;
-        let line = null;
+        if (!response.ok) throw new Error("Failed to fetch puzzle");
         
-        while (attempts < 30) {
-            // 2. Pick a random spot
-            const randomPos = Math.floor(Math.random() * (fileSize - 2000));
-            
-            // 3. Fetch a chunk
-            const rangeResponse = await fetch(path, {
-                headers: { 'Range': `bytes=${randomPos}-${randomPos + 2000}` }
-            });
-            const chunk = await rangeResponse.text();
-            
-            // 4. Extract a full line
-            const lines = chunk.split('\n');
-            // Skip first (likely partial) and take the next one
-            let candidateLine = lines.length > 2 ? lines[1] : lines[0];
-            
-            if (candidateLine && candidateLine.split(',').length >= 8) {
-                const parts = candidateLine.split(',');
-                const themes = parts[7];
-                if (currentThemeFilter === 'all' || themes.toLowerCase().includes(currentThemeFilter.toLowerCase())) {
-                    line = candidateLine;
-                    break;
-                }
-            }
-            attempts++;
-        }
+        const puzzleJson = await response.json();
         
-        if (!line) {
-            statusEl.text(`Theme "${currentThemeFilter}" not found nearby. Retrying any puzzle...`);
-            currentThemeFilter = 'all';
-            $('#themeFilter').val('all');
-            return loadRandomPuzzle();
-        }
-        
+        // Emulate the parsePuzzle format
+        const line = `${puzzleJson.PuzzleId},${puzzleJson.FEN},${puzzleJson.Moves},${puzzleJson.Rating},0,0,0,${puzzleJson.Themes}`;
         parsePuzzle(line);
+        
     } catch (err) {
         console.error('Error loading puzzle:', err);
         statusEl.text('Failed to load puzzle. Retrying...');

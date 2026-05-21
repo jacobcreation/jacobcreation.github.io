@@ -304,56 +304,18 @@ function toggleMute() {
 }
 
 // Preloader Queue Logic
-function getFolderPath(rating) {
-    let lower = Math.floor(rating / 100) * 100;
-    if (lower < 300) lower = 300;
-    if (lower > 3300) lower = 3300;
-    let upper = lower + 100;
-    return `../puzzlelist/${lower}-${upper}/puzzles.csv`;
-}
-
 async function fetchRandomPuzzle(targetRating) {
-    const path = getFolderPath(targetRating);
+    const response = await fetch(`https://puzzle-gen.b4rjxr9lk.workers.dev/api/puzzle?rating=${targetRating}`);
+    if (!response.ok) throw new Error("Failed to fetch puzzle from API");
     
-    // 1. HEAD request to find the content size
-    const headResponse = await fetch(path, { method: 'HEAD' });
-    if (!headResponse.ok) throw new Error("Failed to contact puzzle repository");
+    const puzzleJson = await response.json();
     
-    const fileSize = parseInt(headResponse.headers.get('content-length'));
-    if (!fileSize || isNaN(fileSize)) throw new Error("Could not read content-length");
-    
-    // 2. Select a random spot inside the file (leaving buffer for a full line)
-    const randomPos = Math.floor(Math.random() * (fileSize - 2500));
-    
-    // 3. Fetch a 2500-byte range of the file
-    const rangeResponse = await fetch(path, {
-        headers: { 'Range': `bytes=${randomPos}-${randomPos + 2500}` }
-    });
-    
-    if (!rangeResponse.ok && rangeResponse.status !== 206) {
-        throw new Error("HTTP Range query failed");
-    }
-    
-    const chunk = await rangeResponse.text();
-    const lines = chunk.split('\n');
-    
-    // Skip the first line since it is likely truncated.
-    let candidateLine = lines.length > 2 ? lines[1] : lines[0];
-    if (!candidateLine || candidateLine.split(',').length < 8) {
-        candidateLine = lines.length > 3 ? lines[2] : null;
-    }
-    
-    if (!candidateLine || candidateLine.split(',').length < 8) {
-        throw new Error("Selected range did not contain a valid puzzle CSV line");
-    }
-    
-    const parts = candidateLine.split(',');
     return {
-        id: parts[0],
-        fen: parts[1],
-        moves: parts[2].split(' '),
-        rating: parseInt(parts[3]),
-        themes: parts[7]
+        id: puzzleJson.PuzzleId,
+        fen: puzzleJson.FEN,
+        moves: puzzleJson.Moves.split(' '),
+        rating: parseInt(puzzleJson.Rating),
+        themes: puzzleJson.Themes
     };
 }
 
