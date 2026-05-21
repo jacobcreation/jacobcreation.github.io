@@ -1,0 +1,3 @@
+PuzzleId,FEN,Moves,Rating,RatingDeviation,Popularity,NbPlays,Themes,GameUrl,OpeningTags
+WDc9D,r1r3k1/7p/2p3bP/2BpP1R1/1pn1p3/1N6/P7/2K4R b - - 2 34,a8a2 e5e6 c8c7 h1f1 a2a8 g5f5 g6f5 f1f5,3306,145,85,678,advantage middlegame quietMove sacrifice veryLong,https://lichess.org/1HOzQfot/black#68,
+g7STS,4rr2/pb5R/3p2p1/1qpP1kN1/2p2PP1/2Q5/PP6/2K5 b - - 0 30,f5g4 g5e4 e8e4 c3h3 g4f4 h7h4 f4g5 h4e4,3318,159,85,676,crushing deflection middlegame sacrifice skewer veryLong,https://lichess.org/MHz0Hcxf/black#60,

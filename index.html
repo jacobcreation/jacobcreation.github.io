@@ -2,15 +2,6 @@
 <html lang="en">
 
 <head>
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#000000">
-
-    <!-- iOS PWA Tags -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="JacobCreation">
-    <link rel="apple-touch-icon" href="/favicon.png">
-
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="Explore fun projects created by Jacob, including games like Chess, Snake, Flappy Bird, and more!" />
@@ -385,6 +376,7 @@
                 <a class="card-link" href="/cps">Chess Pairing System</a>
                 <a class="card-link" href="/chcl">Chess Clock</a>
                 <a class="card-link" href="/cpi">Chess Analysis Board</a>
+                <a class="card-link" href="/chesspuzzle">Chess Puzzles</a>
                 <a class="card-link" href="/strategygame">Strategy Game</a>
 
             </div>
@@ -489,12 +481,6 @@
         projectCount.textContent = cards.length;
         countPill.textContent = `${cards.length} projects`;
 
-    </script>
-
-    <script>
-        if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.register("/service-worker.js");
-        }
     </script>
 
     <script>(function(){const v=Date.now();document.write('<script src="/global-header.js?v='+v+'"><\/script>');})();</script>

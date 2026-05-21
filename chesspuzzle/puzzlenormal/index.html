@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Chess Puzzles - JacobCreation</title>
+    <link rel="icon" href="/favicon.png" type="image/png">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chess Libraries -->
+    <link rel="stylesheet" href="lib/chessboard.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- Confetti Library -->
+    <script src="lib/confetti.browser.min.js"></script>
+</head>
+<body>
+    <main>
+        <section class="hero">
+            <div class="hero-card">
+                <a href="../" class="btn btn-ghost btn-small" style="margin-bottom: 10px;">← Back to Home</a>
+                <h1>Chess Puzzles ♟️</h1>
+                <p>Solve puzzles tailored to your skill level. Keep track of your progress and climb the ranks!</p>
+                
+                <div class="rating-display">
+                    <span class="label">Your Rating:</span>
+                    <span id="userRating" class="rating-value">1500</span>
+                </div>
+            </div>
+            
+            <div class="side-card">
+                <h3>⚡ Puzzle Info</h3>
+                <div class="stat"><span>Rating</span><span id="puzzleRating">----</span></div>
+                <div class="stat"><span>Theme</span><span id="puzzleTheme">Loading...</span></div>
+                <div class="stat"><span>Result</span><span id="puzzleResult">Pending</span></div>
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
+                <div class="stat"><span>Streak 🔥</span><span id="currentStreak">0</span></div>
+                <div class="stat"><span>Best 🏆</span><span id="bestStreak">0</span></div>
+                <div class="stat"><span>Time ⏱️</span><span id="timer">00:00</span></div>
+            </div>
+        </section>
+
+        <section class="game-container">
+            <div class="board-column">
+                <div class="panel">
+                    <div id="status">Loading first puzzle...</div>
+                </div>
+                
+                <div class="board-shell">
+                    <div class="eval-bar-container">
+                        <div id="evalBar" class="eval-bar"></div>
+                    </div>
+                    <div id="myBoard"></div>
+                </div>
+
+                <div class="btn-grid">
+                    <button id="hintBtn" class="btn btn-ghost">Hint</button>
+                    <button id="showSolutionBtn" class="btn btn-ghost">Show Solution</button>
+                    <button id="nextPuzzleBtn" class="btn btn-primary">Next Puzzle</button>
+                </div>
+            </div>
+
+            <div class="side-column">
+                <div class="panel">
+                    <h2>History</h2>
+                    <div id="moveList" class="move-list">
+                        <!-- Moves will be listed here -->
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>Settings</h2>
+
+
+                    <div class="setting-group" style="margin-top: 15px;">
+                        <label for="themeFilter">Filter by Theme</label>
+                        <select id="themeFilter" class="select-input">
+                            <option value="all">All Themes</option>
+                            <option value="mate">Checkmate</option>
+                            <option value="fork">Fork</option>
+                            <option value="pin">Pin</option>
+                            <option value="skewer">Skewer</option>
+                            <option value="endgame">Endgame</option>
+                            <option value="advantage">Advantage</option>
+                            <option value="sacrifice">Sacrifice</option>
+                            <option value="discoveredAttack">Discovered Attack</option>
+                            <option value="doubleCheck">Double Check</option>
+                            <option value="promotion">Promotion</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        © 2026 JacobCreation • Built by Jacob 💙
+    </footer>
+
+    <!-- Libraries -->
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/chessboard.min.js"></script>
+    <script src="lib/chess.min.js"></script>
+    
+    <!-- App Logic -->
+    <script src="../accounts-sync.js"></script>
+    <script src="script.js"></script>
+    <script>(function(){const v=Date.now();document.write('<script src="../../global-header.js?v='+v+'"><\/script>');})();</script>
+</body>
+</html>

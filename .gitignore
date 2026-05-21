@@ -14,11 +14,12 @@ allfiles.txt
 build.json
 output.txt
 Untitled-1.txt
+.antigravitycli/
 
 # JavaScript dependencies and caches
 node_modules/
 .vite/
 quiz/worker/
 
-#tmp files
+# Cloudflare Workers
 cloudflare_worker/

@@ -6,9 +6,6 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    
-  <meta name="theme-color" content="#000000">
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Downloads | JacobCreation</title>
@@ -278,18 +275,6 @@
         <a href="https://mega.nz/folder/5m1UAa6A#FzYMatDm60gYB8RmLVnG8g" target="_blank">Browse APKs on Mega.nz</a>
       </div>
 
-      <div class="toolbar" style="flex-direction: column; align-items: center; gap: 15px;">
-
-        <button id="installBtn" class="btn-download">
-          📲 Install JacobCreation App
-        </button>
-      </div>
-
-      <div id="iosNotice" class="ios-notice">
-        To install on iPhone: tap <strong>Share</strong> ( <span style="font-size: 1.2em;">⎋</span> ) then <strong>Add
-          to Home Screen</strong>.
-      </div>
-
       <div id="fileGrid" class="grid">
         <p class="loading-text">Loading available games…</p>
       </div>
@@ -366,55 +351,6 @@
     };
 
     loadOptionalScript("../global-header.js");
-
-    if ("serviceWorker" in navigator && location.protocol !== "file:") {
-      fetch("../service-worker.js", { method: "HEAD" })
-        .then(res => {
-          if (res.ok) {
-            return navigator.serviceWorker.register("../service-worker.js");
-          }
-        })
-        .catch(() => {});
-    }
-
-    let deferredPrompt;
-    const installBtn = document.getElementById("installBtn");
-    const iosNotice = document.getElementById("iosNotice");
-
-    // Check if it's iOS
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-
-    if (isIOS && !isStandalone) {
-      if (iosNotice) iosNotice.style.display = "block";
-    }
-
-    window.addEventListener("beforeinstallprompt", e => {
-      e.preventDefault();
-      deferredPrompt = e;
-      if (installBtn) installBtn.style.display = "inline-flex";
-    });
-
-    if (installBtn) {
-      installBtn.addEventListener("click", async () => {
-        
-        if (!deferredPrompt) return;
-
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log(`User response to the install prompt: ${outcome}`);
-        deferredPrompt = null;
-        installBtn.style.display = "none";
-      });
-    }
-
-    // Hide notice if already installed
-    window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
-      if (e.matches) {
-        if (installBtn) installBtn.style.display = "none";
-        if (iosNotice) iosNotice.style.display = "none";
-      }
-    });
   </script>
 
 </body>
