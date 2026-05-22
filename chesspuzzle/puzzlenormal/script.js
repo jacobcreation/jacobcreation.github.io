@@ -96,13 +96,14 @@ async function loadRandomPuzzle() {
         const themeQuery = currentThemeFilter === 'all' ? '' : `&theme=${currentThemeFilter}`;
         const response = await fetch(`https://puzzle-gen.b4rjxr9lk.workers.dev/api/puzzle?rating=${userRating}${themeQuery}`);
         
-        if (!response.ok) throw new Error("Failed to fetch puzzle");
+        if (!response.ok) throw new Error(`Worker responded with ${response.status}`);
         
         const puzzleJson = await response.json();
         
-        // Emulate the parsePuzzle format
-        const line = `${puzzleJson.PuzzleId},${puzzleJson.FEN},${puzzleJson.Moves},${puzzleJson.Rating},0,0,0,${puzzleJson.Themes}`;
-        parsePuzzle(line);
+        if (puzzleJson.error) throw new Error(puzzleJson.error);
+        
+        // Parse directly from the D1-backed JSON response
+        parsePuzzle(puzzleJson);
         
     } catch (err) {
         console.error('Error loading puzzle:', err);
@@ -111,21 +112,21 @@ async function loadRandomPuzzle() {
     }
 }
 
-function parsePuzzle(line) {
-    const parts = line.split(',');
+// Accepts the JSON object returned by the puzzle-gen Cloudflare Worker (D1 database)
+function parsePuzzle(puzzleJson) {
     currentPuzzle = {
-        id: parts[0],
-        fen: parts[1],
-        moves: parts[2].split(' '),
-        rating: parts[3],
-        themes: parts[7]
+        id: puzzleJson.PuzzleId,
+        fen: puzzleJson.FEN,
+        moves: puzzleJson.Moves.split(' '),
+        rating: puzzleJson.Rating,
+        themes: puzzleJson.Themes || ''
     };
     
     solutionMoves = currentPuzzle.moves;
     currentMoveIndex = 0;
     
     puzzleRatingEl.text(currentPuzzle.rating);
-    puzzleThemeEl.text(currentPuzzle.themes.split(' ').slice(0, 3).join(', '));
+    puzzleThemeEl.text((currentPuzzle.themes).split(' ').filter(Boolean).slice(0, 3).join(', '));
     puzzleResultEl.text('Solving...');
     moveListEl.empty();
     
