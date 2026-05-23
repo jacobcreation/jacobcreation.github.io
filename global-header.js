@@ -281,7 +281,7 @@
           ☰
         </button>
 
-        <nav class="jacob-nav" id="jacobMainNav">
+<nav class="jacob-nav" id="jacobMainNav">
           <a href="/index.html#projects">Projects</a>
           <a href="/chesspuzzle/">♟ Chess Puzzles</a>
           <a href="/about/">About</a>
