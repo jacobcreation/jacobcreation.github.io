@@ -35,13 +35,19 @@ jobs:
         run: |
           rm -rf _site
           mkdir -p _site
-          rsync -a ./ ./_site/ \
-            --exclude ".git/" \
-            --exclude ".github/" \
-            --exclude "_site/" \
-            --exclude "mg/**/venv/" \
-            --exclude "downloads/apk_test/" \
-            --exclude "*.keystore"
+          tar -cf - . \
+            --exclude=.git \
+            --exclude=.github \
+            --exclude=_site \
+            --exclude=downloads/apk_test \
+            --exclude='*.keystore' \
+            --exclude='*/venv' \
+            --exclude='*/venv/*' \
+            --exclude='*/__pycache__' \
+            --exclude='*/__pycache__/*' \
+            --exclude='*.pyc' \
+            --exclude='*.pyo' \
+            | tar -xf - -C _site
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
