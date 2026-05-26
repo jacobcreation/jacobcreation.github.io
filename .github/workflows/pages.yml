@@ -31,10 +31,22 @@ jobs:
       - name: Remove large puzzle data
         run: rm -rf chesspuzzle/puzzlelist
 
+      - name: Prepare Pages artifact
+        run: |
+          rm -rf _site
+          mkdir -p _site
+          rsync -a ./ ./_site/ \
+            --exclude ".git/" \
+            --exclude ".github/" \
+            --exclude "_site/" \
+            --exclude "mg/**/venv/" \
+            --exclude "downloads/apk_test/" \
+            --exclude "*.keystore"
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: './_site'
 
       - name: Deploy to GitHub Pages
         id: deployment
