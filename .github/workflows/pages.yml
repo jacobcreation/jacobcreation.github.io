@@ -2,7 +2,8 @@ name: Deploy static content to Pages
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -11,19 +12,23 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: false
 
 jobs:
   deploy:
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           lfs: true
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
@@ -32,25 +37,45 @@ jobs:
 
       - name: Prepare Pages artifact
         run: |
+          cat > prepare.sh << 'EOF'
           rm -rf _site
           mkdir -p _site
-          rsync -a --exclude='.git' --exclude='.github' --exclude='_site' --exclude='node_modules' --exclude='downloads/apk_test' --exclude='*.keystore' --exclude='*/venv' --exclude='*/__pycache__' --exclude='*.pyc' --exclude='*.pyo' ./ _site/
+
+          rsync -a \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='_site' \
+            --exclude='node_modules' \
+            --exclude='downloads/apk_test' \
+            --exclude='*.keystore' \
+            --exclude='*/venv' \
+            --exclude='*/__pycache__' \
+            --exclude='*.pyc' \
+            --exclude='*.pyo' \
+            ./ _site/
+          EOF
+
+          chmod +x prepare.sh
+          bash prepare.sh
 
       - name: Inspect artifact contents
         run: |
           echo "Artifact directory size:"
           du -sh _site
-          echo "Top 30 largest files:"
-          find _site -type f -printf "%s %p\n" | sort -nr | head -30
+
+          echo "Largest files:"
+          find _site -type f | xargs du -h | sort -hr | head -30
+
           echo "File count:"
           find _site -type f | wc -l
+
           echo "Symlink count:"
           find _site -type l | wc -l
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './_site'
+          path: ./_site
 
       - name: Deploy to GitHub Pages
         id: deployment
