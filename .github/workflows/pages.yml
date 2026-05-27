@@ -18,9 +18,6 @@ jobs:
   deploy:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
