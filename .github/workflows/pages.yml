@@ -30,23 +30,11 @@ jobs:
       - name: Remove large puzzle data
         run: rm -rf chesspuzzle/puzzlelist
 
-      - name: Prepare Pages artifact
-        run: |
-          rm -rf _site
-          mkdir -p _site
-          tar -cf - . \
-            --exclude=.git \
-            --exclude=.github \
-            --exclude=_site \
-            --exclude=downloads/apk_test \
-            --exclude='*.keystore' \
-            --exclude='*/venv' \
-            --exclude='*/venv/*' \
-            --exclude='*/__pycache__' \
-            --exclude='*/__pycache__/*' \
-            --exclude='*.pyc' \
-            --exclude='*.pyo' \
-            | tar -xf - -C _site
+- name: Prepare Pages artifact
+         run: |
+           rm -rf _site
+           mkdir -p _site
+           rsync -a --exclude='.git' --exclude='.github' --exclude='_site' --exclude='node_modules' --exclude='downloads/apk_test' --exclude='*.keystore' --exclude='*/venv' --exclude='*/__pycache__' --exclude='*.pyc' --exclude='*.pyo' ./ _site/
 
       - name: Inspect artifact contents
         run: |
