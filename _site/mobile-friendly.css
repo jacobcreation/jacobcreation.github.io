@@ -1,0 +1,89 @@
+/* Global Mobile Optimization Styles */
+
+/* Ensure touch targets are large enough on ALL devices for consistency, 
+   but we'll keep it flexible for desktop */
+button, 
+a.btn, 
+.card-link, 
+.pill, 
+select, 
+input[type="button"], 
+input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+}
+
+/* Fluid typography and spacing */
+html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+}
+
+/* 📱 Mobile Specific Tweaks (max-width: 768px) */
+@media (max-width: 768px) {
+    html {
+        font-size: 14px;
+    }
+    
+    main {
+        padding: 15px 10px !important;
+    }
+    
+    .hero h1, h1 {
+        font-size: 1.8rem !important;
+    }
+    
+    .hero-card, .side-card, .game-container {
+        padding: 15px !important;
+        border-radius: 12px !important;
+    }
+
+    /* Prevent accidental zooming on inputs (iOS fix) */
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="search"],
+    textarea,
+    select {
+        font-size: 16px !important; 
+    }
+
+    /* Better card layouts for mobile */
+    .link-group {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+        gap: 10px !important;
+    }
+
+    .card-link {
+        padding: 10px !important;
+        font-size: 0.9rem !important;
+    }
+
+    /* Scale games for small screens */
+    canvas, iframe {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+}
+
+/* 🖥️ Desktop / Global Friendly Constraints */
+canvas, iframe {
+    max-width: 100%;
+    /* No !important height on desktop to let JS handle it */
+    object-fit: contain;
+}
+
+/* Improve scroll behavior */
+body {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
+}
+
+#jacob-global-header {
+    height: auto;
+    min-height: 60px;
+}

@@ -1,0 +1,25 @@
+# Generated archives and build output
+*.apk
+*.zip
+build/
+dist/
+
+# Local tool state
+.codex
+**/*.codex
+.lastpull
+.gradle/
+*.log
+allfiles.txt
+build.json
+output.txt
+Untitled-1.txt
+.antigravitycli/
+
+# JavaScript dependencies and caches
+node_modules/
+.vite/
+quiz/worker/
+
+# Cloudflare Workers
+cloudflare_worker/

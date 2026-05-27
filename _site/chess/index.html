@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Cache Busting Meta Tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+        name="description"
+        content="Play chess against Stockfish, switch to local mode, inspect engine lines, and import or export positions."
+    />
+    <title>Chess - JacobCreation</title>
+
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+    <script>(function(){const v=Date.now();document.write('<link rel="stylesheet" href="lib/chessboard.min.css?v='+v+'">');})();</script>
+    <script>(function(){const v=Date.now();document.write('<link rel="stylesheet" href="style.css?v='+v+'">');})();</script>
+</head>
+
+<body data-theme="classic">
+
+    <main>
+        <section class="hero" aria-label="Chess Game">
+            <div class="hero-copy">
+                <p class="eyebrow">Chess Lab</p>
+                <h1>Chess Command Center</h1>
+                <p class="hero-lead">
+                    Play Stockfish, switch to local two-player mode, inspect engine ideas, and keep your board saved
+                    between visits.
+                </p>
+            </div>
+
+            <div class="hero-card app-shell">
+                <div class="board-column">
+                    <div class="panel compact-panel">
+                        <div class="panel-header">
+                            <div>
+                                <span class="label">Game Status</span>
+                                <div id="status">White to move</div>
+                            </div>
+                            <span id="turnBadge" class="pill">White</span>
+                        </div>
+                        <p id="substatus" class="substatus">Standard starting position.</p>
+                    </div>
+
+                    <div class="panel compact-panel capture-panel">
+                        <div class="capture-header">
+                            <span>Black Captured</span>
+                        </div>
+                        <div id="capturedBlack" class="captured-pieces"></div>
+                    </div>
+
+                    <div class="board-shell">
+                        <div id="boardOverlay" class="board-overlay" hidden>Stockfish is thinking...</div>
+                        <div id="myBoard"></div>
+                    </div>
+
+                    <div class="panel compact-panel capture-panel">
+                        <div class="capture-header">
+                            <span>White Captured</span>
+                        </div>
+                        <div id="capturedWhite" class="captured-pieces"></div>
+                    </div>
+
+                    <div class="btn-grid">
+                        <button id="hintBtn" class="btn btn-secondary">Hint</button>
+                        <button id="flipBoardBtn" class="btn btn-ghost">Flip Board</button>
+                        <button id="undoBtn" class="btn btn-ghost">Undo Move</button>
+                        <button id="newGameBtn" class="btn btn-primary">New Game</button>
+                    </div>
+                </div>
+
+                <div class="side-column">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Play Settings</h2>
+                            <label class="toggle" for="soundToggle">
+                                <input type="checkbox" id="soundToggle" checked>
+                                <span>Move Sounds</span>
+                            </label>
+                        </div>
+
+                        <div class="control-grid">
+                            <div class="setting-group">
+                                <label for="gameMode">Mode</label>
+                                <select id="gameMode">
+                                    <option value="ai">Vs Stockfish</option>
+                                    <option value="local">Local 2-Player</option>
+                                </select>
+                            </div>
+
+                            <div class="setting-group">
+                                <label for="playerColor">Board Side</label>
+                                <select id="playerColor">
+                                    <option value="w">White</option>
+                                    <option value="b">Black</option>
+                                </select>
+                            </div>
+
+                            <div class="setting-group">
+                                <label for="boardTheme">Theme</label>
+                                <select id="boardTheme">
+                                    <option value="classic">Classic</option>
+                                    <option value="neon">Neon</option>
+                                    <option value="slate">Slate</option>
+                                    <option value="sand">Sand</option>
+                                </select>
+                            </div>
+
+                            <div class="setting-group">
+                                <label for="difficulty">Skill Level <span id="difficultyVal">10</span></label>
+                                <input type="range" id="difficulty" min="0" max="20" value="10" class="slider">
+                            </div>
+
+                            <div class="setting-group full-width">
+                                <label for="moveTime">Think Time <span id="moveTimeVal">800 ms</span></label>
+                                <input type="range" id="moveTime" min="100" max="2500" step="100" value="800" class="slider">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <h2>Live Data</h2>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <span class="label">Mode</span>
+                                <strong id="statMode">Vs Stockfish</strong>
+                            </div>
+                            <div class="stat-card">
+                                <span class="label">Control</span>
+                                <strong id="statSide">White</strong>
+                            </div>
+                            <div class="stat-card">
+                                <span class="label">Moves</span>
+                                <strong id="statMoveCount">0</strong>
+                            </div>
+                            <div class="stat-card">
+                                <span class="label">Material</span>
+                                <strong id="statMaterial">Even</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Engine Analysis</h2>
+                            <span id="engineState" class="pill pill-muted">Idle</span>
+                        </div>
+
+                        <!-- 
+                        <div class="stats-grid analysis-grid">
+                            <div class="stat-card">
+                                <span class="label">Eval</span>
+                                <strong id="engineEval">Waiting</strong>
+                            </div>
+                            <div class="stat-card">
+                                <span class="label">Depth</span>
+                                <strong id="engineDepth">--</strong>
+                            </div>
+                        </div>
+
+                        <div class="line-block">
+                            <span class="label">Best Line</span>
+                            <div id="bestLine" class="line-text">Make a move or ask for a hint.</div>
+                        </div> 
+                        -->
+
+                        <div class="line-block">
+                            <span class="label">Hint</span>
+                            <div id="hintText" class="line-text">No hint loaded.</div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Position Tools</h2>
+                            <button id="copyFenBtn" class="btn btn-ghost btn-small">Copy FEN</button>
+                        </div>
+
+                        <div class="setting-group">
+                            <label for="fenInput">FEN</label>
+                            <input id="fenInput" class="mono-field" type="text" spellcheck="false" />
+                        </div>
+
+                        <div class="mini-btn-row">
+                            <button id="loadFenBtn" class="btn btn-secondary btn-small">Load FEN</button>
+                            <button id="copyPgnBtn" class="btn btn-ghost btn-small">Copy PGN</button>
+                        </div>
+
+                        <div class="setting-group">
+                            <label for="pgnInput">PGN</label>
+                            <textarea id="pgnInput" class="mono-field" rows="7" spellcheck="false"></textarea>
+                        </div>
+
+                        <div class="mini-btn-row">
+                            <button id="loadPgnBtn" class="btn btn-secondary btn-small">Load PGN</button>
+                            <button id="resetPositionBtn" class="btn btn-primary btn-small">Start Position</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Move History</h2>
+                            <span id="historyCount" class="pill pill-muted">0 moves</span>
+                        </div>
+                        <div id="moveList" class="move-list"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        © 2026 JacobCreation • Built by Jacob 💙
+    </footer>
+
+    <div id="toast" class="toast" hidden></div>
+
+    <div id="promotionModal" class="modal" hidden>
+        <div class="modal-card">
+            <span class="label">Pawn Promotion</span>
+            <h3>Choose a piece</h3>
+            <div id="promotionChoices" class="promotion-grid"></div>
+            <button id="cancelPromotionBtn" class="btn btn-ghost btn-small">Cancel</button>
+        </div>
+    </div>
+
+    <script>(function(){const v=Date.now();document.write('<script src="lib/jquery.min.js?v='+v+'"><\/script>');})();</script>
+    <script>(function(){const v=Date.now();document.write('<script src="lib/chessboard.min.js?v='+v+'"><\/script>');})();</script>
+    <script>(function(){const v=Date.now();document.write('<script src="lib/chess.min.js?v='+v+'"><\/script>');})();</script>
+    <script>(function(){const v=Date.now();document.write('<script src="script.js?v='+v+'"><\/script>');})();</script>
+<script>(function(){const v=Date.now();document.write('<script src="/global-header.js?v='+v+'"><\/script>');})();</script>
+</body>
+
+</html>

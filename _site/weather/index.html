@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Check the weather with Jacob's modern weather app." />
+    <title>JacobWeather - Modern Weather App</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="/favicon.png" type="image/png" />
+</head>
+
+<body>
+    <div id="weatherBgOverlay" class="bg-overlay"></div>
+    <main>
+        <header class="hero">
+            <div class="hero-card">
+                <div class="header-top">
+                    <a href="/" class="back-link">← Back</a>
+                    <div class="unit-toggle">
+                        <span id="unitC" class="active">°C</span>
+                        <span class="toggle-sep">|</span>
+                        <span id="unitF">°F</span>
+                    </div>
+                </div>
+                <h1>JacobWeather 🌤️</h1>
+                <p id="weatherAdvice">Ready to check the skies?</p>
+
+                <div class="search-wrap">
+                    <div class="search" role="search">
+                        🔎
+                        <input id="cityInput" placeholder="Search city..." autocomplete="off" />
+                    </div>
+                    <button id="searchBtn" class="btn btn-primary">Search</button>
+                </div>
+                
+                <div class="recent-searches" id="recentSearches">
+                    <!-- Recent cities will appear here -->
+                </div>
+            </div>
+
+            <div class="side-card" id="locationInfo">
+                <div class="date-time">
+                    <h3 id="cityName">---</h3>
+                    <p id="fullDate">---</p>
+                    <p id="localTime" class="large-time">---</p>
+                </div>
+                <div class="aqi-card">
+                    <span class="label">Air Quality</span>
+                    <span id="aqiValue" class="value">--</span>
+                    <div id="aqiBar" class="aqi-bar"><div></div></div>
+                </div>
+            </div>
+        </header>
+
+        <section class="weather-container" id="weatherContent" style="display: none;">
+            <div class="current-weather">
+                <div class="main-info">
+                    <img id="weatherIcon" src="" alt="Weather Icon" class="weather-icon">
+                    <div class="temp-wrap">
+                        <span id="temp">--</span><span class="unit-label">°</span>
+                    </div>
+                    <div id="condition" class="condition">Condition</div>
+                </div>
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <span class="label">Feels Like</span>
+                        <span id="feelsLike" class="value">--</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Humidity</span>
+                        <span id="humidity" class="value">--%</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Wind</span>
+                        <span id="wind" class="value">--</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Pressure</span>
+                        <span id="pressure" class="value">-- hPa</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Visibility</span>
+                        <span id="visibility" class="value">-- km</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">UV Index</span>
+                        <span id="uvIndex" class="value">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-title">
+                <h2>🕒 Hourly Forecast</h2>
+            </div>
+            <div class="hourly-forecast" id="hourlyForecast">
+                <!-- Hourly items -->
+            </div>
+
+            <div class="forecast-extras">
+                <div class="extra-card">
+                    <h3>🌅 Sun & Moon</h3>
+                    <div class="stat"><span>Sunrise</span><span id="sunrise">--</span></div>
+                    <div class="stat"><span>Sunset</span><span id="sunset">--</span></div>
+                    <div class="stat"><span>Moon Phase</span><span id="moonPhase">--</span></div>
+                </div>
+                <div class="extra-card">
+                    <h3>🌡️ Daily Extremes</h3>
+                    <div class="stat"><span>High</span><span id="maxTemp">--</span></div>
+                    <div class="stat"><span>Low</span><span id="minTemp">--</span></div>
+                    <div class="stat"><span>Rain Chance</span><span id="rainChance">--%</span></div>
+                </div>
+            </div>
+
+            <div class="section-title">
+                <h2>📅 3-Day Forecast</h2>
+            </div>
+            <div class="forecast-grid" id="forecastGrid">
+                <!-- Forecast items -->
+            </div>
+        </section>
+
+
+        <div id="loader" class="loader" style="display: none;">
+            <div class="spinner"></div>
+            <p>Fetching weather data...</p>
+        </div>
+
+        <div id="errorMsg" class="error-msg" style="display: none;">
+            ⚠️ Could not find that city. Please try again.
+        </div>
+    </main>
+
+    <footer>
+        © 2026 JacobCreation • Built by Jacob 💙
+    </footer>
+
+    <script src="script.js"></script>
+    <script>(function(){const v=Date.now();document.write('<script src="../global-header.js?v='+v+'"><\/script>');})();</script>
+</body>
+
+</html>

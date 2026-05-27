@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Blast</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>Block Blast</h1>
+            <div class="score-container">
+                <span id="score-label">Score:</span>
+                <span id="score">0</span>
+            </div>
+        </div>
+
+        <div id="game-board" class="grid"></div>
+
+        <div id="piece-tray" class="tray">
+            <div class="piece-slot" id="slot-0"></div>
+            <div class="piece-slot" id="slot-1"></div>
+            <div class="piece-slot" id="slot-2"></div>
+        </div>
+
+        <div id="game-over" class="modal hidden">
+            <div class="modal-content">
+                <h2>Game Over!</h2>
+                <p>Your score: <span id="final-score">0</span></p>
+                <button id="restart-btn">Play Again</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+    <script>(function(){const v=Date.now();document.write('<script src="/global-header.js?v='+v+'"><\/script>');})();</script>
+</body>
+</html>

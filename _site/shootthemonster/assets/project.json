@@ -1,0 +1,3633 @@
+{
+	"targets": [
+		{
+			"isStage": true,
+			"name": "Stage",
+			"variables": {
+				"gz+~Si*A67|_sMFY{cjf": ["can fire?", "yes"],
+				"{R-m~VP.2$f,;F,~r/KQ": ["Player dir", 90]
+			},
+			"lists": {},
+			"broadcasts": {
+				"#2bgC0#Y]QigcKmU-9gU": "Start Game",
+				"G`z%gh|NOp?7$RL;*=e6": "Level 1",
+				"/uC]0^:?D:dShbE{4f/n": "Monster hit",
+				"S7][ZOXpb-t5~[}Ij#D+": "Player wins",
+				"qb,z4!$v~;,k]:w+UUEk": "Next skin",
+				"5#GXln~t`dZv7bttx8U|": "Prev skin",
+				"h!q`F}!,zmRMaweHCHel": "Player hit",
+				"WM,xYkRfKXOkXv4A!NNO": "Monster wins"
+			},
+			"blocks": {
+				"bq": {
+					"opcode": "event_whenflagclicked",
+					"next": ")",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				")": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "bq",
+					"inputs": { "SUBSTACK": [2, "*"] },
+					"fields": {}
+				},
+				"*": {
+					"opcode": "sound_playuntildone",
+					"next": null,
+					"parent": ")",
+					"inputs": { "SOUND_MENU": [1, "br"] },
+					"fields": {}
+				},
+				"br": {
+					"opcode": "sound_sounds_menu",
+					"next": null,
+					"parent": "*",
+					"inputs": {},
+					"fields": {
+						"SOUND_MENU": ["n-Dimensions (Main Theme - Retro", null]
+					},
+					"shadow": true
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "empty",
+					"dataFormat": "svg",
+					"assetId": "87ec29ad216c0074c731d581c7f40c39",
+					"md5ext": "87ec29ad216c0074c731d581c7f40c39.svg",
+					"rotationCenterX": 240,
+					"rotationCenterY": 180
+				},
+				{
+					"name": "backdrop_viper",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "030804c2b088a6e8186e77878dcbddb3",
+					"md5ext": "030804c2b088a6e8186e77878dcbddb3.svg",
+					"rotationCenterX": 234.50035,
+					"rotationCenterY": 173.500415
+				},
+				{
+					"name": "backdrop_blazer",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "e559f07715c12911f71df91dddf8efcb",
+					"md5ext": "e559f07715c12911f71df91dddf8efcb.svg",
+					"rotationCenterX": 235.49998417400002,
+					"rotationCenterY": 173.500412
+				},
+				{
+					"name": "backdrop_titan",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "05ec6aa28427ebf632cfe33402850e5d",
+					"md5ext": "05ec6aa28427ebf632cfe33402850e5d.svg",
+					"rotationCenterX": 234.99997253029989,
+					"rotationCenterY": 173.500412
+				},
+				{
+					"name": "backdrop_stalker",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "e22a4a432c948f9e2d0367b33fd57ea3",
+					"md5ext": "e22a4a432c948f9e2d0367b33fd57ea3.svg",
+					"rotationCenterX": 235.5000322649999,
+					"rotationCenterY": 173.500412
+				}
+			],
+			"sounds": [
+				{
+					"name": "n-Dimensions (Main Theme - Retro",
+					"assetId": "0b6094dcaf7e6168e66354af311d4bfe",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 4970258,
+					"md5ext": "0b6094dcaf7e6168e66354af311d4bfe.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 0,
+			"tempo": 60,
+			"videoTransparency": 50,
+			"videoState": "on",
+			"textToSpeechLanguage": null
+		},
+		{
+			"isStage": false,
+			"name": "Monster",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"bs": {
+					"opcode": "event_whenflagclicked",
+					"next": "+",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"+": {
+					"opcode": "motion_gotoxy",
+					"next": ",",
+					"parent": "bs",
+					"inputs": { "X": [1, [4, "0"]], "Y": [1, [4, "0"]] },
+					"fields": {}
+				},
+				",": {
+					"opcode": "motion_pointindirection",
+					"next": "-",
+					"parent": "+",
+					"inputs": { "DIRECTION": [1, [8, "90"]] },
+					"fields": {}
+				},
+				"-": {
+					"opcode": "looks_setsizeto",
+					"next": "h",
+					"parent": ",",
+					"inputs": { "SIZE": [1, [4, "25"]] },
+					"fields": {}
+				},
+				"h": {
+					"opcode": "looks_switchcostumeto",
+					"next": ".",
+					"parent": "-",
+					"inputs": { "COSTUME": [1, "bt"] },
+					"fields": {}
+				},
+				"bt": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "h",
+					"inputs": {},
+					"fields": { "COSTUME": ["evil_eye_1", null] },
+					"shadow": true
+				},
+				".": {
+					"opcode": "looks_seteffectto",
+					"next": "i",
+					"parent": "h",
+					"inputs": { "VALUE": [1, [4, "100"]] },
+					"fields": { "EFFECT": ["GHOST", null] }
+				},
+				"i": {
+					"opcode": "control_repeat",
+					"next": "/",
+					"parent": ".",
+					"inputs": { "TIMES": [1, [6, "50"]], "SUBSTACK": [2, "bu"] },
+					"fields": {}
+				},
+				"bu": {
+					"opcode": "looks_changeeffectby",
+					"next": null,
+					"parent": "i",
+					"inputs": { "CHANGE": [1, [4, "-2"]] },
+					"fields": { "EFFECT": ["GHOST", null] }
+				},
+				"/": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "i",
+					"inputs": { "SUBSTACK": [2, "j"] },
+					"fields": {}
+				},
+				"j": {
+					"opcode": "looks_switchcostumeto",
+					"next": ":",
+					"parent": "/",
+					"inputs": { "COSTUME": [1, "bv"] },
+					"fields": {}
+				},
+				"bv": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "j",
+					"inputs": {},
+					"fields": { "COSTUME": ["evil_eye_1", null] },
+					"shadow": true
+				},
+				":": {
+					"opcode": "control_wait",
+					"next": "k",
+					"parent": "j",
+					"inputs": { "DURATION": [1, [5, "0.1"]] },
+					"fields": {}
+				},
+				"k": {
+					"opcode": "looks_switchcostumeto",
+					"next": ";",
+					"parent": ":",
+					"inputs": { "COSTUME": [1, "bw"] },
+					"fields": {}
+				},
+				"bw": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "k",
+					"inputs": {},
+					"fields": { "COSTUME": ["evil_eye_2", null] },
+					"shadow": true
+				},
+				";": {
+					"opcode": "control_wait",
+					"next": "l",
+					"parent": "k",
+					"inputs": { "DURATION": [1, [5, "0.1"]] },
+					"fields": {}
+				},
+				"l": {
+					"opcode": "looks_switchcostumeto",
+					"next": "bx",
+					"parent": ";",
+					"inputs": { "COSTUME": [1, "by"] },
+					"fields": {}
+				},
+				"by": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "l",
+					"inputs": {},
+					"fields": { "COSTUME": ["evil_eye_3", null] },
+					"shadow": true
+				},
+				"bx": {
+					"opcode": "control_wait",
+					"next": null,
+					"parent": "l",
+					"inputs": { "DURATION": [1, [5, "0.1"]] },
+					"fields": {}
+				},
+				"bz": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "=",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Monster hit", "/uC]0^:?D:dShbE{4f/n"]
+					},
+					"topLevel": true
+				},
+				"=": {
+					"opcode": "looks_switchcostumeto",
+					"next": null,
+					"parent": "bz",
+					"inputs": { "COSTUME": [1, "bA"] },
+					"fields": {}
+				},
+				"bA": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "=",
+					"inputs": {},
+					"fields": { "COSTUME": ["evil_eye_hit", null] },
+					"shadow": true
+				},
+				"bB": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "m",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Player wins", "S7][ZOXpb-t5~[}Ij#D+"]
+					},
+					"topLevel": true
+				},
+				"m": {
+					"opcode": "looks_switchcostumeto",
+					"next": "?",
+					"parent": "bB",
+					"inputs": { "COSTUME": [1, "bC"] },
+					"fields": {}
+				},
+				"bC": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "m",
+					"inputs": {},
+					"fields": { "COSTUME": ["evil_eye_ded", null] },
+					"shadow": true
+				},
+				"?": {
+					"opcode": "control_wait",
+					"next": "n",
+					"parent": "m",
+					"inputs": { "DURATION": [1, [5, "10"]] },
+					"fields": {}
+				},
+				"bD": {
+					"opcode": "control_stop",
+					"next": null,
+					"parent": "n",
+					"inputs": {},
+					"fields": { "STOP_OPTION": ["all", null] },
+					"mutation": {
+						"tagName": "mutation",
+						"children": [],
+						"hasnext": "false"
+					}
+				},
+				"n": {
+					"opcode": "control_repeat",
+					"next": "bD",
+					"parent": "?",
+					"inputs": { "TIMES": [1, [6, "50"]], "SUBSTACK": [2, "bE"] },
+					"fields": {}
+				},
+				"bE": {
+					"opcode": "looks_changeeffectby",
+					"next": null,
+					"parent": "n",
+					"inputs": { "CHANGE": [1, [4, "2"]] },
+					"fields": { "EFFECT": ["GHOST", null] }
+				}
+			},
+			"comments": {},
+			"currentCostume": 1,
+			"costumes": [
+				{
+					"name": "evil_eye_1",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "8cdd759bf2446e5d05da932207e8948c",
+					"md5ext": "8cdd759bf2446e5d05da932207e8948c.png",
+					"rotationCenterX": 225,
+					"rotationCenterY": 213.5
+				},
+				{
+					"name": "evil_eye_2",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "40944638254e070568eac5c808f19c0b",
+					"md5ext": "40944638254e070568eac5c808f19c0b.png",
+					"rotationCenterX": 213,
+					"rotationCenterY": 202
+				},
+				{
+					"name": "evil_eye_3",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "f2ee62de0c0b4d22aea61c42bcbf186f",
+					"md5ext": "f2ee62de0c0b4d22aea61c42bcbf186f.png",
+					"rotationCenterX": 225,
+					"rotationCenterY": 213.5
+				},
+				{
+					"name": "evil_eye_hit",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "759235bbdc27de1c0f3266b9cee33b7b",
+					"md5ext": "759235bbdc27de1c0f3266b9cee33b7b.png",
+					"rotationCenterX": 225,
+					"rotationCenterY": 213.5
+				},
+				{
+					"name": "evil_eye_ded",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "f4ca3f9db9638fecdcc294696747f679",
+					"md5ext": "f4ca3f9db9638fecdcc294696747f679.svg",
+					"rotationCenterX": 108.5,
+					"rotationCenterY": 102
+				}
+			],
+			"sounds": [],
+			"volume": 100,
+			"layerOrder": 8,
+			"visible": true,
+			"x": 0,
+			"y": 0,
+			"size": 25,
+			"direction": 90,
+			"draggable": true,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "Level 1",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"bF": {
+					"opcode": "event_whenflagclicked",
+					"next": "o",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"o": {
+					"opcode": "looks_switchcostumeto",
+					"next": "@",
+					"parent": "bF",
+					"inputs": { "COSTUME": [1, "bG"] },
+					"fields": {}
+				},
+				"bG": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "o",
+					"inputs": {},
+					"fields": { "COSTUME": ["Ring1", null] },
+					"shadow": true
+				},
+				"@": {
+					"opcode": "looks_hide",
+					"next": "p",
+					"parent": "o",
+					"inputs": {},
+					"fields": {}
+				},
+				"p": {
+					"opcode": "motion_goto",
+					"next": "[",
+					"parent": "@",
+					"inputs": { "TO": [1, "bH"] },
+					"fields": {}
+				},
+				"bH": {
+					"opcode": "motion_goto_menu",
+					"next": null,
+					"parent": "p",
+					"inputs": {},
+					"fields": { "TO": ["Monster", null] },
+					"shadow": true
+				},
+				"[": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "p",
+					"inputs": { "SUBSTACK": [2, "q"] },
+					"fields": {}
+				},
+				"q": {
+					"opcode": "motion_pointindirection",
+					"next": "r",
+					"parent": "[",
+					"inputs": { "DIRECTION": [3, "bI", [8, "90"]] },
+					"fields": {}
+				},
+				"bI": {
+					"opcode": "operator_random",
+					"next": null,
+					"parent": "q",
+					"inputs": { "FROM": [1, [4, "1"]], "TO": [1, [4, "360"]] },
+					"fields": {}
+				},
+				"r": {
+					"opcode": "control_wait",
+					"next": "bJ",
+					"parent": "q",
+					"inputs": { "DURATION": [3, "bK", [5, "1"]] },
+					"fields": {}
+				},
+				"bK": {
+					"opcode": "operator_random",
+					"next": null,
+					"parent": "r",
+					"inputs": { "FROM": [1, [4, "1"]], "TO": [1, [4, "3"]] },
+					"fields": {}
+				},
+				"bJ": {
+					"opcode": "looks_nextcostume",
+					"next": null,
+					"parent": "r",
+					"inputs": {},
+					"fields": {}
+				},
+				"bL": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "]",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Start Game", "#2bgC0#Y]QigcKmU-9gU"]
+					},
+					"topLevel": true
+				},
+				"]": {
+					"opcode": "looks_show",
+					"next": "s",
+					"parent": "bL",
+					"inputs": {},
+					"fields": {}
+				},
+				"s": {
+					"opcode": "motion_goto",
+					"next": "^",
+					"parent": "]",
+					"inputs": { "TO": [1, "bM"] },
+					"fields": {}
+				},
+				"bM": {
+					"opcode": "motion_goto_menu",
+					"next": null,
+					"parent": "s",
+					"inputs": {},
+					"fields": { "TO": ["Monster", null] },
+					"shadow": true
+				},
+				"^": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "s",
+					"inputs": { "SUBSTACK": [2, "t"] },
+					"fields": {}
+				},
+				"t": {
+					"opcode": "motion_pointindirection",
+					"next": "u",
+					"parent": "^",
+					"inputs": { "DIRECTION": [3, "bN", [8, "90"]] },
+					"fields": {}
+				},
+				"bN": {
+					"opcode": "operator_random",
+					"next": null,
+					"parent": "t",
+					"inputs": { "FROM": [1, [4, "1"]], "TO": [1, [4, "360"]] },
+					"fields": {}
+				},
+				"u": {
+					"opcode": "control_wait",
+					"next": "bO",
+					"parent": "t",
+					"inputs": { "DURATION": [3, "bP", [5, "1"]] },
+					"fields": {}
+				},
+				"bP": {
+					"opcode": "operator_random",
+					"next": null,
+					"parent": "u",
+					"inputs": { "FROM": [1, [4, "1"]], "TO": [1, [4, "3"]] },
+					"fields": {}
+				},
+				"bO": {
+					"opcode": "looks_nextcostume",
+					"next": null,
+					"parent": "u",
+					"inputs": {},
+					"fields": {}
+				},
+				"bQ": {
+					"opcode": "event_whenflagclicked",
+					"next": "_",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"_": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "bQ",
+					"inputs": { "SUBSTACK": [2, "v"] },
+					"fields": {}
+				},
+				"v": {
+					"opcode": "control_if",
+					"next": null,
+					"parent": "_",
+					"inputs": { "CONDITION": [2, "`"], "SUBSTACK": [2, "bR"] },
+					"fields": {}
+				},
+				"`": {
+					"opcode": "operator_equals",
+					"next": null,
+					"parent": "v",
+					"inputs": {
+						"OPERAND1": [3, "{", [10, ""]],
+						"OPERAND2": [1, [10, "5"]]
+					},
+					"fields": {}
+				},
+				"{": {
+					"opcode": "sensing_of",
+					"next": null,
+					"parent": "`",
+					"inputs": { "OBJECT": [1, "bS"] },
+					"fields": { "PROPERTY": ["costume #", null] }
+				},
+				"bS": {
+					"opcode": "sensing_of_object_menu",
+					"next": null,
+					"parent": "{",
+					"inputs": {},
+					"fields": { "OBJECT": ["Monster", null] },
+					"shadow": true
+				},
+				"bR": {
+					"opcode": "control_stop",
+					"next": null,
+					"parent": "v",
+					"inputs": {},
+					"fields": { "STOP_OPTION": ["all", null] },
+					"mutation": {
+						"tagName": "mutation",
+						"children": [],
+						"hasnext": "false"
+					}
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "Ring1",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "9ad3559e0ef582e5b143c1395c69320c",
+					"md5ext": "9ad3559e0ef582e5b143c1395c69320c.svg",
+					"rotationCenterX": 42.76999999999995,
+					"rotationCenterY": 43.12641666666667
+				},
+				{
+					"name": "invincible",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "8ef0a23ecc0d3959cf8014feee5b68bb",
+					"md5ext": "8ef0a23ecc0d3959cf8014feee5b68bb.svg",
+					"rotationCenterX": 42.769999999999925,
+					"rotationCenterY": 43.12641666666667
+				}
+			],
+			"sounds": [
+				{
+					"name": "meow",
+					"assetId": "83c36d806dc92327b9e7049a565c6bff",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 40682,
+					"md5ext": "83c36d806dc92327b9e7049a565c6bff.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 12,
+			"visible": true,
+			"x": 0,
+			"y": 0,
+			"size": 100,
+			"direction": 30,
+			"draggable": false,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "Level 2",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"bT": {
+					"opcode": "event_whenflagclicked",
+					"next": "bU",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"bU": {
+					"opcode": "looks_hide",
+					"next": null,
+					"parent": "bT",
+					"inputs": {},
+					"fields": {}
+				},
+				"bV": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "w",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Start Game", "#2bgC0#Y]QigcKmU-9gU"]
+					},
+					"topLevel": true
+				},
+				"w": {
+					"opcode": "control_wait_until",
+					"next": "|",
+					"parent": "bV",
+					"inputs": { "CONDITION": [2, "}"] },
+					"fields": {}
+				},
+				"}": {
+					"opcode": "operator_equals",
+					"next": null,
+					"parent": "w",
+					"inputs": {
+						"OPERAND1": [3, "~", [10, ""]],
+						"OPERAND2": [1, [10, "2"]]
+					},
+					"fields": {}
+				},
+				"~": {
+					"opcode": "sensing_of",
+					"next": null,
+					"parent": "}",
+					"inputs": { "OBJECT": [1, "bW"] },
+					"fields": { "PROPERTY": ["costume #", null] }
+				},
+				"bW": {
+					"opcode": "sensing_of_object_menu",
+					"next": null,
+					"parent": "~",
+					"inputs": {},
+					"fields": { "OBJECT": ["Messages", null] },
+					"shadow": true
+				},
+				"|": {
+					"opcode": "looks_show",
+					"next": "aa",
+					"parent": "w",
+					"inputs": {},
+					"fields": {}
+				},
+				"aa": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "|",
+					"inputs": { "SUBSTACK": [2, "ab"] },
+					"fields": {}
+				},
+				"ab": {
+					"opcode": "control_wait",
+					"next": "ac",
+					"parent": "aa",
+					"inputs": { "DURATION": [1, [5, "0.5"]] },
+					"fields": {}
+				},
+				"ac": {
+					"opcode": "motion_pointindirection",
+					"next": null,
+					"parent": "ab",
+					"inputs": { "DIRECTION": [3, "bX", [8, "90"]] },
+					"fields": {}
+				},
+				"bX": {
+					"opcode": "operator_random",
+					"next": null,
+					"parent": "ac",
+					"inputs": { "FROM": [1, [4, "1"]], "TO": [1, [4, "360"]] },
+					"fields": {}
+				},
+				"dt": {
+					"opcode": "motion_gotoxy",
+					"next": null,
+					"parent": null,
+					"inputs": { "X": [1, [4, "0"]], "Y": [1, [4, "0"]] },
+					"fields": {},
+					"topLevel": true
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "Ring2",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "5a2523c9cd2c06c111f83fcabde83256",
+					"md5ext": "5a2523c9cd2c06c111f83fcabde83256.svg",
+					"rotationCenterX": -0.6680000000000064,
+					"rotationCenterY": 56.41199999999999
+				}
+			],
+			"sounds": [
+				{
+					"name": "meow",
+					"assetId": "83c36d806dc92327b9e7049a565c6bff",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 40682,
+					"md5ext": "83c36d806dc92327b9e7049a565c6bff.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 13,
+			"visible": true,
+			"x": 0,
+			"y": 0,
+			"size": 100,
+			"direction": -88,
+			"draggable": false,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "Level 3",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"bY": {
+					"opcode": "event_whenflagclicked",
+					"next": "ad",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"ad": {
+					"opcode": "looks_hide",
+					"next": "ae",
+					"parent": "bY",
+					"inputs": {},
+					"fields": {}
+				},
+				"ae": {
+					"opcode": "motion_pointindirection",
+					"next": null,
+					"parent": "ad",
+					"inputs": { "DIRECTION": [3, "bZ", [8, "90"]] },
+					"fields": {}
+				},
+				"bZ": {
+					"opcode": "operator_random",
+					"next": null,
+					"parent": "ae",
+					"inputs": { "FROM": [1, [4, "1"]], "TO": [1, [4, "360"]] },
+					"fields": {}
+				},
+				"b!": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "x",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Start Game", "#2bgC0#Y]QigcKmU-9gU"]
+					},
+					"topLevel": true
+				},
+				"x": {
+					"opcode": "control_wait_until",
+					"next": "af",
+					"parent": "b!",
+					"inputs": { "CONDITION": [2, "ag"] },
+					"fields": {}
+				},
+				"ag": {
+					"opcode": "operator_equals",
+					"next": null,
+					"parent": "x",
+					"inputs": {
+						"OPERAND1": [3, "ah", [10, ""]],
+						"OPERAND2": [1, [10, "3"]]
+					},
+					"fields": {}
+				},
+				"ah": {
+					"opcode": "sensing_of",
+					"next": null,
+					"parent": "ag",
+					"inputs": { "OBJECT": [1, "b#"] },
+					"fields": { "PROPERTY": ["costume #", null] }
+				},
+				"b#": {
+					"opcode": "sensing_of_object_menu",
+					"next": null,
+					"parent": "ah",
+					"inputs": {},
+					"fields": { "OBJECT": ["Messages", null] },
+					"shadow": true
+				},
+				"af": {
+					"opcode": "looks_show",
+					"next": "ai",
+					"parent": "x",
+					"inputs": {},
+					"fields": {}
+				},
+				"ai": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "af",
+					"inputs": { "SUBSTACK": [2, "aj"] },
+					"fields": {}
+				},
+				"aj": {
+					"opcode": "control_wait",
+					"next": "ak",
+					"parent": "ai",
+					"inputs": { "DURATION": [1, [5, "0.5"]] },
+					"fields": {}
+				},
+				"ak": {
+					"opcode": "motion_pointindirection",
+					"next": null,
+					"parent": "aj",
+					"inputs": { "DIRECTION": [3, "b%", [8, "90"]] },
+					"fields": {}
+				},
+				"b%": {
+					"opcode": "operator_random",
+					"next": null,
+					"parent": "ak",
+					"inputs": { "FROM": [1, [4, "1"]], "TO": [1, [4, "360"]] },
+					"fields": {}
+				},
+				"du": {
+					"opcode": "motion_gotoxy",
+					"next": null,
+					"parent": null,
+					"inputs": { "X": [1, [4, "0"]], "Y": [1, [4, "0"]] },
+					"fields": {},
+					"topLevel": true
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "Ring3",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "3a8d62e4ca4027b9a70fa92ae0d3a1f1",
+					"md5ext": "3a8d62e4ca4027b9a70fa92ae0d3a1f1.svg",
+					"rotationCenterX": -0.6680000000000064,
+					"rotationCenterY": 49.05000000000001
+				}
+			],
+			"sounds": [
+				{
+					"name": "meow",
+					"assetId": "83c36d806dc92327b9e7049a565c6bff",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 40682,
+					"md5ext": "83c36d806dc92327b9e7049a565c6bff.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 14,
+			"visible": true,
+			"x": 0,
+			"y": 0,
+			"size": 100,
+			"direction": 26,
+			"draggable": false,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "Level 4",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"b(": {
+					"opcode": "event_whenflagclicked",
+					"next": "al",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"al": {
+					"opcode": "looks_hide",
+					"next": "am",
+					"parent": "b(",
+					"inputs": {},
+					"fields": {}
+				},
+				"am": {
+					"opcode": "motion_pointindirection",
+					"next": null,
+					"parent": "al",
+					"inputs": { "DIRECTION": [3, "b)", [8, "90"]] },
+					"fields": {}
+				},
+				"b)": {
+					"opcode": "operator_random",
+					"next": null,
+					"parent": "am",
+					"inputs": { "FROM": [1, [4, "1"]], "TO": [1, [4, "360"]] },
+					"fields": {}
+				},
+				"b*": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "y",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Start Game", "#2bgC0#Y]QigcKmU-9gU"]
+					},
+					"topLevel": true
+				},
+				"y": {
+					"opcode": "control_wait_until",
+					"next": "an",
+					"parent": "b*",
+					"inputs": { "CONDITION": [2, "ao"] },
+					"fields": {}
+				},
+				"ao": {
+					"opcode": "operator_equals",
+					"next": null,
+					"parent": "y",
+					"inputs": {
+						"OPERAND1": [3, "ap", [10, ""]],
+						"OPERAND2": [1, [10, "4"]]
+					},
+					"fields": {}
+				},
+				"ap": {
+					"opcode": "sensing_of",
+					"next": null,
+					"parent": "ao",
+					"inputs": { "OBJECT": [1, "b+"] },
+					"fields": { "PROPERTY": ["costume #", null] }
+				},
+				"b+": {
+					"opcode": "sensing_of_object_menu",
+					"next": null,
+					"parent": "ap",
+					"inputs": {},
+					"fields": { "OBJECT": ["Messages", null] },
+					"shadow": true
+				},
+				"an": {
+					"opcode": "looks_show",
+					"next": "aq",
+					"parent": "y",
+					"inputs": {},
+					"fields": {}
+				},
+				"aq": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "an",
+					"inputs": { "SUBSTACK": [2, "ar"] },
+					"fields": {}
+				},
+				"ar": {
+					"opcode": "control_wait",
+					"next": "as",
+					"parent": "aq",
+					"inputs": { "DURATION": [1, [5, "0.5"]] },
+					"fields": {}
+				},
+				"as": {
+					"opcode": "motion_pointindirection",
+					"next": null,
+					"parent": "ar",
+					"inputs": { "DIRECTION": [3, "b,", [8, "90"]] },
+					"fields": {}
+				},
+				"b,": {
+					"opcode": "operator_random",
+					"next": null,
+					"parent": "as",
+					"inputs": { "FROM": [1, [4, "1"]], "TO": [1, [4, "360"]] },
+					"fields": {}
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "Ring4",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "68e9cac06dcfc38face28e7308a82248",
+					"md5ext": "68e9cac06dcfc38face28e7308a82248.svg",
+					"rotationCenterX": -0.6680000000000064,
+					"rotationCenterY": -0.6680000000000348
+				}
+			],
+			"sounds": [
+				{
+					"name": "meow",
+					"assetId": "83c36d806dc92327b9e7049a565c6bff",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 40682,
+					"md5ext": "83c36d806dc92327b9e7049a565c6bff.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 1,
+			"visible": true,
+			"x": 0,
+			"y": 0,
+			"size": 100,
+			"direction": -39,
+			"draggable": false,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "Level 5",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"b-": {
+					"opcode": "event_whenflagclicked",
+					"next": "at",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"at": {
+					"opcode": "looks_hide",
+					"next": "au",
+					"parent": "b-",
+					"inputs": {},
+					"fields": {}
+				},
+				"au": {
+					"opcode": "motion_pointindirection",
+					"next": null,
+					"parent": "at",
+					"inputs": { "DIRECTION": [3, "b.", [8, "90"]] },
+					"fields": {}
+				},
+				"b.": {
+					"opcode": "operator_random",
+					"next": null,
+					"parent": "au",
+					"inputs": { "FROM": [1, [4, "1"]], "TO": [1, [4, "360"]] },
+					"fields": {}
+				},
+				"b/": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "z",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Start Game", "#2bgC0#Y]QigcKmU-9gU"]
+					},
+					"topLevel": true
+				},
+				"z": {
+					"opcode": "control_wait_until",
+					"next": "av",
+					"parent": "b/",
+					"inputs": { "CONDITION": [2, "aw"] },
+					"fields": {}
+				},
+				"aw": {
+					"opcode": "operator_equals",
+					"next": null,
+					"parent": "z",
+					"inputs": {
+						"OPERAND1": [3, "ax", [10, ""]],
+						"OPERAND2": [1, [10, "5"]]
+					},
+					"fields": {}
+				},
+				"ax": {
+					"opcode": "sensing_of",
+					"next": null,
+					"parent": "aw",
+					"inputs": { "OBJECT": [1, "b:"] },
+					"fields": { "PROPERTY": ["costume #", null] }
+				},
+				"b:": {
+					"opcode": "sensing_of_object_menu",
+					"next": null,
+					"parent": "ax",
+					"inputs": {},
+					"fields": { "OBJECT": ["Messages", null] },
+					"shadow": true
+				},
+				"av": {
+					"opcode": "looks_show",
+					"next": "ay",
+					"parent": "z",
+					"inputs": {},
+					"fields": {}
+				},
+				"ay": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "av",
+					"inputs": { "SUBSTACK": [2, "az"] },
+					"fields": {}
+				},
+				"az": {
+					"opcode": "control_wait",
+					"next": "aA",
+					"parent": "ay",
+					"inputs": { "DURATION": [1, [5, "0.5"]] },
+					"fields": {}
+				},
+				"aA": {
+					"opcode": "motion_pointindirection",
+					"next": null,
+					"parent": "az",
+					"inputs": { "DIRECTION": [3, "b;", [8, "90"]] },
+					"fields": {}
+				},
+				"b;": {
+					"opcode": "operator_random",
+					"next": null,
+					"parent": "aA",
+					"inputs": { "FROM": [1, [4, "1"]], "TO": [1, [4, "360"]] },
+					"fields": {}
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "Ring5",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "35a678cd4240be9aa3b8b261c39265db",
+					"md5ext": "35a678cd4240be9aa3b8b261c39265db.svg",
+					"rotationCenterX": -0.6680000000000064,
+					"rotationCenterY": -64.35500000000005
+				}
+			],
+			"sounds": [
+				{
+					"name": "meow",
+					"assetId": "83c36d806dc92327b9e7049a565c6bff",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 40682,
+					"md5ext": "83c36d806dc92327b9e7049a565c6bff.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 2,
+			"visible": false,
+			"x": 0,
+			"y": 0,
+			"size": 100,
+			"direction": -20,
+			"draggable": false,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "Player",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"b=": {
+					"opcode": "event_whenflagclicked",
+					"next": "A",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"A": {
+					"opcode": "looks_switchcostumeto",
+					"next": "aB",
+					"parent": "b=",
+					"inputs": { "COSTUME": [1, "b?"] },
+					"fields": {}
+				},
+				"b?": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "A",
+					"inputs": {},
+					"fields": { "COSTUME": ["viper", null] },
+					"shadow": true
+				},
+				"aB": {
+					"opcode": "looks_show",
+					"next": "aC",
+					"parent": "A",
+					"inputs": {},
+					"fields": {}
+				},
+				"aC": {
+					"opcode": "looks_seteffectto",
+					"next": "aD",
+					"parent": "aB",
+					"inputs": { "VALUE": [1, [4, "0"]] },
+					"fields": { "EFFECT": ["GHOST", null] }
+				},
+				"aD": {
+					"opcode": "motion_gotoxy",
+					"next": "aE",
+					"parent": "aC",
+					"inputs": { "X": [1, [4, "0"]], "Y": [1, [4, "0"]] },
+					"fields": {}
+				},
+				"aE": {
+					"opcode": "motion_pointindirection",
+					"next": "B",
+					"parent": "aD",
+					"inputs": { "DIRECTION": [1, [8, "90"]] },
+					"fields": {}
+				},
+				"B": {
+					"opcode": "data_setvariableto",
+					"next": "aF",
+					"parent": "aE",
+					"inputs": { "VALUE": [3, "b@", [10, "0"]] },
+					"fields": { "VARIABLE": ["Player dir", "{R-m~VP.2$f,;F,~r/KQ"] }
+				},
+				"b@": {
+					"opcode": "motion_direction",
+					"next": null,
+					"parent": "B",
+					"inputs": {},
+					"fields": {}
+				},
+				"aF": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "B",
+					"inputs": { "SUBSTACK": [2, "C"] },
+					"fields": {}
+				},
+				"C": {
+					"opcode": "control_if",
+					"next": null,
+					"parent": "aF",
+					"inputs": { "CONDITION": [2, "D"], "SUBSTACK": [2, "E"] },
+					"fields": {}
+				},
+				"D": {
+					"opcode": "operator_and",
+					"next": null,
+					"parent": "C",
+					"inputs": { "OPERAND1": [2, "b["], "OPERAND2": [2, "b]"] },
+					"fields": {}
+				},
+				"b[": {
+					"opcode": "operator_equals",
+					"next": null,
+					"parent": "D",
+					"inputs": {
+						"OPERAND1": [
+							3,
+							[12, "can fire?", "gz+~Si*A67|_sMFY{cjf"],
+							[10, ""]
+						],
+						"OPERAND2": [1, [10, "yes"]]
+					},
+					"fields": {}
+				},
+				"b]": {
+					"opcode": "sensing_mousedown",
+					"next": null,
+					"parent": "D",
+					"inputs": {},
+					"fields": {}
+				},
+				"E": {
+					"opcode": "control_create_clone_of",
+					"next": "b^",
+					"parent": "C",
+					"inputs": { "CLONE_OPTION": [1, "b_"] },
+					"fields": {}
+				},
+				"b_": {
+					"opcode": "control_create_clone_of_menu",
+					"next": null,
+					"parent": "E",
+					"inputs": {},
+					"fields": { "CLONE_OPTION": ["Bullet", null] },
+					"shadow": true
+				},
+				"b^": {
+					"opcode": "control_wait",
+					"next": null,
+					"parent": "E",
+					"inputs": { "DURATION": [1, [5, "0.00001"]] },
+					"fields": {}
+				},
+				"b`": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "aG",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Start Game", "#2bgC0#Y]QigcKmU-9gU"]
+					},
+					"topLevel": true
+				},
+				"aG": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "b`",
+					"inputs": { "SUBSTACK": [2, "a"] },
+					"fields": {}
+				},
+				"a": {
+					"opcode": "control_if",
+					"next": "b",
+					"parent": "aG",
+					"inputs": { "CONDITION": [2, "aH"], "SUBSTACK": [2, "b{"] },
+					"fields": {}
+				},
+				"aH": {
+					"opcode": "sensing_keypressed",
+					"next": null,
+					"parent": "a",
+					"inputs": { "KEY_OPTION": [1, "b|"] },
+					"fields": {}
+				},
+				"b|": {
+					"opcode": "sensing_keyoptions",
+					"next": null,
+					"parent": "aH",
+					"inputs": {},
+					"fields": { "KEY_OPTION": ["right arrow", null] },
+					"shadow": true
+				},
+				"b{": {
+					"opcode": "motion_turnright",
+					"next": null,
+					"parent": "a",
+					"inputs": { "DEGREES": [1, [4, "5"]] },
+					"fields": {}
+				},
+				"b": {
+					"opcode": "control_if",
+					"next": "aI",
+					"parent": "a",
+					"inputs": { "CONDITION": [2, "aJ"], "SUBSTACK": [2, "b}"] },
+					"fields": {}
+				},
+				"aJ": {
+					"opcode": "sensing_keypressed",
+					"next": null,
+					"parent": "b",
+					"inputs": { "KEY_OPTION": [1, "b~"] },
+					"fields": {}
+				},
+				"b~": {
+					"opcode": "sensing_keyoptions",
+					"next": null,
+					"parent": "aJ",
+					"inputs": {},
+					"fields": { "KEY_OPTION": ["left arrow", null] },
+					"shadow": true
+				},
+				"b}": {
+					"opcode": "motion_turnleft",
+					"next": null,
+					"parent": "b",
+					"inputs": { "DEGREES": [1, [4, "5"]] },
+					"fields": {}
+				},
+				"aI": {
+					"opcode": "data_setvariableto",
+					"next": null,
+					"parent": "b",
+					"inputs": { "VALUE": [3, "ca", [10, "0"]] },
+					"fields": { "VARIABLE": ["Player dir", "{R-m~VP.2$f,;F,~r/KQ"] }
+				},
+				"ca": {
+					"opcode": "motion_direction",
+					"next": null,
+					"parent": "aI",
+					"inputs": {},
+					"fields": {}
+				},
+				"cb": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "cc",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Next skin", "qb,z4!$v~;,k]:w+UUEk"]
+					},
+					"topLevel": true
+				},
+				"cc": {
+					"opcode": "looks_nextcostume",
+					"next": null,
+					"parent": "cb",
+					"inputs": {},
+					"fields": {}
+				},
+				"cd": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "c",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Prev skin", "5#GXln~t`dZv7bttx8U|"]
+					},
+					"topLevel": true
+				},
+				"c": {
+					"opcode": "control_if",
+					"next": "d",
+					"parent": "cd",
+					"inputs": { "CONDITION": [2, "aK"], "SUBSTACK": [2, "aL"] },
+					"fields": {}
+				},
+				"aK": {
+					"opcode": "operator_equals",
+					"next": null,
+					"parent": "c",
+					"inputs": {
+						"OPERAND1": [3, "ce", [10, ""]],
+						"OPERAND2": [1, [10, "1"]]
+					},
+					"fields": {}
+				},
+				"ce": {
+					"opcode": "looks_costumenumbername",
+					"next": null,
+					"parent": "aK",
+					"inputs": {},
+					"fields": { "NUMBER_NAME": ["number", null] }
+				},
+				"aL": {
+					"opcode": "looks_switchcostumeto",
+					"next": null,
+					"parent": "c",
+					"inputs": { "COSTUME": [1, "cf"] },
+					"fields": {}
+				},
+				"cf": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "aL",
+					"inputs": {},
+					"fields": { "COSTUME": ["stalker", null] },
+					"shadow": true
+				},
+				"d": {
+					"opcode": "control_if",
+					"next": "e",
+					"parent": "c",
+					"inputs": { "CONDITION": [2, "aM"], "SUBSTACK": [2, "aN"] },
+					"fields": {}
+				},
+				"aM": {
+					"opcode": "operator_equals",
+					"next": null,
+					"parent": "d",
+					"inputs": {
+						"OPERAND1": [3, "cg", [10, ""]],
+						"OPERAND2": [1, [10, "2"]]
+					},
+					"fields": {}
+				},
+				"cg": {
+					"opcode": "looks_costumenumbername",
+					"next": null,
+					"parent": "aM",
+					"inputs": {},
+					"fields": { "NUMBER_NAME": ["number", null] }
+				},
+				"aN": {
+					"opcode": "looks_switchcostumeto",
+					"next": null,
+					"parent": "d",
+					"inputs": { "COSTUME": [1, "ch"] },
+					"fields": {}
+				},
+				"ch": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "aN",
+					"inputs": {},
+					"fields": { "COSTUME": ["viper", null] },
+					"shadow": true
+				},
+				"e": {
+					"opcode": "control_if",
+					"next": "F",
+					"parent": "d",
+					"inputs": { "CONDITION": [2, "aO"], "SUBSTACK": [2, "aP"] },
+					"fields": {}
+				},
+				"aO": {
+					"opcode": "operator_equals",
+					"next": null,
+					"parent": "e",
+					"inputs": {
+						"OPERAND1": [3, "ci", [10, ""]],
+						"OPERAND2": [1, [10, "3"]]
+					},
+					"fields": {}
+				},
+				"ci": {
+					"opcode": "looks_costumenumbername",
+					"next": null,
+					"parent": "aO",
+					"inputs": {},
+					"fields": { "NUMBER_NAME": ["number", null] }
+				},
+				"aP": {
+					"opcode": "looks_switchcostumeto",
+					"next": null,
+					"parent": "e",
+					"inputs": { "COSTUME": [1, "cj"] },
+					"fields": {}
+				},
+				"cj": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "aP",
+					"inputs": {},
+					"fields": { "COSTUME": ["blazer", null] },
+					"shadow": true
+				},
+				"F": {
+					"opcode": "control_if",
+					"next": null,
+					"parent": "e",
+					"inputs": { "CONDITION": [2, "aQ"], "SUBSTACK": [2, "aR"] },
+					"fields": {}
+				},
+				"aQ": {
+					"opcode": "operator_equals",
+					"next": null,
+					"parent": "F",
+					"inputs": {
+						"OPERAND1": [3, "ck", [10, ""]],
+						"OPERAND2": [1, [10, "4"]]
+					},
+					"fields": {}
+				},
+				"ck": {
+					"opcode": "looks_costumenumbername",
+					"next": null,
+					"parent": "aQ",
+					"inputs": {},
+					"fields": { "NUMBER_NAME": ["number", null] }
+				},
+				"aR": {
+					"opcode": "looks_switchcostumeto",
+					"next": null,
+					"parent": "F",
+					"inputs": { "COSTUME": [1, "cl"] },
+					"fields": {}
+				},
+				"cl": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "aR",
+					"inputs": {},
+					"fields": { "COSTUME": ["titan", null] },
+					"shadow": true
+				},
+				"cm": {
+					"opcode": "event_whenflagclicked",
+					"next": "aS",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"aS": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "cm",
+					"inputs": { "SUBSTACK": [2, "G"] },
+					"fields": {}
+				},
+				"G": {
+					"opcode": "control_if",
+					"next": null,
+					"parent": "aS",
+					"inputs": { "CONDITION": [2, "aT"], "SUBSTACK": [2, "cn"] },
+					"fields": {}
+				},
+				"aT": {
+					"opcode": "sensing_touchingobject",
+					"next": null,
+					"parent": "G",
+					"inputs": { "TOUCHINGOBJECTMENU": [1, "co"] },
+					"fields": {}
+				},
+				"co": {
+					"opcode": "sensing_touchingobjectmenu",
+					"next": null,
+					"parent": "aT",
+					"inputs": {},
+					"fields": { "TOUCHINGOBJECTMENU": ["Monster Bullet", null] },
+					"shadow": true
+				},
+				"cn": {
+					"opcode": "event_broadcast",
+					"next": null,
+					"parent": "G",
+					"inputs": {
+						"BROADCAST_INPUT": [1, [11, "Player hit", "h!q`F}!,zmRMaweHCHel"]]
+					},
+					"fields": {}
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "viper",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "df0ea092eb125799590831cd3f12d354",
+					"md5ext": "df0ea092eb125799590831cd3f12d354.png",
+					"rotationCenterX": -265,
+					"rotationCenterY": 43
+				},
+				{
+					"name": "blazer",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "8534aefe6a056bfef8e4eef3d31fdbf0",
+					"md5ext": "8534aefe6a056bfef8e4eef3d31fdbf0.png",
+					"rotationCenterX": -257,
+					"rotationCenterY": 43
+				},
+				{
+					"name": "titan",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "62547cf5ad9489237d1806e979469337",
+					"md5ext": "62547cf5ad9489237d1806e979469337.png",
+					"rotationCenterX": -254,
+					"rotationCenterY": 40
+				},
+				{
+					"name": "stalker",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "b0de25b9568a47955f81fe02fd654618",
+					"md5ext": "b0de25b9568a47955f81fe02fd654618.png",
+					"rotationCenterX": -257,
+					"rotationCenterY": 39
+				}
+			],
+			"sounds": [],
+			"volume": 100,
+			"layerOrder": 15,
+			"visible": true,
+			"x": 0,
+			"y": 0,
+			"size": 100,
+			"direction": 90,
+			"draggable": true,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "Bullet",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"cp": {
+					"opcode": "event_whenflagclicked",
+					"next": "aU",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"aU": {
+					"opcode": "data_setvariableto",
+					"next": "aV",
+					"parent": "cp",
+					"inputs": { "VALUE": [1, [10, "no"]] },
+					"fields": { "VARIABLE": ["can fire?", "gz+~Si*A67|_sMFY{cjf"] }
+				},
+				"aV": {
+					"opcode": "looks_hide",
+					"next": "aW",
+					"parent": "aU",
+					"inputs": {},
+					"fields": {}
+				},
+				"aW": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "aV",
+					"inputs": { "SUBSTACK": [2, "H"] },
+					"fields": {}
+				},
+				"H": {
+					"opcode": "control_if",
+					"next": null,
+					"parent": "aW",
+					"inputs": { "CONDITION": [2, "I"], "SUBSTACK": [2, "J"] },
+					"fields": {}
+				},
+				"I": {
+					"opcode": "operator_and",
+					"next": null,
+					"parent": "H",
+					"inputs": { "OPERAND1": [2, "cq"], "OPERAND2": [2, "aX"] },
+					"fields": {}
+				},
+				"cq": {
+					"opcode": "operator_equals",
+					"next": null,
+					"parent": "I",
+					"inputs": {
+						"OPERAND1": [
+							3,
+							[12, "can fire?", "gz+~Si*A67|_sMFY{cjf"],
+							[10, ""]
+						],
+						"OPERAND2": [1, [10, "yes"]]
+					},
+					"fields": {}
+				},
+				"aX": {
+					"opcode": "sensing_keypressed",
+					"next": null,
+					"parent": "I",
+					"inputs": { "KEY_OPTION": [1, "cr"] },
+					"fields": {}
+				},
+				"cr": {
+					"opcode": "sensing_keyoptions",
+					"next": null,
+					"parent": "aX",
+					"inputs": {},
+					"fields": { "KEY_OPTION": ["space", null] },
+					"shadow": true
+				},
+				"J": {
+					"opcode": "control_create_clone_of",
+					"next": "cs",
+					"parent": "H",
+					"inputs": { "CLONE_OPTION": [1, "ct"] },
+					"fields": {}
+				},
+				"ct": {
+					"opcode": "control_create_clone_of_menu",
+					"next": null,
+					"parent": "J",
+					"inputs": {},
+					"fields": { "CLONE_OPTION": ["_myself_", null] },
+					"shadow": true
+				},
+				"cs": {
+					"opcode": "control_wait",
+					"next": null,
+					"parent": "J",
+					"inputs": { "DURATION": [1, [5, "0.00001"]] },
+					"fields": {}
+				},
+				"cu": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "cv",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Start Game", "#2bgC0#Y]QigcKmU-9gU"]
+					},
+					"topLevel": true
+				},
+				"cv": {
+					"opcode": "data_setvariableto",
+					"next": null,
+					"parent": "cu",
+					"inputs": { "VALUE": [1, [10, "yes"]] },
+					"fields": { "VARIABLE": ["can fire?", "gz+~Si*A67|_sMFY{cjf"] }
+				},
+				"cw": {
+					"opcode": "control_start_as_clone",
+					"next": "aY",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"aY": {
+					"opcode": "procedures_call",
+					"next": "cx",
+					"parent": "cw",
+					"inputs": {},
+					"fields": {},
+					"mutation": {
+						"tagName": "mutation",
+						"children": [],
+						"proccode": "initialise myself",
+						"argumentids": "[]",
+						"warp": "false"
+					}
+				},
+				"cx": {
+					"opcode": "procedures_call",
+					"next": null,
+					"parent": "aY",
+					"inputs": {},
+					"fields": {},
+					"mutation": {
+						"tagName": "mutation",
+						"children": [],
+						"proccode": "move until touching anything",
+						"argumentids": "[]",
+						"warp": "false"
+					}
+				},
+				"aZ": {
+					"opcode": "procedures_definition",
+					"next": "a!",
+					"parent": null,
+					"inputs": { "custom_block": [1, "cy"] },
+					"fields": {},
+					"topLevel": true
+				},
+				"cy": {
+					"opcode": "procedures_prototype",
+					"next": null,
+					"parent": "aZ",
+					"inputs": {},
+					"fields": {},
+					"shadow": true,
+					"mutation": {
+						"tagName": "mutation",
+						"children": [],
+						"proccode": "initialise myself",
+						"argumentids": "[]",
+						"argumentnames": "[]",
+						"argumentdefaults": "[]",
+						"warp": "false"
+					}
+				},
+				"a!": {
+					"opcode": "looks_show",
+					"next": "K",
+					"parent": "aZ",
+					"inputs": {},
+					"fields": {}
+				},
+				"K": {
+					"opcode": "looks_switchcostumeto",
+					"next": "a#",
+					"parent": "a!",
+					"inputs": { "COSTUME": [1, "cz"] },
+					"fields": {}
+				},
+				"cz": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "K",
+					"inputs": {},
+					"fields": { "COSTUME": ["bullet", null] },
+					"shadow": true
+				},
+				"a#": {
+					"opcode": "motion_gotoxy",
+					"next": "a%",
+					"parent": "K",
+					"inputs": { "X": [1, [4, "0"]], "Y": [1, [4, "0"]] },
+					"fields": {}
+				},
+				"a%": {
+					"opcode": "motion_pointindirection",
+					"next": "a(",
+					"parent": "a#",
+					"inputs": {
+						"DIRECTION": [
+							3,
+							[12, "Player dir", "{R-m~VP.2$f,;F,~r/KQ"],
+							[8, "90"]
+						]
+					},
+					"fields": {}
+				},
+				"a(": {
+					"opcode": "motion_movesteps",
+					"next": "a)",
+					"parent": "a%",
+					"inputs": { "STEPS": [1, [4, "130"]] },
+					"fields": {}
+				},
+				"a)": {
+					"opcode": "motion_pointtowards",
+					"next": null,
+					"parent": "a(",
+					"inputs": { "TOWARDS": [1, "cA"] },
+					"fields": {}
+				},
+				"cA": {
+					"opcode": "motion_pointtowards_menu",
+					"next": null,
+					"parent": "a)",
+					"inputs": {},
+					"fields": { "TOWARDS": ["Monster", null] },
+					"shadow": true
+				},
+				"a*": {
+					"opcode": "procedures_definition",
+					"next": "f",
+					"parent": null,
+					"inputs": { "custom_block": [1, "cB"] },
+					"fields": {},
+					"topLevel": true
+				},
+				"cB": {
+					"opcode": "procedures_prototype",
+					"next": null,
+					"parent": "a*",
+					"inputs": {},
+					"fields": {},
+					"shadow": true,
+					"mutation": {
+						"tagName": "mutation",
+						"children": [],
+						"proccode": "move until touching anything",
+						"argumentids": "[]",
+						"argumentnames": "[]",
+						"argumentdefaults": "[]",
+						"warp": "false"
+					}
+				},
+				"f": {
+					"opcode": "control_repeat_until",
+					"next": "a+",
+					"parent": "a*",
+					"inputs": { "CONDITION": [2, "L"], "SUBSTACK": [2, "a,"] },
+					"fields": {}
+				},
+				"L": {
+					"opcode": "operator_or",
+					"next": null,
+					"parent": "f",
+					"inputs": { "OPERAND1": [2, "a-"], "OPERAND2": [2, "a."] },
+					"fields": {}
+				},
+				"a-": {
+					"opcode": "sensing_touchingobject",
+					"next": null,
+					"parent": "L",
+					"inputs": { "TOUCHINGOBJECTMENU": [1, "cC"] },
+					"fields": {}
+				},
+				"cC": {
+					"opcode": "sensing_touchingobjectmenu",
+					"next": null,
+					"parent": "a-",
+					"inputs": {},
+					"fields": { "TOUCHINGOBJECTMENU": ["_edge_", null] },
+					"shadow": true
+				},
+				"a.": {
+					"opcode": "sensing_touchingobject",
+					"next": null,
+					"parent": "L",
+					"inputs": { "TOUCHINGOBJECTMENU": [1, "cD"] },
+					"fields": {}
+				},
+				"cD": {
+					"opcode": "sensing_touchingobjectmenu",
+					"next": null,
+					"parent": "a.",
+					"inputs": {},
+					"fields": { "TOUCHINGOBJECTMENU": ["Monster", null] },
+					"shadow": true
+				},
+				"a,": {
+					"opcode": "motion_movesteps",
+					"next": "M",
+					"parent": "f",
+					"inputs": { "STEPS": [1, [4, "7"]] },
+					"fields": {}
+				},
+				"M": {
+					"opcode": "control_if",
+					"next": null,
+					"parent": "a,",
+					"inputs": { "CONDITION": [2, "cE"], "SUBSTACK": [2, "cF"] },
+					"fields": {}
+				},
+				"cE": {
+					"opcode": "sensing_touchingcolor",
+					"next": null,
+					"parent": "M",
+					"inputs": { "COLOR": [1, [9, "#b33232"]] },
+					"fields": {}
+				},
+				"cF": {
+					"opcode": "control_delete_this_clone",
+					"next": null,
+					"parent": "M",
+					"inputs": {},
+					"fields": {}
+				},
+				"a+": {
+					"opcode": "event_broadcast",
+					"next": "cG",
+					"parent": "f",
+					"inputs": {
+						"BROADCAST_INPUT": [1, [11, "Monster hit", "/uC]0^:?D:dShbE{4f/n"]]
+					},
+					"fields": {}
+				},
+				"cG": {
+					"opcode": "control_delete_this_clone",
+					"next": null,
+					"parent": "a+",
+					"inputs": {},
+					"fields": {}
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "bullet",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "d40752cb38364d8a1677d0cc6bdb45ae",
+					"md5ext": "d40752cb38364d8a1677d0cc6bdb45ae.svg",
+					"rotationCenterX": 4.75,
+					"rotationCenterY": 4.75
+				},
+				{
+					"name": "explode",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "6eb3947ac1d53b2765fff8975db9f51b",
+					"md5ext": "6eb3947ac1d53b2765fff8975db9f51b.svg",
+					"rotationCenterX": 20.75000000000003,
+					"rotationCenterY": 15.5
+				}
+			],
+			"sounds": [
+				{
+					"name": "pop",
+					"assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 1124,
+					"md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 6,
+			"visible": false,
+			"x": -234,
+			"y": 3.4170780791775294e-10,
+			"size": 100,
+			"direction": -90,
+			"draggable": false,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "Messages",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"cH": {
+					"opcode": "event_whenflagclicked",
+					"next": "a/",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"a/": {
+					"opcode": "motion_gotoxy",
+					"next": "N",
+					"parent": "cH",
+					"inputs": { "X": [1, [4, "0"]], "Y": [1, [4, "-113"]] },
+					"fields": {}
+				},
+				"N": {
+					"opcode": "looks_switchcostumeto",
+					"next": "a:",
+					"parent": "a/",
+					"inputs": { "COSTUME": [1, "cI"] },
+					"fields": {}
+				},
+				"cI": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "N",
+					"inputs": {},
+					"fields": { "COSTUME": ["kill the monster", null] },
+					"shadow": true
+				},
+				"a:": {
+					"opcode": "looks_seteffectto",
+					"next": "a;",
+					"parent": "N",
+					"inputs": { "VALUE": [1, [4, "100"]] },
+					"fields": { "EFFECT": ["GHOST", null] }
+				},
+				"a;": {
+					"opcode": "control_repeat",
+					"next": null,
+					"parent": "a:",
+					"inputs": { "TIMES": [1, [6, "50"]], "SUBSTACK": [2, "cJ"] },
+					"fields": {}
+				},
+				"cJ": {
+					"opcode": "looks_changeeffectby",
+					"next": null,
+					"parent": "a;",
+					"inputs": { "CHANGE": [1, [4, "-2"]] },
+					"fields": { "EFFECT": ["GHOST", null] }
+				},
+				"cK": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "a=",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Start Game", "#2bgC0#Y]QigcKmU-9gU"]
+					},
+					"topLevel": true
+				},
+				"a=": {
+					"opcode": "event_broadcast",
+					"next": "a?",
+					"parent": "cK",
+					"inputs": {
+						"BROADCAST_INPUT": [1, [11, "Level 1", "G`z%gh|NOp?7$RL;*=e6"]]
+					},
+					"fields": {}
+				},
+				"a?": {
+					"opcode": "control_wait",
+					"next": "O",
+					"parent": "a=",
+					"inputs": { "DURATION": [1, [5, "5"]] },
+					"fields": {}
+				},
+				"O": {
+					"opcode": "looks_switchcostumeto",
+					"next": "a@",
+					"parent": "a?",
+					"inputs": { "COSTUME": [1, "cL"] },
+					"fields": {}
+				},
+				"cL": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "O",
+					"inputs": {},
+					"fields": { "COSTUME": ["level 2", null] },
+					"shadow": true
+				},
+				"a@": {
+					"opcode": "control_wait",
+					"next": "P",
+					"parent": "O",
+					"inputs": { "DURATION": [1, [5, "10"]] },
+					"fields": {}
+				},
+				"P": {
+					"opcode": "looks_switchcostumeto",
+					"next": "a[",
+					"parent": "a@",
+					"inputs": { "COSTUME": [1, "cM"] },
+					"fields": {}
+				},
+				"cM": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "P",
+					"inputs": {},
+					"fields": { "COSTUME": ["level 3", null] },
+					"shadow": true
+				},
+				"a[": {
+					"opcode": "control_wait",
+					"next": "Q",
+					"parent": "P",
+					"inputs": { "DURATION": [1, [5, "15"]] },
+					"fields": {}
+				},
+				"Q": {
+					"opcode": "looks_switchcostumeto",
+					"next": "a]",
+					"parent": "a[",
+					"inputs": { "COSTUME": [1, "cN"] },
+					"fields": {}
+				},
+				"cN": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "Q",
+					"inputs": {},
+					"fields": { "COSTUME": ["level 4", null] },
+					"shadow": true
+				},
+				"a]": {
+					"opcode": "control_wait",
+					"next": "a^",
+					"parent": "Q",
+					"inputs": { "DURATION": [1, [5, "20"]] },
+					"fields": {}
+				},
+				"a^": {
+					"opcode": "looks_switchcostumeto",
+					"next": null,
+					"parent": "a]",
+					"inputs": { "COSTUME": [1, "cO"] },
+					"fields": {}
+				},
+				"cO": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "a^",
+					"inputs": {},
+					"fields": { "COSTUME": ["level 5", null] },
+					"shadow": true
+				},
+				"cP": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "R",
+					"parent": null,
+					"inputs": {},
+					"fields": { "BROADCAST_OPTION": ["Level 1", "G`z%gh|NOp?7$RL;*=e6"] },
+					"topLevel": true
+				},
+				"R": {
+					"opcode": "looks_switchcostumeto",
+					"next": "cQ",
+					"parent": "cP",
+					"inputs": { "COSTUME": [1, "cR"] },
+					"fields": {}
+				},
+				"cR": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "R",
+					"inputs": {},
+					"fields": { "COSTUME": ["level 1", null] },
+					"shadow": true
+				},
+				"cQ": {
+					"opcode": "motion_glidesecstoxy",
+					"next": null,
+					"parent": "R",
+					"inputs": {
+						"SECS": [1, [4, "1"]],
+						"X": [1, [4, "-160"]],
+						"Y": [1, [4, "-160"]]
+					},
+					"fields": {}
+				},
+				"cS": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "a_",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Player wins", "S7][ZOXpb-t5~[}Ij#D+"]
+					},
+					"topLevel": true
+				},
+				"a_": {
+					"opcode": "looks_switchcostumeto",
+					"next": null,
+					"parent": "cS",
+					"inputs": { "COSTUME": [1, "cT"] },
+					"fields": {}
+				},
+				"cT": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "a_",
+					"inputs": {},
+					"fields": { "COSTUME": ["you win", null] },
+					"shadow": true
+				},
+				"cU": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "S",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Monster wins", "WM,xYkRfKXOkXv4A!NNO"]
+					},
+					"topLevel": true
+				},
+				"S": {
+					"opcode": "looks_switchcostumeto",
+					"next": "cV",
+					"parent": "cU",
+					"inputs": { "COSTUME": [1, "cW"] },
+					"fields": {}
+				},
+				"cW": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "S",
+					"inputs": {},
+					"fields": { "COSTUME": ["game over", null] },
+					"shadow": true
+				},
+				"cV": {
+					"opcode": "control_stop",
+					"next": null,
+					"parent": "S",
+					"inputs": {},
+					"fields": { "STOP_OPTION": ["all", null] },
+					"mutation": {
+						"tagName": "mutation",
+						"children": [],
+						"hasnext": "false"
+					}
+				}
+			},
+			"comments": {},
+			"currentCostume": 3,
+			"costumes": [
+				{
+					"name": "level 1",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "e00bc758d15e9b1a3cdbc764dc099553",
+					"md5ext": "e00bc758d15e9b1a3cdbc764dc099553.svg",
+					"rotationCenterX": 33.916666666666686,
+					"rotationCenterY": 20.25000000000003
+				},
+				{
+					"name": "level 2",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "a7a52b97717daac4f44fb78b52daac3a",
+					"md5ext": "a7a52b97717daac4f44fb78b52daac3a.svg",
+					"rotationCenterX": 33.916666666666686,
+					"rotationCenterY": 20.58333333333337
+				},
+				{
+					"name": "level 3",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "f499aeae21e40f363cad2a123630c095",
+					"md5ext": "f499aeae21e40f363cad2a123630c095.svg",
+					"rotationCenterX": 33.916666666666686,
+					"rotationCenterY": 20.58333333333337
+				},
+				{
+					"name": "level 4",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "2f3c065954e1ab77b9d3073f021c8dbd",
+					"md5ext": "2f3c065954e1ab77b9d3073f021c8dbd.svg",
+					"rotationCenterX": 33.58333333333334,
+					"rotationCenterY": 20.58333333333337
+				},
+				{
+					"name": "level 5",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "fadfa1b768ea00a2b2b91d455c9297b7",
+					"md5ext": "fadfa1b768ea00a2b2b91d455c9297b7.svg",
+					"rotationCenterX": 33.58333333333334,
+					"rotationCenterY": 20.583333333333343
+				},
+				{
+					"name": "you win",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "b8182cce2ca87ac68bcd91f5df6f0e19",
+					"md5ext": "b8182cce2ca87ac68bcd91f5df6f0e19.svg",
+					"rotationCenterX": 33.58333333333334,
+					"rotationCenterY": 20.583333333333343
+				},
+				{
+					"name": "game over",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "7baeed01a203e9e4de3c7a4d3bd7c88f",
+					"md5ext": "7baeed01a203e9e4de3c7a4d3bd7c88f.svg",
+					"rotationCenterX": 55.25000000000003,
+					"rotationCenterY": 73.09583333333336
+				},
+				{
+					"name": "kill the monster",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "d82cfc2c8b29f4b3986a5d87f3e432b5",
+					"md5ext": "d82cfc2c8b29f4b3986a5d87f3e432b5.svg",
+					"rotationCenterX": 146.4999999999999,
+					"rotationCenterY": 73.09582499999999
+				}
+			],
+			"sounds": [
+				{
+					"name": "pop",
+					"assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 1124,
+					"md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 9,
+			"visible": true,
+			"x": -160,
+			"y": -160,
+			"size": 107.1929512238971,
+			"direction": 90,
+			"draggable": false,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "Monster Life",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"cX": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "cY",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Monster hit", "/uC]0^:?D:dShbE{4f/n"]
+					},
+					"topLevel": true
+				},
+				"cY": {
+					"opcode": "looks_nextcostume",
+					"next": null,
+					"parent": "cX",
+					"inputs": {},
+					"fields": {}
+				},
+				"cZ": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "a`",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Start Game", "#2bgC0#Y]QigcKmU-9gU"]
+					},
+					"topLevel": true
+				},
+				"a`": {
+					"opcode": "looks_switchcostumeto",
+					"next": null,
+					"parent": "cZ",
+					"inputs": { "COSTUME": [1, "c!"] },
+					"fields": {}
+				},
+				"c!": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "a`",
+					"inputs": {},
+					"fields": { "COSTUME": ["full", null] },
+					"shadow": true
+				},
+				"c#": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "a{",
+					"parent": null,
+					"inputs": {},
+					"fields": { "BROADCAST_OPTION": ["Level 1", "G`z%gh|NOp?7$RL;*=e6"] },
+					"topLevel": true
+				},
+				"a{": {
+					"opcode": "looks_switchcostumeto",
+					"next": null,
+					"parent": "c#",
+					"inputs": { "COSTUME": [1, "c%"] },
+					"fields": {}
+				},
+				"c%": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "a{",
+					"inputs": {},
+					"fields": { "COSTUME": ["full", null] },
+					"shadow": true
+				},
+				"c(": {
+					"opcode": "event_whenflagclicked",
+					"next": "T",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"T": {
+					"opcode": "looks_switchcostumeto",
+					"next": "a|",
+					"parent": "c(",
+					"inputs": { "COSTUME": [1, "c)"] },
+					"fields": {}
+				},
+				"c)": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "T",
+					"inputs": {},
+					"fields": { "COSTUME": ["full", null] },
+					"shadow": true
+				},
+				"a|": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "T",
+					"inputs": { "SUBSTACK": [2, "U"] },
+					"fields": {}
+				},
+				"U": {
+					"opcode": "control_if",
+					"next": null,
+					"parent": "a|",
+					"inputs": { "CONDITION": [2, "a}"], "SUBSTACK": [2, "c*"] },
+					"fields": {}
+				},
+				"a}": {
+					"opcode": "operator_equals",
+					"next": null,
+					"parent": "U",
+					"inputs": {
+						"OPERAND1": [3, "c+", [10, ""]],
+						"OPERAND2": [1, [10, "10"]]
+					},
+					"fields": {}
+				},
+				"c+": {
+					"opcode": "looks_costumenumbername",
+					"next": null,
+					"parent": "a}",
+					"inputs": {},
+					"fields": { "NUMBER_NAME": ["number", null] }
+				},
+				"c*": {
+					"opcode": "event_broadcast",
+					"next": null,
+					"parent": "U",
+					"inputs": {
+						"BROADCAST_INPUT": [1, [11, "Player wins", "S7][ZOXpb-t5~[}Ij#D+"]]
+					},
+					"fields": {}
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "full",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "2969ab753ceea32daebc3d1f83158da0",
+					"md5ext": "2969ab753ceea32daebc3d1f83158da0.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				},
+				{
+					"name": "hit_1",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "50e95452f775c95c362b6f870c2851eb",
+					"md5ext": "50e95452f775c95c362b6f870c2851eb.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				},
+				{
+					"name": "hit_2",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "2e3f744531608ae7907c3bdc1baa90d8",
+					"md5ext": "2e3f744531608ae7907c3bdc1baa90d8.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				},
+				{
+					"name": "hit_3",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "d6ba076649752fa6b266a9e5d85b4f2c",
+					"md5ext": "d6ba076649752fa6b266a9e5d85b4f2c.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				},
+				{
+					"name": "hit_4",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "817fa73faddc1fe07250476cec5f8071",
+					"md5ext": "817fa73faddc1fe07250476cec5f8071.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 9
+				},
+				{
+					"name": "hit_5",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "a62d47f246ea2a23025d01937b2c23e4",
+					"md5ext": "a62d47f246ea2a23025d01937b2c23e4.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				},
+				{
+					"name": "hit_6",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "0c4551a9f5f36f10f12390626d8fb652",
+					"md5ext": "0c4551a9f5f36f10f12390626d8fb652.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				},
+				{
+					"name": "hit_7",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "e0671db66f3d7f0e93a03a957fbc5f2b",
+					"md5ext": "e0671db66f3d7f0e93a03a957fbc5f2b.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				},
+				{
+					"name": "hit_8",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "b83f7db660504cf4c295d7024001f3e7",
+					"md5ext": "b83f7db660504cf4c295d7024001f3e7.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				},
+				{
+					"name": "hit_9",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "766977c1b161d69a4e03fb1a95897076",
+					"md5ext": "766977c1b161d69a4e03fb1a95897076.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				}
+			],
+			"sounds": [
+				{
+					"name": "pop",
+					"assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 1124,
+					"md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 3,
+			"visible": true,
+			"x": -200,
+			"y": 160,
+			"size": 100,
+			"direction": 90,
+			"draggable": false,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "Monster Bullet",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"c,": {
+					"opcode": "looks_hide",
+					"next": null,
+					"parent": "c-",
+					"inputs": {},
+					"fields": {}
+				},
+				"c-": {
+					"opcode": "event_whenflagclicked",
+					"next": "c,",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"a~": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "c.",
+					"inputs": { "SUBSTACK": [2, "ba"] },
+					"fields": {}
+				},
+				"V": {
+					"opcode": "motion_goto",
+					"next": "W",
+					"parent": "ba",
+					"inputs": { "TO": [1, "c/"] },
+					"fields": {}
+				},
+				"c/": {
+					"opcode": "motion_goto_menu",
+					"next": null,
+					"parent": "V",
+					"inputs": {},
+					"fields": { "TO": ["Monster", null] },
+					"shadow": true
+				},
+				"W": {
+					"opcode": "control_wait",
+					"next": "bb",
+					"parent": "V",
+					"inputs": { "DURATION": [3, "c:", [5, "1"]] },
+					"fields": {}
+				},
+				"c:": {
+					"opcode": "operator_random",
+					"next": null,
+					"parent": "W",
+					"inputs": { "FROM": [1, [4, "1"]], "TO": [1, [4, "10"]] },
+					"fields": {}
+				},
+				"bb": {
+					"opcode": "control_create_clone_of",
+					"next": null,
+					"parent": "W",
+					"inputs": { "CLONE_OPTION": [1, "c;"] },
+					"fields": {}
+				},
+				"c;": {
+					"opcode": "control_create_clone_of_menu",
+					"next": null,
+					"parent": "bb",
+					"inputs": {},
+					"fields": { "CLONE_OPTION": ["_myself_", null] },
+					"shadow": true
+				},
+				"c=": {
+					"opcode": "control_start_as_clone",
+					"next": "bc",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"g": {
+					"opcode": "control_repeat_until",
+					"next": "Y",
+					"parent": "X",
+					"inputs": { "CONDITION": [2, "Z"], "SUBSTACK": [2, "c?"] },
+					"fields": {}
+				},
+				"bd": {
+					"opcode": "sensing_touchingobject",
+					"next": null,
+					"parent": "Z",
+					"inputs": { "TOUCHINGOBJECTMENU": [1, "c@"] },
+					"fields": {}
+				},
+				"c@": {
+					"opcode": "sensing_touchingobjectmenu",
+					"next": null,
+					"parent": "bd",
+					"inputs": {},
+					"fields": { "TOUCHINGOBJECTMENU": ["Player", null] },
+					"shadow": true
+				},
+				"c?": {
+					"opcode": "motion_movesteps",
+					"next": null,
+					"parent": "g",
+					"inputs": { "STEPS": [1, [4, "10"]] },
+					"fields": {}
+				},
+				"c[": {
+					"opcode": "control_delete_this_clone",
+					"next": null,
+					"parent": "Y",
+					"inputs": {},
+					"fields": {}
+				},
+				"Z": {
+					"opcode": "operator_or",
+					"next": null,
+					"parent": "g",
+					"inputs": { "OPERAND1": [2, "bd"], "OPERAND2": [2, "!"] },
+					"fields": {}
+				},
+				"#": {
+					"opcode": "looks_switchcostumeto",
+					"next": "X",
+					"parent": "bc",
+					"inputs": { "COSTUME": [1, "c]"] },
+					"fields": {}
+				},
+				"c]": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "#",
+					"inputs": {},
+					"fields": { "COSTUME": ["bullet", null] },
+					"shadow": true
+				},
+				"Y": {
+					"opcode": "control_repeat",
+					"next": "c[",
+					"parent": "g",
+					"inputs": { "TIMES": [1, [6, "3"]], "SUBSTACK": [2, "c^"] },
+					"fields": {}
+				},
+				"c^": {
+					"opcode": "looks_nextcostume",
+					"next": null,
+					"parent": "Y",
+					"inputs": {},
+					"fields": {}
+				},
+				"be": {
+					"opcode": "sensing_touchingobject",
+					"next": null,
+					"parent": "!",
+					"inputs": { "TOUCHINGOBJECTMENU": [1, "c_"] },
+					"fields": {}
+				},
+				"c_": {
+					"opcode": "sensing_touchingobjectmenu",
+					"next": null,
+					"parent": "be",
+					"inputs": {},
+					"fields": { "TOUCHINGOBJECTMENU": ["_edge_", null] },
+					"shadow": true
+				},
+				"!": {
+					"opcode": "operator_or",
+					"next": null,
+					"parent": "Z",
+					"inputs": { "OPERAND1": [2, "be"], "OPERAND2": [2, "bf"] },
+					"fields": {}
+				},
+				"bf": {
+					"opcode": "sensing_touchingobject",
+					"next": null,
+					"parent": "!",
+					"inputs": { "TOUCHINGOBJECTMENU": [1, "c`"] },
+					"fields": {}
+				},
+				"c`": {
+					"opcode": "sensing_touchingobjectmenu",
+					"next": null,
+					"parent": "bf",
+					"inputs": {},
+					"fields": { "TOUCHINGOBJECTMENU": ["Bullet", null] },
+					"shadow": true
+				},
+				"ba": {
+					"opcode": "looks_hide",
+					"next": "V",
+					"parent": "a~",
+					"inputs": {},
+					"fields": {}
+				},
+				"bc": {
+					"opcode": "looks_show",
+					"next": "#",
+					"parent": "c=",
+					"inputs": {},
+					"fields": {}
+				},
+				"c.": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "a~",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Start Game", "#2bgC0#Y]QigcKmU-9gU"]
+					},
+					"topLevel": true
+				},
+				"X": {
+					"opcode": "motion_pointindirection",
+					"next": "g",
+					"parent": "#",
+					"inputs": { "DIRECTION": [3, "c{", [8, "90"]] },
+					"fields": {}
+				},
+				"c{": {
+					"opcode": "operator_random",
+					"next": null,
+					"parent": "X",
+					"inputs": { "FROM": [1, [4, "0"]], "TO": [1, [4, "360"]] },
+					"fields": {}
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "bullet",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "adc5517a455f844582d1756211736562",
+					"md5ext": "adc5517a455f844582d1756211736562.svg",
+					"rotationCenterX": 6.160714285714334,
+					"rotationCenterY": 6.375000000000057
+				},
+				{
+					"name": "explode_1",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "f039a08f512c37524c740a9cae2d0a70",
+					"md5ext": "f039a08f512c37524c740a9cae2d0a70.svg",
+					"rotationCenterX": 2.785710714285699,
+					"rotationCenterY": 2.7857250000001272
+				},
+				{
+					"name": "explode_2",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "4fa84fb779187ddc35e283c2eb175e3d",
+					"md5ext": "4fa84fb779187ddc35e283c2eb175e3d.svg",
+					"rotationCenterX": 9.642857857142843,
+					"rotationCenterY": 9.357143571428622
+				},
+				{
+					"name": "explode_3",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "a234b7783fe8c40ec2ff8a2b3a35bac8",
+					"md5ext": "a234b7783fe8c40ec2ff8a2b3a35bac8.svg",
+					"rotationCenterX": 15.357143571428509,
+					"rotationCenterY": 14.071439285714433
+				}
+			],
+			"sounds": [
+				{
+					"name": "pop",
+					"assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 1124,
+					"md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 7,
+			"visible": false,
+			"x": 0,
+			"y": 0,
+			"size": 100,
+			"direction": -28,
+			"draggable": false,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "Play",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"c|": {
+					"opcode": "event_whenflagclicked",
+					"next": "bg",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"bg": {
+					"opcode": "looks_show",
+					"next": "bh",
+					"parent": "c|",
+					"inputs": {},
+					"fields": {}
+				},
+				"bh": {
+					"opcode": "looks_seteffectto",
+					"next": "bi",
+					"parent": "bg",
+					"inputs": { "VALUE": [1, [4, "100"]] },
+					"fields": { "EFFECT": ["GHOST", null] }
+				},
+				"bi": {
+					"opcode": "control_wait",
+					"next": "bj",
+					"parent": "bh",
+					"inputs": { "DURATION": [1, [5, "2"]] },
+					"fields": {}
+				},
+				"bj": {
+					"opcode": "control_repeat",
+					"next": null,
+					"parent": "bi",
+					"inputs": { "TIMES": [1, [6, "20"]], "SUBSTACK": [2, "c}"] },
+					"fields": {}
+				},
+				"c}": {
+					"opcode": "looks_changeeffectby",
+					"next": null,
+					"parent": "bj",
+					"inputs": { "CHANGE": [1, [4, "-5"]] },
+					"fields": { "EFFECT": ["GHOST", null] }
+				},
+				"c~": {
+					"opcode": "event_whenthisspriteclicked",
+					"next": "da",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"da": {
+					"opcode": "event_broadcast",
+					"next": null,
+					"parent": "c~",
+					"inputs": {
+						"BROADCAST_INPUT": [1, [11, "Start Game", "#2bgC0#Y]QigcKmU-9gU"]]
+					},
+					"fields": {}
+				},
+				"db": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "%",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Start Game", "#2bgC0#Y]QigcKmU-9gU"]
+					},
+					"topLevel": true
+				},
+				"%": {
+					"opcode": "control_repeat",
+					"next": "dc",
+					"parent": "db",
+					"inputs": { "TIMES": [1, [6, "20"]], "SUBSTACK": [2, "dd"] },
+					"fields": {}
+				},
+				"dd": {
+					"opcode": "looks_changeeffectby",
+					"next": null,
+					"parent": "%",
+					"inputs": { "CHANGE": [1, [4, "5"]] },
+					"fields": { "EFFECT": ["GHOST", null] }
+				},
+				"dc": {
+					"opcode": "looks_hide",
+					"next": null,
+					"parent": "%",
+					"inputs": {},
+					"fields": {}
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "level 1",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "405f50fa3572e5f1698409c00fa246e4",
+					"md5ext": "405f50fa3572e5f1698409c00fa246e4.svg",
+					"rotationCenterX": 33.916666666666686,
+					"rotationCenterY": 58.76250000000002
+				}
+			],
+			"sounds": [
+				{
+					"name": "pop",
+					"assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 1124,
+					"md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 4,
+			"visible": false,
+			"x": 15,
+			"y": -149,
+			"size": 100,
+			"direction": 90,
+			"draggable": false,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "Player Life",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"de": {
+					"opcode": "event_whenflagclicked",
+					"next": "bk",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"bk": {
+					"opcode": "looks_switchcostumeto",
+					"next": null,
+					"parent": "de",
+					"inputs": { "COSTUME": [1, "df"] },
+					"fields": {}
+				},
+				"df": {
+					"opcode": "looks_costume",
+					"next": null,
+					"parent": "bk",
+					"inputs": {},
+					"fields": { "COSTUME": ["full", null] },
+					"shadow": true
+				},
+				"dg": {
+					"opcode": "event_whenbroadcastreceived",
+					"next": "dh",
+					"parent": null,
+					"inputs": {},
+					"fields": {
+						"BROADCAST_OPTION": ["Player hit", "h!q`F}!,zmRMaweHCHel"]
+					},
+					"topLevel": true
+				},
+				"dh": {
+					"opcode": "looks_nextcostume",
+					"next": null,
+					"parent": "dg",
+					"inputs": {},
+					"fields": {}
+				},
+				"di": {
+					"opcode": "event_whenflagclicked",
+					"next": "bl",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"bl": {
+					"opcode": "control_wait",
+					"next": "bm",
+					"parent": "di",
+					"inputs": {
+						"DURATION": [1, [5, "0.0000000000000000000000000000001"]]
+					},
+					"fields": {}
+				},
+				"bm": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "bl",
+					"inputs": { "SUBSTACK": [2, "("] },
+					"fields": {}
+				},
+				"(": {
+					"opcode": "control_if",
+					"next": null,
+					"parent": "bm",
+					"inputs": { "CONDITION": [2, "bn"], "SUBSTACK": [2, "dj"] },
+					"fields": {}
+				},
+				"bn": {
+					"opcode": "operator_equals",
+					"next": null,
+					"parent": "(",
+					"inputs": {
+						"OPERAND1": [3, "dk", [10, ""]],
+						"OPERAND2": [1, [10, "10"]]
+					},
+					"fields": {}
+				},
+				"dk": {
+					"opcode": "looks_costumenumbername",
+					"next": null,
+					"parent": "bn",
+					"inputs": {},
+					"fields": { "NUMBER_NAME": ["number", null] }
+				},
+				"dj": {
+					"opcode": "event_broadcast",
+					"next": null,
+					"parent": "(",
+					"inputs": {
+						"BROADCAST_INPUT": [1, [11, "Monster wins", "WM,xYkRfKXOkXv4A!NNO"]]
+					},
+					"fields": {}
+				}
+			},
+			"comments": {},
+			"currentCostume": 3,
+			"costumes": [
+				{
+					"name": "full",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "2969ab753ceea32daebc3d1f83158da0",
+					"md5ext": "2969ab753ceea32daebc3d1f83158da0.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				},
+				{
+					"name": "hit_1",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "50e95452f775c95c362b6f870c2851eb",
+					"md5ext": "50e95452f775c95c362b6f870c2851eb.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				},
+				{
+					"name": "hit_2",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "2e3f744531608ae7907c3bdc1baa90d8",
+					"md5ext": "2e3f744531608ae7907c3bdc1baa90d8.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				},
+				{
+					"name": "hit_3",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "d6ba076649752fa6b266a9e5d85b4f2c",
+					"md5ext": "d6ba076649752fa6b266a9e5d85b4f2c.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				},
+				{
+					"name": "hit_4",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "817fa73faddc1fe07250476cec5f8071",
+					"md5ext": "817fa73faddc1fe07250476cec5f8071.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 9
+				},
+				{
+					"name": "hit_5",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "a62d47f246ea2a23025d01937b2c23e4",
+					"md5ext": "a62d47f246ea2a23025d01937b2c23e4.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				},
+				{
+					"name": "hit_6",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "0c4551a9f5f36f10f12390626d8fb652",
+					"md5ext": "0c4551a9f5f36f10f12390626d8fb652.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				},
+				{
+					"name": "hit_7",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "e0671db66f3d7f0e93a03a957fbc5f2b",
+					"md5ext": "e0671db66f3d7f0e93a03a957fbc5f2b.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				},
+				{
+					"name": "hit_8",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "b83f7db660504cf4c295d7024001f3e7",
+					"md5ext": "b83f7db660504cf4c295d7024001f3e7.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				},
+				{
+					"name": "hit_9",
+					"bitmapResolution": 2,
+					"dataFormat": "png",
+					"assetId": "766977c1b161d69a4e03fb1a95897076",
+					"md5ext": "766977c1b161d69a4e03fb1a95897076.png",
+					"rotationCenterX": 8,
+					"rotationCenterY": 8
+				}
+			],
+			"sounds": [
+				{
+					"name": "pop",
+					"assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 1124,
+					"md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 5,
+			"visible": true,
+			"x": -200,
+			"y": 130,
+			"size": 100,
+			"direction": 90,
+			"draggable": false,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "Next costume",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"dl": {
+					"opcode": "event_whenflagclicked",
+					"next": "bo",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"bo": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "dl",
+					"inputs": { "SUBSTACK": [2, "dm"] },
+					"fields": {}
+				},
+				"dm": {
+					"opcode": "motion_gotoxy",
+					"next": null,
+					"parent": "bo",
+					"inputs": { "X": [1, [4, "14"]], "Y": [1, [4, "152"]] },
+					"fields": {}
+				},
+				"dn": {
+					"opcode": "event_whenthisspriteclicked",
+					"next": "do",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"do": {
+					"opcode": "event_broadcast",
+					"next": null,
+					"parent": "dn",
+					"inputs": {
+						"BROADCAST_INPUT": [1, [11, "Next skin", "qb,z4!$v~;,k]:w+UUEk"]]
+					},
+					"fields": {}
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "costume1",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "1f69ccfb541000a0c9a9d098c68c29cb",
+					"md5ext": "1f69ccfb541000a0c9a9d098c68c29cb.svg",
+					"rotationCenterX": 17.769018630597856,
+					"rotationCenterY": 16.200175336060795
+				}
+			],
+			"sounds": [
+				{
+					"name": "pop",
+					"assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 1124,
+					"md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 11,
+			"visible": true,
+			"x": 14,
+			"y": 152,
+			"size": 100,
+			"direction": 90,
+			"draggable": false,
+			"rotationStyle": "all around"
+		},
+		{
+			"isStage": false,
+			"name": "Prev costume",
+			"variables": {},
+			"lists": {},
+			"broadcasts": {},
+			"blocks": {
+				"dp": {
+					"opcode": "event_whenflagclicked",
+					"next": "bp",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"bp": {
+					"opcode": "control_forever",
+					"next": null,
+					"parent": "dp",
+					"inputs": { "SUBSTACK": [2, "dq"] },
+					"fields": {}
+				},
+				"dq": {
+					"opcode": "motion_gotoxy",
+					"next": null,
+					"parent": "bp",
+					"inputs": { "X": [1, [4, "-63"]], "Y": [1, [4, "154"]] },
+					"fields": {}
+				},
+				"dr": {
+					"opcode": "event_whenthisspriteclicked",
+					"next": "ds",
+					"parent": null,
+					"inputs": {},
+					"fields": {},
+					"topLevel": true
+				},
+				"ds": {
+					"opcode": "event_broadcast",
+					"next": null,
+					"parent": "dr",
+					"inputs": {
+						"BROADCAST_INPUT": [1, [11, "Prev skin", "5#GXln~t`dZv7bttx8U|"]]
+					},
+					"fields": {}
+				}
+			},
+			"comments": {},
+			"currentCostume": 0,
+			"costumes": [
+				{
+					"name": "costume1",
+					"bitmapResolution": 1,
+					"dataFormat": "svg",
+					"assetId": "d95eae188737fb8b30c6fe424b73fff9",
+					"md5ext": "d95eae188737fb8b30c6fe424b73fff9.svg",
+					"rotationCenterX": 17.768197777686026,
+					"rotationCenterY": 16.200175336060795
+				}
+			],
+			"sounds": [
+				{
+					"name": "pop",
+					"assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
+					"dataFormat": "wav",
+					"format": "",
+					"rate": 48000,
+					"sampleCount": 1124,
+					"md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
+				}
+			],
+			"volume": 100,
+			"layerOrder": 10,
+			"visible": true,
+			"x": -63,
+			"y": 154,
+			"size": 100,
+			"direction": 90,
+			"draggable": false,
+			"rotationStyle": "all around"
+		}
+	],
+	"monitors": [
+		{
+			"id": "gz+~Si*A67|_sMFY{cjf",
+			"mode": "default",
+			"opcode": "data_variable",
+			"params": { "VARIABLE": "can fire?" },
+			"spriteName": null,
+			"value": 0,
+			"width": 0,
+			"height": 0,
+			"x": 5,
+			"y": 5,
+			"visible": false,
+			"sliderMin": 0,
+			"sliderMax": 100,
+			"isDiscrete": true
+		},
+		{
+			"id": "{R-m~VP.2$f,;F,~r/KQ",
+			"mode": "default",
+			"opcode": "data_variable",
+			"params": { "VARIABLE": "Player dir" },
+			"spriteName": null,
+			"value": 0,
+			"width": 0,
+			"height": 0,
+			"x": 5,
+			"y": 5,
+			"visible": false,
+			"sliderMin": 0,
+			"sliderMax": 100,
+			"isDiscrete": true
+		}
+	],
+	"extensions": [],
+	"meta": { "semver": "3.0.0" }
+}

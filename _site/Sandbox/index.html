@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Cache Busting Meta Tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta charset="utf-8" />
+    <title>Web Sandbox – JacobCreation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Browser-based HTML, CSS, and JS sandbox with live preview and AI assistant." />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+    <script>(function(){const v=Date.now();document.write('<link rel="stylesheet" href="./style.css?v='+v+'">');})();</script>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+    <a href="/" class="logo" title="Back to home">
+        <span class="logo-badge">S</span>
+        <span class="logo-text">Sandbox</span>
+    </a>
+
+    <div id="tabs">
+        <button data-file="html" class="active">HTML</button>
+        <button data-file="css">CSS</button>
+        <button data-file="js">JS</button>
+        <button data-file="ai">🤖 AiCoder</button>
+    </div>
+
+    <div class="header-actions">
+        <button id="run" title="Run (Ctrl+Enter)">▶ Run</button>
+        <button id="formatBtn"    class="btn-tool" title="Format code">⌥ Format</button>
+        <button id="templatesBtn" class="btn-tool" title="Starter templates">📋 Templates</button>
+        <button id="libraryBtn"   class="btn-tool" title="Add CDN library">📦 Libraries</button>
+        <button id="saveBtn"      class="btn-tool" title="Save project">💾 Save</button>
+        <button id="projectsBtn"  class="btn-tool" title="Saved projects">📂 Projects</button>
+        <button id="shareBtn"     class="btn-tool" title="Share via URL">🔗 Share</button>
+        <button id="downloadBtn"  class="btn-tool" title="Export as HTML">⬇ Export</button>
+    </div>
+</header>
+
+<!-- SUB-TOOLBAR -->
+<div id="toolbar">
+    <div class="tool-group">
+        <span class="tool-label">Font</span>
+        <input id="fontSizeInput" type="range" min="10" max="24" value="14" title="Editor font size" />
+        <span id="fontSizeVal">14px</span>
+    </div>
+    <label class="tool-group tool-check">
+        <input id="wrapToggle" type="checkbox" />
+        <span>Wrap</span>
+    </label>
+    <div class="tool-group">
+        <button id="layoutBtn" class="btn-mini" title="Toggle layout direction">⇄ Layout</button>
+    </div>
+    <div class="tool-group">
+        <span class="tool-label">Device</span>
+        <div class="seg-btns">
+            <button class="seg-btn active" data-device="full"   title="Full width">🖥 Full</button>
+            <button class="seg-btn"        data-device="tablet" title="Tablet 768px">⬛ 768</button>
+            <button class="seg-btn"        data-device="mobile" title="Mobile 375px">📱 375</button>
+        </div>
+    </div>
+    <div class="tool-group">
+        <span class="tool-label">Filter</span>
+        <div class="seg-btns">
+            <button class="seg-btn filter-btn active" data-filter="all">All</button>
+            <button class="seg-btn filter-btn" data-filter="log">Log</button>
+            <button class="seg-btn filter-btn" data-filter="warn">⚠</button>
+            <button class="seg-btn filter-btn" data-filter="error">✖</button>
+        </div>
+        <button id="clearConsoleBtn" class="btn-mini-icon" title="Clear console">🗑</button>
+    </div>
+    <div class="tool-group" style="margin-left:auto; gap:6px">
+        <button id="newTabBtn"      class="btn-mini" title="Open preview in new tab">↗ New Tab</button>
+        <button id="fullscreenBtn"  class="btn-mini" title="Fullscreen preview">⛶ Full</button>
+    </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<main id="main">
+
+    <!-- LEFT: EDITOR + CONSOLE -->
+    <section id="editorPane">
+        <div id="editorArea">
+            <div id="lineNumbers" aria-hidden="true"></div>
+            <textarea id="code" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></textarea>
+            <div id="ai" style="display: none;">
+                <div class="panel-titlebar">
+                    <span class="panel-title">🤖 AiCoder</span>
+                    <div class="ai-shortcuts">
+                        <button class="ai-quick-btn" data-prompt="Explain my code clearly.">Explain</button>
+                        <button class="ai-quick-btn" data-prompt="Find and fix any bugs in my code.">Fix</button>
+                        <button class="ai-quick-btn" data-prompt="Suggest improvements and best practices.">Improve</button>
+                        <button class="ai-quick-btn" data-prompt="Add helpful comments to my code.">Comment</button>
+                    </div>
+                    <button id="clearAiBtn" class="btn-mini-icon" title="Clear chat">🗑</button>
+                </div>
+                <div id="aiLog">
+                    <div class="ai-bubble ai-ai">
+                        <span class="ai-label">🤖 AiCoder</span>
+                        <div class="ai-body">Hi! I can see your code. Ask me anything, or use the quick buttons above!</div>
+                    </div>
+                </div>
+                <div class="ai-input-row">
+                    <input id="aiInput" placeholder="Ask AI… (Enter to send)" />
+                </div>
+            </div>
+        </div>
+        <div id="consolePanel">
+            <div class="panel-titlebar">
+                <span class="panel-title">Console</span>
+                <button id="clearConsoleBtn2" class="btn-mini-icon" title="Clear">🗑</button>
+            </div>
+            <div id="console"></div>
+        </div>
+    </section>
+
+    <div id="resizer" title="Drag to resize"></div>
+
+    <!-- RIGHT: PREVIEW -->
+    <section id="previewPane">
+        <div id="previewBar">
+            <span id="deviceLabel" class="device-label">Full width</span>
+            <button id="refreshBtn" class="btn-mini-icon" title="Refresh">↺</button>
+            <button id="openTabBtn" class="btn-mini-icon" title="Open in new tab">↗</button>
+        </div>
+        <div id="deviceWrapper">
+            <iframe id="frame" title="Live preview"></iframe>
+        </div>
+    </section>
+</main>
+
+<!-- MODAL -->
+<div id="modalOverlay" class="hidden" role="dialog" aria-modal="true">
+    <div id="modal">
+        <div id="modalHeader">
+            <h2 id="modalTitle"></h2>
+            <button id="modalClose" aria-label="Close">✕</button>
+        </div>
+        <div id="modalContent"></div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" aria-live="polite"></div>
+
+<script>(function(){const v=Date.now();document.write('<script src="./app.js?v='+v+'" type="module"><\/script>');})();</script>
+<script>(function(){const v=Date.now();document.write('<script src="/global-header.js?v='+v+'"><\/script>');})();</script>
+</body>
+</html>

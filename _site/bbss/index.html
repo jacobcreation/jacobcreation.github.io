@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Basketball Scoreboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="scoreboard">
+  <div class="team home">
+    <div class="team-header">
+      <input class="team-name" id="home-name" value="HOME" maxlength="12">
+      <div class="fouls">FOULS: <span id="home-fouls">0</span></div>
+    </div>
+    <div class="score" id="home-score">0</div>
+    <div class="points-btns">
+      <button class="btn btn-3" data-team="home" data-pts="3">+3</button>
+      <button class="btn btn-2" data-team="home" data-pts="2">+2</button>
+      <button class="btn btn-1" data-team="home" data-pts="1">+1</button>
+    </div>
+    <button class="btn foul-btn" data-team="home">+FOUL</button>
+  </div>
+
+  <div class="center-col">
+    <div class="period">
+      <label for="period">PERIOD</label>
+      <div class="period-controls">
+        <button id="period-down">−</button>
+        <span id="period-display">1</span>
+        <button id="period-up">+</button>
+      </div>
+    </div>
+    <div class="timer">
+      <div id="timer-display">12:00</div>
+      <div class="timer-btns">
+        <button id="timer-start">START</button>
+        <button id="timer-reset">RESET</button>
+      </div>
+    </div>
+    <button id="reset-game" class="btn reset-btn">RESET GAME</button>
+  </div>
+
+  <div class="team away">
+    <div class="team-header">
+      <input class="team-name" id="away-name" value="AWAY" maxlength="12">
+      <div class="fouls">FOULS: <span id="away-fouls">0</span></div>
+    </div>
+    <div class="score" id="away-score">0</div>
+    <div class="points-btns">
+      <button class="btn btn-1" data-team="away" data-pts="1">+1</button>
+      <button class="btn btn-2" data-team="away" data-pts="2">+2</button>
+      <button class="btn btn-3" data-team="away" data-pts="3">+3</button>
+    </div>
+    <button class="btn foul-btn" data-team="away">+FOUL</button>
+  </div>
+</div>
+
+<div id="winner-modal" class="modal hidden">
+  <div class="modal-content">
+    <h2>🏆 WINNER</h2>
+    <p id="winner-name">HOME</p>
+    <button id="winner-close">OK</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+<script>(function(){const v=Date.now();document.write('<script src="/global-header.js?v='+v+'"><\/script>');})();</script>
+</body>
+</html>

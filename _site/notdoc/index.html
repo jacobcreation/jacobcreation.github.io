@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Cache Busting Meta Tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DocReminder is part of JacobCreation desktop releases. Head here for downloads, updates, and the right install page.">
+  <title>DocReminder - JacobCreation</title>
+  <style>
+    :root {
+      --bg1: #0b1020;
+      --bg2: #0d1c3f;
+      --card: rgba(255, 255, 255, 0.08);
+      --card-2: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.14);
+      --text: #ebf2ff;
+      --muted: rgba(235, 242, 255, 0.74);
+      --blue: #58b2ff;
+      --blue2: #2e6cff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 110px 18px 24px;
+      color: var(--text);
+      font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(88, 178, 255, 0.22), transparent 24%),
+        radial-gradient(circle at bottom right, rgba(46, 108, 255, 0.18), transparent 28%),
+        linear-gradient(155deg, var(--bg1), var(--bg2));
+    }
+
+    .card {
+      width: min(760px, 100%);
+      padding: 28px;
+      border-radius: 28px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 22px 54px rgba(0, 0, 0, 0.28);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: var(--card-2);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(235, 242, 255, 0.78);
+    }
+
+    h1 {
+      margin: 14px 0 10px;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.02;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 1.02rem;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 11px 16px;
+      border-radius: 999px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.07);
+      transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.24);
+    }
+
+    .btn.primary {
+      color: #071122;
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+      border-color: rgba(88, 178, 255, 0.6);
+      box-shadow: 0 12px 26px rgba(46, 108, 255, 0.28);
+    }
+
+    .note-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .note {
+      padding: 15px;
+      border-radius: 18px;
+      background: var(--card-2);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .note strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--text);
+    }
+  </style>
+</head>
+<body data-project-subtitle="DocReminder lives with Jacob's desktop releases, so this page now points visitors to the right download home.">
+  <main class="card">
+    <span class="eyebrow">Desktop App</span>
+    <h1>DocReminder moved to Releases</h1>
+    <p>
+      This project is part of the JacobCreation desktop app collection, so the old placeholder link has been replaced with a proper landing page.
+      If you were looking for installers, updates, or the newest version of DocReminder, the releases page is the right place to go.
+    </p>
+
+    <div class="actions">
+      <a class="btn primary" href="/releases/">Open Releases</a>
+      <a class="btn" href="/">Back to Home</a>
+    </div>
+
+    <div class="note-grid">
+      <div class="note">
+        <strong>What changed</strong>
+        This page now acts like a clear handoff instead of a raw one-line redirect.
+      </div>
+      <div class="note">
+        <strong>Where to go</strong>
+        Use the releases page for downloads and version updates.
+      </div>
+      <div class="note">
+        <strong>Need more?</strong>
+        The project dock also links you back to the rest of the custom JacobCreation projects.
+      </div>
+    </div>
+  </main>
+<script>(function(){const v=Date.now();document.write('<script src="/global-header.js?v='+v+'"><\/script>');})();</script>
+</body>
+</html>
