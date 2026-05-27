@@ -5,9 +5,22 @@
 
 const ChessAccounts = (function () {
 	// Auto-detect environment: localhost vs. production workers.dev
-	const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+	function isLocalHost() {
+		const host = window.location.hostname;
+		// Note: file:// protocol is NOT treated as localhost — those users
+		// should still hit the live Cloudflare Worker.
+		return host === 'localhost' ||
+			host === '127.0.0.1' ||
+			host === '[::1]' ||
+			host.endsWith('.local') ||
+			/^192\.168\./.test(host) ||
+			/^10\./.test(host) ||
+			/^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host);
+	}
+
+	const API_URL = isLocalHost()
 		? 'http://localhost:8787'
-		: 'https://accnts.jacobcreation.workers.dev';
+		: 'https://accnts.b4rjxr9lk.workers.dev';
 
 	// Storage Keys
 	const TOKEN_KEY = 'chess_session_token';
@@ -39,8 +52,25 @@ const ChessAccounts = (function () {
 			options.body = JSON.stringify(body);
 		}
 
-		const response = await fetch(`${API_URL}${path}`, options);
-		const data = await response.json();
+		let response;
+		try {
+			response = await fetch(`${API_URL}${path}`, options);
+		} catch (networkError) {
+			console.error("[ChessAccounts] Network error hitting " + API_URL + path, networkError);
+			if (isLocalHost()) {
+				throw new Error("⚠️ Local server not running. Start it with: cd cloudflare_worker/accnts && npx wrangler dev");
+			} else {
+				throw new Error("⚠️ Could not reach the account server. Check your internet connection and try again.");
+			}
+		}
+
+		let data;
+		try {
+			data = await response.json();
+		} catch (jsonError) {
+			throw new Error("Invalid response from account server (Status: " + response.status + ")");
+		}
+
 		if (!response.ok) {
 			throw new Error(data.error || 'API Request failed');
 		}
@@ -258,7 +288,11 @@ const ChessAccounts = (function () {
 	const init = async () => {
 		// Sync stats if logged in
 		if (ChessAccounts.isLoggedIn()) {
-			await ChessAccounts.fetchAndSyncStats();
+			try {
+				await ChessAccounts.fetchAndSyncStats();
+			} catch (e) {
+				console.warn("Failed to automatically sync stats from server:", e);
+			}
 		}
 		
 		// Attempt to inject controls (retry if DOM isn't fully ready)

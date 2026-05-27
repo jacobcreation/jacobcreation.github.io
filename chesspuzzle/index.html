@@ -442,7 +442,7 @@
 
     <!-- Scripts -->
     <script src="accounts-sync.js"></script>
-    <script>(function(){const v=Date.now();document.write('<script src="../global-header.js?v='+v+'"><\/script>');})();</script>
+    <script>(function(){const v=Date.now();document.write('<script src="global-header.js?v='+v+'"><\/script>');})();</script>
 
     <script>
         const authContainer = document.getElementById('auth-container');
@@ -534,7 +534,8 @@
                 btn.textContent = originalText;
                 btn.disabled = false;
             } catch (err) {
-                loginError.textContent = err.message || 'Invalid username or password';
+                loginError.textContent = err.message || 'Login failed. Please try again.';
+                loginError.style.display = 'block';
                 e.target.querySelector('button').disabled = false;
                 e.target.querySelector('button').textContent = 'Log In';
             }
@@ -567,7 +568,8 @@
                 btn.textContent = originalText;
                 btn.disabled = false;
             } catch (err) {
-                signupError.textContent = err.message || 'Registration failed';
+                signupError.textContent = err.message || 'Registration failed. Please try again.';
+                signupError.style.display = 'block';
                 e.target.querySelector('button').disabled = false;
                 e.target.querySelector('button').textContent = 'Sign Up';
             }
