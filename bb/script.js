@@ -161,7 +161,6 @@ function showPreview(piece, startRow, startCol) {
 function onPointerUp(e) {
     if (!activePiece) return;
     clearPreview();
-...
     const rect = activePiece.getBoundingClientRect();
     const gridRect = gridElement.getBoundingClientRect();
     
