@@ -68,6 +68,7 @@ let completedLevels = JSON.parse(localStorage.getItem('gd_completed')||'[]');
 let highScores = JSON.parse(localStorage.getItem('gd_scores')||'{}');
 let totalCoins = parseInt(localStorage.getItem('gd_coins')||'0');
 let selectedSkin = parseInt(localStorage.getItem('gd_skin')||'0');
+let selectedConfig = parseInt(localStorage.getItem('gd_config')||'1');
 let particles = [];
 let gameTime = 0;
 let frameCount = 0;
@@ -82,6 +83,15 @@ const SKIN_COLORS = [
 ];
 const SKIN_NAMES = ['Blue','Green','Red','Purple','Gold','Cyan','Pink','Rainbow','Neon','Dark','White','Orange','Lime','Magenta','Crimson'];
 const SKIN_COST = [0,0,0,50,100,75,60,200,150,80,30,50,50,60,120];
+const GAME_CONFIGS = [
+  { name: 'CHILL', speedScale: 0.34, airMult: 1.4, gravity: 0.56, jumpForce: -11 },
+  { name: 'NORMAL', speedScale: 0.45, airMult: 2, gravity: 0.52, jumpForce: -12.5 },
+  { name: 'FAST', speedScale: 0.58, airMult: 2.2, gravity: 0.52, jumpForce: -12.5 },
+  { name: 'WIDE JUMP', speedScale: 0.45, airMult: 3, gravity: 0.48, jumpForce: -12.5 }
+];
+function activeConfig() {
+  return GAME_CONFIGS[selectedConfig] || GAME_CONFIGS[1];
+}
 
 // ============ LEVEL DATA ============
 // Each level: name, theme color, ground color, bg color, speed, obstacles array
@@ -205,6 +215,18 @@ function generateObstacles(level, idx) {
   const obs = [];
   const speed = level.speed;
   const difficulty = 1 + idx * 0.15;
+  const minBlockGap = 12;
+  const addBlock = block => {
+    const blockStart = block.x;
+    const blockEnd = block.x + block.w;
+    const hasRoom = !obs.some(other => {
+      if (other.type !== 'block') return false;
+      const otherStart = other.x;
+      const otherEnd = other.x + other.w;
+      return blockStart < otherEnd + minBlockGap && blockEnd + minBlockGap > otherStart;
+    });
+    if (hasRoom) obs.push(block);
+  };
   // Ground segments
   let x = 0;
   const groundH = 80;
@@ -221,7 +243,7 @@ function generateObstacles(level, idx) {
       // Pillar
       if (Math.random() < 0.5 + idx * 0.05) {
         const h = 30 + Math.random() * 100 * (0.5 + idx * 0.1);
-        obs.push({ x, y: H - groundH - h, w: 30 + Math.random() * 30, h, type: 'block', scored: false });
+        addBlock({ x, y: H - groundH - h, w: 30 + Math.random() * 30, h, type: 'block', scored: false });
       }
       // Spike
       if (Math.random() < 0.4 + idx * 0.05) {
@@ -233,8 +255,8 @@ function generateObstacles(level, idx) {
       // Double obstacle
       if (Math.random() < 0.2 + idx * 0.04) {
         const h = 60 + Math.random() * 80;
-        obs.push({ x: x + 40, y: H - groundH - h, w: 25, h, type: 'block', scored: false });
-        obs.push({ x: x + 80, y: H - groundH - h - 30, w: 25, h: h + 30, type: 'block', scored: false });
+        addBlock({ x: x + 40, y: H - groundH - h, w: 25, h, type: 'block', scored: false });
+        addBlock({ x: x + 80, y: H - groundH - h - 30, w: 25, h: h + 30, type: 'block', scored: false });
       }
       // Moving obstacle
       if (Math.random() < 0.15 + idx * 0.03) {
@@ -277,7 +299,7 @@ function generateObstacles(level, idx) {
 // ============ PLAYER ============
 const player = {
   x: 150, y: 0, w: 30, h: 30,
-  vy: 0, gravity: 0.6, jumpForce: -10,
+  vy: 0, gravity: activeConfig().gravity, jumpForce: activeConfig().jumpForce,
   grounded: false, jumping: false,
   rotation: 0, rotSpeed: 5,
   trail: [],
@@ -295,8 +317,11 @@ const player = {
 };
 
 function resetPlayer() {
+  const cfg = activeConfig();
   player.y = H - 140;
   player.vy = 0;
+  player.gravity = cfg.gravity;
+  player.jumpForce = cfg.jumpForce;
   player.grounded = false;
   player.jumping = false;
   player.rotation = 0;
@@ -319,6 +344,13 @@ const camera = { x: 0 };
 // ============ INPUT ============
 const keys = {};
 let touchActive = false;
+const pointer = { x: -9999, y: -9999, down: false };
+
+function updatePointer(e) {
+  const rect = canvas.getBoundingClientRect();
+  pointer.x = (e.clientX - rect.left) / rect.width * W;
+  pointer.y = (e.clientY - rect.top) / rect.height * H;
+}
 
 document.addEventListener('keydown', e => {
   keys[e.code] = true;
@@ -344,10 +376,27 @@ canvas.addEventListener('touchend', e => {
   touchActive = false;
 }, { passive: false });
 
+canvas.addEventListener('mousemove', e => {
+  updatePointer(e);
+});
+
 canvas.addEventListener('mousedown', e => {
+  updatePointer(e);
+  pointer.down = true;
   initAudio();
   handleJump();
   handleMouseMenu(e);
+});
+
+canvas.addEventListener('mouseup', e => {
+  updatePointer(e);
+  pointer.down = false;
+});
+
+canvas.addEventListener('mouseleave', () => {
+  pointer.x = -9999;
+  pointer.y = -9999;
+  pointer.down = false;
 });
 
 // ============ INPUT HANDLERS ============
@@ -399,11 +448,12 @@ function handleMouseMenu(e) {
 }
 
 function handleMenuClick(mx, my) {
-  if (state === STATE.PLAYING || state === STATE.GAME_OVER) return;
+  if (state === STATE.PLAYING) return;
 
   if (state === STATE.MENU) menuClick(mx, my);
   else if (state === STATE.LEVEL_SELECT) levelSelectClick(mx, my);
   else if (state === STATE.SETTINGS) settingsClick(mx, my);
+  else if (state === STATE.GAME_OVER) gameOverClick(mx, my);
   else if (state === STATE.LEVEL_COMPLETE) completeClick(mx, my);
 }
 
@@ -454,6 +504,15 @@ function levelSelectClick(mx, my) {
 }
 
 function settingsClick(mx, my) {
+  for (const option of getConfigButtons()) {
+    if (inRect(mx, my, option.x, option.y, option.w, option.h)) {
+      playClick();
+      selectedConfig = option.index;
+      localStorage.setItem('gd_config', selectedConfig);
+      return;
+    }
+  }
+
   // Skin selection
   const cols = 5;
   const cellW = Math.min(80, (W - 60) / cols);
@@ -488,6 +547,40 @@ function settingsClick(mx, my) {
   }
   // Back
   if (inRect(mx, my, 20, 20, 100, 40)) {
+    playClick();
+    state = STATE.MENU;
+  }
+}
+
+function getConfigButtons() {
+  const cols = Math.min(4, Math.max(1, Math.floor((W - 40) / 130)));
+  const btnW = Math.min(120, (W - 60) / cols);
+  const btnH = 38;
+  const gap = 10;
+  const rows = Math.ceil(SKIN_COLORS.length / 5);
+  const y = 120 + rows * (100 + 8) + 30;
+  const gridW = cols * btnW + (cols - 1) * gap;
+  const startX = (W - gridW) / 2;
+
+  return GAME_CONFIGS.map((config, index) => {
+    const col = index % cols;
+    const row = Math.floor(index / cols);
+    return {
+      index,
+      config,
+      x: startX + col * (btnW + gap),
+      y: y + row * (btnH + gap),
+      w: btnW,
+      h: btnH
+    };
+  });
+}
+
+function gameOverClick(mx, my) {
+  if (inRect(mx, my, W/2 - 100, H/2 + 40, 200, 50)) {
+    playClick();
+    startLevel(currentLevel);
+  } else if (inRect(mx, my, W/2 - 100, H/2 + 110, 200, 50)) {
     playClick();
     state = STATE.MENU;
   }
@@ -538,6 +631,7 @@ function updatePlaying() {
 
   const speed = currentLevelData.speed * player.speedMult;
   const groundH = currentLevelData.groundH;
+  const prevY = player.y;
 
   // Player physics
   if (!player.isShip) {
@@ -546,7 +640,8 @@ function updatePlaying() {
     player.vy += player.gravity * 0.5 * player.gravityDir;
   }
 
-  player.x += speed * 0.2;
+  const cfg = activeConfig();
+  player.x += speed * cfg.speedScale * (player.grounded ? 1 : cfg.airMult);
   player.y += player.vy;
 
   // Ground collision
@@ -610,7 +705,37 @@ function updatePlaying() {
       }
     }
 
-    if (obs.type === 'block' || obs.type === 'spike') {
+    if (obs.type === 'block') {
+      const hitsBlock = px + pw * 0.7 > obs.x && px + pw * 0.3 < obs.x + obs.w &&
+          py + ph * 0.7 > obs.y && py + ph * 0.3 < obs.y + obs.h;
+      const landsOnTop = player.gravityDir === 1 && player.vy >= 0 &&
+          prevY + ph <= obs.y + 8 &&
+          px + pw * 0.75 > obs.x && px + pw * 0.25 < obs.x + obs.w &&
+          py + ph >= obs.y && py < obs.y;
+      const landsOnBottom = player.gravityDir === -1 && player.vy <= 0 &&
+          prevY >= obs.y + obs.h - 8 &&
+          px + pw * 0.75 > obs.x && px + pw * 0.25 < obs.x + obs.w &&
+          py <= obs.y + obs.h && py + ph > obs.y + obs.h;
+
+      if (landsOnTop) {
+        player.y = obs.y - ph;
+        player.vy = 0;
+        player.grounded = true;
+        player.doubleJumpUsed = false;
+        combo = 0;
+      } else if (landsOnBottom) {
+        player.y = obs.y + obs.h;
+        player.vy = 0;
+        player.grounded = true;
+        player.doubleJumpUsed = false;
+        combo = 0;
+      } else if (hitsBlock && !player.invincible) {
+        die();
+        return;
+      }
+    }
+
+    if (obs.type === 'spike') {
       if (px + pw * 0.7 > obs.x && px + pw * 0.3 < obs.x + obs.w &&
           py + ph * 0.7 > obs.y && py + ph * 0.3 < obs.y + obs.h) {
         if (!player.invincible) {
@@ -1133,7 +1258,7 @@ function drawLevelSelect() {
 
   // Back button
   ctx.fillStyle = '#666';
-  ctx.fillRect(20, 20, 100, 40);
+  drawButton(20, 20, 100, 40, '', '#666');
   ctx.fillStyle = '#fff';
   ctx.font = '14px Arial';
   ctx.textAlign = 'center';
@@ -1208,9 +1333,17 @@ function drawSettings() {
     }
   }
 
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 16px Arial';
+  ctx.fillText('GAME CONFIG', W/2, getConfigButtons()[0].y - 12);
+  for (const option of getConfigButtons()) {
+    const selected = option.index === selectedConfig;
+    drawButton(option.x, option.y, option.w, option.h, option.config.name, selected ? '#ffd700' : '#4a9eff', selected ? '#ffd700' : '#4a9eff');
+  }
+
   // Back button
   ctx.fillStyle = '#666';
-  ctx.fillRect(20, 20, 100, 40);
+  drawButton(20, 20, 100, 40, '', '#666');
   ctx.fillStyle = '#fff';
   ctx.font = '14px Arial';
   ctx.textAlign = 'center';
@@ -1269,16 +1402,62 @@ function drawLevelComplete() {
   ctx.restore();
 }
 
+function chamferPath(x, y, w, h, cut = 10) {
+  const c = Math.min(cut, w / 4, h / 3);
+  ctx.beginPath();
+  ctx.moveTo(x + c, y);
+  ctx.lineTo(x + w - c, y);
+  ctx.lineTo(x + w, y + c);
+  ctx.lineTo(x + w, y + h - c);
+  ctx.lineTo(x + w - c, y + h);
+  ctx.lineTo(x + c, y + h);
+  ctx.lineTo(x, y + h - c);
+  ctx.lineTo(x, y + c);
+  ctx.closePath();
+}
+
 function drawButton(x, y, w, h, text, color, shadowColor) {
   ctx.save();
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
-  ctx.fillRect(x + 2, y + 2, w, h);
-  ctx.fillStyle = color;
-  ctx.shadowColor = shadowColor || color;
-  ctx.shadowBlur = 10;
-  ctx.fillRect(x, y, w, h);
+  const hovered = inRect(pointer.x, pointer.y, x, y, w, h);
+  const pressed = hovered && pointer.down;
+  if (pressed) y += 2;
+  const glow = shadowColor || color;
+  const grad = ctx.createLinearGradient(x, y, x, y + h);
+  grad.addColorStop(0, '#ffffff');
+  grad.addColorStop(0.08, color);
+  grad.addColorStop(0.58, color);
+  grad.addColorStop(1, '#111827');
+
+  chamferPath(x + 5, y + 6, w, h, 12);
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fill();
+
+  chamferPath(x, y, w, h, 12);
+  ctx.shadowColor = glow;
+  ctx.shadowBlur = hovered ? 28 : 18;
+  ctx.fillStyle = grad;
+  ctx.fill();
   ctx.shadowBlur = 0;
+
+  chamferPath(x + 4, y + 4, w - 8, Math.max(8, h * 0.28), 7);
+  ctx.fillStyle = 'rgba(255,255,255,0.24)';
+  ctx.fill();
+
+  chamferPath(x, y, w, h, 12);
+  ctx.strokeStyle = hovered ? '#fff' : 'rgba(255,255,255,0.75)';
+  ctx.lineWidth = hovered ? 3 : 2;
+  ctx.stroke();
+
+  chamferPath(x + 4, y + 4, w - 8, h - 8, 8);
+  ctx.strokeStyle = glow;
+  ctx.globalAlpha = 0.5;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
   ctx.fillStyle = '#fff';
+  ctx.shadowColor = 'rgba(0,0,0,0.65)';
+  ctx.shadowBlur = 4;
   ctx.font = 'bold 16px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
