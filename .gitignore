@@ -23,3 +23,7 @@ quiz/worker/
 
 # Cloudflare Workers
 cloudflare_worker/
+# Who made these? (what are these?)
+AGENTS.md
+GEMINI.md
+

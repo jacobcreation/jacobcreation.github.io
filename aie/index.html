@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity Image Editor - Cloudflare Workers AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0b10;
+            --bg-card: rgba(18, 20, 29, 0.7);
+            --bg-input: #151824;
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.15);
+            --secondary: #a855f7;
+            --secondary-glow: rgba(168, 85, 247, 0.15);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.15);
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        header {
+            padding: 24px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 11, 16, 0.8);
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-dot {
+            width: 10px;
+            height: 10px;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
+        }
+
+        .header-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .worker-url-input {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            width: 320px;
+            transition: all 0.3s ease;
+        }
+
+        .worker-url-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        main {
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 450px 1fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 1024px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            height: fit-content;
+        }
+
+        h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 14px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.01);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.02);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--secondary);
+            background: rgba(168, 85, 247, 0.04);
+            box-shadow: 0 0 20px var(--secondary-glow);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .upload-text {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            font-size: 11px;
+            color: rgba(156, 163, 175, 0.6);
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .form-group {
+            margin-top: 24px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        textarea {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            color: var(--text-main);
+            font-size: 14px;
+            min-height: 120px;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .advanced-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 16px;
+            font-size: 13px;
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
+            padding: 8px 0;
+        }
+
+        .advanced-options {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .advanced-options.show {
+            max-height: 150px;
+            margin-top: 12px;
+        }
+
+        .select-input {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .select-input:focus {
+            border-color: var(--primary);
+        }
+
+        .btn {
+            width: 100%;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            border: none;
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 24px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #1f2235;
+            color: rgba(255, 255, 255, 0.3);
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .image-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            min-height: 400px;
+        }
+
+        @media (max-width: 768px) {
+            .image-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .preview-box {
+            background: rgba(18, 20, 29, 0.4);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 350px;
+        }
+
+        .preview-box img {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 8px;
+            object-fit: contain;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .preview-title {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(10, 11, 16, 0.7);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(8px);
+        }
+
+        .placeholder-text {
+            color: var(--text-muted);
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .placeholder-icon {
+            font-size: 48px;
+            opacity: 0.3;
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 16px;
+            margin-top: 10px;
+        }
+
+        .secondary-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .secondary-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--border-hover);
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-banner {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            color: #fca5a5;
+            font-size: 14px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-dot"></div>
+            Antigravity Image Edit
+        </div>
+
+    </header>
+
+    <main>
+        <section class="panel">
+            <h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary)"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                Editor Configuration
+            </h2>
+
+            <div class="upload-zone" id="drop-zone">
+                <div class="upload-icon">✦</div>
+                <div class="upload-text">Drag and drop your image here</div>
+                <div class="upload-hint">or click to browse from files</div>
+                <div class="upload-hint" style="margin-top: 5px;">Supports PNG, JPG, WEBP</div>
+                <input type="file" id="file-input" accept="image/*">
+            </div>
+
+            <div class="form-group">
+                <label for="prompt-input">Editing prompt</label>
+                <textarea id="prompt-input" placeholder="Example: 'Change the background to a neon cyber-punk city street' or 'Add a cute puppy next to the cat'"></textarea>
+            </div>
+
+            <div class="advanced-toggle" id="advanced-btn">
+                <span>Advanced Settings</span>
+                <span id="advanced-arrow">▼</span>
+            </div>
+
+            <div class="advanced-options" id="advanced-panel">
+                <label for="model-select">Model ID</label>
+                <select id="model-select" class="select-input">
+                    <option value="@cf/runwayml/stable-diffusion-v1-5-img2img">Stable Diffusion Img2Img (Cloudflare Workers AI)</option>
+                </select>
+            </div>
+
+            <button class="btn" id="generate-btn" disabled>
+                <span>Edit Image</span>
+            </button>
+
+            <div class="error-banner" id="error-box"></div>
+        </section>
+
+        <section class="workspace">
+            <div class="image-comparison">
+                <div class="preview-box">
+                    <span class="preview-title">Original Image</span>
+                    <div class="placeholder-text" id="orig-placeholder">
+                        <span class="placeholder-icon">📷</span>
+                        <span>Upload an image to start</span>
+                    </div>
+                    <img id="orig-preview" style="display: none;" alt="Original preview">
+                </div>
+
+                <div class="preview-box">
+                    <span class="preview-title">Edited Output</span>
+                    <div class="placeholder-text" id="output-placeholder">
+                        <span class="placeholder-icon">🪄</span>
+                        <span>Generated image will appear here</span>
+                    </div>
+                    <img id="output-preview" style="display: none;" alt="Edited preview">
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <button class="secondary-btn" id="download-btn" style="display: none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Download Result
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Fixed Cloudflare Worker URL for image editing
+        const WORKER_URL = 'https://ai-image-edit.b4rjxr9lk.workers.dev';
+
+        // Advanced panel toggle
+        const advancedBtn = document.getElementById('advanced-btn');
+        const advancedPanel = document.getElementById('advanced-panel');
+        const advancedArrow = document.getElementById('advanced-arrow');
+        advancedBtn.addEventListener('click', () => {
+            const isShown = advancedPanel.classList.toggle('show');
+            advancedArrow.textContent = isShown ? '▲' : '▼';
+        });
+
+        // Upload zone events
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const origPreview = document.getElementById('orig-preview');
+        const origPlaceholder = document.getElementById('orig-placeholder');
+        const generateBtn = document.getElementById('generate-btn');
+        let selectedFile = null;
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (fileInput.files.length > 0) {
+                handleFile(fileInput.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showError("Please select a valid image file.");
+                return;
+            }
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                origPreview.src = e.target.result;
+                origPreview.style.display = 'block';
+                origPlaceholder.style.display = 'none';
+                updateGenerateButtonState();
+            };
+            reader.readAsDataURL(file);
+            clearError();
+        }
+
+        const promptInput = document.getElementById('prompt-input');
+        promptInput.addEventListener('input', updateGenerateButtonState);
+
+        function updateGenerateButtonState() {
+            generateBtn.disabled = !selectedFile || !promptInput.value.trim();
+        }
+
+        // Error functions
+        const errorBox = document.getElementById('error-box');
+        function showError(message) {
+            errorBox.textContent = message;
+            errorBox.style.display = 'block';
+        }
+
+        function clearError() {
+            errorBox.style.display = 'none';
+            errorBox.textContent = '';
+        }
+
+        // Submit action
+        const outputPreview = document.getElementById('output-preview');
+        const outputPlaceholder = document.getElementById('output-placeholder');
+        const downloadBtn = document.getElementById('download-btn');
+        const modelSelect = document.getElementById('model-select');
+        let outputImageB64 = null;
+
+        generateBtn.addEventListener('click', async () => {
+            if (!selectedFile || !promptInput.value.trim()) return;
+
+            // Loading state
+            generateBtn.disabled = true;
+            const origBtnText = generateBtn.innerHTML;
+            generateBtn.innerHTML = '<div class="spinner"></div> <span>Processing...</span>';
+            outputPreview.style.display = 'none';
+            outputPlaceholder.style.display = 'flex';
+            outputPlaceholder.innerHTML = '<div class="spinner" style="width: 32px; height: 32px; border-width: 3px; border-top-color: var(--primary);"></div><span style="margin-top: 15px; color: var(--text-muted);">Editing with Cloudflare Workers AI...</span>';
+            downloadBtn.style.display = 'none';
+            clearError();
+
+            const workerUrl = WORKER_URL;
+            const prompt = promptInput.value.trim();
+            const model = modelSelect.value;
+
+            const formData = new FormData();
+            formData.append('image', selectedFile);
+            formData.append('prompt', prompt);
+            formData.append('model', model);
+
+            try {
+                const response = await fetch(workerUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || data.message || `HTTP error ${response.status}`);
+                }
+
+                // Handle image output formats
+                // OpenAI image/edits return format: { data: [ { b64_json: '...', url: '...' } ] }
+                if (data.data && data.data[0]) {
+                    const item = data.data[0];
+                    if (item.b64_json) {
+                        outputImageB64 = `data:image/png;base64,${item.b64_json}`;
+                    } else if (item.url) {
+                        outputImageB64 = item.url;
+                    }
+                } else if (data.artifacts && data.artifacts[0]) {
+                    // Alternative image API format
+                    const base64 = data.artifacts[0].base64;
+                    outputImageB64 = `data:image/png;base64,${base64}`;
+                } else if (data.image) {
+                    outputImageB64 = data.image.startsWith('data:') ? data.image : `data:image/png;base64,${data.image}`;
+                }
+
+                if (outputImageB64) {
+                    outputPreview.src = outputImageB64;
+                    outputPreview.style.display = 'block';
+                    outputPlaceholder.style.display = 'none';
+                    downloadBtn.style.display = 'inline-flex';
+                } else {
+                    throw new Error("Could not extract image data from worker response. Response schema: " + JSON.stringify(data));
+                }
+
+            } catch (err) {
+                console.error(err);
+                showError(`Error: ${err.message || 'Unknown error occurred while contacting the worker.'}`);
+                outputPlaceholder.innerHTML = '<span class="placeholder-icon">❌</span><span>Generation failed</span>';
+            } finally {
+                generateBtn.innerHTML = origBtnText;
+                updateGenerateButtonState();
+            }
+        });
+
+        // Download result action
+        downloadBtn.addEventListener('click', () => {
+            if (!outputImageB64) return;
+            const link = document.createElement('a');
+            link.href = outputImageB64;
+            link.download = `edited_${selectedFile ? selectedFile.name : 'image.png'}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
+</body>
+</html>
