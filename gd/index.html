@@ -318,6 +318,7 @@ const player = {
 
 function resetPlayer() {
   const cfg = activeConfig();
+  player.x = 150;
   player.y = H - 140;
   player.vy = 0;
   player.gravity = cfg.gravity;
@@ -631,6 +632,7 @@ function updatePlaying() {
 
   const speed = currentLevelData.speed * player.speedMult;
   const groundH = currentLevelData.groundH;
+  const prevX = player.x;
   const prevY = player.y;
 
   // Player physics
@@ -781,8 +783,12 @@ function updatePlaying() {
     }
 
     if (obs.type === 'finish') {
-      if (px + pw * 0.7 > obs.x && px < obs.x + obs.w &&
-          py + ph * 0.7 > obs.y && py + ph * 0.3 < obs.y + obs.h) {
+      const crossedFinishLine = prevX + pw <= obs.x && px + pw >= obs.x;
+      const overlapsFinish = px + pw * 0.7 > obs.x && px < obs.x + obs.w &&
+          py + ph * 0.7 > obs.y && py + ph * 0.3 < obs.y + obs.h;
+      const withinFinishZone = py < H && py + ph > 0;
+
+      if ((crossedFinishLine && withinFinishZone) || overlapsFinish) {
         levelComplete();
         return;
       }

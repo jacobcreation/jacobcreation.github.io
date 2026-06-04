@@ -1,282 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <!-- Cache Busting Meta Tags -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Play Tetris inside a cleaner JacobCreation wrapper with quick controls, fullscreen access, and easy navigation back to more projects.">
-  <title>Tetris - JacobCreation</title>
-  <style>
-    :root {
-      --bg1: #070b18;
-      --bg2: #111d3d;
-      --card: rgba(9, 15, 32, 0.82);
-      --card-2: rgba(255, 255, 255, 0.08);
-      --border: rgba(255, 255, 255, 0.14);
-      --text: #eef5ff;
-      --muted: rgba(238, 245, 255, 0.74);
-      --accent: #59b2ff;
-      --accent-2: #2f6dff;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      margin: 0;
-      min-height: 100%;
-      background:
-        radial-gradient(circle at top left, rgba(89, 178, 255, 0.18), transparent 24%),
-        radial-gradient(circle at top right, rgba(47, 109, 255, 0.2), transparent 28%),
-        linear-gradient(160deg, var(--bg1), var(--bg2));
-      color: var(--text);
-      font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    body {
-      padding: 116px 18px 24px;
-    }
-
-    main {
-      max-width: 1180px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 300px;
-      gap: 18px;
-      align-items: start;
-    }
-
-    .player-shell,
-    .side-card {
-      border-radius: 24px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      backdrop-filter: blur(14px);
-      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
-    }
-
-    .player-shell {
-      padding: 16px;
-    }
-
-    .player-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: flex-start;
-      margin-bottom: 14px;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      padding: 7px 11px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      font-size: 0.78rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: rgba(238, 245, 255, 0.76);
-    }
-
-    h1 {
-      margin: 12px 0 8px;
-      font-size: clamp(1.9rem, 4vw, 2.8rem);
-      line-height: 1.02;
-    }
-
-    .lead {
-      margin: 0;
-      color: var(--muted);
-      max-width: 56ch;
-      line-height: 1.6;
-    }
-
-    .player-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .action-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 44px;
-      padding: 10px 15px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text);
-      text-decoration: none;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
-    }
-
-    .action-btn:hover {
-      transform: translateY(-2px);
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.22);
-    }
-
-    .action-btn.primary {
-      color: #071122;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      border-color: rgba(89, 178, 255, 0.7);
-      box-shadow: 0 12px 26px rgba(47, 109, 255, 0.28);
-    }
-
-    .frame-wrap {
-      position: relative;
-      overflow: hidden;
-      border-radius: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
-      aspect-ratio: 4 / 3;
-    }
-
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      display: block;
-      background: #000;
-    }
-
-    .side-card {
-      padding: 18px;
-      position: sticky;
-      top: 116px;
-    }
-
-    .side-card h2 {
-      margin: 0 0 10px;
-      font-size: 1.1rem;
-    }
-
-    .tips {
-      display: grid;
-      gap: 10px;
-      margin-top: 16px;
-    }
-
-    .tip {
-      padding: 12px 13px;
-      border-radius: 16px;
-      background: var(--card-2);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: var(--muted);
-      line-height: 1.45;
-    }
-
-    .tip strong {
-      display: block;
-      margin-bottom: 4px;
-      color: var(--text);
-    }
-
-    @media (max-width: 940px) {
-      body {
-        padding-top: 106px;
-      }
-
-      main {
-        grid-template-columns: 1fr;
-      }
-
-      .side-card {
-        position: static;
-      }
-
-      .player-head {
-        flex-direction: column;
-      }
-    }
-
-    @media (max-width: 640px) {
-      body {
-        padding: 98px 12px 16px;
-      }
-
-      .player-shell,
-      .side-card {
-        border-radius: 18px;
-      }
-
-      .player-shell,
-      .side-card {
-        padding: 14px;
-      }
-
-      .player-actions {
-        width: 100%;
-      }
-
-      .action-btn {
-        flex: 1 1 100%;
-      }
-
-      .frame-wrap {
-        border-radius: 16px;
-        aspect-ratio: auto;
-        min-height: 68vh;
-      }
-
-      .lead {
-        font-size: 0.96rem;
-      }
-    }
-  </style>
+  <title>Tetris</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
+<body>
+  <main class="app-shell">
+    <section class="game-card">
+      <div class="board-wrap">
+        <canvas id="game" width="300" height="600" aria-label="Tetris game board"></canvas>
+        <div id="overlay" class="overlay hidden">
+          <div class="overlay-card">
+            <h2 id="overlay-title">Paused</h2>
+            <p id="overlay-message">Press P to resume.</p>
+          </div>
+        </div>
+      </div>
 
-<body data-project-subtitle="A cleaner play page for Tetris with quick controls and a focused embed experience.">
-  <main>
-    <section class="player-shell">
-      <div class="player-head">
-        <div>
-          <span class="eyebrow">Classic Puzzle</span>
+      <aside class="sidebar">
+        <div class="brand">
+          <p class="eyebrow">Arcade Stack</p>
           <h1>Tetris</h1>
-          <p class="lead">Stack smart, clear lines, and jump into a more polished play view without the usual crowded embed frame.</p>
+          <p class="tagline">Rotate fast, place clean, and chase long combo clears.</p>
         </div>
-        <div class="player-actions">
-          <a class="action-btn" href="https://scratch.mit.edu/projects/313865242/fullscreen/" target="_blank" rel="noreferrer">Fullscreen</a>
-          <a class="action-btn primary" href="https://scratch.mit.edu/projects/313865242/" target="_blank" rel="noreferrer">Open on Scratch</a>
-        </div>
-      </div>
 
-      <div class="frame-wrap">
-        <iframe src="https://scratch.mit.edu/projects/313865242/embed" allowfullscreen title="Tetris"></iframe>
-      </div>
+        <div class="panel stats">
+          <div>
+            <span class="label">Score</span>
+            <strong id="score">0</strong>
+          </div>
+          <div>
+            <span class="label">Level</span>
+            <strong id="level">1</strong>
+          </div>
+          <div>
+            <span class="label">Lines</span>
+            <strong id="lines">0</strong>
+          </div>
+        </div>
+
+        <div class="panel next-panel">
+          <span class="label">Next Piece</span>
+          <canvas id="next" width="120" height="120" aria-label="Next Tetris piece preview"></canvas>
+        </div>
+
+        <div class="panel controls">
+          <span class="label">Controls</span>
+          <ul>
+            <li><kbd>&larr;</kbd> <kbd>&rarr;</kbd> move</li>
+            <li><kbd>&darr;</kbd> soft drop</li>
+            <li><kbd>&uarr;</kbd> rotate</li>
+            <li><kbd>Space</kbd> hard drop</li>
+            <li><kbd>P</kbd> pause</li>
+          </ul>
+        </div>
+
+        <div class="actions">
+          <button id="start-button" type="button">New Game</button>
+          <button id="pause-button" type="button">Pause</button>
+        </div>
+      </aside>
     </section>
-
-    <aside class="side-card">
-      <h2>Quick Start</h2>
-      <div class="tips">
-        <div class="tip">
-          <strong>Play instantly</strong>
-          The game is embedded right here, so you can start dropping blocks right away.
-        </div>
-        <div class="tip">
-          <strong>Want a bigger view?</strong>
-          Use the fullscreen button for a roomier layout on desktop or tablet.
-        </div>
-        <div class="tip">
-          <strong>More projects</strong>
-          Jump back to the project list anytime using the JacobCreation dock.
-        </div>
-      </div>
-    </aside>
   </main>
 
-  <script>(function(){const v=Date.now();document.write('<script src="/global-header.js?v='+v+'"><\/script>');})();</script>
+  <script src="script.js"></script>
 </body>
-
 </html>
