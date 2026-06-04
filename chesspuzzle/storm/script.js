@@ -305,7 +305,7 @@ function toggleMute() {
 
 // Preloader Queue Logic
 async function fetchRandomPuzzle(targetRating) {
-    const response = await fetch(`https://puzzle-gen.b4rjxr9lk.workers.dev/api/puzzle?rating=${targetRating}`);
+    const response = await fetch(`https://puzzle-gen.jacobcreation.workers.dev/api/puzzle?rating=${targetRating}`);
     if (!response.ok) throw new Error("Failed to fetch puzzle from API");
     
     const puzzleJson = await response.json();
