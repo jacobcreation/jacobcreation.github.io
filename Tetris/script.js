@@ -437,6 +437,30 @@ document.addEventListener("keydown", (event) => {
 });
 
 startButton.addEventListener("click", resetGame);
+
+// Mobile touch controls
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.mobile-controls button');
+  if (!btn) return;
+  const action = btn.dataset.action;
+  switch (action) {
+    case 'move-left':
+      movePiece(-1);
+      break;
+    case 'move-right':
+      movePiece(1);
+      break;
+    case 'soft-drop':
+      dropPiece();
+      break;
+    case 'rotate':
+      rotatePiece();
+      break;
+    case 'hard-drop':
+      hardDrop();
+      break;
+  }
+});
 pauseButton.addEventListener("click", () => setPaused(!isPaused));
 
 resetGame();
