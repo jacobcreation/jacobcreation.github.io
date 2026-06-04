@@ -1,0 +1,143 @@
+:root {
+  --bg-color: #0a0a12;
+  --player-color: #00d2ff;
+  --monster-color: #ff0055;
+  --projectile-player: #00ffcc;
+  --projectile-monster: #ffaa00;
+  --text-color: #e0e0e0;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.game-container {
+  position: relative;
+  width: 800px;
+  height: 600px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 20px rgba(0, 210, 255, 0.2);
+  background: radial-gradient(circle at center, #1a1a2e 0%, #0a0a12 100%);
+  overflow: hidden;
+}
+
+.player {
+  position: absolute;
+  background-color: var(--player-color);
+  box-shadow: 0 0 15px var(--player-color);
+  border-radius: 4px;
+  transition: transform 0.1s ease-out;
+}
+
+.monster {
+  position: absolute;
+  background-color: var(--monster-color);
+  box-shadow: 0 0 20px var(--monster-color);
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.monster::after {
+  content: '👁️👁️';
+  font-size: 20px;
+  filter: drop-shadow(0 0 5px white);
+}
+
+.projectile {
+  position: absolute;
+  border-radius: 2px;
+}
+
+.projectile.player {
+  background-color: var(--projectile-player);
+  box-shadow: 0 0 10px var(--projectile-player);
+}
+
+.projectile.monster {
+  background-color: var(--projectile-monster);
+  box-shadow: 0 0 10px var(--projectile-monster);
+}
+
+.hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.health-bar-container {
+  width: 200px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.health-bar {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.player-health .health-bar {
+  background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+}
+
+.monster-health .health-bar {
+  background: linear-gradient(90deg, #ff0055, #8e2de2);
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+}
+
+.overlay h1 {
+  font-size: 48px;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  background: linear-gradient(to right, #00d2ff, #ff0055);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.btn-start {
+  padding: 12px 30px;
+  font-size: 20px;
+  background: transparent;
+  color: white;
+  border: 2px solid var(--player-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.btn-start:hover {
+  background: var(--player-color);
+  box-shadow: 0 0 20px var(--player-color);
+}
