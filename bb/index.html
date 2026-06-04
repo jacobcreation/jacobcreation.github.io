@@ -8,30 +8,80 @@
 </head>
 <body>
     <div class="game-container">
-        <div class="header">
-            <h1>Block Blast</h1>
-            <div class="score-container">
-                <span id="score-label">Score:</span>
-                <span id="score">0</span>
+        <div class="header glass-panel">
+            <div class="top-bar">
+                <h1>Block Blast</h1>
+                <button id="settings-btn" class="icon-btn">⚙️</button>
+            </div>
+            <div class="stats-container">
+                <div class="score-container">
+                    <span class="label">Score</span>
+                    <span id="score">0</span>
+                </div>
+                <div class="score-container">
+                    <span class="label">Best</span>
+                    <span id="high-score">0</span>
+                </div>
+                <div id="combo-container" class="score-container hidden">
+                    <span class="label">Combo</span>
+                    <span id="combo-multiplier">x1</span>
+                </div>
             </div>
         </div>
 
-        <div id="game-board" class="grid"></div>
+        <div id="game-board" class="grid glass-panel"></div>
 
-        <div id="piece-tray" class="tray">
-            <div class="piece-slot" id="slot-0"></div>
-            <div class="piece-slot" id="slot-1"></div>
-            <div class="piece-slot" id="slot-2"></div>
+        <div class="controls-container">
+            <div id="piece-tray" class="tray">
+                <div class="piece-slot" id="slot-0"></div>
+                <div class="piece-slot" id="slot-1"></div>
+                <div class="piece-slot" id="slot-2"></div>
+            </div>
+            
+            <div class="power-ups">
+                <button id="powerup-hammer" class="power-up-btn" title="Hammer: Remove a block">
+                    <span class="icon">🔨</span>
+                    <span class="count" id="hammer-count">3</span>
+                </button>
+                <button id="powerup-refresh" class="power-up-btn" title="Refresh: Get new pieces">
+                    <span class="icon">🔄</span>
+                    <span class="count" id="refresh-count">3</span>
+                </button>
+            </div>
         </div>
 
         <div id="game-over" class="modal hidden">
-            <div class="modal-content">
+            <div class="modal-content glass-panel">
                 <h2>Game Over!</h2>
                 <p>Your score: <span id="final-score">0</span></p>
-                <button id="restart-btn">Play Again</button>
+                <div id="new-best-msg" class="hidden">New Best! 🏆</div>
+                <button id="restart-btn" class="primary-btn">Play Again</button>
+            </div>
+        </div>
+
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content glass-panel">
+                <h2>Settings</h2>
+                <div class="setting-item">
+                    <span>Sound Effects</span>
+                    <label class="switch">
+                        <input type="checkbox" id="sound-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <span>Theme</span>
+                    <div class="theme-options">
+                        <button class="theme-btn active" data-theme="default" title="Midnight"></button>
+                        <button class="theme-btn" data-theme="cyberpunk" title="Cyberpunk"></button>
+                        <button class="theme-btn" data-theme="forest" title="Forest"></button>
+                    </div>
+                </div>
+                <button id="close-settings" class="primary-btn">Close</button>
             </div>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="script.js"></script>
     <script>(function(){const v=Date.now();document.write('<script src="/global-header.js?v='+v+'"><\/script>');})();</script>
 </body>

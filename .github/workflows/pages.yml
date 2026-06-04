@@ -35,6 +35,19 @@ jobs:
       - name: Remove large puzzle data
         run: rm -rf chesspuzzle/puzzlelist
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: sss/package-lock.json
+
+      - name: Build sss (Vite project)
+        run: |
+          cd sss
+          npm ci
+          npm run build
+
       - name: Prepare Pages artifact
         run: |
           cat > prepare.sh << 'EOF'
@@ -55,7 +68,11 @@ jobs:
             --exclude='.antigravitycli' \
             --exclude='.codex' \
             --exclude='cloudflare_worker' \
+            --exclude='sss' \
             ./ _site/
+
+          mkdir -p _site/sss
+          rsync -a sss/dist/ _site/sss/
           EOF
 
           chmod +x prepare.sh
