@@ -94,7 +94,7 @@ async function loadRandomPuzzle() {
     
     try {
         const themeQuery = currentThemeFilter === 'all' ? '' : `&theme=${currentThemeFilter}`;
-        const response = await fetch(`https://puzzle-gen.jacobcreation.workers.dev/api/puzzle?rating=${userRating}${themeQuery}`);
+        const response = await fetch(`https://puzzle-gen.b4rjxr9lk.workers.dev/api/puzzle?rating=${userRating}${themeQuery}`);
         
         if (!response.ok) throw new Error(`Worker responded with ${response.status}`);
         

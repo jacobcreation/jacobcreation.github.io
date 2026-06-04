@@ -20,7 +20,7 @@ const ChessAccounts = (function () {
 
 	const API_URL = isLocalHost()
 		? 'http://localhost:8787'
-		: 'https://accnts.jacobcreation.workers.dev';
+		: 'https://accnts.b4rjxr9lk.workers.dev';
 
 	// Storage Keys
 	const TOKEN_KEY = 'chess_session_token';
