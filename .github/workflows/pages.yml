@@ -40,11 +40,26 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: sss/package-lock.json
+          cache-dependency-path: |
+            sss/package-lock.json
+            shootthemonster/package-lock.json
+            Wordscapes/package-lock.json
 
       - name: Build sss (Vite project)
         run: |
           cd sss
+          npm ci
+          npm run build
+
+      - name: Build shootthemonster (Vite project)
+        run: |
+          cd shootthemonster
+          npm ci
+          npm run build
+
+      - name: Build Wordscapes (Vite project)
+        run: |
+          cd Wordscapes
           npm ci
           npm run build
 
@@ -69,10 +84,18 @@ jobs:
             --exclude='.codex' \
             --exclude='cloudflare_worker' \
             --exclude='sss' \
+            --exclude='shootthemonster' \
+            --exclude='Wordscapes' \
             ./ _site/
 
           mkdir -p _site/sss
           rsync -a sss/dist/ _site/sss/
+
+          mkdir -p _site/shootthemonster
+          rsync -a shootthemonster/dist/ _site/shootthemonster/
+
+          mkdir -p _site/Wordscapes
+          rsync -a Wordscapes/dist/ _site/Wordscapes/
           EOF
 
           chmod +x prepare.sh

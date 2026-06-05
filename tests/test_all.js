@@ -2,7 +2,10 @@ const puppeteer = require("puppeteer");
 const express = require("express");
 const path = require("path");
 const app = express();
-app.use(express.static(path.join(__dirname)));
+app.use("/shootthemonster", express.static(path.join(__dirname, "../shootthemonster/dist")));
+app.use("/Wordscapes", express.static(path.join(__dirname, "../Wordscapes/dist")));
+app.use("/sss", express.static(path.join(__dirname, "../sss/dist")));
+app.use(express.static(path.join(__dirname, "..")));
 
 const MULTI_PROJECTS = [
 	"ab",
@@ -13,7 +16,6 @@ const MULTI_PROJECTS = [
 	"calculator",
 	"cc",
 	"cgol",
-	"Minecraft",
 	"minesweeper",
 	"p",
 	"piano",
