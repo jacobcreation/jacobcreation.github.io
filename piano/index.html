@@ -4,23 +4,547 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Piano</title>
-    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+:root {
+    --bg: #0d0d1a;
+    --surface: #1a1a2e;
+    --text: #e0e0e0;
+    --accent: #4fc3f7;
+    --white-key: #f5f5f0;
+    --white-key-hover: #e8e5dc;
+    --white-key-active: #d4d0c4;
+    --black-key: #1a1a1a;
+    --black-key-active: #2d2d2d;
+    --border: #2a2a3e;
+    --wk-w: 44px;
+    --bk-w: 26px;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#status {
+    font-size: 0.75rem;
+    color: var(--accent);
+    background: rgba(79, 195, 247, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    transition: opacity 0.3s;
+}
+
+.status-hidden {
+    opacity: 0;
+}
+
+.toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    transition: background 0.2s;
+}
+
+.toggle:active {
+    background: rgba(255,255,255,0.12);
+}
+
+.toggle input {
+    accent-color: var(--accent);
+}
+
+.keyboard-wrapper {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    position: relative;
+    background: linear-gradient(180deg, #1a1a2e 0%, #0d0d1a 100%);
+    touch-action: none; /* Crucial for multi-touch and glissando */
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.keyboard-wrapper::before,
+.keyboard-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 24px;
+    pointer-events: none;
+    z-index: 20;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.keyboard-wrapper::before {
+    left: 0;
+    background: linear-gradient(270deg, transparent, rgba(13,13,26,0.85));
+}
+
+.keyboard-wrapper::after {
+    right: 0;
+    background: linear-gradient(90deg, transparent, rgba(13,13,26,0.85));
+}
+
+.keyboard-wrapper.scrollable-right::after {
+    opacity: 1;
+}
+
+.keyboard-wrapper.scrollable-left::before {
+    opacity: 1;
+}
+
+.keyboard-wrapper::-webkit-scrollbar {
+    height: 6px;
+}
+
+.keyboard-wrapper::-webkit-scrollbar-track {
+    background: var(--bg);
+}
+
+.keyboard-wrapper::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .keyboard-wrapper::-webkit-scrollbar {
+        height: 3px;
+    }
+    .keyboard-wrapper::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.15);
+    }
+}
+
+.keyboard {
+    display: flex;
+    height: 100%;
+    position: relative;
+    padding: 0;
+}
+
+.white-key {
+    height: 100%;
+    width: var(--wk-w);
+    background: var(--white-key);
+    border: 1px solid #ccc;
+    border-right-color: #bbb;
+    border-bottom: 3px solid #bbb;
+    border-radius: 0 0 6px 6px;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.05s, border-bottom-width 0.05s;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 8px;
+}
+
+.white-key:hover {
+    background: var(--white-key-hover);
+}
+
+.white-key.active {
+    background: var(--white-key-active);
+    border-bottom-width: 1px;
+    border-bottom-color: #999;
+    transition: none;
+}
+
+.key-label {
+    font-size: 9px;
+    color: #888;
+    pointer-events: none;
+    user-select: none;
+    display: none;
+}
+
+.show-labels .key-label {
+    display: block;
+}
+
+.key-label.octave-start {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 10px;
+}
+
+.black-key {
+    position: absolute;
+    top: 0;
+    height: 58%;
+    background: var(--black-key);
+    border: 1px solid #111;
+    border-bottom: 4px solid #000;
+    border-radius: 0 0 5px 5px;
+    cursor: pointer;
+    z-index: 10;
+    transition: background 0.05s, border-bottom-width 0.05s, height 0.05s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 -1px 2px rgba(255,255,255,0.05);
+}
+
+.black-key:hover {
+    background: #222;
+}
+
+.black-key.active {
+    background: var(--black-key-active);
+    border-bottom-width: 2px;
+    height: 57%;
+    transition: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+
+footer {
+    height: 4px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+    header {
+        padding: 4px 10px;
+    }
+    header h1 {
+        font-size: 1rem;
+    }
+    .toggle {
+        font-size: 0.75rem;
+        padding: 2px 8px;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 480px) {
+    header {
+        padding: 2px 10px;
+    }
+    header h1 {
+        font-size: 0.85rem;
+    }
+    .toggle {
+        font-size: 0.7rem;
+        padding: 1px 6px;
+    }
+    .keyboard-wrapper {
+        background: linear-gradient(180deg, #1a1a2e 0%, #0d0d1a 100%);
+    }
+}
+    </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Piano</h1>
-            <label class="toggle">
-                <input type="checkbox" id="toggleLabels">
-                <span>Labels</span>
-            </label>
+            <div class="header-controls">
+                <span id="status">Loading Sounds...</span>
+                <label class="toggle">
+                    <input type="checkbox" id="toggleLabels">
+                    <span>Labels</span>
+                </label>
+            </div>
         </header>
         <div class="keyboard-wrapper" id="wrapper">
             <div class="keyboard" id="keyboard"></div>
         </div>
         <footer></footer>
     </div>
-    <script src="script.js"></script>
+    <script>
+const KEYBOARD = document.getElementById('keyboard');
+const WRAPPER = document.getElementById('wrapper');
+const TOGGLE_LABELS = document.getElementById('toggleLabels');
+const STATUS = document.getElementById('status');
+
+const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const BLACK_INDICES = new Set([1, 3, 6, 8, 10]);
+const FIRST_MIDI = 21;
+const LAST_MIDI = 108;
+const WHITE_COUNT = 52;
+
+// --- Audio Setup (Tone.js Sampler) ---
+const sampler = new Tone.Sampler({
+    urls: {
+        A0: "A0.mp3",
+        C1: "C1.mp3",
+        "D#1": "Ds1.mp3",
+        "F#1": "Fs1.mp3",
+        A1: "A1.mp3",
+        C2: "C2.mp3",
+        "D#2": "Ds2.mp3",
+        "F#2": "Fs2.mp3",
+        A2: "A2.mp3",
+        C3: "C3.mp3",
+        "D#3": "Ds3.mp3",
+        "F#3": "Fs3.mp3",
+        A3: "A3.mp3",
+        C4: "C4.mp3",
+        "D#4": "Ds4.mp3",
+        "F#4": "Fs4.mp3",
+        A4: "A4.mp3",
+        C5: "C5.mp3",
+        "D#5": "Ds5.mp3",
+        "F#5": "Fs5.mp3",
+        A5: "A5.mp3",
+        C6: "C6.mp3",
+        "D#6": "Ds6.mp3",
+        "F#6": "Fs6.mp3",
+        A6: "A6.mp3",
+        C7: "C7.mp3",
+        "D#7": "Ds7.mp3",
+        "F#7": "Fs7.mp3",
+        A7: "A7.mp3",
+        C8: "C8.mp3"
+    },
+    release: 1,
+    baseUrl: "https://tonejs.github.io/audio/salamander/",
+    onload: () => {
+        STATUS.classList.add('status-hidden');
+        console.log("Sampler loaded");
+    }
+}).toDestination();
+
+// --- Input Tracking ---
+// Maps pointerId -> midiNumber
+const activePointers = new Map();
+// Maps midiNumber -> Set of pointerIds (polyphony/overlap support)
+const midiPointers = new Map();
+
+function getWhiteKeyWidth() {
+    const isLandscape = window.innerWidth > window.innerHeight;
+    const w = window.innerWidth <= 480
+        ? Math.max(34, Math.min(48, (window.innerWidth - 24) / 10))
+        : isLandscape
+            ? Math.max(38, Math.min(52, (window.innerWidth - 24) / 18))
+            : Math.max(38, Math.min(56, (window.innerWidth - 24) / 14));
+    return Math.round(w * 10) / 10;
+}
+
+function buildKeyboard() {
+    KEYBOARD.innerHTML = '';
+    const ww = getWhiteKeyWidth();
+    const bw = ww * 0.6;
+
+    document.documentElement.style.setProperty('--wk-w', ww + 'px');
+    document.documentElement.style.setProperty('--bk-w', bw + 'px');
+
+    KEYBOARD.style.width = (WHITE_COUNT * ww) + 'px';
+
+    let wi = -1;
+
+    for (let midi = FIRST_MIDI; midi <= LAST_MIDI; midi++) {
+        const ni = midi % 12;
+        const octave = Math.floor(midi / 12) - 1;
+        const name = NOTES[ni];
+        const isBlack = BLACK_INDICES.has(ni);
+
+        if (!isBlack) {
+            wi++;
+            const key = document.createElement('div');
+            key.className = 'white-key';
+            key.dataset.midi = midi;
+
+            const label = document.createElement('span');
+            label.className = 'key-label' + (ni === 0 ? ' octave-start' : '');
+            label.textContent = name + octave;
+            key.appendChild(label);
+
+            KEYBOARD.appendChild(key);
+        }
+    }
+
+    wi = -1;
+    for (let midi = FIRST_MIDI; midi <= LAST_MIDI; midi++) {
+        const ni = midi % 12;
+        if (!BLACK_INDICES.has(ni)) {
+            wi++;
+            continue;
+        }
+
+        const octave = Math.floor(midi / 12) - 1;
+        const name = NOTES[ni];
+
+        const key = document.createElement('div');
+        key.className = 'black-key';
+        key.dataset.midi = midi;
+        key.style.left = ((wi + 0.7) * ww) + 'px';
+        key.style.width = bw + 'px';
+
+        KEYBOARD.appendChild(key);
+    }
+
+    attachKeyListeners();
+
+    const containerW = WRAPPER.clientWidth;
+    if (containerW < WHITE_COUNT * ww) {
+        const middleCWhiteIndex = 24;
+        const scrollTarget = middleCWhiteIndex * ww - containerW / 2;
+        WRAPPER.scrollLeft = Math.max(0, scrollTarget);
+    }
+
+    checkOverflow();
+
+    if (TOGGLE_LABELS.checked) {
+        KEYBOARD.classList.add('show-labels');
+    }
+}
+
+function getKeyByMidi(midi) {
+    return KEYBOARD.querySelector(`[data-midi="${midi}"]`);
+}
+
+function attachKeyListeners() {
+    const allKeys = KEYBOARD.querySelectorAll('.white-key, .black-key');
+
+    allKeys.forEach(key => {
+        key.addEventListener('pointerdown', onPointerDown);
+        key.addEventListener('pointerenter', onPointerEnter);
+        key.addEventListener('pointerleave', onPointerLeave);
+        key.addEventListener('pointerup', onPointerUp);
+        key.addEventListener('pointercancel', onPointerUp);
+    });
+}
+
+async function onPointerDown(e) {
+    e.preventDefault();
+    await Tone.start();
+    const midi = parseInt(e.currentTarget.dataset.midi);
+    handleNoteOn(midi, e.pointerId);
+}
+
+function onPointerEnter(e) {
+    // buttons is 1 for primary button (usually left click or touch)
+    if (e.buttons === 1 || e.pointerType === 'touch') {
+        const midi = parseInt(e.currentTarget.dataset.midi);
+        handleNoteOn(midi, e.pointerId);
+    }
+}
+
+function onPointerLeave(e) {
+    const midi = parseInt(e.currentTarget.dataset.midi);
+    handleNoteOff(midi, e.pointerId);
+}
+
+function onPointerUp(e) {
+    const midi = parseInt(e.currentTarget.dataset.midi);
+    handleNoteOff(midi, e.pointerId);
+}
+
+function handleNoteOn(midi, pointerId) {
+    if (activePointers.get(pointerId) === midi) return;
+
+    // Release old note if this pointer moved to a new key
+    if (activePointers.has(pointerId)) {
+        handleNoteOff(activePointers.get(pointerId), pointerId);
+    }
+
+    activePointers.set(pointerId, midi);
+
+    if (!midiPointers.has(midi)) {
+        midiPointers.set(midi, new Set());
+    }
+    const pointers = midiPointers.get(midi);
+
+    if (pointers.size === 0) {
+        playNote(midi);
+    }
+    pointers.add(pointerId);
+}
+
+function handleNoteOff(midi, pointerId) {
+    if (activePointers.get(pointerId) !== midi) return;
+
+    activePointers.delete(pointerId);
+    const pointers = midiPointers.get(midi);
+    if (pointers) {
+        pointers.delete(pointerId);
+        if (pointers.size === 0) {
+            stopNote(midi);
+        }
+    }
+}
+
+function playNote(midi) {
+    const note = Tone.Frequency(midi, "midi").toNote();
+    sampler.triggerAttack(note);
+    const key = getKeyByMidi(midi);
+    if (key) key.classList.add('active');
+}
+
+function stopNote(midi) {
+    const note = Tone.Frequency(midi, "midi").toNote();
+    sampler.triggerRelease(note);
+    const key = getKeyByMidi(midi);
+    if (key) key.classList.remove('active');
+}
+
+TOGGLE_LABELS.addEventListener('change', () => {
+    KEYBOARD.classList.toggle('show-labels', TOGGLE_LABELS.checked);
+});
+
+function checkOverflow() {
+    const s = WRAPPER;
+    s.classList.toggle('scrollable-right', s.scrollLeft + s.clientWidth < s.scrollWidth);
+    s.classList.toggle('scrollable-left', s.scrollLeft > 0);
+}
+
+WRAPPER.addEventListener('scroll', checkOverflow, { passive: true });
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(buildKeyboard, 150);
+});
+
+buildKeyboard();
+    </script>
     <script>(function(){const v=Date.now();document.write('<script src="/global-header.js?v='+v+'"><\/script>');})();</script>
 </body>
 </html>
