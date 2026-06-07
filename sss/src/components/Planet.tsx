@@ -28,7 +28,9 @@ const Planet = ({
 
   // Load textures
   const texture = useTexture(data.textureUrl);
-  const ringTexture = data.ring ? useTexture(data.ring.textureUrl) : null;
+  const ring = data.ring;
+  const ringTexture = useTexture(ring?.textureUrl ?? data.textureUrl);
+  const orbitTilt = THREE.MathUtils.degToRad(data.orbitTilt ?? 0);
 
   // Orbital points for the path
   const points = useMemo(() => 
@@ -56,7 +58,7 @@ const Planet = ({
   });
 
   return (
-    <group>
+    <group rotation={[orbitTilt, 0, 0]}>
       {/* Orbital Path */}
       {showOrbits && (
         <Line
@@ -81,6 +83,7 @@ const Planet = ({
         <sphereGeometry args={[data.radius, 64, 64]} />
         <meshStandardMaterial
           map={texture}
+          color={data.color}
           roughness={0.8}
           metalness={0.2}
           emissive={data.color}
@@ -88,14 +91,14 @@ const Planet = ({
         />
 
         {/* Saturn's Rings */}
-        {data.ring && ringTexture && (
+        {ring && (
           <mesh rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[data.ring.innerRadius, data.ring.outerRadius, 64]} />
-            <meshStandardMaterial 
-              map={ringTexture} 
-              transparent 
-              opacity={0.8} 
-              side={THREE.DoubleSide} 
+            <ringGeometry args={[ring.innerRadius, ring.outerRadius, 64]} />
+            <meshStandardMaterial
+              map={ringTexture}
+              transparent
+              opacity={0.8}
+              side={THREE.DoubleSide}
             />
           </mesh>
         )}

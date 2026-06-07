@@ -1,4 +1,4 @@
-import { Pause, RotateCcw, Orbit, Tag } from 'lucide-react';
+import { Pause, RotateCcw, Orbit, Tag, Globe } from 'lucide-react';
 
 interface ControlsProps {
   simulationSpeed: number;
@@ -8,6 +8,7 @@ interface ControlsProps {
   showLabels: boolean;
   setShowLabels: (show: boolean) => void;
   onResetCamera: () => void;
+  onNextSystem: () => void;
 }
 
 const Controls = ({
@@ -17,7 +18,8 @@ const Controls = ({
   setShowOrbits,
   showLabels,
   setShowLabels,
-  onResetCamera
+  onResetCamera,
+  onNextSystem
 }: ControlsProps) => {
   const speeds = [0, 1, 5, 10, 20];
 
@@ -40,6 +42,13 @@ const Controls = ({
       </div>
 
       <div className="flex items-center gap-2">
+        <button
+          onClick={onNextSystem}
+          className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-all"
+          title="Switch System"
+        >
+          <Globe size={18} />
+        </button>
         <button
           onClick={() => setShowOrbits(!showOrbits)}
           className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${

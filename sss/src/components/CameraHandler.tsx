@@ -1,16 +1,29 @@
 import { useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import type { PlanetData } from '../data/planets';
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
+import type { PlanetData, StarSystemData } from '../data/planets';
 
 interface CameraHandlerProps {
   focusedPlanet: PlanetData | null;
   simTimeRef: React.MutableRefObject<number>;
+  activeSystem: StarSystemData;
+  cameraResetTick: number;
 }
 
-const CameraHandler = ({ focusedPlanet, simTimeRef }: CameraHandlerProps) => {
-  const controlsRef = useRef<any>(null);
+const CameraHandler = ({ focusedPlanet, simTimeRef, activeSystem, cameraResetTick }: CameraHandlerProps) => {
+  const controlsRef = useRef<OrbitControlsImpl | null>(null);
+
+  useEffect(() => {
+    if (!controlsRef.current) {
+      return;
+    }
+
+    controlsRef.current.target.set(0, 0, 0);
+    controlsRef.current.object.position.set(...activeSystem.camera.position);
+    controlsRef.current.update();
+  }, [activeSystem, cameraResetTick]);
 
   useFrame(({ camera }) => {
     if (focusedPlanet && controlsRef.current) {
@@ -38,8 +51,8 @@ const CameraHandler = ({ focusedPlanet, simTimeRef }: CameraHandlerProps) => {
       ref={controlsRef}
       enableDamping
       dampingFactor={0.05}
-      minDistance={5}
-      maxDistance={100}
+      minDistance={activeSystem.camera.minDistance}
+      maxDistance={activeSystem.camera.maxDistance}
     />
   );
 };

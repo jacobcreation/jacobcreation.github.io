@@ -1,11 +1,11 @@
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Stars, PerspectiveCamera } from '@react-three/drei';
-import { useRef, Suspense } from 'react';
+import { useEffect, useRef, Suspense } from 'react';
 import * as THREE from 'three';
 import Sun from './Sun';
 import Planet from './Planet';
 import CameraHandler from './CameraHandler';
-import { planets, type PlanetData } from '../data/planets';
+import { type PlanetData, type StarSystemData } from '../data/planets';
 
 interface SolarSystemProps {
   simulationSpeed: number;
@@ -13,6 +13,8 @@ interface SolarSystemProps {
   showLabels: boolean;
   focusedPlanet: PlanetData | null;
   onSelectPlanet: (planet: PlanetData | null) => void;
+  activeSystem: StarSystemData;
+  cameraResetTick: number;
 }
 
 const SceneContent = ({
@@ -20,9 +22,15 @@ const SceneContent = ({
   showOrbits,
   showLabels,
   focusedPlanet,
-  onSelectPlanet
+  onSelectPlanet,
+  activeSystem,
+  cameraResetTick
 }: SolarSystemProps) => {
   const simTimeRef = useRef(0);
+
+  useEffect(() => {
+    simTimeRef.current = 0;
+  }, [activeSystem.id]);
 
   useFrame((_, delta) => {
     simTimeRef.current += delta * simulationSpeed;
@@ -30,16 +38,17 @@ const SceneContent = ({
 
   return (
     <>
-      <PerspectiveCamera makeDefault position={[30, 30, 30]} fov={50} />
+      <PerspectiveCamera key={activeSystem.id} makeDefault position={activeSystem.camera.position} fov={50} />
       
-      <color attach="background" args={['#000000']} />
+      <color attach="background" args={[activeSystem.background]} />
       
-      <ambientLight intensity={0.5} />
-      <Stars radius={300} depth={60} count={20000} factor={7} saturation={0} fade speed={1} />
+      <fog attach="fog" args={[activeSystem.background, 50, 220]} />
+      <ambientLight intensity={0.35} />
+      <Stars radius={250} depth={80} count={activeSystem.id === 'solar-system' ? 22000 : 14000} factor={6} saturation={0} fade speed={1} />
       
-      <Sun />
+      <Sun star={activeSystem.star} />
       
-      {planets.map((planet) => (
+      {activeSystem.bodies.map((planet) => (
         <Planet
           key={planet.name}
           data={planet}
@@ -55,6 +64,8 @@ const SceneContent = ({
       <CameraHandler 
         focusedPlanet={focusedPlanet} 
         simTimeRef={simTimeRef}
+        activeSystem={activeSystem}
+        cameraResetTick={cameraResetTick}
       />
     </>
   );

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>City Sandbox Minds</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Emergent Citizen Sandbox</p>
+        <h1>City Sandbox With Actual Minds</h1>
+      </div>
+      <div class="controls">
+        <button id="pauseBtn">Pause</button>
+        <button id="addHumanBtn">Attract Resident</button>
+        <button id="clearToolBtn" class="secondary">Browse Mode</button>
+        <button id="thoughtsBtn" class="secondary">Hide Thoughts</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="world-panel">
+        <div class="hud">
+          <div>
+            <span class="label">Day</span>
+            <strong id="dayLabel">1</strong>
+          </div>
+          <div>
+            <span class="label">Time</span>
+            <strong id="timeLabel">06:00</strong>
+          </div>
+          <div>
+            <span class="label">Mood Avg</span>
+            <strong id="moodLabel">0</strong>
+          </div>
+          <div>
+            <span class="label">Active Thoughts</span>
+            <strong id="thoughtCountLabel">0</strong>
+          </div>
+        </div>
+        <canvas id="world" width="980" height="640"></canvas>
+      </section>
+
+      <aside class="sidebar">
+        <section class="card">
+          <h2>Build The City</h2>
+          <p class="section-copy">Start from nothing. Pick a zone or service, name it if you want, then click the map to place it.</p>
+          <label class="field-label" for="customBuildingName">Custom name</label>
+          <input id="customBuildingName" class="text-input" type="text" maxlength="30" placeholder="Optional custom name">
+          <div id="buildPalette" class="build-palette"></div>
+          <div id="buildHint" class="build-hint">Browse mode: click people to inspect them.</div>
+        </section>
+
+        <section class="card">
+          <h2>Selected Mind</h2>
+          <div id="selectedHuman" class="selected-empty">Click a human to inspect their mind.</div>
+        </section>
+
+        <section class="card">
+          <h2>City Pulse</h2>
+          <div id="cityStats" class="stats-grid"></div>
+        </section>
+
+        <section class="card log-card">
+          <h2>Recent Events</h2>
+          <div id="eventLog" class="event-log"></div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

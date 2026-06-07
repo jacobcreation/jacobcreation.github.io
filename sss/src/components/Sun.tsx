@@ -2,12 +2,17 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
+import type { StarData } from '../data/planets';
 
-const Sun = () => {
+interface SunProps {
+  star: StarData;
+}
+
+const Sun = ({ star }: SunProps) => {
   const sunRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
 
-  const texture = useTexture(`${import.meta.env.BASE_URL}textures/2k_sun.jpg`);
+  const texture = useTexture(star.textureUrl);
 
   useFrame(({ clock }) => {
     if (sunRef.current) {
@@ -22,20 +27,21 @@ const Sun = () => {
     <group>
       {/* Main Sun Body */}
       <mesh ref={sunRef}>
-        <sphereGeometry args={[3, 64, 64]} />
+        <sphereGeometry args={[star.radius, 64, 64]} />
         <meshStandardMaterial
           map={texture}
-          emissive="#FFCC33"
+          color={star.color}
+          emissive={star.emissiveColor}
           emissiveIntensity={1.5}
         />
-        <pointLight intensity={250} distance={150} decay={1} color="#FFCC33" />
+        <pointLight intensity={star.lightIntensity} distance={star.lightDistance} decay={1} color={star.color} />
       </mesh>
 
       {/* Atmospheric Glow */}
       <mesh ref={glowRef}>
-        <sphereGeometry args={[3.2, 64, 64]} />
+        <sphereGeometry args={[star.radius * 1.06, 64, 64]} />
         <meshBasicMaterial
-          color="#FFCC33"
+          color={star.color}
           transparent
           opacity={0.15}
         />
