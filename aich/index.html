@@ -451,8 +451,33 @@
                 if (!response.ok) throw new Error('Failed to connect to AI');
 
                 const data = await response.json();
-                const aiReply = data.reply || data.result || (data.response ? data.response : JSON.stringify(data));
-                
+                const rawData = data;
+                let aiReply = data.reply || data.result || data.response;
+                // Ensure we only display a string response
+                if (typeof aiReply !== 'string') {
+                    // Attempt to extract a readable field from objects
+                    if (aiReply && typeof aiReply === 'object') {
+                        // Handle structured reply format (e.g., OpenAI API response)
+                        if (Array.isArray(aiReply.choices) && aiReply.choices.length) {
+                            const msg = aiReply.choices[0].message;
+                            if (msg && typeof msg.content === 'string') {
+                                aiReply = msg.content;
+                            }
+                        }
+                        // Fallback to generic text/content fields
+                        if (typeof aiReply !== 'string') {
+                            aiReply = aiReply.text || aiReply.content || '';
+                        }
+                    }
+                    // Fallback to stringified raw data if still empty
+                    if (!aiReply) {
+                        try {
+                            aiReply = JSON.stringify(rawData);
+                        } catch (_) {
+                            aiReply = String(rawData);
+                        }
+                    }
+                }
                 loadingMsg.textContent = aiReply;
             } catch (e) {
                 loadingMsg.className = 'msg error';
