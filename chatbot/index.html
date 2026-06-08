@@ -685,8 +685,7 @@
         }
 
       } catch (err) {
-        console.error(err);
-        typingDiv.remove();
+        // console.error(err);  // Removed for production
         addBubble("Error: " + err.message + " 🧠", "bot");
       }
     });
