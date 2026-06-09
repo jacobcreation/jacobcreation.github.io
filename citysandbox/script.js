@@ -173,6 +173,11 @@ function addRoad(x1, y1, x2, y2) {
     return false;
   }
 
+  if (world.buildings.some((building) => isRoadOverBuilding(snapped, building))) {
+    logEvent("You can't pave a road right through a building.");
+    return false;
+  }
+
   const key = roadKey(snapped);
   if (world.roads.some((road) => roadKey(road) === key)) {
     return false;
@@ -199,6 +204,7 @@ function addBuilding(kind, x, y, name) {
 
 function isPlacementValid(x, y, kind) {
   const preset = buildingCatalog[kind];
+  if (!preset) return null;
   const placed = {
     x: clamp(x - preset.w / 2, 20, canvas.width - preset.w - 20),
     y: clamp(y - preset.h / 2, 24, canvas.height - preset.h - 24),
@@ -212,6 +218,10 @@ function isPlacementValid(x, y, kind) {
     if (overlapX && overlapY) {
       return null;
     }
+  }
+
+  if (world.roads.some((road) => isRoadOverBuilding(road, placed))) {
+    return null;
   }
 
   if (world.roads.length > 0 && kind !== "park" && !roadNearBuilding(placed)) {
@@ -249,6 +259,48 @@ function distancePointToSegment(px, py, road) {
   const sx = x1 + t * vx;
   const sy = y1 + t * vy;
   return Math.hypot(px - sx, py - sy);
+}
+
+function isRoadOverBuilding(road, building) {
+  const margin = 10;
+  const rect = {
+    x: building.x + margin,
+    y: building.y + margin,
+    w: building.w - margin * 2,
+    h: building.h - margin * 2,
+  };
+  return intersectSegmentRect(road.x1, road.y1, road.x2, road.y2, rect);
+}
+
+function intersectSegmentRect(x1, y1, x2, y2, rect) {
+  const minX = Math.min(x1, x2);
+  const maxX = Math.max(x1, x2);
+  const minY = Math.min(y1, y2);
+  const maxY = Math.max(y1, y2);
+
+  if (maxX < rect.x || minX > rect.x + rect.w || maxY < rect.y || minY > rect.y + rect.h) {
+    return false;
+  }
+
+  if (x1 >= rect.x && x1 <= rect.x + rect.w && y1 >= rect.y && y1 <= rect.y + rect.h) return true;
+  if (x2 >= rect.x && x2 <= rect.x + rect.w && y2 >= rect.y && y2 <= rect.y + rect.h) return true;
+
+  const edges = [
+    [rect.x, rect.y, rect.x + rect.w, rect.y],
+    [rect.x + rect.w, rect.y, rect.x + rect.w, rect.y + rect.h],
+    [rect.x + rect.w, rect.y + rect.h, rect.x, rect.y + rect.h],
+    [rect.x, rect.y + rect.h, rect.x, rect.y],
+  ];
+
+  return edges.some(([ex1, ey1, ex2, ey2]) => intersectSegments(x1, y1, x2, y2, ex1, ey1, ex2, ey2));
+}
+
+function intersectSegments(x1, y1, x2, y2, x3, y3, x4, y4) {
+  const den = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+  if (den === 0) return false;
+  const ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / den;
+  const ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / den;
+  return ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1;
 }
 
 function logEvent(text) {
@@ -980,7 +1032,7 @@ function drawBuildings() {
 }
 
 function drawPlacementPreview() {
-  if (!world.pointer || !world.activeTool) {
+  if (!world.pointer || !world.activeTool || !buildingCatalog[world.activeTool]) {
     return;
   }
 
@@ -1209,6 +1261,7 @@ function renderPalette() {
   for (const button of buildPaletteEl.querySelectorAll("button")) {
     button.addEventListener("click", () => {
       world.activeTool = button.dataset.tool;
+      world.roadDraft = null;
       updateBuildHint();
       renderPalette();
     });
@@ -1247,7 +1300,7 @@ function findNearestHuman(mouseX, mouseY) {
 }
 
 function placeSelectedBuilding(mouseX, mouseY) {
-  if (!world.activeTool) {
+  if (!world.activeTool || !buildingCatalog[world.activeTool]) {
     return false;
   }
 
@@ -1284,6 +1337,17 @@ canvas.addEventListener("click", (event) => {
   const mouseX = (event.clientX - rect.left) * scaleX;
   const mouseY = (event.clientY - rect.top) * scaleY;
 
+  if (world.activeTool === "road") {
+    if (!world.roadDraft) {
+      world.roadDraft = { x: mouseX, y: mouseY };
+    } else {
+      addRoad(world.roadDraft.x, world.roadDraft.y, mouseX, mouseY);
+      world.roadDraft = null;
+    }
+    renderStats();
+    return;
+  }
+
   if (placeSelectedBuilding(mouseX, mouseY)) {
     renderStats();
     return;
@@ -1306,6 +1370,7 @@ thoughtsBtn.addEventListener("click", () => {
 
 clearToolBtn.addEventListener("click", () => {
   world.activeTool = null;
+  world.roadDraft = null;
   updateBuildHint();
   renderPalette();
 });
