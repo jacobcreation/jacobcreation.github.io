@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Tower Defense</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background:
+                radial-gradient(circle at 20% 10%, rgba(0, 242, 255, 0.13), transparent 30%),
+                radial-gradient(circle at 80% 80%, rgba(255, 174, 0, 0.10), transparent 28%),
+                #07090b;
+            color: #00f2ff;
+            font-family: "Trebuchet MS", Verdana, sans-serif;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+            touch-action: none;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        canvas.dragging {
+            cursor: grabbing;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            pointer-events: auto;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            font-size: 1.2rem;
+            text-shadow: 0 0 5px #00f2ff;
+        }
+
+        #sidebar {
+            position: absolute;
+            right: 12px;
+            top: 84px;
+            width: 100px;
+            max-height: calc(100% - 180px);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            pointer-events: auto;
+            overflow-y: auto;
+        }
+
+        .tower-btn {
+            width: 80px;
+            height: 80px;
+            background: rgba(0, 242, 255, 0.1);
+            border: 1px solid #00f2ff;
+            color: #00f2ff;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .tower-btn:hover {
+            background: rgba(0, 242, 255, 0.3);
+            box-shadow: 0 0 10px #00f2ff;
+        }
+
+        .tower-btn:active {
+            transform: scale(0.95);
+        }
+
+        .tower-btn.selected {
+            background: rgba(0, 242, 255, 0.5);
+            box-shadow: 0 0 15px #00f2ff;
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: auto;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button.main-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: transparent;
+            color: #00f2ff;
+            border: 2px solid #00f2ff;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+            transition: all 0.3s;
+        }
+
+        button.main-btn:hover {
+            background: #00f2ff;
+            color: #000;
+            box-shadow: 0 0 20px #00f2ff;
+        }
+
+        #hint {
+            position: absolute;
+            left: 14px;
+            bottom: 14px;
+            max-width: 310px;
+            color: rgba(210, 251, 255, 0.85);
+            font-size: 0.86rem;
+            line-height: 1.35;
+            text-shadow: 0 0 7px #000;
+            pointer-events: none;
+        }
+
+        #status-banner {
+            position: absolute;
+            top: 72px;
+            left: 50%;
+            min-width: 280px;
+            padding: 12px 22px;
+            transform: translateX(-50%);
+            color: #d2fbff;
+            background: rgba(0, 0, 0, 0.72);
+            border: 1px solid rgba(0, 242, 255, 0.45);
+            box-shadow: 0 0 18px rgba(0, 242, 255, 0.18);
+            font-size: 1rem;
+            letter-spacing: 1px;
+            text-align: center;
+            text-transform: uppercase;
+            text-shadow: 0 0 8px #00f2ff;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui-layer">
+            <div id="hud">
+                <div class="stat">CREDITS: <span id="credits">1000</span></div>
+                <div class="stat">BASE: <span id="lives">20</span></div>
+                <div class="stat">AI BASES: <span id="ai-base">4</span></div>
+                <div class="stat">BATTLES: <span id="wave">0</span></div>
+            </div>
+            <div id="status-banner">AI factions are choosing targets...</div>
+            <div id="sidebar">
+                <button class="tower-btn" data-type="laser">
+                    <span>LASER</span>
+                    <span>$100</span>
+                </button>
+                <button class="tower-btn" data-type="cannon">
+                    <span>CANNON</span>
+                    <span>$175</span>
+                </button>
+                <button class="tower-btn" data-type="pulse">
+                    <span>PULSE</span>
+                    <span>$250</span>
+                </button>
+                <button class="tower-btn" data-type="sniper">
+                    <span>SNIPER</span>
+                    <span>$325</span>
+                </button>
+                <button class="tower-btn" data-type="tesla">
+                    <span>TESLA</span>
+                    <span>$400</span>
+                </button>
+            </div>
+            <div id="controls">
+                <button id="troop-btn" class="main-btn">Send Troops $75</button>
+            </div>
+            <div id="hint">Drag or swipe the battlefield to roam the huge land. AI bases pick random enemies and battle each other. Build towers and send troops into the chaos.</div>
+        </div>
+    </div>
+    <script src="js/game.js" type="module"></script>
+</body>
+</html>
