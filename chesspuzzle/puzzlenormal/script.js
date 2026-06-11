@@ -27,9 +27,6 @@ function updateRatingDisplay() {
     userRatingEl.text(userRating);
     localStorage.setItem('chessPuzzleRating', userRating);
     updateStreakDisplay();
-    if (typeof ChessAccounts !== 'undefined' && ChessAccounts.isLoggedIn()) {
-        ChessAccounts.syncCurrentLocalStats().catch(err => console.error("Failed to sync stats to worker:", err));
-    }
 }
 
 function updateStreakDisplay() {
@@ -339,19 +336,5 @@ $(document).keydown(function(e) {
 });
 
 // Init
-if (typeof ChessAccounts !== 'undefined' && ChessAccounts.isLoggedIn()) {
-    ChessAccounts.fetchAndSyncStats().then(() => {
-        userRating = parseInt(localStorage.getItem('chessPuzzleRating')) || 1500;
-        currentStreak = parseInt(localStorage.getItem('chessPuzzleStreak')) || 0;
-        bestStreak = parseInt(localStorage.getItem('chessPuzzleBestStreak')) || 0;
-        updateRatingDisplay();
-        loadRandomPuzzle();
-    }).catch(err => {
-        console.error("Failed to sync stats during init:", err);
-        updateRatingDisplay();
-        loadRandomPuzzle();
-    });
-} else {
-    updateRatingDisplay();
-    loadRandomPuzzle();
-}
+updateRatingDisplay();
+loadRandomPuzzle();

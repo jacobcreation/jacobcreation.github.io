@@ -253,16 +253,7 @@ const TOTAL_PLAYED_KEY = 'chessStormTotalPlayedCount';
 
 // Initialize Game
 $(document).ready(() => {
-    if (typeof ChessAccounts !== 'undefined' && ChessAccounts.isLoggedIn()) {
-        ChessAccounts.fetchAndSyncStats().then(() => {
-            loadLobbyStats();
-        }).catch(err => {
-            console.error("Failed to sync stats in storm init:", err);
-            loadLobbyStats();
-        });
-    } else {
-        loadLobbyStats();
-    }
+    loadLobbyStats();
     updateMuteButtonDisplay();
     
     // Fill the puzzle queue immediately in the background
@@ -867,10 +858,6 @@ function endStormRun() {
     // Increment global games played
     const globalCount = parseInt(localStorage.getItem(TOTAL_PLAYED_KEY)) || 0;
     localStorage.setItem(TOTAL_PLAYED_KEY, globalCount + 1);
-    
-    if (typeof ChessAccounts !== 'undefined' && ChessAccounts.isLoggedIn()) {
-        ChessAccounts.syncCurrentLocalStats().catch(err => console.error("Failed to sync stats to worker:", err));
-    }
     
     // Update Lobby displays
     loadLobbyStats();
