@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Among Us</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="stage">
+      <div class="hud">
+        <div class="task-strip">
+          <span>Tasks</span>
+          <strong id="tasksLabel">0 / 6</strong>
+        </div>
+        <div class="match-strip">
+          <span>Crew</span>
+          <strong id="crewLabel">6</strong>
+          <span id="stateLabel">Quiet</span>
+        </div>
+        <div class="settings">
+          <button id="settingsButton" class="settings-button" type="button" aria-expanded="false" aria-controls="settingsPanel">
+            Settings
+          </button>
+          <div id="settingsPanel" class="settings-panel hidden">
+            <label class="settings-row">
+              <input id="hitboxesToggle" type="checkbox" />
+              <span>Show hitboxes</span>
+            </label>
+          </div>
+        </div>
+      </div>
+        <canvas id="game" aria-label="Top down spaceship game"></canvas>
+        <div id="feed" class="feed" aria-live="polite"></div>
+        <div id="overlay" class="overlay hidden">
+          <div class="overlay-card">
+            <div class="eyebrow" id="overlayEyebrow">Round Over</div>
+            <h2 id="overlayTitle">Victory</h2>
+            <p id="overlayText"></p>
+            <button id="restartButton" type="button">Play Again</button>
+          </div>
+        </div>
+    </main>
+
+    <script type="module" src="./game.js?v=20260615-collision"></script>
+  </body>
+</html>

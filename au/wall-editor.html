@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wall Editor</title>
+    <link rel="stylesheet" href="./wall-editor.css" />
+  </head>
+  <body>
+    <main class="editor-shell">
+      <aside class="sidebar">
+        <header class="sidebar-header">
+          <h1>Walls</h1>
+          <div id="saveState" class="save-state">Ready</div>
+        </header>
+
+        <div class="actions">
+          <button id="addWallButton" type="button">Add</button>
+          <button id="addPointButton" type="button">Bend</button>
+          <button id="duplicateWallButton" type="button">Duplicate</button>
+          <button id="deleteWallButton" class="danger" type="button">Delete</button>
+          <button id="saveButton" class="primary" type="button">Save</button>
+        </div>
+
+        <label class="field">
+          <span>Name</span>
+          <input id="wallNameInput" type="text" autocomplete="off" />
+        </label>
+
+        <div class="grid-fields">
+          <label class="field">
+            <span>X1</span>
+            <input id="wallX1Input" type="number" step="1" />
+          </label>
+          <label class="field">
+            <span>Y1</span>
+            <input id="wallY1Input" type="number" step="1" />
+          </label>
+          <label class="field">
+            <span>X2</span>
+            <input id="wallX2Input" type="number" step="1" />
+          </label>
+          <label class="field">
+            <span>Y2</span>
+            <input id="wallY2Input" type="number" step="1" />
+          </label>
+          <label class="field thickness-field">
+            <span>Thickness</span>
+            <input id="wallThicknessInput" type="number" min="1" step="1" />
+          </label>
+        </div>
+
+        <div id="wallList" class="wall-list"></div>
+      </aside>
+
+      <section class="canvas-panel">
+        <div class="toolbar">
+          <button id="zoomOutButton" type="button">-</button>
+          <output id="zoomLabel">100%</output>
+          <button id="zoomInButton" type="button">+</button>
+          <input id="zoomSlider" type="range" min="25" max="600" value="100" />
+          <button id="fitButton" type="button">Fit</button>
+        </div>
+        <div id="viewport" class="viewport">
+          <div id="world" class="world">
+            <img
+              class="map"
+              src="./assets/amim/skeld-map.webp"
+              alt=""
+              draggable="false"
+            />
+            <div id="wallsLayer" class="walls-layer"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./wall-editor.js"></script>
+  </body>
+</html>

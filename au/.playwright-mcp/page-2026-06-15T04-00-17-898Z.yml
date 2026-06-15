@@ -1,0 +1,10 @@
+- main [ref=e2]:
+  - generic:
+    - generic:
+      - strong: 0 / 6
+    - generic:
+      - generic: Crew
+      - strong: "5"
+      - generic: Quiet
+    - button "Settings" [ref=e4] [cursor=pointer]
+  - generic "Top down spaceship game" [ref=e5]
