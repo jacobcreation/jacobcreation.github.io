@@ -1,0 +1,64 @@
+- main [ref=e2]:
+  - region "Ubuntu Server virtual machine terminal" [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e9]:
+        - heading "Ubuntu Server VM" [level=1] [ref=e10]
+        - paragraph [ref=e11]: Ubuntu Server 18.04 netboot installer is running. Click the terminal and type.
+      - generic "Virtual machine resources" [ref=e12]:
+        - generic [ref=e13]: running
+        - strong [ref=e14]: 512 MB RAM
+    - generic [ref=e15]:
+      - generic [ref=e17]:
+        - generic [ref=e102]: ┌────────────────┤ [?] Ubuntu installer main menu ├────────────────┐
+        - generic [ref=e103]: │ │
+        - generic [ref=e104]: "│ Choose the next step in the install process: │"
+        - generic [ref=e105]: │ │
+        - generic [ref=e106]: │ Choose language │
+        - generic [ref=e107]: │ Access software for a blind person using a braille display │
+        - generic [ref=e108]: │ Configure the keyboard │
+        - generic [ref=e109]: │ Detect network hardware │
+        - generic [ref=e110]: │ Configure the network │
+        - generic [ref=e111]: │ Choose a mirror of the Ubuntu archive │
+        - generic [ref=e112]: │ Download installer components │
+        - generic [ref=e113]: │ Change debconf priority │
+        - generic [ref=e114]: │ Save debug logs │
+        - generic [ref=e115]: │ Execute a shell │
+        - generic [ref=e116]: │ Abort the installation │
+        - generic [ref=e117]: │ │
+        - generic [ref=e118]: └──────────────────────────────────────────────────────────────────┘
+        - generic [ref=e123]: <Tab> moves; <Space> selects; <Enter> activates buttons
+      - generic "Linux serial terminal" [ref=e73]
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - generic [ref=e21]: Boot media
+        - combobox "Boot media" [ref=e22]:
+          - option "Ubuntu Server 18.04 netboot" [selected]
+      - generic [ref=e23]:
+        - generic [ref=e24]: Memory
+        - combobox "Memory" [ref=e25]:
+          - option "64 MB"
+          - option "128 MB" [selected]
+          - option "256 MB"
+          - option "512 MB"
+      - generic [ref=e26]:
+        - button "Boot Ubuntu" [ref=e27] [cursor=pointer]
+        - button "Pause" [ref=e28] [cursor=pointer]
+        - button "Reset" [ref=e29] [cursor=pointer]
+  - complementary "Virtual machine details" [ref=e30]:
+    - generic [ref=e31]:
+      - text: Machine
+      - heading "Ubuntu Server on x86" [level=2] [ref=e32]
+      - paragraph [ref=e33]: This boots Ubuntu Server media inside the browser with a JavaScript/WebAssembly CPU, BIOS, VGA, serial console, and virtual boot media.
+    - generic [ref=e34]:
+      - generic [ref=e35]:
+        - term [ref=e36]: Kernel
+        - definition [ref=e37]: Ubuntu Server 18.04 netboot installer
+      - generic [ref=e38]:
+        - term [ref=e39]: CPU
+        - definition [ref=e40]: v86 WebAssembly x86
+      - generic [ref=e41]:
+        - term [ref=e42]: Storage
+        - definition [ref=e43]: Local vendored VM image
+      - generic [ref=e44]:
+        - term [ref=e45]: Host access
+        - definition [ref=e46]: Sandboxed browser VM

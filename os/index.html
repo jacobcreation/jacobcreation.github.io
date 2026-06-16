@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ubuntu Server VM</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="desktop">
+      <section class="terminal-window" aria-label="Ubuntu Server virtual machine terminal">
+        <header class="titlebar">
+          <div class="window-dots" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <div class="title-stack">
+            <h1>Ubuntu Server VM</h1>
+            <p id="statusText">Ready to boot an emulated Ubuntu Server machine.</p>
+          </div>
+          <div class="meter" aria-label="Virtual machine resources">
+            <span id="cpuState">stopped</span>
+            <strong id="memoryState">512 MB RAM</strong>
+          </div>
+        </header>
+
+        <div class="screen-shell">
+          <div id="screenContainer" class="screen-container">
+            <div class="vga-text"></div>
+            <canvas></canvas>
+            <div id="bootPrompt" class="screen-loading">
+              <span>v86</span>
+              <strong>Press Boot Ubuntu</strong>
+            </div>
+          </div>
+          <pre id="serialContainer" class="serial-container" aria-label="Linux serial terminal"></pre>
+        </div>
+
+        <footer class="control-panel">
+          <div class="control-group">
+            <label for="profileSelect">Boot media</label>
+            <select id="profileSelect">
+              <option value="ubuntu">Ubuntu Server 18.04 netboot</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="memorySelect">Memory</label>
+            <select id="memorySelect">
+              <option value="512" selected>512 MB</option>
+              <option value="768">768 MB</option>
+              <option value="1024">1024 MB</option>
+            </select>
+          </div>
+
+          <div class="button-row">
+            <button id="bootButton" type="button">Boot Ubuntu</button>
+            <button id="pauseButton" type="button" disabled>Pause</button>
+            <button id="resetButton" type="button" disabled>Reset</button>
+          </div>
+        </footer>
+      </section>
+
+      <aside class="machine-panel" aria-label="Virtual machine details">
+        <div>
+          <span class="eyebrow">Machine</span>
+          <h2>Ubuntu Server on x86</h2>
+          <p>
+            This boots Ubuntu Server media inside the browser with a JavaScript/WebAssembly CPU,
+            BIOS, VGA, serial console, and virtual boot media.
+          </p>
+        </div>
+
+        <dl>
+          <div>
+            <dt>Kernel</dt>
+            <dd id="kernelInfo">Ubuntu Server netboot</dd>
+          </div>
+          <div>
+            <dt>CPU</dt>
+            <dd>v86 WebAssembly x86</dd>
+          </div>
+          <div>
+            <dt>Storage</dt>
+            <dd>Local vendored VM image</dd>
+          </div>
+          <div>
+            <dt>Host access</dt>
+            <dd>Sandboxed browser VM</dd>
+          </div>
+        </dl>
+      </aside>
+    </main>
+
+    <script src="./vendor/v86/build/libv86.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
