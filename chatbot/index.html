@@ -302,11 +302,38 @@
       box-shadow: 0 4px 12px rgba(45, 107, 255, 0.2);
     }
 
+    .bubble-attachment {
+      display: block;
+      width: min(100%, 260px);
+      max-height: 240px;
+      object-fit: cover;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .bubble.user .bubble-attachment {
+      border-color: rgba(7, 17, 34, 0.18);
+      background: rgba(7, 17, 34, 0.08);
+    }
+
+    .bubble-text:empty {
+      display: none;
+    }
+
     /* ─── FIXED Chat Input ─── */
     .chat-input {
       padding: 14px;
       background: rgba(255, 255, 255, 0.02);
       border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .composer-row {
       display: flex;
       gap: 10px;
       align-items: center;
@@ -327,6 +354,67 @@
 
     .chat-input input:focus {
       border-color: var(--blue);
+    }
+
+    .composer-attachment {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      width: fit-content;
+      max-width: 100%;
+      padding: 7px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .composer-attachment.active {
+      display: flex;
+    }
+
+    .composer-attachment img {
+      width: 74px;
+      height: 74px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      flex-shrink: 0;
+    }
+
+    .attachment-meta {
+      min-width: 0;
+      max-width: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      color: var(--text);
+      font-size: 0.82rem;
+      line-height: 1.25;
+    }
+
+    .attachment-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 700;
+    }
+
+    .attachment-note {
+      color: var(--muted);
+      font-size: 0.72rem;
+    }
+
+    .remove-attachment {
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.10);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      flex-shrink: 0;
     }
 
     .btn-send {
@@ -474,8 +562,18 @@
         </div>
 
         <form class="chat-input" id="chatForm">
-          <input id="chatText" type="text" placeholder="Type your message..." autocomplete="off" />
-          <button class="btn-send" type="submit" id="sendBtn">Send</button>
+          <div class="composer-attachment" id="composerAttachment" aria-live="polite">
+            <img id="composerAttachmentImg" alt="Attached image preview" />
+            <div class="attachment-meta">
+              <span class="attachment-name" id="composerAttachmentName"></span>
+              <span class="attachment-note">Ready to send with your message</span>
+            </div>
+            <button class="remove-attachment" type="button" id="removeAttachmentBtn" title="Remove image">×</button>
+          </div>
+          <div class="composer-row">
+            <input id="chatText" type="text" placeholder="Type your message..." autocomplete="off" />
+            <button class="btn-send" type="submit" id="sendBtn">Send</button>
+          </div>
         </form>
 
       </section>
@@ -502,6 +600,10 @@
     const imgBtn = document.getElementById("uploadImgBtn");
     const imgFile = document.getElementById("imgFileInput");
     const clearBtn = document.getElementById("clearChatBtn");
+    const composerAttachment = document.getElementById("composerAttachment");
+    const composerAttachmentImg = document.getElementById("composerAttachmentImg");
+    const composerAttachmentName = document.getElementById("composerAttachmentName");
+    const removeAttachmentBtn = document.getElementById("removeAttachmentBtn");
 
     let currentImage = null;
 
@@ -529,7 +631,7 @@
       return escaped.replace(/\n/g, "<br>");
     }
 
-    function addBubble(text, who = "bot", typing = false) {
+    function addBubble(text, who = "bot", typing = false, attachment = null) {
       const div = document.createElement("div");
       div.className = `bubble ${who}`;
       
@@ -555,12 +657,42 @@
               chatBody.appendChild(div);
           }
       } else {
-          div.innerText = text;
+          if (attachment && attachment.dataUrl) {
+            const img = document.createElement("img");
+            img.className = "bubble-attachment";
+            img.src = attachment.dataUrl;
+            img.alt = attachment.name ? `Attached image: ${attachment.name}` : "Attached image";
+            div.appendChild(img);
+          }
+
+          const textNode = document.createElement("div");
+          textNode.className = "bubble-text";
+          textNode.innerText = text;
+          div.appendChild(textNode);
           chatBody.appendChild(div);
       }
       
       chatBody.scrollTop = chatBody.scrollHeight;
       return div;
+    }
+
+    function updateComposerAttachment() {
+      if (!currentImage) {
+        composerAttachment.classList.remove("active");
+        composerAttachmentImg.removeAttribute("src");
+        composerAttachmentName.textContent = "";
+        return;
+      }
+
+      composerAttachmentImg.src = currentImage.dataUrl;
+      composerAttachmentName.textContent = currentImage.name || "Image";
+      composerAttachment.classList.add("active");
+    }
+
+    function clearComposerAttachment() {
+      currentImage = null;
+      updateComposerAttachment();
+      imgFile.value = "";
     }
 
     async function loadHistory() {
@@ -589,12 +721,10 @@
       if (!msg && !currentImage) return;
       if (!msg && currentImage) msg = "Please analyze this image.";
 
-      if (currentImage) {
-        addBubble("🖼️ [Image attached]\n" + msg, "user");
-      } else {
-        addBubble(msg, "user");
-      }
+      const attachedImage = currentImage;
+      addBubble(msg, "user", false, attachedImage);
       chatText.value = "";
+      clearComposerAttachment();
 
       const typingDiv = document.createElement("div");
       typingDiv.className = "bubble bot";
@@ -612,9 +742,11 @@
             model: modelSelect ? modelSelect.value : "@cf/meta/llama-3.2-3b-instruct"
         };
 
-        if (currentImage) {
-            payload.image = currentImage;
-            currentImage = null;
+        if (attachedImage) {
+            payload.image = {
+              mimeType: attachedImage.mimeType,
+              data: attachedImage.data
+            };
         }
 
         const res = await fetch(ENDPOINT, {
@@ -686,6 +818,7 @@
 
     ulBtn.addEventListener("click", () => { memFile.click(); });
     imgBtn.addEventListener("click", () => { imgFile.click(); });
+    removeAttachmentBtn.addEventListener("click", clearComposerAttachment);
 
     imgFile.addEventListener("change", (e) => {
       const file = e.target.files[0];
@@ -693,12 +826,18 @@
 
       const reader = new FileReader();
       reader.onload = (event) => {
-        const base64String = event.target.result.split(',')[1];
-        currentImage = { mimeType: file.type, data: base64String };
-        addBubble("Image attached! Type a message to ask about it. 🖼️", "bot");
+        const dataUrl = event.target.result;
+        const base64String = dataUrl.split(',')[1];
+        currentImage = {
+          mimeType: file.type,
+          data: base64String,
+          dataUrl,
+          name: file.name
+        };
+        updateComposerAttachment();
+        chatText.focus();
       };
       reader.readAsDataURL(file);
-      imgFile.value = "";
     });
 
     memFile.addEventListener("change", (e) => {
