@@ -8,16 +8,15 @@
     <meta http-equiv="Expires" content="0">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Play fun minigames like Snake, Tetris, and Chess!" />
+  <meta name="description" content="Chat with JacobBot AI using multiple live AI providers." />
 
-  <title>Chat + Minigames - JacobCreation</title>
+  <title>JacobBot AI - JacobCreation</title>
 
-  <link rel="icon" href="/favicon.png" type="image/png" />
+  <link rel="icon" href="https://jacobcreation.github.io/favicon.png" type="image/png" />
 
-  <link href="/fonts/fonts.css" rel="stylesheet">
-  <link href="/fonts/fonts.css" rel="stylesheet">
+  <link href="https://jacobcreation.github.io/fonts/fonts.css" rel="stylesheet">
   
-  <script src="/vendor/marked.min.js"></script>
+  <script src="https://jacobcreation.github.io/vendor/marked.min.js"></script>
 
   <style>
     :root {
@@ -153,8 +152,7 @@
       width: 100%;
     }
 
-    .chat-panel,
-    .game-panel {
+    .chat-panel {
       border-radius: var(--radius);
       border: 1px solid var(--border);
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.05));
@@ -163,15 +161,8 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      height: 600px;
-    }
-
-    .chat-panel {
-      width: 380px;
-    }
-
-    .game-panel {
-      width: 660px;
+      height: 700px;
+      width: min(100%, 820px);
     }
 
     /* ─── Chat Header ─── */
@@ -357,46 +348,6 @@
       transform: scale(1.03);
     }
 
-    .game-tabs {
-      display: flex;
-      background: rgba(255, 255, 255, 0.03);
-      border-bottom: 1px solid var(--border);
-      overflow-x: auto;
-    }
-
-    .game-tabs button {
-      flex: 1;
-      min-width: 90px;
-      padding: 14px;
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      border-bottom: 3px solid transparent;
-      font-family: inherit;
-    }
-
-    .game-tabs button:hover {
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.03);
-    }
-
-    .game-tabs button.active {
-      color: var(--blue);
-      border-bottom-color: var(--blue);
-      background: rgba(78, 161, 255, 0.05);
-    }
-
-    .game-area {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      position: relative;
-    }
 
     .pill {
       padding: 8px 16px;
@@ -429,10 +380,9 @@
     }
 
     @media (max-width: 1080px) {
-      .chat-panel,
-      .game-panel {
+      .chat-panel {
         width: 100%;
-        height: 500px;
+        height: 600px;
       }
 
       main {
@@ -472,35 +422,42 @@
             <div class="model-row">
               <select id="modelSelect" class="model-select">
                 <optgroup label="Llama Series (Meta)">
-                  <option value="@cf/meta/llama-3.1-8b-instruct" selected>Llama 3.1 8B (Default)</option>
-                  <option value="@cf/meta/llama-3.2-3b-instruct">Llama 3.2 3B (Fast)</option>
+                  <option value="@cf/meta/llama-3.2-3b-instruct" selected>Llama 3.2 3B (Default)</option>
                   <option value="@cf/meta/llama-3.2-1b-instruct">Llama 3.2 1B (Tiny)</option>
-                  <option value="@cf/meta/llama-3.1-70b-instruct">Llama 3.1 70B (Smart but slow)</option>
+                  <option value="@cf/meta/llama-3.3-70b-instruct-fp8-fast">Llama 3.3 70B (Smart)</option>
                 </optgroup>
                 <optgroup label="Groq (Ultra-Fast)">
                   <option value="groq/llama-3.3-70b-versatile">Llama 3.3 70B (Groq)</option>
                   <option value="groq/llama-3.1-8b-instant">Llama 3.1 8B (Groq)</option>
-                  <option value="groq/mixtral-8x7b-32768">Mixtral 8x7B (Groq)</option>
+                  <option value="groq/openai/gpt-oss-120b">GPT OSS 120B (Groq)</option>
+                  <option value="groq/openai/gpt-oss-20b">GPT OSS 20B (Groq)</option>
                 </optgroup>
                 <optgroup label="Cerebras (Inference Speed King)">
-                  <option value="cerebras/llama-3.3-70b">Llama 3.3 70B (Cerebras)</option>
-                  <option value="cerebras/llama3.1-8b">Llama 3.1 8B (Cerebras)</option>
+                  <option value="cerebras/gpt-oss-120b">GPT OSS 120B (Cerebras)</option>
+                  <option value="cerebras/zai-glm-4.7">GLM 4.7 Preview (Cerebras)</option>
+                </optgroup>
+                <optgroup label="NVIDIA NIM">
+                  <option value="nvidia/nvidia/llama-3.1-nemotron-nano-8b-v1">Nemotron Nano 8B (NVIDIA)</option>
+                  <option value="nvidia/nvidia/llama-3.3-nemotron-super-49b-v1.5">Nemotron Super 49B (NVIDIA)</option>
+                  <option value="nvidia/nvidia/nemotron-3-super-120b-a12b">Nemotron 3 Super 120B (NVIDIA)</option>
+                  <option value="nvidia/openai/gpt-oss-120b">GPT OSS 120B (NVIDIA)</option>
+                  <option value="nvidia/openai/gpt-oss-20b">GPT OSS 20B (NVIDIA)</option>
+                  <option value="nvidia/qwen/qwen3-coder-480b-a35b-instruct">Qwen3 Coder 480B (NVIDIA)</option>
                 </optgroup>
                 <optgroup label="Google Gemini / Gemma">
-                  <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                  <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                  <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                  <option value="@cf/google/gemma-7b-it">Gemma 7B</option>
-                  <option value="@cf/google/gemma-2b-it-lora">Gemma 2B</option>
+                  <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                  <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
+                  <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                  <option value="@cf/google/gemma-4-26b-a4b-it">Gemma 4 26B</option>
                 </optgroup>
                 <optgroup label="Mistral / Mixtral">
-                  <option value="@cf/mistral/mistral-7b-instruct-v0.1">Mistral 7B v0.1</option>
-                  <option value="@cf/mistral/mistral-7b-instruct-v0.2">Mistral 7B v0.2</option>
+                  <option value="@cf/mistral/mistral-small-3.1-24b-instruct">Mistral Small 3.1 24B</option>
                 </optgroup>
                 <optgroup label="Specialized">
-                  <option value="@cf/qwen/qwen1.5-7b-chat-awq">Qwen 1.5 7B (Multilingual)</option>
-                  <option value="@cf/deepseek-ai/deepseek-math-7b-instruct">DeepSeek Math</option>
-                  <option value="@cf/microsoft/phi-2">Microsoft Phi-2</option>
+                  <option value="@cf/openai/gpt-oss-20b">GPT OSS 20B (Reasoning)</option>
+                  <option value="@cf/qwen/qwen3-30b-a3b-fp8">Qwen3 30B A3B</option>
+                  <option value="@cf/qwen/qwen2.5-coder-32b-instruct">Qwen2.5 Coder 32B</option>
+                  <option value="@cf/deepseek-ai/deepseek-r1-distill-qwen-32b">DeepSeek R1 Distill Qwen 32B</option>
                 </optgroup>
               </select>
             </div>
@@ -521,26 +478,6 @@
           <button class="btn-send" type="submit" id="sendBtn">Send</button>
         </form>
 
-      </section>
-
-      <!-- Games -->
-      <section class="game-panel">
-        <div class="game-tabs" id="gameTabs">
-          <button class="active" data-game="clicker">Clicker</button>
-          <button data-game="memory">Memory</button>
-          <button data-game="snake">Snake</button>
-          <button data-game="pong">Pong</button>
-          <button data-game="tetris">Tetris</button>
-          <button data-game="chess">Chess</button>
-        </div>
-
-        <div class="game-area" id="gameArea">
-          <div id="clicker" style="width:100%; height:100%;">
-            <iframe src="https://jacobcreation.github.io/clicker/" style="width:100%; height:100%; border:none;"
-              allowfullscreen>
-            </iframe>
-          </div>
-        </div>
       </section>
 
     </div>
@@ -579,6 +516,19 @@
       return id;
     }
 
+    function renderMarkdown(text) {
+      if (window.marked && typeof window.marked.parse === "function") {
+        return window.marked.parse(text);
+      }
+      const escaped = String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+      return escaped.replace(/\n/g, "<br>");
+    }
+
     function addBubble(text, who = "bot", typing = false) {
       const div = document.createElement("div");
       div.className = `bubble ${who}`;
@@ -591,7 +541,7 @@
               const words = text.split(" ");
               const interval = setInterval(() => {
                   if (i < words.length) {
-                      div.innerHTML = marked.parse(words.slice(0, i + 1).join(" "));
+                      div.innerHTML = renderMarkdown(words.slice(0, i + 1).join(" "));
                       div.querySelectorAll("p").forEach(p => p.style.margin = "0 0 10px 0");
                       chatBody.scrollTop = chatBody.scrollHeight;
                       i++;
@@ -600,7 +550,7 @@
                   }
               }, 40);
           } else {
-              div.innerHTML = marked.parse(text);
+              div.innerHTML = renderMarkdown(text);
               div.querySelectorAll("p").forEach(p => p.style.margin = "0 0 10px 0");
               chatBody.appendChild(div);
           }
@@ -659,7 +609,7 @@
             site: SITE_NAME,
             sessionId: getSessionId(),
             message: msg,
-            model: modelSelect ? modelSelect.value : "@cf/meta/llama-3.1-8b-instruct"
+            model: modelSelect ? modelSelect.value : "@cf/meta/llama-3.2-3b-instruct"
         };
 
         if (currentImage) {
@@ -787,202 +737,17 @@
       memFile.value = "";
     });
 
-    const gameTabsContainer = document.getElementById("gameTabs");
-    const gameArea = document.getElementById("gameArea");
-
-    gameTabsContainer.addEventListener("click", (e) => {
-      if (e.target.tagName !== "BUTTON") return;
-
-      gameTabsContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-      e.target.classList.add("active");
-
-      loadGameContent(e.target.getAttribute("data-game"));
-    });
-
-    function loadGameContent(gameName) {
-      gameArea.innerHTML = "";
-
-      switch (gameName) {
-        case "clicker":
-          gameArea.innerHTML = `<iframe src="https://jacobcreation.github.io/clicker/" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
-          break;
-        case "chess":
-          gameArea.innerHTML = `<iframe src="https://jacobcreation.github.io/chess/" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
-          break;
-        case "tetris":
-          gameArea.innerHTML = `<iframe src="https://jacobcreation.github.io/Tetris/" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
-          break;
-        case "snake":
-          gameArea.innerHTML = `<iframe src="https://jacobcreation.github.io/snake/" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
-          break;
-        case "pong":
-          initPongGame();
-          break;
-        case "memory":
-          initMemoryGame();
-          break;
-        default:
-          gameArea.innerHTML = "Select a game to play!";
-      }
-    }
-
-    function initPongGame() {
-      gameArea.innerHTML = `
-        <div style="position:relative; width:100%; height:100%; display:flex; flex-direction:column; align-items:center;">
-           <div id="pongScore" style="font-size:1.5rem; font-weight:800; margin-bottom:5px; color:var(--blue);">0 : 0</div>
-           <canvas id="pongCanvas" width="500" height="300" style="background:#000; border:3px solid var(--blue); max-width:100%; cursor:none;"></canvas>
-           <div style="margin-top:10px; font-size:0.8rem; color:var(--muted);">Mouse/Touch to move paddle</div>
-        </div>
-      `;
-
-      const canvas = document.getElementById("pongCanvas");
-      const ctx = canvas.getContext("2d");
-      const scoreDisplay = document.getElementById("pongScore");
-
-      let p1Score = 0, p2Score = 0;
-
-      const ball = { x: 250, y: 150, radius: 7, dx: 4, dy: 4, speed: 4 };
-      const p1 = { x: 10, y: 125, w: 10, h: 50 };
-      const p2 = { x: 480, y: 125, w: 10, h: 50 };
-
-      function resetBall() {
-        ball.x = canvas.width / 2;
-        ball.y = canvas.height / 2;
-        ball.speed = 4;
-        ball.dx = -ball.dx;
-      }
-
-      function drawRect(x, y, w, h, color) {
-        ctx.fillStyle = color;
-        ctx.fillRect(x, y, w, h);
-      }
-
-      function drawCircle(x, y, r, color) {
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2, false);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      canvas.addEventListener("mousemove", (e) => {
-        let rect = canvas.getBoundingClientRect();
-        p1.y = e.clientY - rect.top - p1.h / 2;
-      });
-
-      function collision(b, p) {
-        p.top = p.y; p.bottom = p.y + p.h; p.left = p.x; p.right = p.x + p.w;
-        b.top = b.y - b.radius; b.bottom = b.y + b.radius; b.left = b.x - b.radius; b.right = b.x + b.radius;
-        return b.right > p.left && b.bottom > p.top && b.left < p.right && b.top < p.bottom;
-      }
-
-      function update() {
-        ball.x += ball.dx;
-        ball.y += ball.dy;
-
-        if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) ball.dy = -ball.dy;
-
-        let player = (ball.x < canvas.width / 2) ? p1 : p2;
-        if (collision(ball, player)) {
-          let collidePoint = ball.y - (player.y + player.h / 2);
-          collidePoint = collidePoint / (player.h / 2);
-          let angleRad = (Math.PI / 4) * collidePoint;
-          let direction = (ball.x < canvas.width / 2) ? 1 : -1;
-          ball.dx = direction * ball.speed * Math.cos(angleRad);
-          ball.dy = ball.speed * Math.sin(angleRad);
-          ball.speed += 0.2;
-        }
-
-        p2.y += (ball.y - (p2.y + p2.h / 2)) * 0.1;
-
-        if (ball.x - ball.radius < 0) { p2Score++; resetBall(); }
-        else if (ball.x + ball.radius > canvas.width) { p1Score++; resetBall(); }
-        scoreDisplay.innerText = `${p1Score} : ${p2Score}`;
-      }
-
-      function render() {
-        drawRect(0, 0, canvas.width, canvas.height, "#000");
-        drawRect(p1.x, p1.y, p1.w, p1.h, "#fff");
-        drawRect(p2.x, p2.y, p2.w, p2.h, "#fff");
-        drawCircle(ball.x, ball.y, ball.radius, getComputedStyle(document.documentElement).getPropertyValue('--blue').trim() || "#4ea1ff");
-      }
-
-      function game() {
-        if (!document.getElementById("pongCanvas")) return;
-        update();
-        render();
-        requestAnimationFrame(game);
-      }
-      game();
-    }
-
-    function initMemoryGame() {
-      gameArea.innerHTML = '';
-
-      const grid = document.createElement('div');
-      grid.id = "memBoard";
-      grid.style.cssText = "display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; width:100%; max-width:400px; margin:auto;";
-
-      const restartBtn = document.createElement('div');
-      restartBtn.style.textAlign = "center";
-      restartBtn.style.marginTop = "10px";
-      restartBtn.innerHTML = `<button class="pill" id="restartMemBtn">Restart</button>`;
-
-      gameArea.appendChild(grid);
-      gameArea.appendChild(restartBtn);
-
-      document.getElementById('restartMemBtn').addEventListener('click', initMemoryGame);
-
-      const icons = ["🍎","🍎","🍌","🍌","🍇","🍇","🍉","🍉","🍒","🍒","🥝","🥝","🍍","🍍","🥭","🥭"];
-
-      for (let i = icons.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [icons[i], icons[j]] = [icons[j], icons[i]];
-      }
-
-      let flippedCards = [], matchedCount = 0;
-
-      icons.forEach((icon, idx) => {
-        const card = document.createElement("div");
-        card.style.cssText = `background:var(--card2); height:80px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:2rem; cursor:pointer; user-select:none; transition:transform 0.2s; border:1px solid var(--border);`;
-        card.dataset.val = icon;
-        card.dataset.idx = idx;
-        card.innerText = "❓";
-
-        card.addEventListener("click", () => {
-          if (card.innerText !== "❓" || flippedCards.length >= 2) return;
-
-          card.innerText = icon;
-          card.style.background = "#fff";
-          card.style.transform = "scale(1.05)";
-          flippedCards.push(card);
-
-          if (flippedCards.length === 2) {
-            const [c1, c2] = flippedCards;
-            if (c1.dataset.val === c2.dataset.val) {
-              c1.style.background = "rgba(45, 107, 255, 0.2)";
-              c2.style.background = "rgba(45, 107, 255, 0.2)";
-              flippedCards = [];
-              matchedCount += 2;
-              if (matchedCount === icons.length) setTimeout(() => alert("You Won! 🎉"), 500);
-            } else {
-              setTimeout(() => {
-                c1.innerText = "❓"; c1.style.background = "var(--card2)"; c1.style.transform = "scale(1)";
-                c2.innerText = "❓"; c2.style.background = "var(--card2)"; c2.style.transform = "scale(1)";
-                flippedCards = [];
-              }, 800);
-            }
-          }
-        });
-
-        grid.appendChild(card);
-      });
-    }
 
   </script>
 
-  <script>(function(){const v=Date.now();document.write('<script src="../global-header.js?v='+v+'"><\/script>');})();</script>
-    <script src="/accounts/account-widget.js" defer data-account-api="https://accounts-system.b4rjxr9lk.workers.dev"></script>
+  <script>
+    (function () {
+      const script = document.createElement("script");
+      script.src = `https://jacobcreation.github.io/global-header.js?v=${Date.now()}`;
+      document.body.appendChild(script);
+    })();
+  </script>
+    <script src="https://jacobcreation.github.io/accounts/account-widget.js" defer data-account-api="https://accounts-system.b4rjxr9lk.workers.dev"></script>
 </body>
 
 </html>

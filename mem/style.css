@@ -1,0 +1,250 @@
+:root {
+  --bg-color: #f0f4f8;
+  --card-front-bg: #fff;
+  --card-back-bg: #2e3d49;
+  --card-back-color: #fff;
+  --border-color: #2e3d49;
+  --text-color: #222;
+  --accent-color: #4a90e2;
+  --button-bg: #4a90e2;
+  --button-hover: #357ab8;
+  --button-color: #fff;
+  --success-color: #2ecc71;
+  --error-color: #e74c3c;
+}
+
+body.dark {
+  --bg-color: #1e1e1e;
+  --card-front-bg: #2d2d2d;
+  --card-back-bg: #4a4a4a;
+  --card-back-color: #fff;
+  --border-color: #ccc;
+  --text-color: #eee;
+  --accent-color: #81b2f2;
+  --button-bg: #81b2f2;
+  --button-hover: #5d9cec;
+  --button-color: #111;
+  --success-color: #27ae60;
+  --error-color: #c0392b;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  padding: 20px;
+  transition: background 0.3s, color 0.3s;
+}
+
+h1 {
+  margin-bottom: 5px;
+  color: var(--accent-color);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.toolbar label {
+  font-size: 0.9rem;
+  margin-right: 4px;
+}
+
+.toolbar select,
+.toolbar button {
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background: var(--button-bg);
+  color: var(--button-color);
+  transition: background 0.2s;
+}
+
+.toolbar button:hover {
+  background: var(--button-hover);
+}
+
+.toolbar select {
+  background: var(--card-front-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.theme-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.theme-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--accent-color);
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+#stats {
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+#stats span {
+  font-weight: bold;
+}
+
+.game-board {
+  display: grid;
+  gap: 10px;
+  width: max-content;
+  justify-content: center;
+}
+
+/* Responsive grid: auto columns based on min-width */
+@media (max-width: 480px) {
+  .game-board {
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  }
+  .card {
+    width: 60px;
+    height: 60px;
+  }
+}
+@media (min-width: 481px) and (max-width: 768px) {
+  .game-board {
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  }
+  .card {
+    width: 70px;
+    height: 70px;
+  }
+}
+@media (min-width: 769px) {
+  .game-board {
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  }
+  .card {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+.card {
+  width: 100px;
+  height: 100px;
+  perspective: 600px;
+  cursor: pointer;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  border-radius: 8px;
+  border: 2px solid var(--border-color);
+}
+
+.card-front {
+   background: var(--card-front-bg);
+   transform: rotateY(180deg);
+ }
+
+  .card-back {
+    background: var(--card-back-bg);
+    color: var(--card-back-color);
+    transform: rotateY(0deg);
+  }
+
+/* Match effect */
+.card.matched {
+  animation: pulse 0.8s;
+}
+.card.matched .card-front {
+  border-color: var(--success-color);
+  box-shadow: 0 0 8px var(--success-color);
+}
+.card.mismatch {
+  animation: shake 0.5s;
+}
+.card.mismatch .card-front {
+  border-color: var(--error-color);
+  box-shadow: 0 0 8px var(--error-color);
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
+/* Ensure focus visible for accessibility */
+.card:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
