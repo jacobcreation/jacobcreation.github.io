@@ -1,3 +1,0 @@
-public/vendor/v86/images/alpine/*.iso filter=lfs diff=lfs merge=lfs -text
-public/vendor/v86/images/ubuntu-preinstalled/*.raw filter=lfs diff=lfs merge=lfs -text
-public/vendor/v86/images/ubuntu-preinstalled/seed.iso filter=lfs diff=lfs merge=lfs -text
