@@ -42,29 +42,30 @@ select {
 }
 
 .desktop {
-  width: min(1380px, 100%);
+  width: 100%;
   min-height: 100vh;
-  margin: 0 auto;
-  padding: 24px;
+  margin: 0;
+  padding: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
   align-items: stretch;
 }
 
 .terminal-window,
 .machine-panel {
-  border: 1px solid var(--line);
   background: rgba(24, 31, 32, 0.94);
-  box-shadow: var(--shadow);
 }
 
 .terminal-window {
   min-width: 0;
+  min-height: 100vh;
   display: grid;
-  grid-template-rows: auto minmax(440px, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
-  border-radius: 8px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .titlebar {
@@ -72,9 +73,9 @@ select {
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 16px;
   align-items: center;
-  padding: 14px 16px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--line);
-  background: var(--panel-strong);
+  background: rgba(24, 31, 32, 0.96);
 }
 
 .window-dots {
@@ -151,13 +152,16 @@ dd {
   position: relative;
   min-height: 0;
   overflow: auto;
-  padding: 14px;
+  padding: 0;
+  display: grid;
+  place-items: center;
   background:
     linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%) 0 0 / 100% 4px,
     #050806;
 }
 
 .screen-container canvas {
+  display: block;
   max-width: 100%;
   image-rendering: pixelated;
 }
@@ -166,12 +170,12 @@ dd {
   position: relative;
   z-index: 1;
   display: inline-block;
-  min-width: 720px;
-  min-height: 400px;
+  min-width: max-content;
+  min-height: max-content;
   padding: 0;
   color: #b9ffc8;
   background: #000;
-  font: 16px/1 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font: 18px/1 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   white-space: pre;
 }
 
@@ -210,14 +214,89 @@ dd {
   display: none;
 }
 
+.guide-panel {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 3;
+  width: min(360px, calc(100vw - 36px));
+  max-height: calc(100% - 36px);
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid rgba(108, 182, 255, 0.25);
+  border-radius: 10px;
+  background: rgba(14, 20, 21, 0.9);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+}
+
+.guide-panel.is-collapsed {
+  width: auto;
+  max-height: none;
+  padding-bottom: 12px;
+}
+
+.guide-panel.is-collapsed .guide-summary,
+.guide-panel.is-collapsed .guide-list,
+.guide-panel.is-collapsed .guide-tip {
+  display: none;
+}
+
+.guide-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.guide-eyebrow {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--blue);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.guide-header h2 {
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.guide-toggle {
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border-color: rgba(108, 182, 255, 0.35);
+  background: rgba(19, 28, 29, 0.9);
+  font-size: 0.82rem;
+}
+
+.guide-summary,
+.guide-tip {
+  margin-top: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.guide-list {
+  margin: 14px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.guide-list li {
+  line-height: 1.4;
+}
+
 .control-panel {
   display: grid;
   grid-template-columns: 180px 140px minmax(0, 1fr);
   gap: 12px;
   align-items: end;
-  padding: 14px 16px;
+  padding: 12px 16px;
   border-top: 1px solid var(--line);
-  background: var(--panel-strong);
+  background: rgba(24, 31, 32, 0.96);
 }
 
 .control-group {
@@ -275,11 +354,7 @@ button:disabled {
 }
 
 .machine-panel {
-  border-radius: 8px;
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 26px;
+  display: none;
 }
 
 .machine-panel h2 {
@@ -315,11 +390,11 @@ dd {
 @media (max-width: 920px) {
   .desktop {
     grid-template-columns: 1fr;
-    padding: 12px;
+    padding: 0;
   }
 
   .terminal-window {
-    grid-template-rows: auto minmax(360px, 64vh) auto;
+    grid-template-rows: auto minmax(0, 1fr) auto;
   }
 
   .control-panel {
@@ -347,5 +422,17 @@ dd {
 
   .control-panel {
     grid-template-columns: 1fr;
+  }
+
+  .vga-text {
+    font-size: 14px;
+  }
+
+  .guide-panel {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    max-height: 42vh;
   }
 }
