@@ -242,6 +242,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      flex-wrap: wrap;
     }
 
     .model-select {
@@ -258,10 +259,86 @@
       max-width: 100%;
     }
 
+    .model-search {
+      flex: 1 1 220px;
+      min-width: 180px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.76rem;
+      outline: none;
+      font-family: inherit;
+    }
+
     .model-select:hover {
       background: rgba(255, 255, 255, 0.08);
       border-color: var(--blue);
       color: var(--text);
+    }
+
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .control-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .control-field label {
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(234, 242, 255, 0.7);
+    }
+
+    .control-field select,
+    .control-field input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 0.78rem;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .quick-prompts {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .prompt-chip {
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+
+    .prompt-chip:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.11);
+    }
+
+    .tiny-note {
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.4;
     }
 
     .chat-body {
@@ -399,6 +476,10 @@
       font-weight: 700;
     }
 
+    .composer-attachment.file-mode img {
+      display: none;
+    }
+
     .attachment-note {
       color: var(--muted);
       font-size: 0.72rem;
@@ -477,6 +558,21 @@
         padding-top: 20px;
       }
     }
+
+    @media (max-width: 720px) {
+      .control-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .composer-row {
+        flex-wrap: wrap;
+      }
+
+      .btn-send,
+      .chat-input input {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 
@@ -501,28 +597,34 @@
                 <button class="mem-mini-btn" type="button" id="downloadMemBtn" title="Download Memory">⬇️</button>
                 <button class="mem-mini-btn" type="button" id="uploadMemBtn" title="Upload Memory">⬆️</button>
                 <button class="mem-mini-btn" type="button" id="uploadImgBtn" title="Attach Image">🖼️</button>
+                <button class="mem-mini-btn" type="button" id="uploadFileBtn" title="Attach File">📎</button>
                 <input type="file" id="memFileInput" accept="application/json" style="display:none;">
                 <input type="file" id="imgFileInput" accept="image/*" style="display:none;">
+                <input type="file" id="docFileInput" accept=".txt,.md,.json,.csv,.js,.ts,.html,.css,.xml,.yml,.yaml,.log,text/plain,text/markdown,application/json,text/csv" style="display:none;">
               </div>
             </div>
 
             <!-- Row 2: Model selector -->
             <div class="model-row">
+              <input id="modelSearch" class="model-search" type="text" placeholder="Search models..." autocomplete="off" />
               <select id="modelSelect" class="model-select">
                 <optgroup label="Llama Series (Meta)">
                   <option value="@cf/meta/llama-3.2-3b-instruct" selected>Llama 3.2 3B (Default)</option>
                   <option value="@cf/meta/llama-3.2-1b-instruct">Llama 3.2 1B (Tiny)</option>
                   <option value="@cf/meta/llama-3.3-70b-instruct-fp8-fast">Llama 3.3 70B (Smart)</option>
+                  <option value="@cf/meta/llama-4-scout-17b-16e-instruct">Llama 4 Scout 17B</option>
                 </optgroup>
                 <optgroup label="Groq (Ultra-Fast)">
                   <option value="groq/llama-3.3-70b-versatile">Llama 3.3 70B (Groq)</option>
                   <option value="groq/llama-3.1-8b-instant">Llama 3.1 8B (Groq)</option>
                   <option value="groq/openai/gpt-oss-120b">GPT OSS 120B (Groq)</option>
                   <option value="groq/openai/gpt-oss-20b">GPT OSS 20B (Groq)</option>
+                  <option value="groq/deepseek-r1-distill-llama-70b">DeepSeek R1 Distill 70B (Groq)</option>
                 </optgroup>
                 <optgroup label="Cerebras (Inference Speed King)">
                   <option value="cerebras/gpt-oss-120b">GPT OSS 120B (Cerebras)</option>
                   <option value="cerebras/zai-glm-4.7">GLM 4.7 Preview (Cerebras)</option>
+                  <option value="cerebras/qwen-3-235b-a22b-instruct-2507">Qwen3 235B (Cerebras)</option>
                 </optgroup>
                 <optgroup label="NVIDIA NIM">
                   <option value="nvidia/nvidia/llama-3.1-nemotron-nano-8b-v1">Nemotron Nano 8B (NVIDIA)</option>
@@ -536,23 +638,60 @@
                   <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                   <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
                   <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                  <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
                   <option value="@cf/google/gemma-4-26b-a4b-it">Gemma 4 26B</option>
                 </optgroup>
                 <optgroup label="Mistral / Mixtral">
                   <option value="@cf/mistral/mistral-small-3.1-24b-instruct">Mistral Small 3.1 24B</option>
+                  <option value="@cf/mistralai/mistral-7b-instruct-v0.2-lora">Mistral 7B Instruct</option>
                 </optgroup>
                 <optgroup label="Specialized">
                   <option value="@cf/openai/gpt-oss-20b">GPT OSS 20B (Reasoning)</option>
+                  <option value="@cf/openai/gpt-oss-120b">GPT OSS 120B (Reasoning)</option>
                   <option value="@cf/qwen/qwen3-30b-a3b-fp8">Qwen3 30B A3B</option>
+                  <option value="@cf/qwen/qwen2.5-72b-instruct">Qwen2.5 72B Instruct</option>
                   <option value="@cf/qwen/qwen2.5-coder-32b-instruct">Qwen2.5 Coder 32B</option>
+                  <option value="@cf/deepseek-ai/deepseek-r1-distill-llama-70b">DeepSeek R1 Distill Llama 70B</option>
                   <option value="@cf/deepseek-ai/deepseek-r1-distill-qwen-32b">DeepSeek R1 Distill Qwen 32B</option>
                 </optgroup>
               </select>
             </div>
 
+            <div class="control-grid">
+              <div class="control-field">
+                <label for="presetSelect">Preset</label>
+                <select id="presetSelect">
+                  <option value="default">Balanced Assistant</option>
+                  <option value="coder">Code Helper</option>
+                  <option value="teacher">Explainer</option>
+                  <option value="brainstorm">Brainstormer</option>
+                  <option value="concise">Concise Mode</option>
+                </select>
+              </div>
+              <div class="control-field">
+                <label for="replyLengthSelect">Reply Length</label>
+                <select id="replyLengthSelect">
+                  <option value="medium">Medium</option>
+                  <option value="short">Short</option>
+                  <option value="long">Long</option>
+                </select>
+              </div>
+              <div class="control-field">
+                <label for="memoryNoteInput">Remember</label>
+                <input id="memoryNoteInput" type="text" placeholder="Call me Jacob, I use JS..." />
+              </div>
+            </div>
+
+            <div class="quick-prompts" id="quickPrompts">
+              <button class="prompt-chip" type="button" data-prompt="Summarize the last part of our chat and give me the next best action.">Next Step</button>
+              <button class="prompt-chip" type="button" data-prompt="Review my idea, point out risks, then improve it.">Critique It</button>
+              <button class="prompt-chip" type="button" data-prompt="Explain this simply, then give one practical example.">Explain Simply</button>
+              <button class="prompt-chip" type="button" data-prompt="Turn this into a clean checklist I can follow.">Make Checklist</button>
+            </div>
+
             <!-- Row 3: Note -->
             <div class="tiny-note">
-              ⚠️ I can read your image NOW 👀 but after refresh I won't remember it 🙂
+              Images, text files, saved memory notes, and provider/model choices now stick with the conversation better.
             </div>
           </div>
         </header>
@@ -599,15 +738,49 @@
 
     const imgBtn = document.getElementById("uploadImgBtn");
     const imgFile = document.getElementById("imgFileInput");
+    const fileBtn = document.getElementById("uploadFileBtn");
+    const docFile = document.getElementById("docFileInput");
     const clearBtn = document.getElementById("clearChatBtn");
     const composerAttachment = document.getElementById("composerAttachment");
     const composerAttachmentImg = document.getElementById("composerAttachmentImg");
     const composerAttachmentName = document.getElementById("composerAttachmentName");
     const removeAttachmentBtn = document.getElementById("removeAttachmentBtn");
+    const modelSelect = document.getElementById("modelSelect");
+    const modelSearch = document.getElementById("modelSearch");
+    const presetSelect = document.getElementById("presetSelect");
+    const replyLengthSelect = document.getElementById("replyLengthSelect");
+    const memoryNoteInput = document.getElementById("memoryNoteInput");
+    const quickPrompts = document.getElementById("quickPrompts");
 
-    let currentImage = null;
+    const SETTINGS_KEY = "jc_chatbot_settings_v2";
+    let currentAttachment = null;
+    const allModelOptions = Array.from(modelSelect.querySelectorAll("option")).map((option) => ({
+      value: option.value,
+      label: option.textContent,
+      group: option.parentElement?.label || "Models"
+    }));
 
+    restoreSettings();
     loadHistory();
+
+    function restoreSettings() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+        if (saved.model) modelSelect.value = saved.model;
+        if (saved.preset) presetSelect.value = saved.preset;
+        if (saved.replyLength) replyLengthSelect.value = saved.replyLength;
+      } catch (error) {
+        console.warn("Failed to restore chatbot settings", error);
+      }
+    }
+
+    function saveSettings() {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+        model: modelSelect.value,
+        preset: presetSelect.value,
+        replyLength: replyLengthSelect.value
+      }));
+    }
 
     function getSessionId() {
       let id = localStorage.getItem("jc_session");
@@ -677,22 +850,61 @@
     }
 
     function updateComposerAttachment() {
-      if (!currentImage) {
+      if (!currentAttachment) {
         composerAttachment.classList.remove("active");
+        composerAttachment.classList.remove("file-mode");
         composerAttachmentImg.removeAttribute("src");
         composerAttachmentName.textContent = "";
         return;
       }
 
-      composerAttachmentImg.src = currentImage.dataUrl;
-      composerAttachmentName.textContent = currentImage.name || "Image";
+      if (currentAttachment.kind === "image" && currentAttachment.dataUrl) {
+        composerAttachmentImg.src = currentAttachment.dataUrl;
+        composerAttachment.classList.remove("file-mode");
+      } else {
+        composerAttachmentImg.removeAttribute("src");
+        composerAttachment.classList.add("file-mode");
+      }
+
+      composerAttachmentName.textContent = currentAttachment.name || (currentAttachment.kind === "file" ? "File" : "Image");
       composerAttachment.classList.add("active");
     }
 
     function clearComposerAttachment() {
-      currentImage = null;
+      currentAttachment = null;
       updateComposerAttachment();
       imgFile.value = "";
+      docFile.value = "";
+    }
+
+    function updateModelFilter() {
+      const query = modelSearch.value.trim().toLowerCase();
+      const currentValue = modelSelect.value;
+      if (!query) {
+        Array.from(modelSelect.querySelectorAll("optgroup")).forEach((group) => {
+          group.hidden = false;
+          Array.from(group.children).forEach((option) => {
+            option.hidden = false;
+          });
+        });
+        modelSelect.value = currentValue;
+        return;
+      }
+
+      Array.from(modelSelect.querySelectorAll("optgroup")).forEach((group) => {
+        let anyVisible = false;
+        Array.from(group.children).forEach((option) => {
+          const matches = `${option.textContent} ${option.value}`.toLowerCase().includes(query);
+          option.hidden = !matches;
+          if (matches) anyVisible = true;
+        });
+        group.hidden = !anyVisible;
+      });
+
+      const visibleOption = Array.from(modelSelect.querySelectorAll("option")).find((option) => !option.hidden);
+      if (visibleOption && modelSelect.selectedOptions[0]?.hidden) {
+        modelSelect.value = visibleOption.value;
+      }
     }
 
     async function loadHistory() {
@@ -718,11 +930,12 @@
       e.preventDefault();
       let msg = chatText.value.trim();
 
-      if (!msg && !currentImage) return;
-      if (!msg && currentImage) msg = "Please analyze this image.";
+      if (!msg && !currentAttachment) return;
+      if (!msg && currentAttachment?.kind === "image") msg = "Please analyze this image.";
+      if (!msg && currentAttachment?.kind === "file") msg = `Please analyze this file: ${currentAttachment.name}`;
 
-      const attachedImage = currentImage;
-      addBubble(msg, "user", false, attachedImage);
+      const attachedItem = currentAttachment;
+      addBubble(msg, "user", false, attachedItem?.kind === "image" ? attachedItem : null);
       chatText.value = "";
       clearComposerAttachment();
 
@@ -733,20 +946,31 @@
       chatBody.scrollTop = chatBody.scrollHeight;
 
       try {
-        const modelSelect = document.getElementById("modelSelect");
         const payload = {
             action: "chat",
             site: SITE_NAME,
             sessionId: getSessionId(),
             message: msg,
-            model: modelSelect ? modelSelect.value : "@cf/meta/llama-3.2-3b-instruct"
+            model: modelSelect ? modelSelect.value : "@cf/meta/llama-3.2-3b-instruct",
+            preset: presetSelect.value,
+            replyLength: replyLengthSelect.value,
+            memoryNote: memoryNoteInput.value.trim()
         };
 
-        if (attachedImage) {
-            payload.image = {
-              mimeType: attachedImage.mimeType,
-              data: attachedImage.data
-            };
+        if (attachedItem?.kind === "image") {
+          payload.image = {
+            mimeType: attachedItem.mimeType,
+            data: attachedItem.data
+          };
+        }
+
+        if (attachedItem?.kind === "file") {
+          payload.file = {
+            mimeType: attachedItem.mimeType,
+            data: attachedItem.data,
+            name: attachedItem.name,
+            text: attachedItem.text
+          };
         }
 
         const res = await fetch(ENDPOINT, {
@@ -765,8 +989,14 @@
         } else {
             addBubble("I'm not sure what to say.");
         }
+        if (data.memorySaved) {
+          addBubble(`Saved to memory: ${data.memorySaved}`, "bot");
+        }
+        memoryNoteInput.value = "";
+        saveSettings();
 
       } catch (err) {
+        typingDiv.remove();
         // console.error(err);  // Removed for production
         addBubble("Error: " + err.message + " 🧠", "bot");
       }
@@ -818,7 +1048,19 @@
 
     ulBtn.addEventListener("click", () => { memFile.click(); });
     imgBtn.addEventListener("click", () => { imgFile.click(); });
+    fileBtn.addEventListener("click", () => { docFile.click(); });
     removeAttachmentBtn.addEventListener("click", clearComposerAttachment);
+    modelSearch.addEventListener("input", updateModelFilter);
+    modelSelect.addEventListener("change", saveSettings);
+    presetSelect.addEventListener("change", saveSettings);
+    replyLengthSelect.addEventListener("change", saveSettings);
+
+    quickPrompts.addEventListener("click", (event) => {
+      const chip = event.target.closest(".prompt-chip");
+      if (!chip) return;
+      chatText.value = chip.dataset.prompt || "";
+      chatText.focus();
+    });
 
     imgFile.addEventListener("change", (e) => {
       const file = e.target.files[0];
@@ -828,7 +1070,8 @@
       reader.onload = (event) => {
         const dataUrl = event.target.result;
         const base64String = dataUrl.split(',')[1];
-        currentImage = {
+        currentAttachment = {
+          kind: "image",
           mimeType: file.type,
           data: base64String,
           dataUrl,
@@ -838,6 +1081,26 @@
         chatText.focus();
       };
       reader.readAsDataURL(file);
+    });
+
+    docFile.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = typeof event.target.result === "string" ? event.target.result : "";
+        currentAttachment = {
+          kind: "file",
+          mimeType: file.type || "text/plain",
+          data: btoa(unescape(encodeURIComponent(text))).slice(0, 350000),
+          text: text.slice(0, 12000),
+          name: file.name
+        };
+        updateComposerAttachment();
+        chatText.focus();
+      };
+      reader.readAsText(file);
     });
 
     memFile.addEventListener("change", (e) => {
@@ -856,7 +1119,8 @@
             body: JSON.stringify({
               action: "upload",
               sessionId: getSessionId(),
-              history: jsonContent.history || []
+              history: jsonContent.history || [],
+              facts: jsonContent.facts || {}
             })
           });
 
@@ -875,6 +1139,8 @@
       reader.readAsText(file);
       memFile.value = "";
     });
+
+    updateModelFilter();
 
 
   </script>
