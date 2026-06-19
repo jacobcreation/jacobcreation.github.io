@@ -624,7 +624,6 @@
                 <optgroup label="Cerebras (Inference Speed King)">
                   <option value="cerebras/gpt-oss-120b">GPT OSS 120B (Cerebras)</option>
                   <option value="cerebras/zai-glm-4.7">GLM 4.7 Preview (Cerebras)</option>
-                  <option value="cerebras/qwen-3-235b-a22b-instruct-2507">Qwen3 235B (Cerebras)</option>
                 </optgroup>
                 <optgroup label="NVIDIA NIM">
                   <option value="nvidia/nvidia/llama-3.1-nemotron-nano-8b-v1">Nemotron Nano 8B (NVIDIA)</option>
@@ -642,16 +641,14 @@
                   <option value="@cf/google/gemma-4-26b-a4b-it">Gemma 4 26B</option>
                 </optgroup>
                 <optgroup label="Mistral / Mixtral">
-                  <option value="@cf/mistral/mistral-small-3.1-24b-instruct">Mistral Small 3.1 24B</option>
-                  <option value="@cf/mistralai/mistral-7b-instruct-v0.2-lora">Mistral 7B Instruct</option>
+                  <option value="@cf/mistralai/mistral-small-3.1-24b-instruct">Mistral Small 3.1 24B</option>
+                  <option value="@cf/mistral/mistral-7b-instruct-v0.2-lora">Mistral 7B Instruct</option>
                 </optgroup>
                 <optgroup label="Specialized">
                   <option value="@cf/openai/gpt-oss-20b">GPT OSS 20B (Reasoning)</option>
                   <option value="@cf/openai/gpt-oss-120b">GPT OSS 120B (Reasoning)</option>
                   <option value="@cf/qwen/qwen3-30b-a3b-fp8">Qwen3 30B A3B</option>
-                  <option value="@cf/qwen/qwen2.5-72b-instruct">Qwen2.5 72B Instruct</option>
                   <option value="@cf/qwen/qwen2.5-coder-32b-instruct">Qwen2.5 Coder 32B</option>
-                  <option value="@cf/deepseek-ai/deepseek-r1-distill-llama-70b">DeepSeek R1 Distill Llama 70B</option>
                   <option value="@cf/deepseek-ai/deepseek-r1-distill-qwen-32b">DeepSeek R1 Distill Qwen 32B</option>
                 </optgroup>
               </select>
@@ -753,6 +750,13 @@
     const quickPrompts = document.getElementById("quickPrompts");
 
     const SETTINGS_KEY = "jc_chatbot_settings_v2";
+    const LEGACY_MODEL_REDIRECTS = {
+      "cerebras/qwen-3-235b-a22b-instruct-2507": "cerebras/gpt-oss-120b",
+      "@cf/mistral/mistral-small-3.1-24b-instruct": "@cf/mistralai/mistral-small-3.1-24b-instruct",
+      "@cf/mistralai/mistral-7b-instruct-v0.2-lora": "@cf/mistral/mistral-7b-instruct-v0.2-lora",
+      "@cf/qwen/qwen2.5-72b-instruct": "@cf/qwen/qwen3-30b-a3b-fp8",
+      "@cf/deepseek-ai/deepseek-r1-distill-llama-70b": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    };
     let currentAttachment = null;
     const allModelOptions = Array.from(modelSelect.querySelectorAll("option")).map((option) => ({
       value: option.value,
@@ -760,15 +764,20 @@
       group: option.parentElement?.label || "Models"
     }));
 
+    function normalizeModelSelection(value) {
+      return LEGACY_MODEL_REDIRECTS[value] || value;
+    }
+
     restoreSettings();
     loadHistory();
 
     function restoreSettings() {
       try {
         const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
-        if (saved.model) modelSelect.value = saved.model;
+        if (saved.model) modelSelect.value = normalizeModelSelection(saved.model);
         if (saved.preset) presetSelect.value = saved.preset;
         if (saved.replyLength) replyLengthSelect.value = saved.replyLength;
+        saveSettings();
       } catch (error) {
         console.warn("Failed to restore chatbot settings", error);
       }
@@ -776,7 +785,7 @@
 
     function saveSettings() {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({
-        model: modelSelect.value,
+        model: normalizeModelSelection(modelSelect.value),
         preset: presetSelect.value,
         replyLength: replyLengthSelect.value
       }));
