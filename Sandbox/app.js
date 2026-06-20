@@ -8,7 +8,7 @@ import {
 	updateLineNumbers,
 } from "./editor.js";
 import { runSandbox, LIBRARIES } from "./sandbox.js";
-import { askAI } from "./ai.js";
+import { askAI, initAIControls } from "./ai.js";
 import { TEMPLATES } from "./templates.js";
 
 // ── Globals & Init ────────────────────────────────────────────────────────────
@@ -19,6 +19,7 @@ function init() {
 	initEditor();
 	setupUI();
 	loadFromURLOrStorage();
+	initAIControls();
 
 	window.addEventListener("message", handleConsoleMessage);
 

@@ -90,6 +90,13 @@
             <div id="ai" style="display: none;">
                 <div class="panel-titlebar">
                     <span class="panel-title">🤖 AiCoder</span>
+                    <div class="ai-modelbar">
+                        <label class="ai-model-label" for="aiModelSelect">Model</label>
+                        <select id="aiModelSelect" title="Choose AI model">
+                            <option value="qwen/qwen3-next-80b-a3b-instruct">Qwen3 Next 80B</option>
+                        </select>
+                        <input id="aiModelSearch" type="search" placeholder="Search models..." aria-label="Search AI models" />
+                    </div>
                     <div class="ai-shortcuts">
                         <button class="ai-quick-btn" data-prompt="Explain my code clearly.">Explain</button>
                         <button class="ai-quick-btn" data-prompt="Find and fix any bugs in my code.">Fix</button>
