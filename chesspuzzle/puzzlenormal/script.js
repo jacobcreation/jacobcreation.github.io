@@ -22,11 +22,13 @@ const currentStreakEl = $('#currentStreak');
 const bestStreakEl = $('#bestStreak');
 const timerEl = $('#timer');
 const evalBarEl = $('#evalBar');
+let syncProgressTimer = null;
 
 function updateRatingDisplay() {
     userRatingEl.text(userRating);
     localStorage.setItem('chessPuzzleRating', userRating);
     updateStreakDisplay();
+    scheduleAccountProgressSync();
 }
 
 function updateStreakDisplay() {
@@ -34,6 +36,27 @@ function updateStreakDisplay() {
     bestStreakEl.text(bestStreak);
     localStorage.setItem('chessPuzzleStreak', currentStreak);
     localStorage.setItem('chessPuzzleBestStreak', bestStreak);
+    scheduleAccountProgressSync();
+}
+
+function scheduleAccountProgressSync() {
+    clearTimeout(syncProgressTimer);
+    syncProgressTimer = setTimeout(syncAccountProgress, 350);
+}
+
+async function syncAccountProgress() {
+    const api = window.JacobAccounts;
+    if (!api || !api.isSignedIn || !api.isSignedIn()) return;
+    try {
+        await api.setProgress('chesspuzzle', {
+            rating: userRating,
+            streak: currentStreak,
+            bestStreak: bestStreak,
+            currentTheme: currentThemeFilter
+        });
+    } catch (error) {
+        console.warn('Could not sync chess puzzle progress', error);
+    }
 }
 
 function startTimer() {
@@ -338,3 +361,4 @@ $(document).keydown(function(e) {
 // Init
 updateRatingDisplay();
 loadRandomPuzzle();
+window.addEventListener('jacob-account-change', syncAccountProgress);

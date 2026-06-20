@@ -341,6 +341,91 @@
       line-height: 1.4;
     }
 
+    .cloud-panel {
+      display: none;
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.06);
+      gap: 10px;
+    }
+
+    .cloud-panel.active {
+      display: grid;
+    }
+
+    .cloud-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .cloud-panel-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .cloud-status {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .cloud-chat-list {
+      display: grid;
+      gap: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .cloud-chat-card {
+      display: grid;
+      gap: 6px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(8, 14, 28, 0.4);
+    }
+
+    .cloud-chat-top,
+    .cloud-chat-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .cloud-chat-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .cloud-chat-preview {
+      font-size: 0.74rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .cloud-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
     .chat-body {
       flex: 1;
       overflow-y: auto;
@@ -596,6 +681,8 @@
                 <button class="mem-mini-btn" type="button" id="clearChatBtn" title="Clear Chat">🗑️</button>
                 <button class="mem-mini-btn" type="button" id="downloadMemBtn" title="Download Memory">⬇️</button>
                 <button class="mem-mini-btn" type="button" id="uploadMemBtn" title="Upload Memory">⬆️</button>
+                <button class="mem-mini-btn" type="button" id="newChatBtn" title="New Chat">✨</button>
+                <button class="mem-mini-btn" type="button" id="cloudChatsBtn" title="Cloud Chats">☁️</button>
                 <button class="mem-mini-btn" type="button" id="uploadImgBtn" title="Attach Image">🖼️</button>
                 <button class="mem-mini-btn" type="button" id="uploadFileBtn" title="Attach File">📎</button>
                 <input type="file" id="memFileInput" accept="application/json" style="display:none;">
@@ -699,6 +786,17 @@
             <div class="tiny-note">
               Images, text files, saved memory notes, and provider/model choices now stick with the conversation better.
             </div>
+
+            <div class="cloud-panel" id="cloudChatsPanel">
+              <div class="cloud-panel-head">
+                <div>
+                  <div class="cloud-panel-title">Account Chats</div>
+                  <div class="cloud-status" id="cloudChatsStatus">Sign in to sync chats.</div>
+                </div>
+                <button class="cloud-chip" type="button" id="syncCloudChatBtn">Sync current chat</button>
+              </div>
+              <div class="cloud-chat-list" id="cloudChatsList"></div>
+            </div>
           </div>
         </header>
 
@@ -747,6 +845,12 @@
     const fileBtn = document.getElementById("uploadFileBtn");
     const docFile = document.getElementById("docFileInput");
     const clearBtn = document.getElementById("clearChatBtn");
+    const newChatBtn = document.getElementById("newChatBtn");
+    const cloudChatsBtn = document.getElementById("cloudChatsBtn");
+    const cloudChatsPanel = document.getElementById("cloudChatsPanel");
+    const cloudChatsList = document.getElementById("cloudChatsList");
+    const cloudChatsStatus = document.getElementById("cloudChatsStatus");
+    const syncCloudChatBtn = document.getElementById("syncCloudChatBtn");
     const composerAttachment = document.getElementById("composerAttachment");
     const composerAttachmentImg = document.getElementById("composerAttachmentImg");
     const composerAttachmentName = document.getElementById("composerAttachmentName");
@@ -759,6 +863,7 @@
     const quickPrompts = document.getElementById("quickPrompts");
 
     const SETTINGS_KEY = "jc_chatbot_settings_v2";
+    const CHAT_APP_ID = "chatbot";
     const LEGACY_MODEL_REDIRECTS = {
       "cerebras/qwen-3-235b-a22b-instruct-2507": "cerebras/gpt-oss-120b",
       "@cf/mistral/mistral-small-3.1-24b-instruct": "@cf/mistralai/mistral-small-3.1-24b-instruct",
@@ -809,6 +914,19 @@
       return id;
     }
 
+    function setSessionId(id) {
+      localStorage.setItem("jc_session", id);
+    }
+
+    function getAccountsApi() {
+      return window.JacobAccounts || null;
+    }
+
+    function isAccountSignedIn() {
+      const api = getAccountsApi();
+      return Boolean(api && typeof api.isSignedIn === "function" && api.isSignedIn());
+    }
+
     function renderMarkdown(text) {
       if (window.marked && typeof window.marked.parse === "function") {
         return window.marked.parse(text);
@@ -820,6 +938,15 @@
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
       return escaped.replace(/\n/g, "<br>");
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
 
     function addBubble(text, who = "bot", typing = false, attachment = null) {
@@ -938,10 +1065,170 @@
                 data.history.forEach(m => {
                     addBubble(m.content, m.role === "assistant" ? "bot" : "user", false);
                 });
+            } else {
+                chatBody.innerHTML = "";
+                addBubble("Hi! How can I help today?");
             }
         } catch (e) {
             console.error("Failed to load history:", e);
         }
+    }
+
+    async function getCurrentServerChatSnapshot() {
+      const res = await fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "download", sessionId: getSessionId() })
+      });
+      const data = await res.json().catch(() => ({}));
+      return {
+        history: Array.isArray(data.history) ? data.history : [],
+        facts: data.facts && typeof data.facts === "object" ? data.facts : {}
+      };
+    }
+
+    function deriveChatTitle(history) {
+      const firstUser = history.find((item) => item.role === "user" && item.content);
+      const title = (firstUser ? firstUser.content : "Saved chat").replace(/\s+/g, " ").trim();
+      return title.slice(0, 80) || "Saved chat";
+    }
+
+    function formatCloudDate(value) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "";
+      return date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    }
+
+    function renderCloudChats(chats) {
+      if (!cloudChatsList) return;
+      if (!chats.length) {
+        cloudChatsList.innerHTML = `<div class="cloud-chat-card"><div class="cloud-chat-preview">No saved account chats yet.</div></div>`;
+        return;
+      }
+
+      cloudChatsList.innerHTML = chats.map((chat) => `
+        <div class="cloud-chat-card" data-chat-id="${chat.id}">
+          <div class="cloud-chat-top">
+            <div class="cloud-chat-title">${escapeHtml(chat.title || "Saved chat")}</div>
+            <div class="cloud-status">${escapeHtml(formatCloudDate(chat.updatedAt))}</div>
+          </div>
+          <div class="cloud-chat-preview">${escapeHtml(chat.preview || `${chat.messageCount || 0} saved messages`)}</div>
+          <div class="cloud-chat-actions">
+            <button class="cloud-chip" type="button" data-load-chat="${chat.id}">Load</button>
+            <button class="cloud-chip" type="button" data-delete-chat="${chat.id}">Delete</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function loadCloudChats() {
+      if (!cloudChatsStatus) return;
+      const api = getAccountsApi();
+      if (!api || !isAccountSignedIn()) {
+        cloudChatsStatus.textContent = "Sign in to sync chats.";
+        renderCloudChats([]);
+        return;
+      }
+
+      cloudChatsStatus.textContent = "Loading saved chats...";
+      try {
+        const chats = await api.listChats(CHAT_APP_ID);
+        renderCloudChats(chats);
+        cloudChatsStatus.textContent = chats.length ? "Saved chats in your account." : "No saved account chats yet.";
+      } catch (error) {
+        cloudChatsStatus.textContent = error.message || "Could not load saved chats.";
+        renderCloudChats([]);
+      }
+    }
+
+    async function syncCurrentChatToAccount(showBubble = false) {
+      const api = getAccountsApi();
+      if (!api || !isAccountSignedIn()) {
+        if (showBubble) addBubble("Sign in first to sync chats to your account.", "bot");
+        return;
+      }
+
+      const snapshot = await getCurrentServerChatSnapshot();
+      if (!snapshot.history.length) {
+        if (showBubble) addBubble("This chat is empty, so there is nothing to sync yet.", "bot");
+        return;
+      }
+
+      await api.saveChat(CHAT_APP_ID, getSessionId(), {
+        title: deriveChatTitle(snapshot.history),
+        messages: snapshot.history,
+        meta: {
+          model: modelSelect.value,
+          preset: presetSelect.value,
+          replyLength: replyLengthSelect.value,
+          factCount: Object.keys(snapshot.facts || {}).length
+        }
+      });
+
+      if (showBubble) addBubble("Synced this chat to your account. ☁️", "bot");
+      if (cloudChatsPanel.classList.contains("active")) {
+        loadCloudChats();
+      }
+    }
+
+    async function loadCloudChat(chatId) {
+      const api = getAccountsApi();
+      if (!api || !isAccountSignedIn()) {
+        addBubble("Sign in first to load account chats.", "bot");
+        return;
+      }
+
+      try {
+        const chat = await api.getChat(CHAT_APP_ID, chatId);
+        await fetch(ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "upload",
+            sessionId: chatId,
+            history: Array.isArray(chat.messages) ? chat.messages : [],
+            facts: {}
+          })
+        });
+        setSessionId(chatId);
+        chatBody.innerHTML = "";
+        await loadHistory();
+        cloudChatsStatus.textContent = `Loaded "${chat.title || "Saved chat"}".`;
+      } catch (error) {
+        addBubble(`Could not load account chat: ${error.message}`, "bot");
+      }
+    }
+
+    async function deleteCloudChat(chatId) {
+      const api = getAccountsApi();
+      if (!api || !isAccountSignedIn()) return;
+      try {
+        await api.deleteChat(CHAT_APP_ID, chatId);
+        if (chatId === getSessionId()) {
+          setSessionId(crypto.randomUUID());
+          chatBody.innerHTML = "";
+          addBubble("Hi! How can I help today?");
+        }
+        loadCloudChats();
+      } catch (error) {
+        addBubble(`Could not delete account chat: ${error.message}`, "bot");
+      }
+    }
+
+    async function startNewChat() {
+      try {
+        await syncCurrentChatToAccount(false);
+      } catch (error) {
+        console.warn("Could not sync current chat before starting a new one", error);
+      }
+      setSessionId(crypto.randomUUID());
+      chatBody.innerHTML = "";
+      addBubble("Hi! How can I help today?");
+      clearComposerAttachment();
+      chatText.value = "";
+      if (cloudChatsPanel.classList.contains("active")) {
+        cloudChatsStatus.textContent = "Started a fresh chat. Sync it anytime.";
+      }
     }
 
     chatForm.addEventListener("submit", async (e) => {
@@ -1016,6 +1303,7 @@
         }
         memoryNoteInput.value = "";
         saveSettings();
+        syncCurrentChatToAccount(false).catch(() => {});
 
       } catch (err) {
         typingDiv.remove();
@@ -1034,6 +1322,7 @@
             });
             chatBody.innerHTML = "";
             addBubble("Memory cleared! Starting fresh. ✨");
+            syncCurrentChatToAccount(false).catch(() => {});
         } catch (e) {
             console.error(e);
             addBubble("Failed to clear chat history from server.");
@@ -1071,6 +1360,16 @@
     ulBtn.addEventListener("click", () => { memFile.click(); });
     imgBtn.addEventListener("click", () => { imgFile.click(); });
     fileBtn.addEventListener("click", () => { docFile.click(); });
+    newChatBtn.addEventListener("click", () => { startNewChat(); });
+    cloudChatsBtn.addEventListener("click", () => {
+      cloudChatsPanel.classList.toggle("active");
+      if (cloudChatsPanel.classList.contains("active")) {
+        loadCloudChats();
+      }
+    });
+    syncCloudChatBtn.addEventListener("click", () => {
+      syncCurrentChatToAccount(true).catch((error) => addBubble(`Cloud sync failed: ${error.message}`, "bot"));
+    });
     removeAttachmentBtn.addEventListener("click", clearComposerAttachment);
     modelSearch.addEventListener("input", updateModelFilter);
     modelSelect.addEventListener("change", saveSettings);
@@ -1148,6 +1447,7 @@
 
           if (res.ok) {
             addBubble("Memory restored successfully! 🧠✨");
+            syncCurrentChatToAccount(false).catch(() => {});
           } else {
             addBubble("Server rejected the memory.");
           }
@@ -1163,6 +1463,29 @@
     });
 
     updateModelFilter();
+
+    cloudChatsList.addEventListener("click", (event) => {
+      const loadButton = event.target.closest("[data-load-chat]");
+      if (loadButton) {
+        loadCloudChat(loadButton.dataset.loadChat);
+        return;
+      }
+      const deleteButton = event.target.closest("[data-delete-chat]");
+      if (deleteButton) {
+        if (confirm("Delete this saved account chat?")) {
+          deleteCloudChat(deleteButton.dataset.deleteChat);
+        }
+      }
+    });
+
+    window.addEventListener("jacob-account-change", () => {
+      if (isAccountSignedIn()) {
+        syncCurrentChatToAccount(false).catch(() => {});
+      }
+      if (cloudChatsPanel.classList.contains("active")) {
+        loadCloudChats();
+      }
+    });
 
 
   </script>

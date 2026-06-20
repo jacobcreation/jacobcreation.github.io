@@ -176,17 +176,48 @@
 
     <script>(function(){const v=Date.now();document.write('<script src="global-header.js?v='+v+'"><\/script>');})();</script>
     <script>
-        const rating = localStorage.getItem('chessPuzzleRating') || 1500;
-        const streak = localStorage.getItem('chessPuzzleStreak') || 0;
-        const bestStreak = localStorage.getItem('chessPuzzleBestStreak') || 0;
-        const stormPB = localStorage.getItem('chessStormHighScore') || 0;
-        const stormPlayed = localStorage.getItem('chessStormTotalPlayedCount') || 0;
+        function renderStats(stats) {
+            document.getElementById('stats-summary').innerHTML = `
+                <div class="stat-badge">Elo Rating<strong>${stats.rating}</strong></div>
+                <div class="stat-badge">Streak<strong>${stats.streak}</strong>Best: ${stats.bestStreak}</div>
+                <div class="stat-badge">Storm PB<strong>${stats.stormPB}</strong>Runs: ${stats.stormPlayed}</div>
+            `;
+        }
 
-        document.getElementById('stats-summary').innerHTML = `
-            <div class="stat-badge">Elo Rating<strong>${rating}</strong></div>
-            <div class="stat-badge">Streak<strong>${streak}</strong>Best: ${bestStreak}</div>
-            <div class="stat-badge">Storm PB<strong>${stormPB}</strong>Runs: ${stormPlayed}</div>
-        `;
+        function localStats() {
+            return {
+                rating: Number(localStorage.getItem('chessPuzzleRating') || 1500),
+                streak: Number(localStorage.getItem('chessPuzzleStreak') || 0),
+                bestStreak: Number(localStorage.getItem('chessPuzzleBestStreak') || 0),
+                stormPB: Number(localStorage.getItem('chessStormHighScore') || 0),
+                stormPlayed: Number(localStorage.getItem('chessStormTotalPlayedCount') || 0),
+            };
+        }
+
+        async function loadAccountStats() {
+            const base = localStats();
+            renderStats(base);
+            const api = window.JacobAccounts;
+            if (!api || !api.isSignedIn || !api.isSignedIn()) return;
+
+            try {
+                const remote = await api.getProgress('chesspuzzle');
+                if (!remote) return;
+                renderStats({
+                    rating: Number(remote.rating || base.rating || 1500),
+                    streak: Number(remote.streak || base.streak || 0),
+                    bestStreak: Math.max(Number(remote.bestStreak || 0), Number(base.bestStreak || 0)),
+                    stormPB: Math.max(Number(remote.stormPB || 0), Number(base.stormPB || 0)),
+                    stormPlayed: Math.max(Number(remote.stormPlayed || 0), Number(base.stormPlayed || 0)),
+                });
+            } catch (error) {
+                console.warn('Could not load account chess progress', error);
+            }
+        }
+
+        renderStats(localStats());
+        window.addEventListener('jacob-account-change', loadAccountStats);
+        setTimeout(loadAccountStats, 400);
     </script>
     <script src="/accounts/account-widget.js" defer data-account-api="https://accounts-system.b4rjxr9lk.workers.dev"></script>
 </body>

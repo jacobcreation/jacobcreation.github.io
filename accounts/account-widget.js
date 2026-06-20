@@ -8,6 +8,8 @@
 	const state = {
 		token: localStorage.getItem(tokenKey) || '',
 		user: null,
+		stats: null,
+		session: null,
 		ready: false,
 		open: false,
 		mode: 'login',
@@ -62,6 +64,18 @@
 		async logout() {
 			return logout();
 		},
+		async logoutEverywhere() {
+			return logoutEverywhere();
+		},
+		async updateProfile(details) {
+			return updateProfile(details);
+		},
+		async changePassword(details) {
+			return changePassword(details);
+		},
+		async deleteAccount(password) {
+			return deleteAccount(password);
+		},
 		currentGameId() {
 			return currentGameId();
 		},
@@ -92,6 +106,54 @@
 			const gameId = game ? cleanGameId(game) : '';
 			const suffix = gameId ? `?game=${encodeURIComponent(gameId)}` : '';
 			return request(`/api/scores/me${suffix}`, { method: 'GET', auth: true });
+		},
+		async getProgress(appId) {
+			if (!state.user) await accountsApi.requireSignIn();
+			const app = cleanGameId(appId);
+			if (!app) throw new Error('A valid app id is required.');
+			const data = await request(`/api/progress/${encodeURIComponent(app)}`, { method: 'GET', auth: true });
+			return data.progress || null;
+		},
+		async setProgress(appId, progress) {
+			if (!state.user) await accountsApi.requireSignIn();
+			const app = cleanGameId(appId);
+			if (!app) throw new Error('A valid app id is required.');
+			const data = await request(`/api/progress/${encodeURIComponent(app)}`, { method: 'PUT', auth: true, body: progress || {} });
+			return data.progress || null;
+		},
+		async listChats(appId) {
+			if (!state.user) await accountsApi.requireSignIn();
+			const app = cleanGameId(appId);
+			if (!app) throw new Error('A valid app id is required.');
+			const data = await request(`/api/chats/${encodeURIComponent(app)}`, { method: 'GET', auth: true });
+			return data.chats || [];
+		},
+		async getChat(appId, chatId) {
+			if (!state.user) await accountsApi.requireSignIn();
+			const app = cleanGameId(appId);
+			const chat = cleanChatId(chatId);
+			if (!app || !chat) throw new Error('A valid app id and chat id are required.');
+			const data = await request(`/api/chats/${encodeURIComponent(app)}/${encodeURIComponent(chat)}`, { method: 'GET', auth: true });
+			return data.chat || null;
+		},
+		async saveChat(appId, chatId, payload) {
+			if (!state.user) await accountsApi.requireSignIn();
+			const app = cleanGameId(appId);
+			const chat = cleanChatId(chatId);
+			if (!app || !chat) throw new Error('A valid app id and chat id are required.');
+			const data = await request(`/api/chats/${encodeURIComponent(app)}/${encodeURIComponent(chat)}`, {
+				method: 'PUT',
+				auth: true,
+				body: payload || {},
+			});
+			return data.chat || null;
+		},
+		async deleteChat(appId, chatId) {
+			if (!state.user) await accountsApi.requireSignIn();
+			const app = cleanGameId(appId);
+			const chat = cleanChatId(chatId);
+			if (!app || !chat) throw new Error('A valid app id and chat id are required.');
+			return request(`/api/chats/${encodeURIComponent(app)}/${encodeURIComponent(chat)}`, { method: 'DELETE', auth: true });
 		},
 		requireSignIn() {
 			if (state.user) return Promise.resolve(state.user);
@@ -135,6 +197,8 @@
 		try {
 			const data = await request('/api/me', { method: 'GET', auth: true });
 			state.user = data.user;
+			state.stats = data.stats || null;
+			state.session = data.session || null;
 			state.message = '';
 			notifyChange();
 			flushPendingScores();
@@ -142,6 +206,8 @@
 		} catch (error) {
 			state.token = '';
 			state.user = null;
+			state.stats = null;
+			state.session = null;
 			localStorage.removeItem(tokenKey);
 			state.message = error.message || 'Session expired.';
 			notifyChange();
@@ -196,10 +262,27 @@
 		} finally {
 			state.token = '';
 			state.user = null;
+			state.stats = null;
+			state.session = null;
 			state.busy = false;
 			localStorage.removeItem(tokenKey);
 			notifyChange();
 			render();
+		}
+	}
+
+	async function logoutEverywhere() {
+		state.busy = true;
+		state.message = '';
+		render();
+		try {
+			await request('/api/logout-all', { method: 'POST', auth: true });
+			state.message = 'Signed out on every device.';
+		} catch (error) {
+			state.message = error.message || 'Could not sign out everywhere.';
+			throw error;
+		} finally {
+			await logout();
 		}
 	}
 
@@ -222,10 +305,58 @@
 	function acceptSession(data) {
 		state.token = data.token;
 		state.user = data.user;
+		state.stats = data.stats || state.stats || null;
+		state.session = data.session || null;
 		state.message = '';
 		localStorage.setItem(tokenKey, state.token);
 		notifyChange();
 		flushPendingScores();
+	}
+
+	async function updateProfile(values) {
+		return runAuth(async () => {
+			const data = await request('/api/profile', {
+				method: 'PATCH',
+				auth: true,
+				body: {
+					displayName: values.displayName,
+					email: values.email,
+				},
+			});
+			state.user = data.user;
+			state.stats = data.stats || state.stats;
+			state.message = 'Profile updated.';
+			notifyChange();
+			return state.user;
+		});
+	}
+
+	async function changePassword(values) {
+		return runAuth(async () => {
+			await request('/api/password', {
+				method: 'POST',
+				auth: true,
+				body: {
+					currentPassword: values.currentPassword,
+					newPassword: values.newPassword,
+				},
+			});
+			state.message = 'Password changed. Other devices were signed out.';
+			return true;
+		});
+	}
+
+	async function deleteAccount(password) {
+		return runAuth(async () => {
+			await request('/api/account', {
+				method: 'DELETE',
+				auth: true,
+				body: { password },
+			});
+			await logout();
+			state.message = 'Account deleted.';
+			return true;
+		});
 	}
 
 	async function request(path, options = {}) {
@@ -292,8 +423,48 @@
 		const logoutButton = app.querySelector('[data-logout]');
 		if (logoutButton) logoutButton.addEventListener('click', logout);
 
+		const logoutEverywhereButton = app.querySelector('[data-logout-all]');
+		if (logoutEverywhereButton) logoutEverywhereButton.addEventListener('click', () => logoutEverywhere().catch(() => {}));
+
 		const refreshScoresButton = app.querySelector('[data-refresh-scores]');
 		if (refreshScoresButton) refreshScoresButton.addEventListener('click', () => loadPanelScores(true));
+
+		const profileForm = app.querySelector('[data-profile-form]');
+		if (profileForm) {
+			profileForm.addEventListener('submit', (event) => {
+				event.preventDefault();
+				const data = Object.fromEntries(new FormData(event.currentTarget));
+				updateProfile(data).catch(() => {});
+			});
+		}
+
+		const passwordForm = app.querySelector('[data-password-form]');
+		if (passwordForm) {
+			passwordForm.addEventListener('submit', (event) => {
+				event.preventDefault();
+				const data = Object.fromEntries(new FormData(event.currentTarget));
+				if (data.newPassword !== data.confirmPassword) {
+					state.message = 'New passwords do not match.';
+					render();
+					return;
+				}
+				changePassword(data)
+					.then(() => {
+						event.currentTarget.reset();
+						render();
+					})
+					.catch(() => {});
+			});
+		}
+
+		const deleteButton = app.querySelector('[data-delete-account]');
+		if (deleteButton) {
+			deleteButton.addEventListener('click', async () => {
+				const password = window.prompt('Enter your password to delete this account.');
+				if (!password) return;
+				deleteAccount(password).catch(() => {});
+			});
+		}
 
 		if (state.open && state.user) loadPanelScores();
 	}
@@ -320,8 +491,41 @@
 						<span>@${escapeHtml(state.user.username)}</span>
 						<span>${escapeHtml(state.user.email)}</span>
 					</div>
+					${accountStatsMarkup()}
 					${scorePanelMarkup()}
+					<form class="stack-form" data-profile-form>
+						<p class="eyebrow">Profile</p>
+						<label>
+							<span>Display name</span>
+							<input name="displayName" maxlength="40" value="${escapeAttribute(state.user.displayName || '')}" required>
+						</label>
+						<label>
+							<span>Email</span>
+							<input name="email" type="email" value="${escapeAttribute(state.user.email || '')}" required>
+						</label>
+						<button class="primary secondary" type="submit" ${state.busy ? 'disabled' : ''}>Save profile</button>
+					</form>
+					<form class="stack-form" data-password-form>
+						<p class="eyebrow">Security</p>
+						<label>
+							<span>Current password</span>
+							<input name="currentPassword" type="password" autocomplete="current-password" required>
+						</label>
+						<label>
+							<span>New password</span>
+							<input name="newPassword" type="password" autocomplete="new-password" minlength="8" required>
+						</label>
+						<label>
+							<span>Confirm new password</span>
+							<input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required>
+						</label>
+						<button class="primary secondary" type="submit" ${state.busy ? 'disabled' : ''}>Change password</button>
+					</form>
 					${state.message ? `<p class="message">${escapeHtml(state.message)}</p>` : ''}
+					<div class="action-grid">
+						<button class="mini-button" type="button" data-logout-all ${state.busy ? 'disabled' : ''}>Sign out everywhere</button>
+						<button class="mini-button danger-button" type="button" data-delete-account ${state.busy ? 'disabled' : ''}>Delete account</button>
+					</div>
 					<button class="primary danger" type="button" data-logout ${state.busy ? 'disabled' : ''}>Sign out</button>
 				</section>
 			`;
@@ -449,6 +653,28 @@
 		`;
 	}
 
+	function accountStatsMarkup() {
+		const stats = state.stats || {};
+		const sessionExpiry = state.session && state.session.expiresAt ? formatShortDate(state.session.expiresAt) : 'Unknown';
+		return `
+			<div class="stats-box">
+				<div class="scores-head">
+					<div>
+						<p class="eyebrow">Account</p>
+						<h3>Progress</h3>
+					</div>
+					<span class="session-chip">Session until ${escapeHtml(sessionExpiry)}</span>
+				</div>
+				<div class="stats-grid">
+					<div class="stat-card"><span>Games tracked</span><strong>${formatCount(stats.gamesTracked)}</strong></div>
+					<div class="stat-card"><span>Score submits</span><strong>${formatCount(stats.submissionCount)}</strong></div>
+					<div class="stat-card"><span>New bests</span><strong>${formatCount(stats.improvementCount)}</strong></div>
+					<div class="stat-card"><span>Last game</span><strong>${escapeHtml(stats.lastGame || '-')}</strong></div>
+				</div>
+			</div>
+		`;
+	}
+
 	function normalizeScorePayload(game, score, details = {}) {
 		if (typeof game === 'object' && game) {
 			details = game;
@@ -487,8 +713,27 @@
 			.slice(0, 50);
 	}
 
+	function cleanChatId(value) {
+		return String(value || '')
+			.trim()
+			.toLowerCase()
+			.replace(/[^a-z0-9_-]+/g, '-')
+			.replace(/^-+|-+$/g, '')
+			.slice(0, 80);
+	}
+
 	function formatScore(score) {
 		return Number(score).toLocaleString(undefined, { maximumFractionDigits: 3 });
+	}
+
+	function formatCount(value) {
+		return Number(value || 0).toLocaleString();
+	}
+
+	function formatShortDate(value) {
+		const parsed = new Date(value);
+		if (Number.isNaN(parsed.getTime())) return 'Unknown';
+		return parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 	}
 
 	function installLocalScoreBridge() {
@@ -837,6 +1082,12 @@
 				background: #ffb4a6;
 			}
 
+			.primary.secondary {
+				background: rgba(248, 251, 255, 0.1);
+				color: #f8fbff;
+				border: 1px solid rgba(255, 255, 255, 0.14);
+			}
+
 			.primary:disabled {
 				cursor: wait;
 				opacity: 0.68;
@@ -871,6 +1122,48 @@
 				border: 1px solid rgba(255, 255, 255, 0.12);
 				border-radius: 8px;
 				background: rgba(255, 255, 255, 0.05);
+			}
+
+			.stats-box,
+			.stack-form {
+				display: grid;
+				gap: 10px;
+				margin-bottom: 14px;
+				padding: 12px;
+				border: 1px solid rgba(255, 255, 255, 0.12);
+				border-radius: 8px;
+				background: rgba(255, 255, 255, 0.05);
+			}
+
+			.stats-grid {
+				display: grid;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				gap: 8px;
+			}
+
+			.stat-card {
+				display: grid;
+				gap: 4px;
+				padding: 10px;
+				border-radius: 7px;
+				background: rgba(4, 10, 20, 0.36);
+				color: #c7d4e7;
+				font-size: 12px;
+			}
+
+			.stat-card strong {
+				color: #ffffff;
+				font-size: 15px;
+			}
+
+			.session-chip {
+				align-self: start;
+				padding: 6px 8px;
+				border-radius: 999px;
+				background: rgba(110, 231, 183, 0.12);
+				color: #dffdf2;
+				font-size: 11px;
+				font-weight: 800;
 			}
 
 			.scores-head,
@@ -909,6 +1202,18 @@
 			.mini-button:disabled {
 				opacity: 0.6;
 				cursor: wait;
+			}
+
+			.action-grid {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 8px;
+				margin-bottom: 12px;
+			}
+
+			.danger-button {
+				color: #ffd6ce;
+				border-color: rgba(255, 180, 166, 0.26);
 			}
 
 			.my-score {
@@ -958,5 +1263,9 @@
 			.replace(/>/g, '&gt;')
 			.replace(/"/g, '&quot;')
 			.replace(/'/g, '&#039;');
+	}
+
+	function escapeAttribute(value) {
+		return escapeHtml(value).replace(/`/g, '&#096;');
 	}
 })();

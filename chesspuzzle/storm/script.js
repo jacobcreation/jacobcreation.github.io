@@ -249,6 +249,7 @@ const muteBtn = $('#muteBtn');
 
 // Local storage keys
 const PB_KEY = 'chessStormHighScore';
+let syncStormProgressTimer = null;
 const TOTAL_PLAYED_KEY = 'chessStormTotalPlayedCount';
 
 // Initialize Game
@@ -858,6 +859,7 @@ function endStormRun() {
     // Increment global games played
     const globalCount = parseInt(localStorage.getItem(TOTAL_PLAYED_KEY)) || 0;
     localStorage.setItem(TOTAL_PLAYED_KEY, globalCount + 1);
+    scheduleStormProgressSync();
     
     // Update Lobby displays
     loadLobbyStats();
@@ -889,6 +891,26 @@ function endStormRun() {
     
     // Display results screen overlay
     gameOverOverlay.removeClass('hidden');
+}
+
+function scheduleStormProgressSync() {
+    clearTimeout(syncStormProgressTimer);
+    syncStormProgressTimer = setTimeout(syncStormProgress, 350);
+}
+
+async function syncStormProgress() {
+    const api = window.JacobAccounts;
+    if (!api || !api.isSignedIn || !api.isSignedIn()) return;
+    try {
+        await api.setProgress('chesspuzzle', {
+            stormPB: Number(localStorage.getItem(PB_KEY) || 0),
+            stormPlayed: Number(localStorage.getItem(TOTAL_PLAYED_KEY) || 0),
+            stormBestStreak: bestStreak,
+            stormLastScore: score
+        });
+    } catch (error) {
+        console.warn('Could not sync puzzle storm progress', error);
+    }
 }
 
 function resetAndStartNewStorm() {
@@ -1110,3 +1132,6 @@ puzzleSolved = function() {
 $(window).resize(() => {
     if (board) board.resize();
 });
+
+window.addEventListener('jacob-account-change', syncStormProgress);
+setTimeout(syncStormProgress, 600);
