@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Nemotron OCR — AI-Powered Text Extraction</title>
-<meta name="description" content="Extract text from any image instantly using NVIDIA's Nemotron OCR AI model." />
+<title>PaddleOCR — AI-Powered Text Extraction</title>
+<meta name="description" content="Extract text from any image instantly using Baidu PaddleOCR." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="/fonts/fonts.css" rel="stylesheet">
 <style>
@@ -347,8 +347,8 @@
 
   <header>
     <div class="badge">NVIDIA NIM</div>
-    <h1>Nemotron OCR</h1>
-    <p class="subtitle">AI-powered text extraction from any image — powered by NVIDIA's Nemotron OCR v1 vision model.</p>
+    <h1>PaddleOCR</h1>
+    <p class="subtitle">AI-powered text extraction from any image — powered by Baidu PaddleOCR through NVIDIA NIM.</p>
   </header>
 
 
@@ -370,7 +370,10 @@
     </div>
     <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" />
 
-
+    <div class="prompt-row">
+      <label class="field-label" for="promptInput">OCR Prompt</label>
+      <textarea id="promptInput" spellcheck="false">Extract all visible text from this image in any language or script. Preserve the original language, characters, line breaks, spacing, and reading order as much as possible. Do not translate, summarize, or explain. Return only the extracted text.</textarea>
+    </div>
 
     <div class="run-row">
       <button class="btn btn-primary" id="runBtn" disabled>
@@ -409,6 +412,7 @@
   const clearBtn = document.getElementById('clearBtn');
 
   const runBtn = document.getElementById('runBtn');
+  const promptInput = document.getElementById('promptInput');
   const status = document.getElementById('status');
   const resultCard = document.getElementById('resultCard');
   const resultText = document.getElementById('resultText');
@@ -484,7 +488,10 @@
       const res = await fetch(`${workerUrl}/ocr`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: imageDataUrl }),
+        body: JSON.stringify({
+          image: imageDataUrl,
+          prompt: promptInput.value.trim(),
+        }),
       });
 
       const data = await res.json();
