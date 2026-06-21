@@ -529,4 +529,23 @@ describe('accounts worker', () => {
 		);
 		expect(missing.status).toBe(404);
 	});
+
+	it('advertises PUT in CORS preflight headers for chat saves', async () => {
+		const response = await worker.fetch(
+			new Request('http://example.com/api/chats/chatbot/session-one', {
+				method: 'OPTIONS',
+				headers: {
+					origin: 'https://jacobcreation.github.io',
+					'access-control-request-method': 'PUT',
+					'access-control-request-headers': 'content-type,authorization',
+				},
+			}),
+			env,
+			createExecutionContext(),
+		);
+
+		expect(response.status).toBe(204);
+		expect(response.headers.get('access-control-allow-methods')).toContain('PUT');
+		expect(response.headers.get('access-control-allow-origin')).toBe('https://jacobcreation.github.io');
+	});
 });
