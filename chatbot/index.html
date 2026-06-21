@@ -784,14 +784,14 @@
 
             <!-- Row 3: Note -->
             <div class="tiny-note">
-              Images, text files, saved memory notes, and provider/model choices now stick with the conversation better.
+              Images, text files, saved memory notes, and provider/model choices stick with the conversation better. To save chats to your account, make an account, then open the ☁️ chats menu.
             </div>
 
             <div class="cloud-panel" id="cloudChatsPanel">
               <div class="cloud-panel-head">
                 <div>
                   <div class="cloud-panel-title">Account Chats</div>
-                  <div class="cloud-status" id="cloudChatsStatus">Sign in to sync chats.</div>
+                  <div class="cloud-status" id="cloudChatsStatus">Make an account or sign in to save chats here.</div>
                 </div>
                 <button class="cloud-chip" type="button" id="syncCloudChatBtn">Sync current chat</button>
               </div>
@@ -1125,7 +1125,7 @@
       if (!cloudChatsStatus) return;
       const api = getAccountsApi();
       if (!api || !isAccountSignedIn()) {
-        cloudChatsStatus.textContent = "Sign in to sync chats.";
+        cloudChatsStatus.textContent = "Make an account or sign in to save chats here.";
         renderCloudChats([]);
         return;
       }
