@@ -737,7 +737,7 @@
 	}
 
 	function installLocalScoreBridge() {
-		if (scoreBridgeInstalled || !window.localStorage) return;
+		if (scoreBridgeInstalled || !window.localStorage || !autoScoreEnabled()) return;
 		scoreBridgeInstalled = true;
 
 		try {
@@ -804,7 +804,17 @@
 		const text = String(key || '');
 		if (!text || text === tokenKey || text === pendingScoresKey) return false;
 		if (/(sound|theme|config|skin|coin|completed|muted|token|session|account|state|save)/i.test(text)) return false;
-		return /(high.?score|best|personal.?best|\bpb\b|_scores$|-scores$|scores$)/i.test(text);
+		return /(high.?score|best.?score|personal.?best|\bpb\b|_scores$|-scores$)/i.test(text);
+	}
+
+	function autoScoreEnabled() {
+		const bodyFlag = document.body && document.body.dataset ? document.body.dataset.accountAutoscore : '';
+		const scriptFlag = script && script.dataset ? script.dataset.accountAutoscore : '';
+		return isTrueLike(bodyFlag) || isTrueLike(scriptFlag) || window.JacobAccountsAutoScore === true;
+	}
+
+	function isTrueLike(value) {
+		return /^(1|true|yes|on)$/i.test(String(value || '').trim());
 	}
 
 	function extractBestScore(value) {
