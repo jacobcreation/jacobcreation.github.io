@@ -18,6 +18,7 @@
 		scoreBusy: false,
 		scoreLoaded: false,
 		scoreGame: '',
+		scoreGameName: '',
 		leaderboard: [],
 		myScore: null,
 	};
@@ -598,11 +599,13 @@
 
 	async function loadPanelScores(force = false) {
 		const game = currentGameId();
+		const gameName = currentGameName();
 		if (state.scoreBusy) return;
 		if (!force && state.scoreLoaded && state.scoreGame === game) return;
 
 		state.scoreBusy = true;
 		state.scoreGame = game;
+		state.scoreGameName = gameName;
 		try {
 			const [leaderboard, mine] = await Promise.all([
 				accountsApi.getLeaderboard(game, { limit: 3 }),
@@ -622,6 +625,7 @@
 
 	function scorePanelMarkup() {
 		const game = state.scoreGame || currentGameId();
+		const gameName = state.scoreGameName || currentGameName() || game;
 		const rows = state.leaderboard.length
 			? state.leaderboard
 					.map(
@@ -640,7 +644,7 @@
 				<div class="scores-head">
 					<div>
 						<p class="eyebrow">Scores</p>
-						<h3>${escapeHtml(game)}</h3>
+						<h3>${escapeHtml(gameName)}</h3>
 					</div>
 					<button class="mini-button" type="button" data-refresh-scores ${state.scoreBusy ? 'disabled' : ''}>Refresh</button>
 				</div>
@@ -656,6 +660,7 @@
 	function accountStatsMarkup() {
 		const stats = state.stats || {};
 		const sessionExpiry = state.session && state.session.expiresAt ? formatShortDate(state.session.expiresAt) : 'Unknown';
+		const lastGameName = stats.lastGameName || formatGameNameFromId(stats.lastGame) || '-';
 		return `
 			<div class="stats-box">
 				<div class="scores-head">
@@ -669,7 +674,7 @@
 					<div class="stat-card"><span>Games tracked</span><strong>${formatCount(stats.gamesTracked)}</strong></div>
 					<div class="stat-card"><span>Score submits</span><strong>${formatCount(stats.submissionCount)}</strong></div>
 					<div class="stat-card"><span>New bests</span><strong>${formatCount(stats.improvementCount)}</strong></div>
-					<div class="stat-card"><span>Last game</span><strong>${escapeHtml(stats.lastGame || '-')}</strong></div>
+					<div class="stat-card"><span>Last game</span><strong>${escapeHtml(lastGameName)}</strong></div>
 				</div>
 			</div>
 		`;
@@ -684,12 +689,14 @@
 		const gameId = cleanGameId(game || currentGameId());
 		const numericScore = Number(score);
 		if (!gameId || !Number.isFinite(numericScore)) return null;
+		const gameName = cleanGameName(details.gameName || currentGameName());
 		return {
 			game: gameId,
+			gameName,
 			score: numericScore,
 			label: details.label || '',
 			mode: details.mode || '',
-			meta: details.meta || {},
+			meta: { ...(details.meta || {}), gameName },
 		};
 	}
 
@@ -704,6 +711,18 @@
 		return cleanGameId(parts[0]);
 	}
 
+	function currentGameName() {
+		const bodyExplicit = document.body && document.body.dataset ? document.body.dataset.accountGameName : '';
+		if (bodyExplicit) return cleanGameName(bodyExplicit);
+		const scriptExplicit = script && script.dataset ? script.dataset.accountGameName : '';
+		if (scriptExplicit) return cleanGameName(scriptExplicit);
+		const heading = document.querySelector('main h1, h1, .logo, .logo-text, .brand h1, .portal-header h1, .game-header h1');
+		if (heading && heading.textContent) return cleanGameName(heading.textContent);
+		const title = String(document.title || '').replace(/\s*[-|]\s*JacobCreation\s*$/i, '').trim();
+		if (title) return cleanGameName(title);
+		return formatGameNameFromId(currentGameId());
+	}
+
 	function cleanGameId(value) {
 		return String(value || '')
 			.trim()
@@ -711,6 +730,24 @@
 			.replace(/[^a-z0-9_-]+/g, '-')
 			.replace(/^-+|-+$/g, '')
 			.slice(0, 50);
+	}
+
+	function cleanGameName(value) {
+		return String(value || '')
+			.replace(/\s+/g, ' ')
+			.trim()
+			.slice(0, 80);
+	}
+
+	function formatGameNameFromId(value) {
+		const text = String(value || '')
+			.replace(/^mg-/, 'MG ')
+			.replace(/^chesspuzzle-/, 'Chess Puzzle ')
+			.replace(/^riddles-/, 'Riddles ')
+			.replace(/[-_]+/g, ' ')
+			.trim();
+		if (!text) return '';
+		return text.replace(/\b\w/g, (char) => char.toUpperCase());
 	}
 
 	function cleanChatId(value) {

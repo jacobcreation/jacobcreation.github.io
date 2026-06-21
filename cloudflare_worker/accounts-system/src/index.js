@@ -271,6 +271,7 @@ async function login(request, storage) {
 async function saveScore(request, storage, session) {
 	const body = await readJson(request);
 	const game = normalizeGameId(body.game);
+	const gameName = cleanString(body.gameName, 80);
 	const score = normalizeScore(body.score);
 	const label = cleanString(body.label, 80);
 	const mode = cleanString(body.mode, 40);
@@ -306,7 +307,7 @@ async function saveScore(request, storage, session) {
 		await updateUserScores(storage, session.record.id, entry);
 		await updateLeaderboard(storage, game, entry);
 	}
-	await updateAccountStats(storage, session.record.id, { game, score, improved });
+	await updateAccountStats(storage, session.record.id, { game, gameName, score, improved });
 
 	const leaderboard = await getLeaderboard(storage, game, 10);
 	return json(request, {
@@ -509,6 +510,7 @@ async function getAccountStats(storage, userId) {
 		submissionCount: Number(stats.submissionCount) || 0,
 		improvementCount: Number(stats.improvementCount) || 0,
 		lastGame: stats.lastGame || '',
+		lastGameName: stats.lastGameName || '',
 		lastScore: Number.isFinite(stats.lastScore) ? stats.lastScore : null,
 		lastPlayedAt: stats.lastPlayedAt || null,
 	};
@@ -521,6 +523,7 @@ async function updateAccountStats(storage, userId, details) {
 		stats.improvementCount = (Number(stats.improvementCount) || 0) + 1;
 	}
 	stats.lastGame = details.game;
+	stats.lastGameName = cleanString(details.gameName, 80);
 	stats.lastScore = details.score;
 	stats.lastPlayedAt = new Date().toISOString();
 	const userScores = (await storage.get(userScoresKey(userId))) || {};
