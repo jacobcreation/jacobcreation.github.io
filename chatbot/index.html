@@ -1289,6 +1289,9 @@
         if (!res.ok) throw new Error(data.error || "Network response was not ok");
 
         typingDiv.remove();
+        if (data.resolvedModelSelection && modelSelect && Array.from(modelSelect.options).some((option) => option.value === data.resolvedModelSelection)) {
+            modelSelect.value = data.resolvedModelSelection;
+        }
         if (data.routedModel) {
             const routedLabel = data.routedProviderLabel || "Model used";
             addBubble(`${routedLabel}: ${data.routedModel}`, "bot");
