@@ -1,0 +1,97 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "J JacobCreation" [ref=e4] [cursor=pointer]:
+        - /url: /index.html
+        - generic [ref=e5]: J
+        - generic [ref=e6]: JacobCreation
+      - navigation [ref=e7]:
+        - link "Projects" [ref=e8] [cursor=pointer]:
+          - /url: /index.html#projects
+        - link "About" [ref=e9] [cursor=pointer]:
+          - /url: /about/
+        - link "🎮 Play Offline" [ref=e10] [cursor=pointer]:
+          - /url: /downloads/
+        - link "🚀 Releases" [ref=e11] [cursor=pointer]:
+          - /url: /releases/
+  - main [ref=e12]:
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]: 🤝
+        - generic [ref=e17]:
+          - generic [ref=e18]:
+            - strong [ref=e20]: JacobBot AI
+            - generic [ref=e21]:
+              - button "🗑️" [ref=e22] [cursor=pointer]
+              - button "⬇️" [ref=e23] [cursor=pointer]
+              - button "⬆️" [ref=e24] [cursor=pointer]
+              - button "✨" [ref=e25] [cursor=pointer]
+              - button "☁️" [ref=e26] [cursor=pointer]
+              - button "🖼️" [ref=e27] [cursor=pointer]
+              - button "📎" [ref=e28] [cursor=pointer]
+          - generic [ref=e29]:
+            - textbox "Search models..." [ref=e30]
+            - combobox [ref=e31] [cursor=pointer]:
+              - option "Llama 3.2 3B (Default)" [selected]
+              - option "Llama 3.2 1B (Tiny)"
+              - option "Llama 3.3 70B (Smart)"
+              - option "Llama 4 Scout 17B"
+              - option "Llama 3.3 70B (Groq)"
+              - option "Llama 3.1 8B (Groq)"
+              - option "GPT OSS 120B (Groq)"
+              - option "GPT OSS 20B (Groq)"
+              - option "DeepSeek R1 Distill 70B (Groq)"
+              - option "GPT OSS 120B (Cerebras)"
+              - option "GLM 4.7 Preview (Cerebras)"
+              - option "Nemotron Nano 8B (NVIDIA)"
+              - option "Nemotron Super 49B (NVIDIA)"
+              - option "Nemotron 3 Super 120B (NVIDIA)"
+              - option "GPT OSS 120B (NVIDIA)"
+              - option "GPT OSS 20B (NVIDIA)"
+              - option "Qwen3 Coder 480B (NVIDIA)"
+              - option "Gemini 2.5 Flash"
+              - option "Gemini 2.5 Flash-Lite"
+              - option "Gemini 2.5 Pro"
+              - option "Gemini 2.0 Flash"
+              - option "Gemma 4 26B"
+              - option "Mistral Small 3.1 24B"
+              - option "Mistral 7B Instruct"
+              - option "GPT OSS 20B (Reasoning)"
+              - option "GPT OSS 120B (Reasoning)"
+              - option "OpenRouter Free Router"
+              - option "OpenRouter GPT OSS 20B :free"
+              - option "Qwen3 30B A3B"
+              - option "Qwen2.5 Coder 32B"
+              - option "DeepSeek R1 Distill Qwen 32B"
+          - generic [ref=e32]:
+            - generic [ref=e33]:
+              - generic [ref=e34]: Preset
+              - combobox "Preset" [ref=e35] [cursor=pointer]:
+                - option "Balanced Assistant" [selected]
+                - option "Code Helper"
+                - option "Explainer"
+                - option "Brainstormer"
+                - option "Concise Mode"
+            - generic [ref=e36]:
+              - generic [ref=e37]: Reply Length
+              - combobox "Reply Length" [ref=e38] [cursor=pointer]:
+                - option "Medium" [selected]
+                - option "Short"
+                - option "Long"
+            - generic [ref=e39]:
+              - generic [ref=e40]: Remember
+              - textbox "Remember" [ref=e41]:
+                - /placeholder: Call me Jacob, I use JS...
+          - generic [ref=e42]:
+            - button "Next Step" [ref=e43] [cursor=pointer]
+            - button "Critique It" [ref=e44] [cursor=pointer]
+            - button "Explain Simply" [ref=e45] [cursor=pointer]
+            - button "Make Checklist" [ref=e46] [cursor=pointer]
+          - generic [ref=e47]: Images, text files, saved memory notes, and provider/model choices stick with the conversation better. To save chats to your account, make an account, then open the ☁️ chats menu.
+      - generic [ref=e49]: Hi! How can I help today?
+      - generic [ref=e51]:
+        - textbox "Type your message..." [ref=e52]
+        - button "Send" [ref=e53] [cursor=pointer]
+  - button "? Sign in" [ref=e54] [cursor=pointer]:
+    - generic [ref=e55]: "?"
+    - generic [ref=e56]: Sign in

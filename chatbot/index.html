@@ -42,13 +42,15 @@
       margin: 0;
       font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color: var(--text);
-      min-height: 100vh;
+      height: 100vh;
+      height: 100dvh;
       background:
         radial-gradient(1200px 600px at 20% 10%, rgba(78, 161, 255, 0.30), transparent 55%),
         radial-gradient(900px 600px at 90% 15%, rgba(45, 107, 255, 0.22), transparent 55%),
         linear-gradient(135deg, var(--bg1), var(--bg2));
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
     header {
@@ -61,9 +63,8 @@
     }
 
     .header-container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 14px 18px;
+      width: 100%;
+      padding: 14px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -135,34 +136,30 @@
     }
 
     main {
-      padding: 28px 18px 60px;
       width: 100%;
-      max-width: 1100px;
-      margin: 0 auto;
       flex: 1;
       display: flex;
-      justify-content: center;
+      min-height: 0;
     }
 
     .container {
       display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-      justify-content: center;
       width: 100%;
+      min-height: 0;
     }
 
     .chat-panel {
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.05));
-      backdrop-filter: blur(12px);
-      box-shadow: var(--shadow);
+      border-radius: 0;
+      border: none;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+      backdrop-filter: blur(16px);
+      box-shadow: none;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      height: 700px;
-      width: min(100%, 820px);
+      min-height: 0;
+      height: 100%;
+      width: 100%;
     }
 
     /* ─── Chat Header ─── */
@@ -429,7 +426,7 @@
     .chat-body {
       flex: 1;
       overflow-y: auto;
-      padding: 16px;
+      padding: 18px 20px;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -486,8 +483,9 @@
 
     /* ─── FIXED Chat Input ─── */
     .chat-input {
-      padding: 14px;
-      background: rgba(255, 255, 255, 0.02);
+      padding: 14px 20px 18px;
+      background: rgba(7, 13, 24, 0.62);
+      backdrop-filter: blur(18px);
       border-top: 1px solid var(--border);
       display: flex;
       flex-direction: column;
@@ -619,13 +617,7 @@
     }
 
     footer {
-      border-top: 1px solid rgba(255, 255, 255, 0.10);
-      background: rgba(10, 16, 32, 0.55);
-      backdrop-filter: blur(10px);
-      padding: 20px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.9rem;
+      display: none;
     }
 
     @keyframes bubbleIn {
@@ -634,17 +626,28 @@
     }
 
     @media (max-width: 1080px) {
-      .chat-panel {
-        width: 100%;
-        height: 600px;
-      }
-
-      main {
-        padding-top: 20px;
+      .header-container {
+        padding-inline: 16px;
       }
     }
 
     @media (max-width: 720px) {
+      body {
+        overflow: auto;
+      }
+
+      main,
+      .container,
+      .chat-panel {
+        min-height: 0;
+      }
+
+      .chat-header,
+      .chat-body,
+      .chat-input {
+        padding-inline: 14px;
+      }
+
       .control-grid {
         grid-template-columns: 1fr;
       }
@@ -720,6 +723,17 @@
                   <option value="nvidia/openai/gpt-oss-20b">GPT OSS 20B (NVIDIA)</option>
                   <option value="nvidia/qwen/qwen3-coder-480b-a35b-instruct">Qwen3 Coder 480B (NVIDIA)</option>
                 </optgroup>
+                <optgroup label="Cohere">
+                  <option value="cohere/command-a-plus-05-2026">Command A+ 05-2026 (Cohere)</option>
+                  <option value="cohere/command-a-03-2025">Command A 03-2025 (Cohere)</option>
+                  <option value="cohere/command-r7b-12-2024">Command R7B 12-2024 (Cohere)</option>
+                </optgroup>
+                <optgroup label="Hugging Face">
+                  <option value="huggingface/openai/gpt-oss-120b">GPT OSS 120B (Hugging Face)</option>
+                  <option value="huggingface/Qwen/Qwen3-Coder-480B-A35B-Instruct">Qwen3 Coder 480B (Hugging Face)</option>
+                  <option value="huggingface/Qwen/Qwen2.5-Coder-32B-Instruct">Qwen2.5 Coder 32B (Hugging Face)</option>
+                  <option value="huggingface/zai-org/GLM-4.5">GLM 4.5 (Hugging Face)</option>
+                </optgroup>
                 <optgroup label="Google Gemini / Gemma">
                   <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                   <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
@@ -777,7 +791,7 @@
 
             <!-- Row 3: Note -->
             <div class="tiny-note">
-              Images, text files, saved memory notes, and provider/model choices stick with the conversation better. To save chats to your account, make an account, then open the ☁️ chats menu.
+              Images and files use Gemini automatically and are limited to 1 upload per day. To save chats to your account, make an account, then open the ☁️ chats menu.
             </div>
 
             <div class="cloud-panel" id="cloudChatsPanel">
@@ -802,7 +816,7 @@
             <img id="composerAttachmentImg" alt="Attached image preview" />
             <div class="attachment-meta">
               <span class="attachment-name" id="composerAttachmentName"></span>
-              <span class="attachment-note">Ready to send with your message</span>
+              <span class="attachment-note">Uploads use Gemini and are limited to 1 per day</span>
             </div>
             <button class="remove-attachment" type="button" id="removeAttachmentBtn" title="Remove image">×</button>
           </div>
@@ -857,6 +871,9 @@
 
     const SETTINGS_KEY = "jc_chatbot_settings_v2";
     const CHAT_APP_ID = "chatbot";
+    const CLIENT_ID_KEY = "jc_chatbot_client_id";
+    const UPLOAD_LIMIT_KEY = "jc_chatbot_upload_day";
+    const ATTACHMENT_MODEL_FALLBACK = "gemini-2.5-flash";
     const LEGACY_MODEL_REDIRECTS = {
       "cerebras/qwen-3-235b-a22b-instruct-2507": "cerebras/gpt-oss-120b",
       "@cf/mistral/mistral-small-3.1-24b-instruct": "@cf/mistralai/mistral-small-3.1-24b-instruct",
@@ -909,6 +926,35 @@
 
     function setSessionId(id) {
       localStorage.setItem("jc_session", id);
+    }
+
+    function getClientId() {
+      let id = localStorage.getItem(CLIENT_ID_KEY);
+      if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem(CLIENT_ID_KEY, id);
+      }
+      return id;
+    }
+
+    function getUtcDayStamp() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function hasUsedDailyUpload() {
+      return localStorage.getItem(UPLOAD_LIMIT_KEY) === getUtcDayStamp();
+    }
+
+    function markDailyUploadUsed() {
+      localStorage.setItem(UPLOAD_LIMIT_KEY, getUtcDayStamp());
+    }
+
+    function getAttachmentModelSelection() {
+      const selected = normalizeModelSelection(modelSelect?.value || "");
+      if (selected.startsWith("gemini-")) {
+        return selected;
+      }
+      return ATTACHMENT_MODEL_FALLBACK;
     }
 
     function getAccountsApi() {
@@ -1233,6 +1279,10 @@
       if (!msg && currentAttachment?.kind === "file") msg = `Please analyze this file: ${currentAttachment.name}`;
 
       const attachedItem = currentAttachment;
+      if (attachedItem && hasUsedDailyUpload()) {
+        addBubble("Uploads are limited to 1 per day. Try again tomorrow for another image or file.", "bot");
+        return;
+      }
       addBubble(msg, "user", false, attachedItem?.kind === "image" ? attachedItem : null);
       chatText.value = "";
       clearComposerAttachment();
@@ -1248,8 +1298,9 @@
             action: "chat",
             site: SITE_NAME,
             sessionId: getSessionId(),
+            clientId: getClientId(),
             message: msg,
-            model: modelSelect ? modelSelect.value : "@cf/meta/llama-3.2-3b-instruct",
+            model: attachedItem ? getAttachmentModelSelection() : (modelSelect ? modelSelect.value : "@cf/meta/llama-3.2-3b-instruct"),
             preset: presetSelect.value,
             replyLength: replyLengthSelect.value,
             memoryNote: memoryNoteInput.value.trim()
@@ -1282,6 +1333,9 @@
         if (!res.ok) throw new Error(data.error || "Network response was not ok");
 
         typingDiv.remove();
+        if (attachedItem) {
+            markDailyUploadUsed();
+        }
         if (data.resolvedModelSelection && modelSelect && Array.from(modelSelect.options).some((option) => option.value === data.resolvedModelSelection)) {
             modelSelect.value = data.resolvedModelSelection;
         }
@@ -1382,6 +1436,11 @@
     imgFile.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
+      if (hasUsedDailyUpload()) {
+        addBubble("You already used today's upload. Come back tomorrow to attach another image.", "bot");
+        e.target.value = "";
+        return;
+      }
 
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -1403,6 +1462,11 @@
     docFile.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
+      if (hasUsedDailyUpload()) {
+        addBubble("You already used today's upload. Come back tomorrow to attach another file.", "bot");
+        e.target.value = "";
+        return;
+      }
 
       const reader = new FileReader();
       reader.onload = (event) => {

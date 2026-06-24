@@ -1,0 +1,17 @@
+{
+	"name": "JacobCreation",
+	"short_name": "JacobCreation",
+	"description": "Games and tools by Jacob.",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#0b1020",
+	"theme_color": "#000000",
+	"icons": [
+		{
+			"src": "/favicon.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any maskable"
+		}
+	]
+}

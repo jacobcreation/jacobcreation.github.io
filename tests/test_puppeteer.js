@@ -5,7 +5,14 @@ const app = express();
 
 app.use(express.static(path.join(__dirname, "..")));
 
-const server = app.listen(0, async () => {
+const server = app.listen(0);
+
+server.once("error", (error) => {
+	console.error(`Failed to start Puppeteer server: ${error.message}`);
+	process.exit(1);
+});
+
+server.once("listening", async () => {
 	const port = server.address().port;
 	const browser = await puppeteer.launch({
 		headless: "new",

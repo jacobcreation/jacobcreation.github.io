@@ -1,1 +1,1 @@
-./stockfish-17.1-asm-341ff22.js
+importScripts("./stockfish-17.1-asm-341ff22.js");

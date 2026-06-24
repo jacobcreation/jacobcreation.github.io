@@ -1,6 +1,7 @@
 # Generated archives and build output
 *.apk
 *.zip
+!cc/project.zip
 build/
 dist/
 

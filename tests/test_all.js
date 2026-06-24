@@ -1,11 +1,14 @@
 const puppeteer = require("puppeteer");
 const express = require("express");
+const fs = require("fs");
 const path = require("path");
 const app = express();
 app.use("/shootthemonster", express.static(path.join(__dirname, "../shootthemonster/dist")));
 app.use("/Wordscapes", express.static(path.join(__dirname, "../Wordscapes/dist")));
 app.use("/sss", express.static(path.join(__dirname, "../sss/dist")));
 app.use(express.static(path.join(__dirname, "..")));
+
+const BUILT_PROJECTS = ["shootthemonster", "sss", "Wordscapes"];
 
 const MULTI_PROJECTS = [
 	"ab",
@@ -28,7 +31,14 @@ const MULTI_PROJECTS = [
 	"Wordscapes",
 ];
 
-const server = app.listen(0, async () => {
+const server = app.listen(0);
+
+server.once("error", (error) => {
+	console.error(`Failed to start smoke-test server: ${error.message}`);
+	process.exit(1);
+});
+
+server.once("listening", async () => {
 	const port = server.address().port;
 	const browser = await puppeteer.launch({
 		headless: "new",
@@ -36,6 +46,14 @@ const server = app.listen(0, async () => {
 	});
 
 	for (const proj of MULTI_PROJECTS) {
+		if (
+			BUILT_PROJECTS.includes(proj) &&
+			!fs.existsSync(path.join(__dirname, "..", proj, "dist"))
+		) {
+			console.log(`SKIP [${proj}]: dist folder not built`);
+			continue;
+		}
+
 		const page = await browser.newPage();
 		let errors = [];
 		page.on("pageerror", (e) => errors.push("PAGE_ERROR: " + e.message));

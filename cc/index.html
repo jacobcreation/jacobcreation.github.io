@@ -187,23 +187,39 @@
     const getProjectData = () => new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.responseType = "arraybuffer";
-      xhr.onload = () => resolve(xhr.response);
+      xhr.onload = () => {
+        if (xhr.status < 200 || xhr.status >= 300) {
+          reject(`Failed to load project.zip (${xhr.status})`);
+          return;
+        }
+        if (!xhr.response || xhr.response.byteLength === 0) {
+          reject("project.zip is empty");
+          return;
+        }
+        resolve(xhr.response);
+      };
       xhr.onerror = () => reject("Failed to load project.zip");
       xhr.open("GET", "./project.zip");
       xhr.send();
     });
 
     (async () => {
-      const projectData = await getProjectData();
-      await scaffolding.loadProject(projectData);
-      setProgress(1);
-      document.getElementById("loading").hidden = true;
-      document.getElementById("launch").hidden = false;
+      try {
+        const projectData = await getProjectData();
+        await scaffolding.loadProject(projectData);
+        setProgress(1);
+        document.getElementById("loading").hidden = true;
+        document.getElementById("launch").hidden = false;
 
-      document.getElementById("launch").onclick = () => {
-        document.getElementById("launch").hidden = true;
-        scaffolding.start();
-      };
+        document.getElementById("launch").onclick = () => {
+          document.getElementById("launch").hidden = true;
+          scaffolding.start();
+        };
+      } catch (error) {
+        document.getElementById("loading").hidden = true;
+        document.getElementById("error").hidden = false;
+        document.getElementById("error-message").textContent = error;
+      }
     })();
   </script>
 
