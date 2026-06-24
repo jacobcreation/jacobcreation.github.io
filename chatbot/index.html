@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description" content="Chat with JacobBot AI using multiple live AI providers." />
 
   <title>JacobBot AI - JacobCreation</title>
@@ -442,6 +442,15 @@
       line-height: 1.5;
       position: relative;
       animation: bubbleIn 0.3s ease-out;
+      overflow-wrap: anywhere;
+    }
+
+    .bubble pre,
+    .bubble code {
+      max-width: 100%;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      overflow-wrap: anywhere;
     }
 
     .bubble.bot {
@@ -633,32 +642,229 @@
 
     @media (max-width: 720px) {
       body {
-        overflow: auto;
+        overflow: hidden;
+        min-width: 0;
       }
 
       main,
       .container,
       .chat-panel {
         min-height: 0;
+        height: 100%;
       }
 
       .chat-header,
       .chat-body,
       .chat-input {
+        padding-inline: max(10px, env(safe-area-inset-left));
+        padding-right: max(10px, env(safe-area-inset-right));
+      }
+
+      .chat-header {
+        gap: 8px;
+        padding-block: 8px;
+        max-height: 36dvh;
+        overflow-y: auto;
+        align-items: flex-start;
+        scrollbar-width: thin;
+      }
+
+      .chat-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        font-size: 17px;
+      }
+
+      .chat-header-right {
+        gap: 6px;
+      }
+
+      .chat-title-row {
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .chat-title strong {
+        font-size: 0.9rem;
+        line-height: 1.2;
+      }
+
+      .mem-actions {
+        max-width: 100%;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        scrollbar-width: none;
+      }
+
+      .mem-actions::-webkit-scrollbar {
+        display: none;
+      }
+
+      .mem-mini-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        font-size: 14px;
+      }
+
+      .model-row {
+        display: grid;
+        grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+        gap: 6px;
+      }
+
+      .model-search,
+      .model-select {
+        width: 100%;
+        min-width: 0;
+        min-height: 36px;
+        font-size: 0.78rem;
+      }
+
+      .model-select,
+      .control-field select,
+      .control-field input,
+      .chat-input input {
+        font-size: 16px;
+      }
+
+      .control-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .control-field:nth-child(3) {
+        grid-column: 1 / -1;
+      }
+
+      .control-field label {
+        font-size: 0.6rem;
+      }
+
+      .control-field select,
+      .control-field input {
+        min-height: 36px;
+        padding: 7px 9px;
+      }
+
+      .quick-prompts {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 6px;
+        margin-inline: -2px;
+        padding: 0 2px 2px;
+        scrollbar-width: none;
+      }
+
+      .quick-prompts::-webkit-scrollbar {
+        display: none;
+      }
+
+      .prompt-chip {
+        flex: 0 0 auto;
+        min-height: 34px;
+        padding: 6px 10px;
+        font-size: 0.72rem;
+      }
+
+      .tiny-note {
+        font-size: 0.66rem;
+        line-height: 1.3;
+      }
+
+      .cloud-panel {
+        margin-top: 6px;
+        padding: 9px;
+        border-radius: 12px;
+      }
+
+      .cloud-chat-list {
+        max-height: 160px;
+      }
+
+      .chat-body {
+        padding-block: 12px;
+        gap: 10px;
+      }
+
+      .bubble {
+        max-width: 94%;
+        padding: 10px 12px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+        line-height: 1.45;
+      }
+
+      .bubble-attachment {
+        width: min(100%, 220px);
+        max-height: 210px;
+        border-radius: 12px;
+      }
+
+      .chat-input {
+        padding-top: 10px;
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+        gap: 8px;
+      }
+
+      .composer-row {
+        flex-wrap: nowrap;
+        gap: 8px;
+      }
+
+      .chat-input input {
+        min-height: 44px;
+        padding: 10px 12px;
+      }
+
+      .btn-send {
+        width: auto;
+        min-width: 76px;
+        height: 44px;
         padding-inline: 14px;
+      }
+
+      .composer-attachment {
+        width: 100%;
+        padding: 6px;
+      }
+
+      .composer-attachment img {
+        width: 52px;
+        height: 52px;
+      }
+
+      .attachment-meta {
+        max-width: none;
+        flex: 1;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .chat-header {
+        max-height: 38dvh;
+      }
+
+      .chat-title-row {
+        flex-direction: column;
+      }
+
+      .mem-actions {
+        width: 100%;
+      }
+
+      .model-row {
+        grid-template-columns: 1fr;
       }
 
       .control-grid {
         grid-template-columns: 1fr;
       }
 
-      .composer-row {
-        flex-wrap: wrap;
-      }
-
-      .btn-send,
-      .chat-input input {
-        width: 100%;
+      .btn-send {
+        min-width: 68px;
+        padding-inline: 12px;
       }
     }
   </style>
@@ -1547,6 +1753,34 @@
       }
     });
 
+    function keepAccountLauncherAboveComposer() {
+      const widget = document.getElementById("jacob-account-widget");
+      const root = widget?.shadowRoot;
+      if (!root || root.getElementById("chatbot-mobile-account-offset")) return Boolean(root);
+
+      const style = document.createElement("style");
+      style.id = "chatbot-mobile-account-offset";
+      style.textContent = `
+        .account-launcher {
+          bottom: max(84px, calc(env(safe-area-inset-bottom) + 84px));
+        }
+        @media (max-width: 720px) {
+          .account-launcher {
+            bottom: max(88px, calc(env(safe-area-inset-bottom) + 88px));
+          }
+        }
+      `;
+      root.appendChild(style);
+      return true;
+    }
+
+    const accountLauncherOffsetTimer = window.setInterval(() => {
+      if (keepAccountLauncherAboveComposer()) {
+        window.clearInterval(accountLauncherOffsetTimer);
+      }
+    }, 250);
+
+    window.addEventListener("load", keepAccountLauncherAboveComposer);
 
   </script>
 
