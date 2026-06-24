@@ -277,7 +277,7 @@
 
     .control-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(160px, 1.4fr);
       gap: 8px;
       margin-top: 4px;
     }
@@ -734,7 +734,7 @@
         gap: 6px;
       }
 
-      .control-field:nth-child(3) {
+      .control-field:nth-child(4) {
         grid-column: 1 / -1;
       }
 
@@ -983,6 +983,14 @@
                 </select>
               </div>
               <div class="control-field">
+                <label for="webSearchSelect">Web</label>
+                <select id="webSearchSelect">
+                  <option value="auto">Auto Search</option>
+                  <option value="on">Always Search</option>
+                  <option value="off">Off</option>
+                </select>
+              </div>
+              <div class="control-field">
                 <label for="memoryNoteInput">Remember</label>
                 <input id="memoryNoteInput" type="text" placeholder="Call me Jacob, I use JS..." />
               </div>
@@ -997,7 +1005,7 @@
 
             <!-- Row 3: Note -->
             <div class="tiny-note">
-              Images and files use Gemini automatically and are limited to 1 upload per day. To save chats to your account, make an account, then open the ☁️ chats menu.
+              Web search runs through Tavily in Auto mode for fresh/current questions. Images and files use Gemini automatically and are limited to 1 upload per day. To save chats to your account, make an account, then open the ☁️ chats menu.
             </div>
 
             <div class="cloud-panel" id="cloudChatsPanel">
@@ -1072,6 +1080,7 @@
     const modelSearch = document.getElementById("modelSearch");
     const presetSelect = document.getElementById("presetSelect");
     const replyLengthSelect = document.getElementById("replyLengthSelect");
+    const webSearchSelect = document.getElementById("webSearchSelect");
     const memoryNoteInput = document.getElementById("memoryNoteInput");
     const quickPrompts = document.getElementById("quickPrompts");
 
@@ -1107,6 +1116,7 @@
         if (saved.model) modelSelect.value = normalizeModelSelection(saved.model);
         if (saved.preset) presetSelect.value = saved.preset;
         if (saved.replyLength) replyLengthSelect.value = saved.replyLength;
+        if (saved.webSearchMode) webSearchSelect.value = saved.webSearchMode;
         saveSettings();
       } catch (error) {
         console.warn("Failed to restore chatbot settings", error);
@@ -1117,7 +1127,8 @@
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({
         model: normalizeModelSelection(modelSelect.value),
         preset: presetSelect.value,
-        replyLength: replyLengthSelect.value
+        replyLength: replyLengthSelect.value,
+        webSearchMode: webSearchSelect.value
       }));
     }
 
@@ -1509,6 +1520,7 @@
             model: attachedItem ? getAttachmentModelSelection() : (modelSelect ? modelSelect.value : "@cf/meta/llama-3.2-3b-instruct"),
             preset: presetSelect.value,
             replyLength: replyLengthSelect.value,
+            webSearchMode: webSearchSelect.value,
             memoryNote: memoryNoteInput.value.trim()
         };
 
@@ -1548,6 +1560,10 @@
         if (data.routedModel) {
             const routedLabel = data.routedProviderLabel || "Model used";
             addBubble(`${routedLabel}: ${data.routedModel}`, "bot");
+        }
+        if (data.webSearch) {
+            const sourceCount = data.webSearch.resultCount === 1 ? "1 source" : `${data.webSearch.resultCount} sources`;
+            addBubble(`Web search used: ${data.webSearch.query} (${sourceCount})`, "bot");
         }
         if (data.reply) {
             addBubble(data.reply, "bot", true);
@@ -1631,6 +1647,7 @@
     modelSelect.addEventListener("change", saveSettings);
     presetSelect.addEventListener("change", saveSettings);
     replyLengthSelect.addEventListener("change", saveSettings);
+    webSearchSelect.addEventListener("change", saveSettings);
 
     quickPrompts.addEventListener("click", (event) => {
       const chip = event.target.closest(".prompt-chip");
