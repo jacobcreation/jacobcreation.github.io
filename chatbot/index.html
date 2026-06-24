@@ -423,6 +423,63 @@
       cursor: pointer;
     }
 
+    .generated-files {
+      align-self: flex-start;
+      display: grid;
+      gap: 8px;
+      width: min(520px, 94%);
+      margin-top: -4px;
+    }
+
+    .generated-file {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .generated-file-meta {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    .generated-file-name {
+      color: var(--text);
+      font-weight: 700;
+      font-size: 0.84rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .generated-file-note {
+      color: var(--muted);
+      font-size: 0.72rem;
+    }
+
+    .generated-file-download {
+      flex-shrink: 0;
+      min-height: 34px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+      color: #071122;
+      font: inherit;
+      font-weight: 700;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    .generated-file-download:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
     .chat-body {
       flex: 1;
       overflow-y: auto;
@@ -828,6 +885,15 @@
       .composer-attachment {
         width: 100%;
         padding: 6px;
+      }
+
+      .generated-file {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .generated-file-download {
+        width: 100%;
       }
 
       .composer-attachment img {
@@ -1250,6 +1316,91 @@
       return div;
     }
 
+    function formatBytes(bytes) {
+      const value = Number(bytes) || 0;
+      if (value < 1024) return `${value} B`;
+      if (value < 1024 * 1024) return `${Math.round(value / 1024)} KB`;
+      return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    function base64ToBlob(base64, mimeType) {
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return new Blob([bytes], { type: mimeType || "application/octet-stream" });
+    }
+
+    async function downloadGeneratedFile(fileId, button) {
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = "Downloading";
+      try {
+        const res = await fetch(ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "downloadGeneratedFile",
+            sessionId: getSessionId(),
+            fileId
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Could not download file.");
+        const blob = base64ToBlob(data.contentBase64, data.mimeType);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = data.name || "jacobbot-file.txt";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        addBubble(`Download failed: ${error.message}`, "bot");
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    }
+
+    function addGeneratedFileCards(files) {
+      if (!Array.isArray(files) || files.length === 0) return;
+      const wrap = document.createElement("div");
+      wrap.className = "generated-files";
+      files.forEach((file) => {
+        const row = document.createElement("div");
+        row.className = "generated-file";
+
+        const meta = document.createElement("div");
+        meta.className = "generated-file-meta";
+
+        const name = document.createElement("div");
+        name.className = "generated-file-name";
+        name.textContent = file.name || "Generated file";
+
+        const note = document.createElement("div");
+        note.className = "generated-file-note";
+        const expires = file.expiresAt ? new Date(file.expiresAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "24 hours";
+        note.textContent = `${file.mimeType || "file"} • ${formatBytes(file.size)} • expires ${expires}`;
+
+        const btn = document.createElement("button");
+        btn.className = "generated-file-download";
+        btn.type = "button";
+        btn.textContent = "Download";
+        btn.addEventListener("click", () => downloadGeneratedFile(file.id, btn));
+
+        meta.appendChild(name);
+        meta.appendChild(note);
+        row.appendChild(meta);
+        row.appendChild(btn);
+        wrap.appendChild(row);
+      });
+      chatBody.appendChild(wrap);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
     function updateComposerAttachment() {
       if (!currentAttachment) {
         composerAttachment.classList.remove("active");
@@ -1569,6 +1720,9 @@
             addBubble(data.reply, "bot", true);
         } else {
             addBubble("I'm not sure what to say.");
+        }
+        if (data.generatedFiles && data.generatedFiles.length) {
+            addGeneratedFileCards(data.generatedFiles);
         }
         if (data.memorySaved) {
           addBubble(`Saved to memory: ${data.memorySaved}`, "bot");
