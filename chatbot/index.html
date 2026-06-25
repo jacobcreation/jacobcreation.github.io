@@ -954,13 +954,10 @@
               </div>
               <div class="mem-actions">
                 <button class="mem-mini-btn" type="button" id="clearChatBtn" title="Clear Chat">🗑️</button>
-                <button class="mem-mini-btn" type="button" id="downloadMemBtn" title="Download Memory">⬇️</button>
-                <button class="mem-mini-btn" type="button" id="uploadMemBtn" title="Upload Memory">⬆️</button>
                 <button class="mem-mini-btn" type="button" id="newChatBtn" title="New Chat">✨</button>
                 <button class="mem-mini-btn" type="button" id="cloudChatsBtn" title="Cloud Chats">☁️</button>
                 <button class="mem-mini-btn" type="button" id="uploadImgBtn" title="Attach Image">🖼️</button>
                 <button class="mem-mini-btn" type="button" id="uploadFileBtn" title="Attach File">📎</button>
-                <input type="file" id="memFileInput" accept="application/json" style="display:none;">
                 <input type="file" id="imgFileInput" accept="image/*" style="display:none;">
                 <input type="file" id="docFileInput" accept=".txt,.md,.json,.csv,.js,.ts,.html,.css,.xml,.yml,.yaml,.log,text/plain,text/markdown,application/json,text/csv" style="display:none;">
               </div>
@@ -1122,10 +1119,6 @@
     const chatBody = document.getElementById("chatBody");
     const chatForm = document.getElementById("chatForm");
     const chatText = document.getElementById("chatText");
-
-    const dlBtn = document.getElementById("downloadMemBtn");
-    const ulBtn = document.getElementById("uploadMemBtn");
-    const memFile = document.getElementById("memFileInput");
 
     const imgBtn = document.getElementById("uploadImgBtn");
     const imgFile = document.getElementById("imgFileInput");
@@ -1770,35 +1763,6 @@
         }
     });
 
-    dlBtn.addEventListener("click", async () => {
-      try {
-        const res = await fetch(ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "download", sessionId: getSessionId() })
-        });
-
-        const data = await res.json();
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `memory-${new Date().toISOString().slice(0, 10)}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        addBubble("Memory downloaded! Keep it safe. 💾");
-
-      } catch (err) {
-        console.error(err);
-        addBubble("Failed to download memory.");
-      }
-    });
-
-    ulBtn.addEventListener("click", () => { memFile.click(); });
     imgBtn.addEventListener("click", () => { imgFile.click(); });
     fileBtn.addEventListener("click", () => { docFile.click(); });
     newChatBtn.addEventListener("click", () => { startNewChat(); });
@@ -1874,44 +1838,6 @@
         chatText.focus();
       };
       reader.readAsText(file);
-    });
-
-    memFile.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        try {
-          const jsonContent = JSON.parse(event.target.result);
-          addBubble("Uploading memory... 📤");
-
-          const res = await fetch(ENDPOINT, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              action: "upload",
-              sessionId: getSessionId(),
-              history: jsonContent.history || [],
-              facts: jsonContent.facts || {}
-            })
-          });
-
-          if (res.ok) {
-            addBubble("Memory restored successfully! 🧠✨");
-            syncCurrentChatToAccount(false).catch(() => {});
-          } else {
-            addBubble("Server rejected the memory.");
-          }
-
-        } catch (err) {
-          console.error(err);
-          addBubble("Invalid memory file. Corrupt JSON?");
-        }
-      };
-
-      reader.readAsText(file);
-      memFile.value = "";
     });
 
     updateModelFilter();
