@@ -1051,7 +1051,7 @@
               <div class="control-field">
                 <label for="webSearchSelect">Web</label>
                 <select id="webSearchSelect">
-                  <option value="auto">Auto Search</option>
+                  <option value="auto">Auto Frequent</option>
                   <option value="on">Always Search</option>
                   <option value="off">Off</option>
                 </select>
@@ -1071,7 +1071,7 @@
 
             <!-- Row 3: Note -->
             <div class="tiny-note">
-              Web search runs through Tavily in Auto mode for fresh/current questions. Images and files use Gemini automatically and are limited to 1 upload per day. To save chats to your account, make an account, then open the ☁️ chats menu.
+              Auto web search uses Tavily for most knowledge/current questions, and the chat shows when it is searching. Images and files use Gemini automatically and are limited to 1 upload per day. To save chats to your account, make an account, then open the ☁️ chats menu.
             </div>
 
             <div class="cloud-panel" id="cloudChatsPanel">
@@ -1155,6 +1155,8 @@
     const CLIENT_ID_KEY = "jc_chatbot_client_id";
     const UPLOAD_LIMIT_KEY = "jc_chatbot_upload_day";
     const ATTACHMENT_MODEL_FALLBACK = "gemini-2.5-flash";
+    const WEB_SEARCH_AUTO_RE = /\b(latest|current|today|tonight|yesterday|tomorrow|this week|this month|this year|news|headline|recent|new|now|live|price|stock|weather|schedule|score|release date|version|update|verify|fact check|look up|search|web|internet|browse|who is|what is|where is|when is|which|compare|best|top|review|available|released|changed)\b/i;
+    const WEB_SEARCH_SKIP_RE = /\b(remember this|save to memory|call me|my name is|clear chat|new chat|download memory|upload memory|make|generate|create|write|export|build)\b/i;
     const LEGACY_MODEL_REDIRECTS = {
       "cerebras/qwen-3-235b-a22b-instruct-2507": "cerebras/gpt-oss-120b",
       "@cf/mistral/mistral-small-3.1-24b-instruct": "@cf/mistralai/mistral-small-3.1-24b-instruct",
@@ -1238,6 +1240,19 @@
         return selected;
       }
       return ATTACHMENT_MODEL_FALLBACK;
+    }
+
+    function willLikelySearchWeb(message, attachment = null) {
+      if (attachment) return false;
+      const mode = webSearchSelect?.value || "auto";
+      const text = String(message || "").trim();
+      if (!text) return false;
+      if (mode === "on") return true;
+      if (mode === "off") return false;
+      if (WEB_SEARCH_SKIP_RE.test(text)) return false;
+      if (WEB_SEARCH_AUTO_RE.test(text)) return true;
+      if (/\?/.test(text) && text.length >= 18) return true;
+      return /\b(what|who|where|when|why|how|is|are|does|do|can)\b/i.test(text) && text.split(/\s+/).length >= 5;
     }
 
     function getAccountsApi() {
@@ -1657,7 +1672,7 @@
 
       const typingDiv = document.createElement("div");
       typingDiv.className = "bubble bot";
-      typingDiv.textContent = "Thinking... 💭";
+      typingDiv.textContent = willLikelySearchWeb(msg, attachedItem) ? "Searching web..." : "Thinking... 💭";
       chatBody.appendChild(typingDiv);
       chatBody.scrollTop = chatBody.scrollHeight;
 
