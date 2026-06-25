@@ -44,7 +44,7 @@
                 <button class="mem-mini-btn" type="button" id="uploadImgBtn" title="Attach Image">🖼️</button>
                 <button class="mem-mini-btn" type="button" id="uploadFileBtn" title="Attach File">📎</button>
                 <input type="file" id="imgFileInput" accept="image/*" style="display:none;">
-                <input type="file" id="docFileInput" accept=".txt,.md,.json,.csv,.js,.ts,.html,.css,.xml,.yml,.yaml,.log,text/plain,text/markdown,application/json,text/csv" style="display:none;">
+                <input type="file" id="docFileInput" accept=".txt,.md,.markdown,.pdf,.docx,.zip,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip" style="display:none;">
               </div>
             </div>
 
@@ -70,6 +70,7 @@
                   <option value="cerebras/zai-glm-4.7">GLM 4.7 Preview (Cerebras)</option>
                 </optgroup>
                 <optgroup label="NVIDIA NIM">
+                  <option value="nvidia/meta/llama-4-maverick-17b-128e-instruct">Llama 4 Maverick 17B 128E (NVIDIA)</option>
                   <option value="nvidia/nvidia/llama-3.1-nemotron-nano-8b-v1">Nemotron Nano 8B (NVIDIA)</option>
                   <option value="nvidia/nvidia/llama-3.3-nemotron-super-49b-v1.5">Nemotron Super 49B (NVIDIA)</option>
                   <option value="nvidia/nvidia/nemotron-3-super-120b-a12b">Nemotron 3 Super 120B (NVIDIA)</option>
@@ -153,7 +154,7 @@
 
             <!-- Row 3: Note -->
             <div class="tiny-note">
-              Auto web search uses Tavily for most knowledge/current questions, and the chat shows when it is searching. Images and files use Gemini automatically and are limited to 1 upload per day. To save chats to your account, make an account, then open the ☁️ chats menu.
+              Auto web search uses Tavily for most knowledge/current questions, and the chat shows when it is searching. Images and files use Llama 4 Maverick on NVIDIA NIM automatically and are limited to 1 upload per day. To save chats to your account, make an account, then open the ☁️ chats menu.
             </div>
 
             <div class="cloud-panel" id="cloudChatsPanel">
@@ -178,7 +179,7 @@
             <img id="composerAttachmentImg" alt="Attached image preview" />
             <div class="attachment-meta">
               <span class="attachment-name" id="composerAttachmentName"></span>
-              <span class="attachment-note">Uploads use Gemini and are limited to 1 per day</span>
+              <span class="attachment-note">Uploads use NVIDIA NIM Llama 4 Maverick and are limited to 1 per day</span>
             </div>
             <button class="remove-attachment" type="button" id="removeAttachmentBtn" title="Remove image">×</button>
           </div>

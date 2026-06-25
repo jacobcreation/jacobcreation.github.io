@@ -20,10 +20,13 @@
     };
     const interpolate = (a, b, t) => a + t * (b - a);
 
+    let scaffolding;
+    let vm;
+
     try {
       setProgress(0.1);
 
-      const scaffolding = new Scaffolding.Scaffolding();
+      scaffolding = new Scaffolding.Scaffolding();
       scaffolding.width = 480;
       scaffolding.height = 360;
       scaffolding.resizeMode = "preserve-ratio";
@@ -32,7 +35,7 @@
       scaffolding.setup();
       scaffolding.appendTo(appElement);
 
-      const vm = scaffolding.vm;
+      vm = scaffolding.vm;
       window.scaffolding = scaffolding;
       window.vm = scaffolding.vm;
       window.Scratch = {
@@ -89,6 +92,7 @@
 ;
 
       const getProjectData = (function() {
+        if (!scaffolding) throw new Error('Scaffolding failed to initialize.');
         const storage = scaffolding.storage;
         storage.onprogress = (total, loaded) => {
           setProgress(interpolate(0.2, 0.98, loaded / total));
@@ -127,6 +131,8 @@
       })();
 
 ;
+
+    if (!scaffolding) { handleError(new Error('Cannot run: scaffolding was not initialized.')); return; }
 
     const run = async () => {
       const projectData = await getProjectData();

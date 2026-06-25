@@ -140,13 +140,14 @@
   <!-- 🚫 MOBILE DETECTION (RUNS FIRST) -->
   <script>
     const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent);
+    window.isMobileBlocked = false;
 
     if (isMobile) {
+      window.isMobileBlocked = true;
       document.getElementById('mobile-block').hidden = false;
       document.getElementById('app').style.display = 'none';
       document.getElementById('loading').style.display = 'none';
       document.getElementById('launch').style.display = 'none';
-      throw new Error("Mobile device blocked");
     }
   </script>
 
@@ -154,73 +155,84 @@
   <script>(function(){const v=Date.now();document.write('<script src="script.js?v='+v+'"><\/script>');})();</script>
 
   <script>
-    const loadingInner = document.getElementById('loading-inner');
+    if (!window.isMobileBlocked) {
+      const loadingInner = document.getElementById('loading-inner');
 
-    const setProgress = p => loadingInner.style.width = (p * 100) + "%";
+      const setProgress = p => loadingInner.style.width = (p * 100) + "%";
 
-    try {
-      setProgress(0.1);
+      try {
+        setProgress(0.1);
 
-      const scaffolding = new Scaffolding.Scaffolding();
-      scaffolding.width = 480;
-      scaffolding.height = 360;
-      scaffolding.resizeMode = "preserve-ratio";
-      scaffolding.usePackagedRuntime = true;
-      scaffolding.setup();
-      scaffolding.appendTo(document.getElementById("app"));
+        const scaffolding = new Scaffolding.Scaffolding();
+        scaffolding.width = 480;
+        scaffolding.height = 360;
+        scaffolding.resizeMode = "preserve-ratio";
+        scaffolding.usePackagedRuntime = true;
+        scaffolding.setup();
+        scaffolding.appendTo(document.getElementById("app"));
 
-      const vm = scaffolding.vm;
-      scaffolding.setUsername("player" + Math.floor(Math.random() * 10000));
-      scaffolding.setAccentColor("#ff4c4c");
+        const vm = scaffolding.vm;
+        scaffolding.setUsername("player" + Math.floor(Math.random() * 10000));
+        scaffolding.setAccentColor("#ff4c4c");
 
-      vm.setTurboMode(false);
-      if (vm.setFramerate) vm.setFramerate(30);
+        vm.setTurboMode(false);
+        if (vm.setFramerate) vm.setFramerate(30);
 
-      window.scaffolding = scaffolding;
-    } catch (e) {
-      document.getElementById("error").hidden = false;
-      document.getElementById("error-message").textContent = e;
+        window.scaffolding = scaffolding;
+        window.setProgress = setProgress;
+      } catch (e) {
+        document.getElementById("error").hidden = false;
+        document.getElementById("error-message").textContent = e;
+      }
     }
   </script>
 
   <script>
-    const getProjectData = () => new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.responseType = "arraybuffer";
-      xhr.onload = () => {
-        if (xhr.status < 200 || xhr.status >= 300) {
-          reject(`Failed to load project.zip (${xhr.status})`);
-          return;
-        }
-        if (!xhr.response || xhr.response.byteLength === 0) {
-          reject("project.zip is empty");
-          return;
-        }
-        resolve(xhr.response);
-      };
-      xhr.onerror = () => reject("Failed to load project.zip");
-      xhr.open("GET", "./project.zip");
-      xhr.send();
-    });
-
-    (async () => {
-      try {
-        const projectData = await getProjectData();
-        await scaffolding.loadProject(projectData);
-        setProgress(1);
-        document.getElementById("loading").hidden = true;
-        document.getElementById("launch").hidden = false;
-
-        document.getElementById("launch").onclick = () => {
-          document.getElementById("launch").hidden = true;
-          scaffolding.start();
+    if (!window.isMobileBlocked) {
+      const getProjectData = () => new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.responseType = "arraybuffer";
+        xhr.onload = () => {
+          if (xhr.status < 200 || xhr.status >= 300) {
+            reject(`Failed to load project.zip (${xhr.status})`);
+            return;
+          }
+          if (!xhr.response || xhr.response.byteLength === 0) {
+            reject("project.zip is empty");
+            return;
+          }
+          resolve(xhr.response);
         };
-      } catch (error) {
-        document.getElementById("loading").hidden = true;
-        document.getElementById("error").hidden = false;
-        document.getElementById("error-message").textContent = error;
-      }
-    })();
+        xhr.onerror = () => reject("Failed to load project.zip");
+        xhr.open("GET", "./project.zip");
+        xhr.send();
+      });
+
+      (async () => {
+        if (!window.scaffolding) {
+          document.getElementById("loading").hidden = true;
+          document.getElementById("error").hidden = false;
+          document.getElementById("error-message").textContent = "Scaffolding failed to initialize.";
+          return;
+        }
+        try {
+          const projectData = await getProjectData();
+          await window.scaffolding.loadProject(projectData);
+          window.setProgress(1);
+          document.getElementById("loading").hidden = true;
+          document.getElementById("launch").hidden = false;
+
+          document.getElementById("launch").onclick = () => {
+            document.getElementById("launch").hidden = true;
+            window.scaffolding.start();
+          };
+        } catch (error) {
+          document.getElementById("loading").hidden = true;
+          document.getElementById("error").hidden = false;
+          document.getElementById("error-message").textContent = error;
+        }
+      })();
+    }
   </script>
 
   <script>(function(){const v=Date.now();document.write('<script src="../global-header.js?v='+v+'"><\/script>');})();</script>

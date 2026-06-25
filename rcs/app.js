@@ -196,6 +196,7 @@
 ;
 
     const getProjectData = (function () {
+      if (!scaffolding) throw new Error('Scaffolding failed to initialize.');
       const storage = scaffolding.storage;
       storage.onprogress = (total, loaded) => {
         setProgress(interpolate(0.2, 0.98, loaded / total));
@@ -234,6 +235,8 @@
     })();
 
 ;
+
+    if (!scaffolding) { handleError(new Error('Cannot run: scaffolding was not initialized.')); return; }
 
     const run = async () => {
       const projectData = await getProjectData();

@@ -32,7 +32,8 @@
     const CHAT_APP_ID = "chatbot";
     const CLIENT_ID_KEY = "jc_chatbot_client_id";
     const UPLOAD_LIMIT_KEY = "jc_chatbot_upload_day";
-    const ATTACHMENT_MODEL_FALLBACK = "gemini-2.5-flash";
+    const ATTACHMENT_MODEL = "nvidia/meta/llama-4-maverick-17b-128e-instruct";
+    const MAX_DOCUMENT_UPLOAD_BYTES = 12 * 1024 * 1024;
     const WEB_SEARCH_AUTO_RE = /\b(latest|current|today|tonight|yesterday|tomorrow|this week|this month|this year|news|headline|recent|new|now|live|price|stock|weather|schedule|score|release date|version|update|verify|fact check|look up|search|web|internet|browse|who is|what is|where is|when is|which|compare|best|top|review|available|released|changed)\b/i;
     const WEB_SEARCH_SKIP_RE = /\b(remember this|save to memory|call me|my name is|clear chat|new chat|download memory|upload memory|make|generate|create|write|export|build)\b/i;
     const LEGACY_MODEL_REDIRECTS = {
@@ -113,11 +114,7 @@
     }
 
     function getAttachmentModelSelection() {
-      const selected = normalizeModelSelection(modelSelect?.value || "");
-      if (selected.startsWith("gemini-")) {
-        return selected;
-      }
-      return ATTACHMENT_MODEL_FALLBACK;
+      return ATTACHMENT_MODEL;
     }
 
     function willLikelySearchWeb(message, attachment = null) {
@@ -223,6 +220,16 @@
         bytes[i] = binary.charCodeAt(i);
       }
       return new Blob([bytes], { type: mimeType || "application/octet-stream" });
+    }
+
+    function arrayBufferToBase64(buffer) {
+      const bytes = new Uint8Array(buffer);
+      let binary = "";
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+      }
+      return btoa(binary);
     }
 
     async function downloadGeneratedFile(fileId, button) {
@@ -708,21 +715,28 @@
         e.target.value = "";
         return;
       }
+      if (file.size > MAX_DOCUMENT_UPLOAD_BYTES) {
+        addBubble("That document is too large. Uploads are limited to 12 MB.", "bot");
+        e.target.value = "";
+        return;
+      }
 
       const reader = new FileReader();
       reader.onload = (event) => {
-        const text = typeof event.target.result === "string" ? event.target.result : "";
+        const buffer = event.target.result;
         currentAttachment = {
           kind: "file",
-          mimeType: file.type || "text/plain",
-          data: btoa(unescape(encodeURIComponent(text))).slice(0, 350000),
-          text: text.slice(0, 12000),
+          mimeType: file.type || "application/octet-stream",
+          data: arrayBufferToBase64(buffer),
           name: file.name
         };
         updateComposerAttachment();
         chatText.focus();
       };
-      reader.readAsText(file);
+      reader.onerror = () => {
+        addBubble("Could not read that document. Try a different file.", "bot");
+      };
+      reader.readAsArrayBuffer(file);
     });
 
     updateModelFilter();
