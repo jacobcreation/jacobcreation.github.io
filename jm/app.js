@@ -1,0 +1,1051 @@
+    // ============================
+    // CONFIG
+    // ============================
+    const WORKER_ROUTE_URL = "https://protect.b4rjxr9lk.workers.dev/route";
+    const OPENCAGE_API_KEY = "3ff7094f176242cf915d8decfdda6766";
+    const STORAGE_KEY = "jm_v2_state";
+    const AUTO_ROUTE_MS = 25000;
+    const QUICK_DESTINATIONS = [
+      { label: "SM City CDO", q: "SM CDO Downtown Premier" },
+      { label: "Laguindingan Airport", q: "Laguindingan Airport" },
+      { label: "Ayala Center Cebu", q: "Ayala Center Cebu" },
+      { label: "BGC High Street", q: "Bonifacio High Street" }
+    ];
+
+    const TILE_CONFIGS = {
+      osm: {
+        url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        options: { maxZoom: 19, attribution: "&copy; OpenStreetMap contributors" }
+      },
+      voyager: {
+        url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+        options: { maxZoom: 20, attribution: "&copy; OpenStreetMap contributors &copy; CARTO" }
+      },
+      dark: {
+        url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        options: { maxZoom: 20, attribution: "&copy; OpenStreetMap contributors &copy; CARTO" }
+      },
+      sat: {
+        url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        options: { maxZoom: 19, attribution: "Tiles &copy; Esri" }
+      }
+    };
+
+    // ============================
+    // GLOBALS
+    // ============================
+    let map = null;
+    let mapLayer = null;
+    let userMarker = null;
+    let lastPosition = null;
+    let lastGPSUpdateAt = 0;
+
+    let destination = null;
+    let destinationMarker = null;
+
+    let routeLine = null;
+    let routeMode = "normal";
+    let autoRouteOn = false;
+    let followOn = false;
+    let autoRouteTimer = null;
+
+    let addingCheckpoint = false;
+    let checkpoints = [];
+    let checkpointMarkers = [];
+
+    let favorites = [];
+    let recentSearches = [];
+    let tileMode = "osm";
+
+    // ============================
+    // ELEMENTS
+    // ============================
+    const statusTextEl = document.getElementById("statusText");
+    const gpsBadgeEl = document.getElementById("gpsBadge");
+    const coordsEl = document.getElementById("coords");
+    const speedTextEl = document.getElementById("speedText");
+    const destTextEl = document.getElementById("destText");
+    const routeTextEl = document.getElementById("routeText");
+    const distanceTextEl = document.getElementById("distanceText");
+    const clockTextEl = document.getElementById("clockText");
+
+    const panelEl = document.getElementById("panel");
+    const panelToggle = document.getElementById("panelToggle");
+
+    const recenterBtn = document.getElementById("recenterBtn");
+    const fitRouteBtn = document.getElementById("fitRouteBtn");
+    const normalBtn = document.getElementById("normalBtn");
+    const highwayBtn = document.getElementById("highwayBtn");
+    const forceBtn = document.getElementById("forceBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const followBtn = document.getElementById("followBtn");
+    const autoRouteBtn = document.getElementById("autoRouteBtn");
+
+    const addCheckpointBtn = document.getElementById("addCheckpointBtn");
+    const undoCheckpointBtn = document.getElementById("undoCheckpointBtn");
+    const clearCheckpointBtn = document.getElementById("clearCheckpointBtn");
+    const exportCheckpointBtn = document.getElementById("exportCheckpointBtn");
+    const importCheckpointBtn = document.getElementById("importCheckpointBtn");
+    const checkpointImportInput = document.getElementById("checkpointImportInput");
+
+    const checkpointList = document.getElementById("checkpointList");
+    const favoriteList = document.getElementById("favoriteList");
+    const recentList = document.getElementById("recentList");
+    const recentSearchesList = document.getElementById("recentSearchesList");
+    const quickPicks = document.getElementById("quickPicks");
+
+    const searchInput = document.getElementById("searchInput");
+    const searchBtn = document.getElementById("searchBtn");
+    const saveFavoriteBtn = document.getElementById("saveFavoriteBtn");
+    const shareBtn = document.getElementById("shareBtn");
+    const copyCoordsBtn = document.getElementById("copyCoordsBtn");
+    const tileSelect = document.getElementById("tileSelect");
+
+    window.addEventListener("load", () => {
+      if (window.innerWidth <= 640) {
+        panelEl.classList.add("collapsed");
+      }
+      loadState();
+      initClock();
+      initMap();
+      hydrateFromURL();
+      renderQuickPicks();
+      renderFavorites();
+      renderRecentSearches();
+      renderCheckpointList();
+      setActiveRouteModeButtons();
+    });
+
+    // ============================
+    // UTILITIES
+    // ============================
+    function setStatus(message) {
+      statusTextEl.textContent = message;
+    }
+
+    function safeLabel(text) {
+      return (text || "").toString().trim().slice(0, 120);
+    }
+
+    function escapeHTML(text) {
+      return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\"", "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
+    function formatClock(d) {
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function formatDistanceMeters(meters) {
+      if (!Number.isFinite(meters)) return "-";
+      if (meters < 1000) return `${Math.round(meters)} m`;
+      return `${(meters / 1000).toFixed(1)} km`;
+    }
+
+    function straightLineMeters(a, b) {
+      if (!a || !b) return null;
+      return map.distance([a.lat, a.lng], [b.lat, b.lng]);
+    }
+
+    function downloadJson(filename, payload) {
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ============================
+    // LOCAL STORAGE STATE
+    // ============================
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+
+        const data = JSON.parse(raw);
+        if (Array.isArray(data.favorites)) favorites = data.favorites.slice(0, 20);
+        if (Array.isArray(data.recentSearches)) recentSearches = data.recentSearches.slice(0, 15);
+        if (Array.isArray(data.checkpoints)) checkpoints = data.checkpoints.map(c => L.latLng(c.lat, c.lng));
+        if (typeof data.tileMode === "string" && TILE_CONFIGS[data.tileMode]) tileMode = data.tileMode;
+        if (data.destination && Number.isFinite(data.destination.lat) && Number.isFinite(data.destination.lng)) {
+          destination = L.latLng(data.destination.lat, data.destination.lng);
+          destination._label = safeLabel(data.destination.label || "Saved destination");
+        }
+      } catch (err) {
+        console.error("State load failed", err);
+      }
+    }
+
+    function saveState() {
+      try {
+        const data = {
+          favorites,
+          recentSearches,
+          checkpoints: checkpoints.map(c => ({ lat: c.lat, lng: c.lng })),
+          tileMode,
+          destination: destination ? { lat: destination.lat, lng: destination.lng, label: destination._label || "" } : null,
+          updatedAt: nowIso()
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (err) {
+        console.error("State save failed", err);
+      }
+    }
+
+    // ============================
+    // URL SHARE
+    // ============================
+    function hydrateFromURL() {
+      const url = new URL(window.location.href);
+      const destParam = url.searchParams.get("dest");
+      const cpsParam = url.searchParams.get("cps");
+
+      if (destParam) {
+        const [latStr, lngStr] = destParam.split(",");
+        const lat = Number(latStr);
+        const lng = Number(lngStr);
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+          setDestination(lat, lng, "Shared destination");
+        }
+      }
+
+      if (cpsParam) {
+        const decoded = decodeURIComponent(cpsParam);
+        const parts = decoded.split("|").filter(Boolean);
+        if (parts.length) {
+          clearCheckpoints();
+          parts.forEach((p) => {
+            const [latStr, lngStr] = p.split(",");
+            const lat = Number(latStr);
+            const lng = Number(lngStr);
+            if (Number.isFinite(lat) && Number.isFinite(lng)) addCheckpoint(lat, lng, false);
+          });
+          renderCheckpointList();
+        }
+      }
+    }
+
+    function buildShareURL() {
+      const url = new URL(window.location.href);
+      url.search = "";
+
+      if (destination) {
+        url.searchParams.set("dest", `${destination.lat.toFixed(6)},${destination.lng.toFixed(6)}`);
+      }
+
+      if (checkpoints.length) {
+        const cps = checkpoints.map(c => `${c.lat.toFixed(6)},${c.lng.toFixed(6)}`).join("|");
+        url.searchParams.set("cps", encodeURIComponent(cps));
+      }
+
+      return url.toString();
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        setStatus("Copied to clipboard.");
+      } catch {
+        setStatus("Clipboard blocked by browser.");
+      }
+    }
+
+    // ============================
+    // CLOCK
+    // ============================
+    function initClock() {
+      clockTextEl.textContent = formatClock(new Date());
+      setInterval(() => {
+        clockTextEl.textContent = formatClock(new Date());
+      }, 1000);
+    }
+
+    // ============================
+    // SEARCH + GEOCODE
+    // ============================
+    async function geocodeAddress(address) {
+      if (!OPENCAGE_API_KEY) return null;
+
+      const url = new URL("https://api.opencagedata.com/geocode/v1/json");
+      url.searchParams.set("q", address);
+      url.searchParams.set("key", OPENCAGE_API_KEY);
+      url.searchParams.set("limit", "1");
+      url.searchParams.set("no_annotations", "1");
+      url.searchParams.set("countrycode", "ph");
+
+      if (lastPosition?.coords) {
+        const { latitude, longitude } = lastPosition.coords;
+        url.searchParams.set("proximity", `${latitude},${longitude}`);
+      }
+
+      const res = await fetch(url.toString());
+      if (!res.ok) throw new Error("Geocoding failed: " + res.status);
+
+      const data = await res.json();
+      const result = data?.results?.[0];
+      if (!result?.geometry) return null;
+
+      return {
+        lat: result.geometry.lat,
+        lng: result.geometry.lng,
+        label: safeLabel(result.formatted || address)
+      };
+    }
+
+    async function handleSearch(query = null) {
+      const q = safeLabel(query || searchInput.value);
+      if (!q) return;
+
+      setStatus("Searching...");
+      try {
+        const result = await geocodeAddress(q);
+        if (!result) {
+          setStatus("No destination found.");
+          return;
+        }
+
+        setDestination(result.lat, result.lng, result.label);
+        map.setView([result.lat, result.lng], Math.max(map.getZoom(), 14), { animate: true });
+
+        addRecentSearch(q);
+        setStatus("Destination found.");
+      } catch (err) {
+        console.error(err);
+        setStatus("Search failed.");
+      }
+    }
+
+    function addRecentSearch(query) {
+      recentSearches = [query, ...recentSearches.filter(v => v !== query)].slice(0, 15);
+      renderRecentSearches();
+      saveState();
+    }
+
+    function renderRecentSearches() {
+      recentSearchesList.innerHTML = "";
+      recentList.innerHTML = "";
+
+      if (!recentSearches.length) {
+        recentList.innerHTML = `<div class="mini">No recent searches yet.</div>`;
+        return;
+      }
+
+      recentSearches.forEach((q) => {
+        const opt = document.createElement("option");
+        opt.value = q;
+        recentSearchesList.appendChild(opt);
+
+        const item = document.createElement("div");
+        item.className = "gridItem";
+
+        const main = document.createElement("div");
+        main.className = "gridItemMain";
+        main.innerHTML = `<div class="gridItemTitle">${escapeHTML(q)}</div><div class="gridItemMeta">Tap to search again</div>`;
+
+        const actions = document.createElement("div");
+        const useBtn = document.createElement("button");
+        useBtn.className = "tinyBtn";
+        useBtn.textContent = "Use";
+        useBtn.addEventListener("click", () => {
+          searchInput.value = q;
+          handleSearch(q);
+        });
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "tinyBtn";
+        delBtn.textContent = "Del";
+        delBtn.addEventListener("click", () => {
+          recentSearches = recentSearches.filter(v => v !== q);
+          renderRecentSearches();
+          saveState();
+        });
+
+        actions.append(useBtn, delBtn);
+        item.append(main, actions);
+        recentList.appendChild(item);
+      });
+    }
+
+    function renderQuickPicks() {
+      quickPicks.innerHTML = "";
+      QUICK_DESTINATIONS.forEach((d) => {
+        const chip = document.createElement("button");
+        chip.className = "btn";
+        chip.textContent = d.label;
+        chip.style.marginTop = "0.35rem";
+        chip.addEventListener("click", () => {
+          searchInput.value = d.q;
+          handleSearch(d.q);
+        });
+        quickPicks.appendChild(chip);
+      });
+    }
+
+    // ============================
+    // FAVORITES
+    // ============================
+    function addFavoriteFromDestination() {
+      if (!destination) {
+        setStatus("Set a destination first.");
+        return;
+      }
+
+      const label = destination._label || `Pinned ${destination.lat.toFixed(4)}, ${destination.lng.toFixed(4)}`;
+      const item = {
+        id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        label: safeLabel(label),
+        lat: destination.lat,
+        lng: destination.lng,
+        createdAt: nowIso()
+      };
+
+      favorites = [item, ...favorites.filter(f => !(Math.abs(f.lat - item.lat) < 0.00001 && Math.abs(f.lng - item.lng) < 0.00001))].slice(0, 20);
+      renderFavorites();
+      saveState();
+      setStatus("Saved to favorites.");
+    }
+
+    function renderFavorites() {
+      favoriteList.innerHTML = "";
+      if (!favorites.length) {
+        favoriteList.innerHTML = `<div class="mini">No favorites yet.</div>`;
+        return;
+      }
+
+      favorites.forEach((f) => {
+        const item = document.createElement("div");
+        item.className = "gridItem";
+
+        const main = document.createElement("div");
+        main.className = "gridItemMain";
+        main.innerHTML = `<div class="gridItemTitle">${escapeHTML(f.label)}</div><div class="gridItemMeta">${f.lat.toFixed(5)}, ${f.lng.toFixed(5)}</div>`;
+
+        const actions = document.createElement("div");
+
+        const goBtn = document.createElement("button");
+        goBtn.className = "tinyBtn";
+        goBtn.textContent = "Go";
+        goBtn.addEventListener("click", () => {
+          setDestination(f.lat, f.lng, f.label);
+          map.setView([f.lat, f.lng], Math.max(map.getZoom(), 14), { animate: true });
+          setStatus("Favorite destination selected.");
+        });
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "tinyBtn";
+        delBtn.textContent = "Del";
+        delBtn.addEventListener("click", () => {
+          favorites = favorites.filter(x => x.id !== f.id);
+          renderFavorites();
+          saveState();
+        });
+
+        actions.append(goBtn, delBtn);
+        item.append(main, actions);
+        favoriteList.appendChild(item);
+      });
+    }
+
+    // ============================
+    // DESTINATION
+    // ============================
+    function setDestination(lat, lng, label = null) {
+      destination = L.latLng(lat, lng);
+      destination._label = safeLabel(label || "Selected destination");
+
+      const displayName = destination._label;
+      destTextEl.innerHTML = `Destination: <b>${escapeHTML(displayName)}</b>`;
+
+      if (!destinationMarker) {
+        destinationMarker = L.marker(destination).addTo(map);
+      } else {
+        destinationMarker.setLatLng(destination);
+      }
+
+      destinationMarker.bindPopup(`Destination: ${displayName}`).openPopup();
+      updateDistanceToDestination();
+      saveState();
+    }
+
+    function clearRoute() {
+      if (routeLine) {
+        map.removeLayer(routeLine);
+        routeLine = null;
+      }
+      routeTextEl.classList.add("hidden");
+      setStatus("Route cleared.");
+    }
+
+    function updateDistanceToDestination() {
+      if (!destination || !lastPosition || !map) {
+        distanceTextEl.classList.add("hidden");
+        return;
+      }
+
+      const start = L.latLng(lastPosition.coords.latitude, lastPosition.coords.longitude);
+      const direct = straightLineMeters(start, destination);
+
+      distanceTextEl.classList.remove("hidden");
+      distanceTextEl.textContent = `Direct distance: ${formatDistanceMeters(direct)}`;
+    }
+
+    // ============================
+    // CHECKPOINTS
+    // ============================
+    function renderCheckpointList() {
+      checkpointList.innerHTML = "";
+
+      if (!checkpoints.length) {
+        checkpointList.innerHTML = `<div class="mini">No checkpoints added.</div>`;
+        return;
+      }
+
+      checkpoints.forEach((cp, i) => {
+        const item = document.createElement("div");
+        item.className = "gridItem";
+
+        const main = document.createElement("div");
+        main.className = "gridItemMain";
+        main.innerHTML = `<div class="gridItemTitle">Checkpoint #${i + 1}</div><div class="gridItemMeta">${cp.lat.toFixed(5)}, ${cp.lng.toFixed(5)}</div>`;
+
+        const actions = document.createElement("div");
+        const flyBtn = document.createElement("button");
+        flyBtn.className = "tinyBtn";
+        flyBtn.textContent = "View";
+        flyBtn.addEventListener("click", () => map.flyTo([cp.lat, cp.lng], Math.max(map.getZoom(), 15)));
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "tinyBtn";
+        delBtn.textContent = "Del";
+        delBtn.addEventListener("click", () => removeCheckpoint(i));
+
+        actions.append(flyBtn, delBtn);
+        item.append(main, actions);
+        checkpointList.appendChild(item);
+      });
+
+      saveState();
+    }
+
+    function addCheckpoint(lat, lng, save = true) {
+      const cp = L.latLng(lat, lng);
+      checkpoints.push(cp);
+
+      const m = L.marker(cp).addTo(map).bindPopup(`Checkpoint #${checkpoints.length} star`);
+      checkpointMarkers.push(m);
+
+      if (save) renderCheckpointList();
+    }
+
+    function removeCheckpoint(index) {
+      checkpoints.splice(index, 1);
+      const marker = checkpointMarkers.splice(index, 1)[0];
+      if (marker) map.removeLayer(marker);
+
+      checkpointMarkers.forEach((m, i) => m.bindPopup(`Checkpoint #${i + 1} star`));
+      renderCheckpointList();
+    }
+
+    function undoLastCheckpoint() {
+      if (!checkpoints.length) {
+        setStatus("No checkpoints to undo.");
+        return;
+      }
+      removeCheckpoint(checkpoints.length - 1);
+      setStatus("Removed last checkpoint.");
+    }
+
+    function clearCheckpoints() {
+      checkpoints = [];
+      checkpointMarkers.forEach(m => map.removeLayer(m));
+      checkpointMarkers = [];
+      renderCheckpointList();
+    }
+
+    function exportCheckpoints() {
+      const payload = {
+        exportedAt: nowIso(),
+        checkpoints: checkpoints.map((cp, idx) => ({
+          index: idx + 1,
+          lat: cp.lat,
+          lng: cp.lng
+        }))
+      };
+      downloadJson("jacobmaps-checkpoints.json", payload);
+      setStatus("Checkpoint export downloaded.");
+    }
+
+    function importCheckpointsFromFile(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const json = JSON.parse(reader.result);
+          const list = Array.isArray(json.checkpoints) ? json.checkpoints : [];
+
+          clearCheckpoints();
+          list.forEach((cp) => {
+            const lat = Number(cp.lat);
+            const lng = Number(cp.lng);
+            if (Number.isFinite(lat) && Number.isFinite(lng)) addCheckpoint(lat, lng, false);
+          });
+
+          renderCheckpointList();
+          setStatus(`Imported ${checkpoints.length} checkpoints.`);
+        } catch (err) {
+          console.error(err);
+          setStatus("Invalid checkpoint file.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // ============================
+    // POLYLINE DECODER
+    // ============================
+    function decodePolyline(str, precision = 5) {
+      let index = 0;
+      let lat = 0;
+      let lng = 0;
+      const coordinates = [];
+      const factor = Math.pow(10, precision);
+
+      while (index < str.length) {
+        let b;
+        let shift = 0;
+        let result = 0;
+
+        do {
+          b = str.charCodeAt(index++) - 63;
+          result |= (b & 0x1f) << shift;
+          shift += 5;
+        } while (b >= 0x20);
+        const dlat = (result & 1) ? ~(result >> 1) : (result >> 1);
+        lat += dlat;
+
+        shift = 0;
+        result = 0;
+        do {
+          b = str.charCodeAt(index++) - 63;
+          result |= (b & 0x1f) << shift;
+          shift += 5;
+        } while (b >= 0x20);
+        const dlng = (result & 1) ? ~(result >> 1) : (result >> 1);
+        lng += dlng;
+
+        coordinates.push([lat / factor, lng / factor]);
+      }
+
+      return coordinates;
+    }
+
+    function drawRoute(coords) {
+      if (routeLine) {
+        map.removeLayer(routeLine);
+        routeLine = null;
+      }
+
+      routeLine = L.polyline(coords, { weight: 7, opacity: 0.9, color: "#3ee2ff" }).addTo(map);
+      map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
+    }
+
+    function showRouteStats(path, label) {
+      const km = (path.distance / 1000).toFixed(1);
+      const mins = Math.round(path.time / 60000);
+      const avgKmh = path.time > 0 ? ((path.distance / 1000) / (path.time / 3600000)).toFixed(1) : "-";
+
+      setStatus(label);
+      routeTextEl.classList.remove("hidden");
+      routeTextEl.textContent = `Distance: ${km} km | ETA: ${mins} min | Avg speed: ${avgKmh} km/h`;
+    }
+
+    // ============================
+    // WORKER HELPERS
+    // ============================
+    async function getRouteFromWorkerByP1P2(start, dest, mode) {
+      const url = new URL(WORKER_ROUTE_URL);
+      url.searchParams.set("p1", `${start.lat},${start.lng}`);
+      url.searchParams.set("p2", `${dest.lat},${dest.lng}`);
+      url.searchParams.set("mode", mode);
+
+      const res = await fetch(url.toString());
+      const json = await res.json();
+
+      if (!res.ok || json.ok === false) {
+        throw new Error(json.error || "Worker failed");
+      }
+
+      return json;
+    }
+
+    async function getRouteFromWorkerByPoints(pointsString, mode) {
+      const url = new URL(WORKER_ROUTE_URL);
+      url.searchParams.set("points", pointsString);
+      url.searchParams.set("mode", mode);
+
+      const res = await fetch(url.toString());
+      const json = await res.json();
+
+      if (!res.ok || json.ok === false) {
+        throw new Error(json.error || "Worker failed");
+      }
+
+      return json;
+    }
+
+    // ============================
+    // ROUTING
+    // ============================
+    async function route(mode = "normal") {
+      routeMode = mode;
+      setActiveRouteModeButtons();
+
+      if (!lastPosition) {
+        setStatus("No GPS yet. Allow location permission.");
+        return;
+      }
+      if (!destination) {
+        setStatus("Pick a destination first.");
+        return;
+      }
+
+      const start = L.latLng(lastPosition.coords.latitude, lastPosition.coords.longitude);
+      const dest = destination;
+
+      setStatus("Routing...");
+      routeTextEl.classList.add("hidden");
+
+      try {
+        const result = await getRouteFromWorkerByP1P2(start, dest, mode);
+        const paths = result?.data?.paths || [];
+        const chosenIndex = result?.chosenIndex ?? 0;
+
+        if (!paths.length) {
+          setStatus("No route found.");
+          return;
+        }
+
+        const chosen = paths[chosenIndex] || paths[0];
+        const coords = decodePolyline(chosen.points, 5);
+
+        drawRoute(coords);
+        showRouteStats(chosen, mode === "highway" ? "Highway preferred route ready." : "Normal route ready.");
+      } catch (err) {
+        console.error(err);
+        setStatus("Routing failed.");
+      }
+    }
+
+    async function forceHighwayRoute() {
+      routeMode = "forced";
+      setActiveRouteModeButtons();
+
+      if (!lastPosition) {
+        setStatus("No GPS yet.");
+        return;
+      }
+      if (!destination) {
+        setStatus("Pick a destination first.");
+        return;
+      }
+
+      setStatus("Forcing highway route...");
+      routeTextEl.classList.add("hidden");
+
+      const start = `${lastPosition.coords.latitude},${lastPosition.coords.longitude}`;
+      const dest = `${destination.lat},${destination.lng}`;
+
+      if (checkpoints.length) {
+        const cpStrings = checkpoints.map(c => `${c.lat},${c.lng}`);
+        const pointsString = [start, ...cpStrings, dest].join("|");
+
+        try {
+          const json = await getRouteFromWorkerByPoints(pointsString, "forced");
+          const path = json?.data?.paths?.[0];
+          if (!path) {
+            setStatus("No forced route found.");
+            return;
+          }
+
+          drawRoute(decodePolyline(path.points, 5));
+          showRouteStats(path, "Forced route with checkpoints ready.");
+          return;
+        } catch (err) {
+          console.error(err);
+          setStatus("Forced route failed.");
+          return;
+        }
+      }
+
+      const universalCheckpoint = "8.5950,124.4560";
+      const pointsString = [start, universalCheckpoint, dest].join("|");
+
+      try {
+        const json = await getRouteFromWorkerByPoints(pointsString, "forced");
+        const path = json?.data?.paths?.[0];
+
+        if (!path) {
+          setStatus("No forced route found.");
+          return;
+        }
+
+        drawRoute(decodePolyline(path.points, 5));
+        showRouteStats(path, "Forced highway route ready.");
+      } catch (err) {
+        console.error(err);
+        setStatus("Forced route failed.");
+      }
+    }
+
+    function runCurrentModeRoute() {
+      if (routeMode === "forced") return forceHighwayRoute();
+      return route(routeMode);
+    }
+
+    function setActiveRouteModeButtons() {
+      [normalBtn, highwayBtn, forceBtn].forEach(btn => btn.classList.remove("isActive"));
+      if (routeMode === "highway") highwayBtn.classList.add("isActive");
+      else if (routeMode === "forced") forceBtn.classList.add("isActive");
+      else normalBtn.classList.add("isActive");
+
+      followBtn.textContent = `Follow: ${followOn ? "On" : "Off"}`;
+      followBtn.classList.toggle("isActive", followOn);
+
+      autoRouteBtn.textContent = `Auto Route: ${autoRouteOn ? "On" : "Off"}`;
+      autoRouteBtn.classList.toggle("isActive", autoRouteOn);
+
+      addCheckpointBtn.classList.toggle("isActive", addingCheckpoint);
+    }
+
+    function startAutoRouteTimer() {
+      stopAutoRouteTimer();
+      autoRouteTimer = setInterval(() => {
+        if (!autoRouteOn) return;
+        if (!destination || !lastPosition) return;
+
+        // Skip if GPS did not update in the last 45s.
+        if (Date.now() - lastGPSUpdateAt > 45000) return;
+        runCurrentModeRoute();
+      }, AUTO_ROUTE_MS);
+    }
+
+    function stopAutoRouteTimer() {
+      if (!autoRouteTimer) return;
+      clearInterval(autoRouteTimer);
+      autoRouteTimer = null;
+    }
+
+    // ============================
+    // TILE LAYERS
+    // ============================
+    function applyTileMode(mode) {
+      if (!TILE_CONFIGS[mode]) return;
+      tileMode = mode;
+      if (tileSelect.value !== mode) tileSelect.value = mode;
+
+      if (mapLayer) map.removeLayer(mapLayer);
+      const cfg = TILE_CONFIGS[mode];
+      mapLayer = L.tileLayer(cfg.url, cfg.options).addTo(map);
+
+      saveState();
+    }
+
+    // ============================
+    // INIT MAP
+    // ============================
+    function initMap() {
+      setStatus("Loading map...");
+
+      map = L.map("map").setView([12.8797, 121.7740], 6);
+      applyTileMode(tileMode);
+
+      userMarker = L.marker([12.8797, 121.7740]).bindPopup("You are here");
+
+      if (destination) {
+        setDestination(destination.lat, destination.lng, destination._label || "Saved destination");
+      }
+
+      // Restore checkpoints from state.
+      if (checkpoints.length) {
+        const cpCopy = checkpoints.slice();
+        checkpoints = [];
+        cpCopy.forEach(cp => addCheckpoint(cp.lat, cp.lng, false));
+        renderCheckpointList();
+      }
+
+      map.on("click", (e) => {
+        if (addingCheckpoint) {
+          addCheckpoint(e.latlng.lat, e.latlng.lng);
+          setStatus("Checkpoint added. Click map to keep adding.");
+          return;
+        }
+
+        setDestination(e.latlng.lat, e.latlng.lng, `Pinned ${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`);
+        setStatus("Destination set.");
+      });
+
+      recenterBtn.addEventListener("click", () => {
+        if (!lastPosition) return;
+        map.setView([lastPosition.coords.latitude, lastPosition.coords.longitude], Math.max(map.getZoom(), 16), { animate: true });
+      });
+
+      fitRouteBtn.addEventListener("click", () => {
+        if (!routeLine) {
+          setStatus("No route to fit.");
+          return;
+        }
+        map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
+      });
+
+      normalBtn.addEventListener("click", () => route("normal"));
+      highwayBtn.addEventListener("click", () => route("highway"));
+      forceBtn.addEventListener("click", () => forceHighwayRoute());
+
+      clearBtn.addEventListener("click", clearRoute);
+
+      followBtn.addEventListener("click", () => {
+        followOn = !followOn;
+        setActiveRouteModeButtons();
+        setStatus(`Follow mode ${followOn ? "enabled" : "disabled"}.`);
+      });
+
+      autoRouteBtn.addEventListener("click", () => {
+        autoRouteOn = !autoRouteOn;
+        setActiveRouteModeButtons();
+        if (autoRouteOn) {
+          startAutoRouteTimer();
+          setStatus("Auto route enabled.");
+        } else {
+          stopAutoRouteTimer();
+          setStatus("Auto route disabled.");
+        }
+      });
+
+      addCheckpointBtn.addEventListener("click", () => {
+        addingCheckpoint = !addingCheckpoint;
+        setActiveRouteModeButtons();
+        setStatus(addingCheckpoint ? "Checkpoint mode ON." : "Checkpoint mode OFF.");
+      });
+
+      undoCheckpointBtn.addEventListener("click", undoLastCheckpoint);
+
+      clearCheckpointBtn.addEventListener("click", () => {
+        clearCheckpoints();
+        setStatus("Checkpoints cleared.");
+      });
+
+      exportCheckpointBtn.addEventListener("click", exportCheckpoints);
+      importCheckpointBtn.addEventListener("click", () => checkpointImportInput.click());
+      checkpointImportInput.addEventListener("change", () => {
+        const file = checkpointImportInput.files?.[0];
+        if (file) importCheckpointsFromFile(file);
+        checkpointImportInput.value = "";
+      });
+
+      searchBtn.addEventListener("click", () => handleSearch());
+      searchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") handleSearch();
+      });
+
+      saveFavoriteBtn.addEventListener("click", addFavoriteFromDestination);
+
+      shareBtn.addEventListener("click", () => {
+        const url = buildShareURL();
+        copyText(url);
+      });
+
+      copyCoordsBtn.addEventListener("click", () => {
+        if (!destination) {
+          setStatus("No destination to copy.");
+          return;
+        }
+        copyText(`${destination.lat.toFixed(6)},${destination.lng.toFixed(6)}`);
+      });
+
+      tileSelect.value = tileMode;
+      tileSelect.addEventListener("change", () => applyTileMode(tileSelect.value));
+
+      panelToggle.addEventListener("click", () => {
+        panelEl.classList.toggle("collapsed");
+      });
+
+      // Keyboard shortcuts.
+      window.addEventListener("keydown", (e) => {
+        if (["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)) return;
+
+        if (e.key === "n" || e.key === "N") route("normal");
+        if (e.key === "h" || e.key === "H") route("highway");
+        if (e.key === "f" || e.key === "F") forceHighwayRoute();
+        if (e.key === "r" || e.key === "R") recenterBtn.click();
+        if (e.key === "c" || e.key === "C") addCheckpointBtn.click();
+      });
+
+      if (!("geolocation" in navigator)) {
+        setStatus("Geolocation not supported.");
+        gpsBadgeEl.textContent = "GPS: unsupported";
+        return;
+      }
+
+      setStatus("Waiting for location permission...");
+
+      navigator.geolocation.watchPosition(
+        (pos) => {
+          lastPosition = pos;
+          lastGPSUpdateAt = Date.now();
+
+          const { latitude, longitude, accuracy, speed } = pos.coords;
+
+          if (!userMarker._map) {
+            userMarker.addTo(map);
+            map.setView([latitude, longitude], 15);
+          }
+
+          userMarker.setLatLng([latitude, longitude]);
+
+          if (followOn) {
+            map.setView([latitude, longitude], Math.max(map.getZoom(), 16), { animate: true });
+          }
+
+          coordsEl.classList.remove("hidden");
+          coordsEl.textContent = `Lat: ${latitude.toFixed(6)} | Lng: ${longitude.toFixed(6)} | +/-${Math.round(accuracy)}m`;
+
+          if (Number.isFinite(speed) && speed >= 0) {
+            speedTextEl.classList.remove("hidden");
+            speedTextEl.textContent = `Speed: ${(speed * 3.6).toFixed(1)} km/h`;
+          } else {
+            speedTextEl.classList.add("hidden");
+          }
+
+          gpsBadgeEl.textContent = "GPS: live";
+          setStatus("GPS live.");
+          updateDistanceToDestination();
+        },
+        (err) => {
+          const messages = {
+            1: "Permission denied. Allow location access in browser.",
+            2: "Position unavailable. Move to open area.",
+            3: "Timeout getting position."
+          };
+          setStatus(messages[err.code] || (`Geolocation error: ${err.message}`));
+          gpsBadgeEl.textContent = "GPS: error";
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 5000,
+          timeout: 20000
+        }
+      );
+
+      renderCheckpointList();
+      startAutoRouteTimer();
+    }

@@ -1,0 +1,309 @@
+    /* Design Tokens */
+    :root {
+      --bg1: #0b1020;
+      --bg2: #0a1633;
+      --card: rgba(255, 255, 255, 0.08);
+      --card2: rgba(255, 255, 255, 0.12);
+      --border: rgba(255, 255, 255, 0.14);
+      --text: #eaf2ff;
+      --muted: rgba(234, 242, 255, 0.75);
+      --blue: #4ea1ff;
+      --red: #ff4c4c;
+      --green: #4ade80;
+      --shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(78, 161, 255, 0.30), transparent 55%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 80px;
+    }
+
+    /* Game Layout */
+    .game-container {
+      width: 100%;
+      max-width: 800px;
+      padding: 0 20px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+    }
+
+    /* Level Indicator */
+    .level-badge {
+      background: linear-gradient(90deg, #ff8c00, #ff0055);
+      padding: 6px 16px;
+      border-radius: 99px;
+      font-weight: 800;
+      font-family: "Orbitron", sans-serif;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      box-shadow: 0 0 15px rgba(255, 140, 0, 0.4);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    /* Arena (Health Bars & Avatars) */
+    .arena {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 0px;
+      gap: 20px;
+    }
+
+    .fighter {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 15px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .avatar {
+      font-size: 3rem;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+      transition: transform 0.2s;
+    }
+
+    .shake {
+      animation: shake 0.5s;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-5px) rotate(-5deg);
+      }
+
+      75% {
+        transform: translateX(5px) rotate(5deg);
+      }
+    }
+
+    .health-track {
+      width: 100%;
+      height: 12px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .health-fill {
+      height: 100%;
+      background: var(--green);
+      width: 100%;
+      transition: width 0.5s ease, background 0.3s;
+    }
+
+    .health-fill.low {
+      background: var(--red);
+    }
+
+    .health-fill.med {
+      background: #ffaa00;
+    }
+
+    .name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    /* Riddle Card */
+    .card {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 30px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #riddle-text {
+      font-size: 1.3rem;
+      line-height: 1.6;
+      text-align: center;
+      min-height: 60px;
+      margin: 0;
+    }
+
+    .placeholder {
+      font-style: italic;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    /* Input Area */
+    .input-wrap {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 450px;
+      transition: all 0.3s ease;
+    }
+
+    .input-wrap.hidden {
+      opacity: 0.5;
+      pointer-events: none;
+      filter: blur(2px);
+    }
+
+    input {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 14px 24px;
+      color: white;
+      font-family: inherit;
+      font-size: 1.1rem;
+      outline: none;
+      transition: 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(78, 161, 255, 0.2);
+    }
+
+    .btn {
+      border: none;
+      padding: 12px 28px;
+      border-radius: 999px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: transform 0.2s;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1e90ff, #ff2d2d);
+      color: white;
+      box-shadow: 0 4px 15px rgba(30, 144, 255, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 22px rgba(30, 144, 255, 0.5);
+    }
+
+    .btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Feedback & Status */
+    .status-msg {
+      font-weight: 700;
+      font-size: 1.2rem;
+      height: 30px;
+      text-align: center;
+    }
+
+    .game-over-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s;
+    }
+
+    .game-over-overlay.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .game-over-title {
+      font-size: 3rem;
+      font-family: "Orbitron";
+      font-weight: 800;
+    }
+
+    .win-text {
+      color: var(--green);
+      text-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
+    }
+
+    .lose-text {
+      color: var(--red);
+      text-shadow: 0 0 20px rgba(255, 76, 76, 0.5);
+    }
+
+    .spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+      margin: 10px auto;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loading .spinner {
+      display: block;
+    }

@@ -1,0 +1,272 @@
+:root {
+    --bg: #0d0d1a;
+    --surface: #1a1a2e;
+    --text: #e0e0e0;
+    --accent: #4fc3f7;
+    --white-key: #f5f5f0;
+    --white-key-hover: #e8e5dc;
+    --white-key-active: #d4d0c4;
+    --black-key: #1a1a1a;
+    --black-key-active: #2d2d2d;
+    --border: #2a2a3e;
+    --wk-w: 44px;
+    --bk-w: 26px;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#status {
+    font-size: 0.75rem;
+    color: var(--accent);
+    background: rgba(79, 195, 247, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    transition: opacity 0.3s;
+}
+
+.status-hidden {
+    opacity: 0;
+}
+
+.toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    transition: background 0.2s;
+}
+
+.toggle:active {
+    background: rgba(255,255,255,0.12);
+}
+
+.toggle input {
+    accent-color: var(--accent);
+}
+
+.keyboard-wrapper {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    position: relative;
+    background: linear-gradient(180deg, #1a1a2e 0%, #0d0d1a 100%);
+    touch-action: none; /* Crucial for multi-touch and glissando */
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.keyboard-wrapper::before,
+.keyboard-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 24px;
+    pointer-events: none;
+    z-index: 20;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.keyboard-wrapper::before {
+    left: 0;
+    background: linear-gradient(270deg, transparent, rgba(13,13,26,0.85));
+}
+
+.keyboard-wrapper::after {
+    right: 0;
+    background: linear-gradient(90deg, transparent, rgba(13,13,26,0.85));
+}
+
+.keyboard-wrapper.scrollable-right::after {
+    opacity: 1;
+}
+
+.keyboard-wrapper.scrollable-left::before {
+    opacity: 1;
+}
+
+.keyboard-wrapper::-webkit-scrollbar {
+    height: 6px;
+}
+
+.keyboard-wrapper::-webkit-scrollbar-track {
+    background: var(--bg);
+}
+
+.keyboard-wrapper::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .keyboard-wrapper::-webkit-scrollbar {
+        height: 3px;
+    }
+    .keyboard-wrapper::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.15);
+    }
+}
+
+.keyboard {
+    display: flex;
+    height: 100%;
+    position: relative;
+    padding: 0;
+}
+
+.white-key {
+    height: 100%;
+    width: var(--wk-w);
+    background: var(--white-key);
+    border: 1px solid #ccc;
+    border-right-color: #bbb;
+    border-bottom: 3px solid #bbb;
+    border-radius: 0 0 6px 6px;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.05s, border-bottom-width 0.05s;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 8px;
+}
+
+.white-key:hover {
+    background: var(--white-key-hover);
+}
+
+.white-key.active {
+    background: var(--white-key-active);
+    border-bottom-width: 1px;
+    border-bottom-color: #999;
+    transition: none;
+}
+
+.key-label {
+    font-size: 9px;
+    color: #888;
+    pointer-events: none;
+    user-select: none;
+    display: none;
+}
+
+.show-labels .key-label {
+    display: block;
+}
+
+.key-label.octave-start {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 10px;
+}
+
+.black-key {
+    position: absolute;
+    top: 0;
+    height: 58%;
+    background: var(--black-key);
+    border: 1px solid #111;
+    border-bottom: 4px solid #000;
+    border-radius: 0 0 5px 5px;
+    cursor: pointer;
+    z-index: 10;
+    transition: background 0.05s, border-bottom-width 0.05s, height 0.05s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 -1px 2px rgba(255,255,255,0.05);
+}
+
+.black-key:hover {
+    background: #222;
+}
+
+.black-key.active {
+    background: var(--black-key-active);
+    border-bottom-width: 2px;
+    height: 57%;
+    transition: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+
+footer {
+    height: 4px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+    header {
+        padding: 4px 10px;
+    }
+    header h1 {
+        font-size: 1rem;
+    }
+    .toggle {
+        font-size: 0.75rem;
+        padding: 2px 8px;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 480px) {
+    header {
+        padding: 2px 10px;
+    }
+    header h1 {
+        font-size: 0.85rem;
+    }
+    .toggle {
+        font-size: 0.7rem;
+        padding: 1px 6px;
+    }
+    .keyboard-wrapper {
+        background: linear-gradient(180deg, #1a1a2e 0%, #0d0d1a 100%);
+    }
+}

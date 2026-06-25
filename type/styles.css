@@ -1,0 +1,487 @@
+        :root {
+            --bg-dark: #050a18;
+            --bg-light: #0d1b3e;
+            --text-main: #eaf2ff;
+            --accent-blue: #00d2ff;
+            --accent-purple: #9d50bb;
+            --accent-gold: #ffcc33;
+            --accent-red: #ff4b2b;
+            --card-glass: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --shadow-neon: 0 0 20px rgba(0, 210, 255, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Poppins", sans-serif;
+            color: var(--text-main);
+            background: radial-gradient(circle at center, var(--bg-light), var(--bg-dark));
+            display: flex;
+            flex-direction: row;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Main Content Area */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-family: "Orbitron", sans-serif;
+            font-size: 3rem;
+            margin: 0;
+            background: linear-gradient(to right, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            filter: drop-shadow(0 0 10px rgba(0, 210, 255, 0.5));
+        }
+
+        /* Game HUD */
+        #hud {
+            display: flex;
+            gap: 30px;
+            background: var(--card-glass);
+            padding: 15px 30px;
+            border-radius: 50px;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-neon);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--accent-blue);
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-family: "Orbitron", sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+        }
+
+        #points-display {
+            color: var(--accent-gold);
+        }
+
+        /* Game Container */
+        #game-viewport {
+            position: relative;
+            width: 100%;
+            max-width: 1000px;
+            height: 60vh;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 24px;
+            border: 2px solid var(--card-border);
+            overflow: hidden;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
+        }
+
+        #game-over-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(5, 10, 24, 0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .game-over-text {
+            font-family: "Bangers", cursive;
+            font-size: 6rem;
+            color: var(--accent-red);
+            text-shadow: 0 0 20px rgba(255, 75, 43, 0.6);
+            margin-bottom: 20px;
+        }
+
+        /* Words */
+        .word {
+            position: absolute;
+            font-family: "Orbitron", sans-serif;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 0 0 8px var(--accent-blue);
+            white-space: nowrap;
+            pointer-events: none;
+            transition: transform 0.1s linear;
+            z-index: 10;
+        }
+
+        .word.frozen {
+            color: var(--accent-blue) !important;
+            text-shadow: 0 0 15px #fff;
+        }
+
+        .word.exploding {
+            animation: explode 0.4s forwards;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(3);
+                opacity: 0;
+                color: var(--accent-red);
+            }
+        }
+
+        /* Input area */
+        #input-container {
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        #main-input {
+            width: 100%;
+            padding: 15px 25px;
+            font-size: 1.5rem;
+            background: var(--card-glass);
+            border: 2px solid var(--card-border);
+            border-radius: 15px;
+            color: white;
+            outline: none;
+            text-align: center;
+            font-family: "Orbitron", sans-serif;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        #main-input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
+        }
+
+        /* Sidebars */
+        .sidebar {
+            width: 320px;
+            background: rgba(5, 10, 24, 0.6);
+            backdrop-filter: blur(15px);
+            border-left: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+            overflow-y: auto;
+        }
+
+        .sidebar-title {
+            font-family: "Orbitron", sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--accent-gold);
+            padding-bottom: 10px;
+        }
+
+        /* Store Items */
+        .store-item {
+            background: var(--card-glass);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: transform 0.2s, background 0.2s;
+            cursor: pointer;
+        }
+
+        .store-item:hover {
+            transform: translateX(-5px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-name {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .item-cost {
+            background: var(--accent-gold);
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 800;
+        }
+
+        .item-desc {
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+
+        .item-shortcut {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: var(--accent-purple);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        /* Inventory */
+        #inventory {
+            margin-top: auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding-top: 20px;
+            border-top: 1px solid var(--card-border);
+        }
+
+        .inv-slot {
+            aspect-ratio: 1;
+            background: var(--card-glass);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            font-size: 1.2rem;
+        }
+
+        .inv-count {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: var(--accent-blue);
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 5px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        /* Controls */
+        #controls {
+            margin-top: 20px;
+        }
+
+        button.primary-btn {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-family: "Orbitron", sans-serif;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: white;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button.primary-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0, 210, 255, 0.4);
+        }
+
+        button.primary-btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Spell Active Indicators */
+        #active-spells {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .spell-tag {
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from {
+                opacity: 0.6;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .shield-count {
+            color: var(--accent-gold);
+            font-weight: bold;
+        }
+
+        @media (max-width: 960px) {
+            body {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+
+            main {
+                padding: 16px;
+            }
+
+            header {
+                margin-bottom: 16px;
+            }
+
+            h1 {
+                font-size: clamp(2rem, 8vw, 2.6rem);
+                letter-spacing: 2px;
+            }
+
+            #hud {
+                width: 100%;
+                gap: 14px;
+                padding: 14px 18px;
+                border-radius: 22px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            #game-viewport,
+            #input-container {
+                max-width: none;
+            }
+
+            #game-viewport {
+                height: min(56vh, 520px);
+            }
+
+            .sidebar {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid var(--card-border);
+                padding: 20px 16px 28px;
+            }
+
+            .sidebar-title {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            main {
+                padding: 12px;
+            }
+
+            #hud {
+                gap: 10px;
+                padding: 12px;
+            }
+
+            .stat-item {
+                min-width: calc(50% - 8px);
+            }
+
+            .stat-value {
+                font-size: 1.1rem;
+            }
+
+            #game-viewport {
+                height: min(50vh, 380px);
+                border-radius: 18px;
+            }
+
+            .word {
+                font-size: 1.15rem;
+            }
+
+            #input-container {
+                margin-top: 14px;
+            }
+
+            #main-input {
+                padding: 14px 16px;
+                font-size: 1.1rem;
+            }
+
+            button.primary-btn {
+                width: 100%;
+                padding: 14px 18px;
+                font-size: 1rem;
+            }
+
+            .sidebar {
+                padding: 18px 12px 24px;
+            }
+
+            .store-item {
+                padding: 12px;
+            }
+
+            .item-header {
+                align-items: flex-start;
+                gap: 8px;
+                flex-direction: column;
+            }
+
+            #inventory {
+                gap: 8px;
+            }
+        }
