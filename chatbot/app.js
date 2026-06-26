@@ -614,7 +614,15 @@
         }
         if (data.webSearch) {
             const sourceCount = data.webSearch.resultCount === 1 ? "1 source" : `${data.webSearch.resultCount} sources`;
-            addBubble(`Web search used: ${data.webSearch.query} (${sourceCount})`, "bot");
+            console.info("Web search used", {
+                provider: data.webSearch.provider || "",
+                fallbackFrom: data.webSearch.fallbackFrom || "",
+                fallbackReason: data.webSearch.fallbackReason || "",
+                query: data.webSearch.query,
+                sourceCount,
+                sources: data.webSearch.sources || [],
+            });
+            addBubble("Searching web...", "bot");
         }
         if (data.reply) {
             addBubble(data.reply, "bot", true);
