@@ -32,7 +32,7 @@
     const CHAT_APP_ID = "chatbot";
     const CLIENT_ID_KEY = "jc_chatbot_client_id";
     const UPLOAD_LIMIT_KEY = "jc_chatbot_upload_day";
-    const ATTACHMENT_MODEL = "nvidia/meta/llama-4-maverick-17b-128e-instruct";
+    const ATTACHMENT_MODEL = "gemini-1.5-flash";
     const MAX_DOCUMENT_UPLOAD_BYTES = 12 * 1024 * 1024;
     const WEB_SEARCH_AUTO_RE = /\b(latest|current|today|tonight|yesterday|tomorrow|this week|this month|this year|news|headline|recent|new|now|live|price|stock|weather|schedule|score|release date|version|update|verify|fact check|look up|search|web|internet|browse|who is|what is|where is|when is|which|compare|best|top|review|available|released|changed)\b/i;
     const WEB_SEARCH_SKIP_RE = /\b(remember this|save to memory|call me|my name is|clear chat|new chat|download memory|upload memory|make|generate|create|write|export|build)\b/i;

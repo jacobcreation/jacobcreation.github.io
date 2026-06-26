@@ -94,6 +94,7 @@
                   <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
                   <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
                   <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                  <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
                   <option value="@cf/google/gemma-4-26b-a4b-it">Gemma 4 26B</option>
                 </optgroup>
                 <optgroup label="Mistral / Mixtral">
@@ -154,7 +155,7 @@
 
             <!-- Row 3: Note -->
             <div class="tiny-note">
-              Auto web search uses Tavily for most knowledge/current questions, and the chat shows when it is searching. Images and files use Llama 4 Maverick on NVIDIA NIM automatically and are limited to 1 upload per day. To save chats to your account, make an account, then open the ☁️ chats menu.
+              Auto web search uses Tavily for most knowledge/current questions, and the chat shows when it is searching. Images and files request Gemini 1.5 Flash first, fall back to current Gemini Flash if needed, and are limited to 1 upload per day. To save chats to your account, make an account, then open the ☁️ chats menu.
             </div>
 
             <div class="cloud-panel" id="cloudChatsPanel">
@@ -179,7 +180,7 @@
             <img id="composerAttachmentImg" alt="Attached image preview" />
             <div class="attachment-meta">
               <span class="attachment-name" id="composerAttachmentName"></span>
-              <span class="attachment-note">Uploads use NVIDIA NIM Llama 4 Maverick and are limited to 1 per day</span>
+              <span class="attachment-note">Uploads request Gemini 1.5 Flash first and are limited to 1 per day</span>
             </div>
             <button class="remove-attachment" type="button" id="removeAttachmentBtn" title="Remove image">×</button>
           </div>
