@@ -38,6 +38,8 @@
     const WEB_SEARCH_SKIP_RE = /\b(remember this|save to memory|call me|my name is|clear chat|new chat|download memory|upload memory|make|generate|create|write|export|build)\b/i;
     const LEGACY_MODEL_REDIRECTS = {
       "cerebras/qwen-3-235b-a22b-instruct-2507": "cerebras/gpt-oss-120b",
+      "cohere/command-r": "cohere/command-r-08-2024",
+      "cohere/command-r-plus": "cohere/command-r-plus-08-2024",
       "@cf/mistral/mistral-small-3.1-24b-instruct": "@cf/mistralai/mistral-small-3.1-24b-instruct",
       "@cf/mistralai/mistral-7b-instruct-v0.2-lora": "@cf/mistral/mistral-7b-instruct-v0.2-lora",
       "@cf/qwen/qwen2.5-72b-instruct": "@cf/qwen/qwen3-30b-a3b-fp8",
