@@ -32,8 +32,9 @@
     const CHAT_APP_ID = "chatbot";
     const CLIENT_ID_KEY = "jc_chatbot_client_id";
     const UPLOAD_LIMIT_KEY = "jc_chatbot_upload_day";
-    const ATTACHMENT_MODEL = "gemini-1.5-flash";
     const MAX_DOCUMENT_UPLOAD_BYTES = 12 * 1024 * 1024;
+    const MAX_AUDIO_UPLOAD_BYTES = 12 * 1024 * 1024;
+    const MAX_VIDEO_UPLOAD_BYTES = 12 * 1024 * 1024;
     const WEB_SEARCH_AUTO_RE = /\b(latest|current|today|tonight|yesterday|tomorrow|this week|this month|this year|news|headline|recent|new|now|live|price|stock|weather|schedule|score|release date|version|update|verify|fact check|look up|search|web|internet|browse|who is|what is|where is|when is|which|compare|best|top|review|available|released|changed)\b/i;
     const WEB_SEARCH_SKIP_RE = /\b(remember this|save to memory|call me|my name is|clear chat|new chat|download memory|upload memory|make|generate|create|write|export|build)\b/i;
     const LEGACY_MODEL_REDIRECTS = {
@@ -116,7 +117,7 @@
     }
 
     function getAttachmentModelSelection() {
-      return ATTACHMENT_MODEL;
+      return "@cf/meta/llama-4-scout-17b-16e-instruct";
     }
 
     function willLikelySearchWeb(message, attachment = null) {
@@ -189,12 +190,33 @@
               chatBody.appendChild(div);
           }
       } else {
-          if (attachment && attachment.dataUrl) {
-            const img = document.createElement("img");
-            img.className = "bubble-attachment";
-            img.src = attachment.dataUrl;
-            img.alt = attachment.name ? `Attached image: ${attachment.name}` : "Attached image";
-            div.appendChild(img);
+          if (attachment && (attachment.dataUrl || attachment.thumbnailUrl || attachment.kind === "audio" || attachment.kind === "video")) {
+            if (attachment.kind === "audio") {
+              const media = document.createElement("div");
+              media.className = "bubble-media-card audio";
+              media.textContent = attachment.name ? `Audio uploaded: ${attachment.name}` : "Audio uploaded";
+              div.appendChild(media);
+            } else if (attachment.kind === "video" && !attachment.thumbnailUrl && !attachment.dataUrl) {
+              const media = document.createElement("div");
+              media.className = "bubble-media-card video";
+              media.textContent = attachment.name ? `Video uploaded: ${attachment.name}` : "Video uploaded";
+              div.appendChild(media);
+            } else {
+              const wrap = document.createElement("div");
+              wrap.className = attachment.kind === "video" ? "bubble-video-wrap" : "bubble-image-wrap";
+              const img = document.createElement("img");
+              img.className = "bubble-attachment";
+              img.src = attachment.thumbnailUrl || attachment.dataUrl;
+              img.alt = attachment.name ? `Attached ${attachment.kind}: ${attachment.name}` : `Attached ${attachment.kind}`;
+              wrap.appendChild(img);
+              if (attachment.kind === "video") {
+                const badge = document.createElement("span");
+                badge.className = "media-badge";
+                badge.textContent = "Video";
+                wrap.appendChild(badge);
+              }
+              div.appendChild(wrap);
+            }
           }
 
           const textNode = document.createElement("div");
@@ -307,20 +329,27 @@
       if (!currentAttachment) {
         composerAttachment.classList.remove("active");
         composerAttachment.classList.remove("file-mode");
+        composerAttachment.classList.remove("video-mode");
+        composerAttachment.classList.remove("audio-mode");
         composerAttachmentImg.removeAttribute("src");
         composerAttachmentName.textContent = "";
         return;
       }
 
-      if (currentAttachment.kind === "image" && currentAttachment.dataUrl) {
-        composerAttachmentImg.src = currentAttachment.dataUrl;
+      composerAttachment.classList.remove("video-mode");
+      composerAttachment.classList.remove("audio-mode");
+      if ((currentAttachment.kind === "image" || currentAttachment.kind === "video") && (currentAttachment.dataUrl || currentAttachment.thumbnailUrl)) {
+        composerAttachmentImg.src = currentAttachment.thumbnailUrl || currentAttachment.dataUrl;
         composerAttachment.classList.remove("file-mode");
+        if (currentAttachment.kind === "video") composerAttachment.classList.add("video-mode");
       } else {
         composerAttachmentImg.removeAttribute("src");
         composerAttachment.classList.add("file-mode");
+        if (currentAttachment.kind === "audio") composerAttachment.classList.add("audio-mode");
       }
 
-      composerAttachmentName.textContent = currentAttachment.name || (currentAttachment.kind === "file" ? "File" : "Image");
+      const fallbackLabel = currentAttachment.kind === "video" ? "Video" : currentAttachment.kind === "audio" ? "Audio" : currentAttachment.kind === "file" ? "File" : "Image";
+      composerAttachmentName.textContent = currentAttachment.name || fallbackLabel;
       composerAttachment.classList.add("active");
     }
 
@@ -546,6 +575,8 @@
 
       if (!msg && !currentAttachment) return;
       if (!msg && currentAttachment?.kind === "image") msg = "Please analyze this image.";
+      if (!msg && currentAttachment?.kind === "video") msg = `Please analyze this video: ${currentAttachment.name}`;
+      if (!msg && currentAttachment?.kind === "audio") msg = `Please transcribe and analyze this audio: ${currentAttachment.name}`;
       if (!msg && currentAttachment?.kind === "file") msg = `Please analyze this file: ${currentAttachment.name}`;
 
       const attachedItem = currentAttachment;
@@ -553,13 +584,17 @@
         addBubble("Uploads are limited to 1 per day. Try again tomorrow for another image or file.", "bot");
         return;
       }
-      addBubble(msg, "user", false, attachedItem?.kind === "image" ? attachedItem : null);
+      addBubble(msg, "user", false, ["image", "video", "audio"].includes(attachedItem?.kind) ? attachedItem : null);
       chatText.value = "";
       clearComposerAttachment();
 
       const typingDiv = document.createElement("div");
       typingDiv.className = "bubble bot";
-      typingDiv.textContent = willLikelySearchWeb(msg, attachedItem) ? "Searching web..." : "Thinking... 💭";
+      typingDiv.textContent = attachedItem?.kind === "audio"
+        ? "Transcribing audio..."
+        : attachedItem?.kind === "video"
+          ? "Sending raw video..."
+          : willLikelySearchWeb(msg, attachedItem) ? "Searching web..." : "Thinking... 💭";
       chatBody.appendChild(typingDiv);
       chatBody.scrollTop = chatBody.scrollHeight;
 
@@ -570,7 +605,7 @@
             sessionId: getSessionId(),
             clientId: getClientId(),
             message: msg,
-            model: attachedItem ? getAttachmentModelSelection() : (modelSelect ? modelSelect.value : "@cf/meta/llama-3.2-3b-instruct"),
+            model: attachedItem?.kind === "video" ? "google/gemma-4-31b-it" : attachedItem ? getAttachmentModelSelection() : (modelSelect ? modelSelect.value : "@cf/meta/llama-3.2-3b-instruct"),
             preset: presetSelect.value,
             replyLength: replyLengthSelect.value,
             webSearchMode: webSearchSelect.value,
@@ -586,10 +621,29 @@
 
         if (attachedItem?.kind === "file") {
           payload.file = {
+            kind: attachedItem.kind,
             mimeType: attachedItem.mimeType,
             data: attachedItem.data,
             name: attachedItem.name,
             text: attachedItem.text
+          };
+        }
+
+        if (attachedItem?.kind === "video") {
+          payload.file = {
+            kind: "video",
+            mimeType: attachedItem.mimeType,
+            name: attachedItem.name,
+            data: attachedItem.data
+          };
+        }
+
+        if (attachedItem?.kind === "audio") {
+          payload.file = {
+            kind: "audio",
+            mimeType: attachedItem.mimeType,
+            data: attachedItem.data,
+            name: attachedItem.name
           };
         }
 
@@ -725,8 +779,11 @@
         e.target.value = "";
         return;
       }
-      if (file.size > MAX_DOCUMENT_UPLOAD_BYTES) {
-        addBubble("That document is too large. Uploads are limited to 12 MB.", "bot");
+      const isVideo = (file.type || "").startsWith("video/");
+      const isAudio = (file.type || "").startsWith("audio/");
+      const maxBytes = isVideo ? MAX_VIDEO_UPLOAD_BYTES : isAudio ? MAX_AUDIO_UPLOAD_BYTES : MAX_DOCUMENT_UPLOAD_BYTES;
+      if (file.size > maxBytes) {
+        addBubble(isVideo ? "That video is too large. Raw video uploads are limited to 12 MB." : "That file is too large. Uploads are limited to 12 MB.", "bot");
         e.target.value = "";
         return;
       }
@@ -735,7 +792,7 @@
       reader.onload = (event) => {
         const buffer = event.target.result;
         currentAttachment = {
-          kind: "file",
+          kind: isVideo ? "video" : isAudio ? "audio" : "file",
           mimeType: file.type || "application/octet-stream",
           data: arrayBufferToBase64(buffer),
           name: file.name

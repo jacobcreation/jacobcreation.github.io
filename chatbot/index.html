@@ -44,7 +44,7 @@
                 <button class="mem-mini-btn" type="button" id="uploadImgBtn" title="Attach Image">🖼️</button>
                 <button class="mem-mini-btn" type="button" id="uploadFileBtn" title="Attach File">📎</button>
                 <input type="file" id="imgFileInput" accept="image/*" style="display:none;">
-                <input type="file" id="docFileInput" accept=".txt,.md,.markdown,.pdf,.docx,.zip,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip" style="display:none;">
+                <input type="file" id="docFileInput" accept=".txt,.md,.markdown,.pdf,.docx,.zip,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip,video/*,audio/*" style="display:none;">
               </div>
             </div>
 
@@ -157,7 +157,7 @@
 
             <!-- Row 3: Note -->
             <div class="tiny-note">
-              Auto web search uses Tavily for most knowledge/current questions, and the chat shows when it is searching. Images and files request Gemini 1.5 Flash first, fall back to current Gemini Flash if needed, and are limited to 1 upload per day. To save chats to your account, make an account, then open the ☁️ chats menu.
+              Auto web search uses Tavily for most knowledge/current questions, and the chat shows when it is searching. Files use Cloudflare Llama 4 Scout, raw videos use the first working NVIDIA video model, and audio is transcribed before analysis. Uploads are limited to 1 per day.
             </div>
 
             <div class="cloud-panel" id="cloudChatsPanel">
@@ -182,9 +182,9 @@
             <img id="composerAttachmentImg" alt="Attached image preview" />
             <div class="attachment-meta">
               <span class="attachment-name" id="composerAttachmentName"></span>
-              <span class="attachment-note">Uploads request Gemini 1.5 Flash first and are limited to 1 per day</span>
+              <span class="attachment-note">Files use Llama 4 Scout; videos are sent raw</span>
             </div>
-            <button class="remove-attachment" type="button" id="removeAttachmentBtn" title="Remove image">×</button>
+            <button class="remove-attachment" type="button" id="removeAttachmentBtn" title="Remove attachment">×</button>
           </div>
           <div class="composer-row">
             <input id="chatText" type="text" placeholder="Type your message..." autocomplete="off" />

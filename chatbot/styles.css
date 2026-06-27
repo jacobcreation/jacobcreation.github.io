@@ -522,6 +522,40 @@
       background: rgba(7, 17, 34, 0.08);
     }
 
+    .bubble-image-wrap,
+    .bubble-video-wrap {
+      position: relative;
+      width: fit-content;
+      max-width: 100%;
+    }
+
+    .bubble-video-wrap .bubble-attachment {
+      filter: saturate(0.95) contrast(1.05);
+    }
+
+    .media-badge {
+      position: absolute;
+      left: 10px;
+      bottom: 18px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: rgba(7, 17, 34, 0.78);
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .bubble-media-card {
+      width: min(100%, 260px);
+      margin-bottom: 10px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(7, 17, 34, 0.18);
+      background: rgba(7, 17, 34, 0.08);
+      font-size: 0.84rem;
+      line-height: 1.35;
+    }
+
     .bubble-text:empty {
       display: none;
     }
@@ -606,6 +640,14 @@
 
     .composer-attachment.file-mode img {
       display: none;
+    }
+
+    .composer-attachment.video-mode {
+      border-color: rgba(71, 184, 129, 0.55);
+    }
+
+    .composer-attachment.audio-mode {
+      border-color: rgba(255, 204, 102, 0.55);
     }
 
     .attachment-note {
