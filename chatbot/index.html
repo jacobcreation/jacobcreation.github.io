@@ -44,7 +44,7 @@
                 <button class="mem-mini-btn" type="button" id="uploadImgBtn" title="Attach Image">🖼️</button>
                 <button class="mem-mini-btn" type="button" id="uploadFileBtn" title="Attach File">📎</button>
                 <input type="file" id="imgFileInput" accept="image/*" style="display:none;">
-                <input type="file" id="docFileInput" accept=".txt,.md,.markdown,.pdf,.docx,.zip,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip,video/*,audio/*" style="display:none;">
+                <input type="file" id="docFileInput" accept="image/*,.txt,.md,.markdown,.pdf,.docx,.zip,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip,video/*,audio/*" style="display:none;">
               </div>
             </div>
 
@@ -157,7 +157,7 @@
 
             <!-- Row 3: Note -->
             <div class="tiny-note">
-              Auto web search uses Tavily for most knowledge/current questions, and the chat shows when it is searching. Files use Cloudflare Llama 4 Scout, raw videos use the first working NVIDIA video model, and audio is transcribed before analysis. Uploads are limited to 1 per day.
+              Auto web search uses Tavily for most knowledge/current questions, and the chat shows when it is searching. Images and files use Cloudflare Llama 4 Scout, raw videos use the first working NVIDIA vision model, and audio is transcribed before analysis. Uploads are limited to 1 per day.
             </div>
 
             <div class="cloud-panel" id="cloudChatsPanel">
@@ -182,7 +182,7 @@
             <img id="composerAttachmentImg" alt="Attached image preview" />
             <div class="attachment-meta">
               <span class="attachment-name" id="composerAttachmentName"></span>
-              <span class="attachment-note">Files use Llama 4 Scout; videos are sent raw</span>
+              <span class="attachment-note">Images and files use Llama 4 Scout</span>
             </div>
             <button class="remove-attachment" type="button" id="removeAttachmentBtn" title="Remove attachment">×</button>
           </div>

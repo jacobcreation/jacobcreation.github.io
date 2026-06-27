@@ -33,6 +33,7 @@
     const CLIENT_ID_KEY = "jc_chatbot_client_id";
     const UPLOAD_LIMIT_KEY = "jc_chatbot_upload_day";
     const MAX_DOCUMENT_UPLOAD_BYTES = 12 * 1024 * 1024;
+    const MAX_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024;
     const MAX_AUDIO_UPLOAD_BYTES = 12 * 1024 * 1024;
     const MAX_VIDEO_UPLOAD_BYTES = 12 * 1024 * 1024;
     const WEB_SEARCH_AUTO_RE = /\b(latest|current|today|tonight|yesterday|tomorrow|this week|this month|this year|news|headline|recent|new|now|live|price|stock|weather|schedule|score|release date|version|update|verify|fact check|look up|search|web|internet|browse|who is|what is|where is|when is|which|compare|best|top|review|available|released|changed)\b/i;
@@ -120,6 +121,10 @@
       return "@cf/meta/llama-4-scout-17b-16e-instruct";
     }
 
+    function isImageFile(file) {
+      return Boolean(file) && ((file.type || "").startsWith("image/") || /\.(png|jpe?g|webp|gif|bmp|heic|heif)$/i.test(file.name || ""));
+    }
+
     function willLikelySearchWeb(message, attachment = null) {
       if (attachment) return false;
       const mode = webSearchSelect?.value || "auto";
@@ -190,11 +195,35 @@
               chatBody.appendChild(div);
           }
       } else {
-          if (attachment && (attachment.dataUrl || attachment.thumbnailUrl || attachment.kind === "audio" || attachment.kind === "video")) {
+          if (attachment && (attachment.dataUrl || attachment.thumbnailUrl || attachment.kind === "audio" || attachment.kind === "video" || attachment.kind === "file")) {
             if (attachment.kind === "audio") {
               const media = document.createElement("div");
               media.className = "bubble-media-card audio";
               media.textContent = attachment.name ? `Audio uploaded: ${attachment.name}` : "Audio uploaded";
+              div.appendChild(media);
+            } else if (attachment.kind === "file") {
+              const media = document.createElement("div");
+              media.className = "bubble-media-card file";
+
+              const icon = document.createElement("span");
+              icon.className = "bubble-file-icon";
+              icon.textContent = "FILE";
+
+              const details = document.createElement("span");
+              details.className = "bubble-file-details";
+
+              const name = document.createElement("span");
+              name.className = "bubble-file-name";
+              name.textContent = attachment.name || "Uploaded file";
+
+              const meta = document.createElement("span");
+              meta.className = "bubble-file-meta";
+              meta.textContent = [attachment.mimeType || "file", attachment.size ? formatBytes(attachment.size) : ""].filter(Boolean).join(" • ");
+
+              details.appendChild(name);
+              details.appendChild(meta);
+              media.appendChild(icon);
+              media.appendChild(details);
               div.appendChild(media);
             } else if (attachment.kind === "video" && !attachment.thumbnailUrl && !attachment.dataUrl) {
               const media = document.createElement("div");
@@ -584,7 +613,7 @@
         addBubble("Uploads are limited to 1 per day. Try again tomorrow for another image or file.", "bot");
         return;
       }
-      addBubble(msg, "user", false, ["image", "video", "audio"].includes(attachedItem?.kind) ? attachedItem : null);
+      addBubble(msg, "user", false, attachedItem || null);
       chatText.value = "";
       clearComposerAttachment();
 
@@ -605,7 +634,7 @@
             sessionId: getSessionId(),
             clientId: getClientId(),
             message: msg,
-            model: attachedItem?.kind === "video" ? "google/gemma-4-31b-it" : attachedItem ? getAttachmentModelSelection() : (modelSelect ? modelSelect.value : "@cf/meta/llama-3.2-3b-instruct"),
+            model: attachedItem ? getAttachmentModelSelection() : (modelSelect ? modelSelect.value : "@cf/meta/llama-3.2-3b-instruct"),
             preset: presetSelect.value,
             replyLength: replyLengthSelect.value,
             webSearchMode: webSearchSelect.value,
@@ -745,12 +774,21 @@
       chatText.focus();
     });
 
-    imgFile.addEventListener("change", (e) => {
-      const file = e.target.files[0];
+    function attachImageFile(file, input) {
       if (!file) return;
       if (hasUsedDailyUpload()) {
         addBubble("You already used today's upload. Come back tomorrow to attach another image.", "bot");
-        e.target.value = "";
+        if (input) input.value = "";
+        return;
+      }
+      if (!isImageFile(file)) {
+        addBubble("That does not look like an image. Choose a PNG, JPEG, WebP, GIF, BMP, HEIC, or HEIF file.", "bot");
+        if (input) input.value = "";
+        return;
+      }
+      if (file.size > MAX_IMAGE_UPLOAD_BYTES) {
+        addBubble("That image is too large. Image uploads are limited to 8 MB.", "bot");
+        if (input) input.value = "";
         return;
       }
 
@@ -758,22 +796,34 @@
       reader.onload = (event) => {
         const dataUrl = event.target.result;
         const base64String = dataUrl.split(',')[1];
+        const mimeType = file.type || "image/png";
         currentAttachment = {
           kind: "image",
-          mimeType: file.type,
+          mimeType,
           data: base64String,
-          dataUrl,
+          dataUrl: `data:${mimeType};base64,${base64String}`,
           name: file.name
         };
         updateComposerAttachment();
         chatText.focus();
       };
+      reader.onerror = () => {
+        addBubble("Could not read that image. Try a different file.", "bot");
+      };
       reader.readAsDataURL(file);
+    }
+
+    imgFile.addEventListener("change", (e) => {
+      attachImageFile(e.target.files[0], e.target);
     });
 
     docFile.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
+      if (isImageFile(file)) {
+        attachImageFile(file, e.target);
+        return;
+      }
       if (hasUsedDailyUpload()) {
         addBubble("You already used today's upload. Come back tomorrow to attach another file.", "bot");
         e.target.value = "";
@@ -795,7 +845,8 @@
           kind: isVideo ? "video" : isAudio ? "audio" : "file",
           mimeType: file.type || "application/octet-stream",
           data: arrayBufferToBase64(buffer),
-          name: file.name
+          name: file.name,
+          size: file.size
         };
         updateComposerAttachment();
         chatText.focus();

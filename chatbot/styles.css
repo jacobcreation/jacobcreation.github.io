@@ -556,6 +556,53 @@
       line-height: 1.35;
     }
 
+    .bubble-media-card.file {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: min(100%, 300px);
+      padding: 10px;
+    }
+
+    .bubble-file-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 10px;
+      background: rgba(7, 17, 34, 0.12);
+      border: 1px solid rgba(7, 17, 34, 0.16);
+      color: #071122;
+      font-size: 0.62rem;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .bubble-file-details {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .bubble-file-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 0.88rem;
+      font-weight: 800;
+    }
+
+    .bubble-file-meta {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: rgba(7, 17, 34, 0.72);
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
     .bubble-text:empty {
       display: none;
     }
