@@ -18,7 +18,7 @@
   
   <script src="https://jacobcreation.github.io/vendor/marked.min.js"></script>
 
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260628">
 </head>
 
 <body>
@@ -37,138 +37,177 @@
               <div class="chat-title">
                 <strong>JacobBot AI</strong>
               </div>
-              <div class="mem-actions">
-                <button class="mem-mini-btn" type="button" id="clearChatBtn" title="Clear Chat">🗑️</button>
-                <button class="mem-mini-btn" type="button" id="newChatBtn" title="New Chat">✨</button>
-                <button class="mem-mini-btn" type="button" id="cloudChatsBtn" title="Cloud Chats">☁️</button>
-                <button class="mem-mini-btn" type="button" id="uploadImgBtn" title="Attach Image">🖼️</button>
-                <button class="mem-mini-btn" type="button" id="uploadFileBtn" title="Attach File">📎</button>
-                <input type="file" id="imgFileInput" accept="image/*" style="display:none;">
-                <input type="file" id="docFileInput" accept="image/*,.txt,.md,.markdown,.pdf,.docx,.zip,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip,video/*,audio/*" style="display:none;">
-              </div>
-            </div>
-
-            <!-- Row 2: Model selector -->
-            <div class="model-row">
-              <input id="modelSearch" class="model-search" type="text" placeholder="Search models..." autocomplete="off" />
-              <select id="modelSelect" class="model-select">
-                <optgroup label="Llama Series (Meta)">
-                  <option value="@cf/meta/llama-3.2-3b-instruct" selected>Llama 3.2 3B (Default)</option>
-                  <option value="@cf/meta/llama-3.2-1b-instruct">Llama 3.2 1B (Tiny)</option>
-                  <option value="@cf/meta/llama-3.3-70b-instruct-fp8-fast">Llama 3.3 70B (Smart)</option>
-                  <option value="@cf/meta/llama-4-scout-17b-16e-instruct">Llama 4 Scout 17B</option>
-                </optgroup>
-                <optgroup label="Groq (Ultra-Fast)">
-                  <option value="groq/llama-3.3-70b-versatile">Llama 3.3 70B (Groq)</option>
-                  <option value="groq/llama-3.1-8b-instant">Llama 3.1 8B (Groq)</option>
-                  <option value="groq/openai/gpt-oss-120b">GPT OSS 120B (Groq)</option>
-                  <option value="groq/openai/gpt-oss-20b">GPT OSS 20B (Groq)</option>
-                  <option value="groq/deepseek-r1-distill-llama-70b">DeepSeek R1 Distill 70B (Groq)</option>
-                </optgroup>
-                <optgroup label="Cerebras (Inference Speed King)">
-                  <option value="cerebras/gpt-oss-120b">GPT OSS 120B (Cerebras)</option>
-                  <option value="cerebras/zai-glm-4.7">GLM 4.7 Preview (Cerebras)</option>
-                </optgroup>
-                <optgroup label="NVIDIA NIM">
-                  <option value="nvidia/meta/llama-4-maverick-17b-128e-instruct">Llama 4 Maverick 17B 128E (NVIDIA)</option>
-                  <option value="nvidia/nvidia/llama-3.1-nemotron-nano-8b-v1">Nemotron Nano 8B (NVIDIA)</option>
-                  <option value="nvidia/nvidia/llama-3.3-nemotron-super-49b-v1.5">Nemotron Super 49B (NVIDIA)</option>
-                  <option value="nvidia/nvidia/nemotron-3-super-120b-a12b">Nemotron 3 Super 120B (NVIDIA)</option>
-                  <option value="nvidia/openai/gpt-oss-120b">GPT OSS 120B (NVIDIA)</option>
-                  <option value="nvidia/openai/gpt-oss-20b">GPT OSS 20B (NVIDIA)</option>
-                  <option value="nvidia/qwen/qwen3-coder-480b-a35b-instruct">Qwen3 Coder 480B (NVIDIA)</option>
-                </optgroup>
-                <optgroup label="Cohere">
-                  <option value="cohere/command-a-plus-05-2026">Command A+ 05-2026 (Cohere)</option>
-                  <option value="cohere/command-a-03-2025">Command A 03-2025 (Cohere)</option>
-                  <option value="cohere/command-r7b-12-2024">Command R7B 12-2024 (Cohere)</option>
-                  <option value="cohere/command-r-plus-08-2024">Command R+ 08-2024 (Cohere)</option>
-                  <option value="cohere/command-r-08-2024">Command R 08-2024 (Cohere)</option>
-                </optgroup>
-                <optgroup label="Hugging Face">
-                  <option value="huggingface/openai/gpt-oss-120b">GPT OSS 120B (Hugging Face)</option>
-                  <option value="huggingface/Qwen/Qwen3-Coder-480B-A35B-Instruct">Qwen3 Coder 480B (Hugging Face)</option>
-                  <option value="huggingface/Qwen/Qwen2.5-Coder-32B-Instruct">Qwen2.5 Coder 32B (Hugging Face)</option>
-                  <option value="huggingface/zai-org/GLM-4.5">GLM 4.5 (Hugging Face)</option>
-                </optgroup>
-                <optgroup label="Google Gemini / Gemma">
-                  <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                  <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
-                  <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                  <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                  <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                  <option value="@cf/google/gemma-4-26b-a4b-it">Gemma 4 26B</option>
-                </optgroup>
-                <optgroup label="Mistral / Mixtral">
-                  <option value="@cf/mistralai/mistral-small-3.1-24b-instruct">Mistral Small 3.1 24B</option>
-                  <option value="@cf/mistral/mistral-7b-instruct-v0.2-lora">Mistral 7B Instruct</option>
-                </optgroup>
-                <optgroup label="Specialized">
-                  <option value="@cf/openai/gpt-oss-20b">GPT OSS 20B (Reasoning)</option>
-                  <option value="@cf/openai/gpt-oss-120b">GPT OSS 120B (Reasoning)</option>
-                  <option value="openrouter/router:free">OpenRouter Free Router</option>
-                  <option value="openrouter/openai/gpt-oss-20b:free">OpenRouter GPT OSS 20B :free</option>
-                  <option value="@cf/qwen/qwen3-30b-a3b-fp8">Qwen3 30B A3B</option>
-                  <option value="@cf/qwen/qwen2.5-coder-32b-instruct">Qwen2.5 Coder 32B</option>
-                  <option value="@cf/deepseek-ai/deepseek-r1-distill-qwen-32b">DeepSeek R1 Distill Qwen 32B</option>
-                </optgroup>
-              </select>
-            </div>
-
-            <div class="control-grid">
-              <div class="control-field">
-                <label for="presetSelect">Preset</label>
-                <select id="presetSelect">
-                  <option value="default">Balanced Assistant</option>
-                  <option value="coder">Code Helper</option>
-                  <option value="teacher">Explainer</option>
-                  <option value="brainstorm">Brainstormer</option>
-                  <option value="concise">Concise Mode</option>
-                </select>
-              </div>
-              <div class="control-field">
-                <label for="replyLengthSelect">Reply Length</label>
-                <select id="replyLengthSelect">
-                  <option value="medium">Medium</option>
-                  <option value="short">Short</option>
-                  <option value="long">Long</option>
-                </select>
-              </div>
-              <div class="control-field">
-                <label for="webSearchSelect">Web</label>
-                <select id="webSearchSelect">
-                  <option value="auto">Auto Frequent</option>
-                  <option value="on">Always Search</option>
-                  <option value="off">Off</option>
-                </select>
-              </div>
-              <div class="control-field">
-                <label for="memoryNoteInput">Remember</label>
-                <input id="memoryNoteInput" type="text" placeholder="Call me Jacob, I use JS..." />
-              </div>
-            </div>
-
-            <div class="quick-prompts" id="quickPrompts">
-              <button class="prompt-chip" type="button" data-prompt="Summarize the last part of our chat and give me the next best action.">Next Step</button>
-              <button class="prompt-chip" type="button" data-prompt="Review my idea, point out risks, then improve it.">Critique It</button>
-              <button class="prompt-chip" type="button" data-prompt="Explain this simply, then give one practical example.">Explain Simply</button>
-              <button class="prompt-chip" type="button" data-prompt="Turn this into a clean checklist I can follow.">Make Checklist</button>
-            </div>
-
-            <!-- Row 3: Note -->
-            <div class="tiny-note">
-              Auto web search uses Tavily for most knowledge/current questions, and the chat shows when it is searching. Images and files use Cloudflare Llama 4 Scout, raw videos use the first working NVIDIA vision model, and audio is transcribed before analysis. Uploads are limited to 1 per day.
-            </div>
-
-            <div class="cloud-panel" id="cloudChatsPanel">
-              <div class="cloud-panel-head">
-                <div>
-                  <div class="cloud-panel-title">Account Chats</div>
-                  <div class="cloud-status" id="cloudChatsStatus">Make an account or sign in to save chats here.</div>
+              <div class="chat-actions">
+                <button class="chat-action-btn" type="button" id="moreActionsBtn" title="More actions" aria-expanded="false" aria-haspopup="true">⋯</button>
+                <div class="action-dropdown" id="actionDropdown" role="menu" aria-label="Chat actions">
+                  <button class="action-item" type="button" id="newChatBtn" title="New Chat" role="menuitem">✨ New Chat</button>
+                  <button class="action-item" type="button" id="clearChatBtn" title="Clear Chat" role="menuitem">🗑️ Clear Chat</button>
+                  <button class="action-item" type="button" id="cloudChatsBtn" title="Cloud Chats" role="menuitem">☁️ Cloud Chats</button>
+                  <hr class="action-divider">
+                  <button class="action-item" type="button" id="uploadImgBtn" title="Attach Image" role="menuitem">🖼️ Attach Image</button>
+                  <button class="action-item" type="button" id="uploadFileBtn" title="Attach File" role="menuitem">📎 Attach File</button>
+                  <input type="file" id="imgFileInput" accept="image/*" style="display:none;">
+                  <input type="file" id="docFileInput" accept="image/*,.txt,.md,.markdown,.pdf,.docx,.zip,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip,video/*,audio/*" style="display:none;">
                 </div>
-                <button class="cloud-chip" type="button" id="syncCloudChatBtn">Sync current chat</button>
               </div>
-              <div class="cloud-chat-list" id="cloudChatsList"></div>
+            </div>
+
+            <!-- Collapsible sections -->
+            <div class="chat-sections">
+              <!-- Model Selector Section -->
+              <details class="section-panel" id="modelSection" open>
+                <summary class="section-summary">
+                  <span class="section-icon">🤖</span>
+                  <span class="section-title">Model</span>
+                  <span class="section-value" id="modelSectionValue">Llama 3.2 3B (Default)</span>
+                  <span class="section-chevron">▼</span>
+                </summary>
+                <div class="section-content">
+                  <div class="model-row">
+                    <input id="modelSearch" class="model-search" type="text" placeholder="Search models..." autocomplete="off" />
+                    <select id="modelSelect" class="model-select">
+                      <optgroup label="Llama Series (Meta)">
+                        <option value="@cf/meta/llama-3.2-3b-instruct" selected>Llama 3.2 3B (Default)</option>
+                        <option value="@cf/meta/llama-3.2-1b-instruct">Llama 3.2 1B (Tiny)</option>
+                        <option value="@cf/meta/llama-3.3-70b-instruct-fp8-fast">Llama 3.3 70B (Smart)</option>
+                        <option value="@cf/meta/llama-4-scout-17b-16e-instruct">Llama 4 Scout 17B</option>
+                      </optgroup>
+                      <optgroup label="Groq (Ultra-Fast)">
+                        <option value="groq/llama-3.3-70b-versatile">Llama 3.3 70B (Groq)</option>
+                        <option value="groq/llama-3.1-8b-instant">Llama 3.1 8B (Groq)</option>
+                        <option value="groq/openai/gpt-oss-120b">GPT OSS 120B (Groq)</option>
+                        <option value="groq/openai/gpt-oss-20b">GPT OSS 20B (Groq)</option>
+                        <option value="groq/deepseek-r1-distill-llama-70b">DeepSeek R1 Distill 70B (Groq)</option>
+                      </optgroup>
+                      <optgroup label="Cerebras (Inference Speed King)">
+                        <option value="cerebras/gpt-oss-120b">GPT OSS 120B (Cerebras)</option>
+                        <option value="cerebras/zai-glm-4.7">GLM 4.7 Preview (Cerebras)</option>
+                      </optgroup>
+                      <optgroup label="NVIDIA NIM">
+                        <option value="nvidia/meta/llama-4-maverick-17b-128e-instruct">Llama 4 Maverick 17B 128E (NVIDIA)</option>
+                        <option value="nvidia/nvidia/llama-3.1-nemotron-nano-8b-v1">Nemotron Nano 8B (NVIDIA)</option>
+                        <option value="nvidia/nvidia/llama-3.3-nemotron-super-49b-v1.5">Nemotron Super 49B (NVIDIA)</option>
+                        <option value="nvidia/nvidia/nemotron-3-super-120b-a12b">Nemotron 3 Super 120B (NVIDIA)</option>
+                        <option value="nvidia/openai/gpt-oss-120b">GPT OSS 120B (NVIDIA)</option>
+                        <option value="nvidia/openai/gpt-oss-20b">GPT OSS 20B (NVIDIA)</option>
+                        <option value="nvidia/qwen/qwen3-coder-480b-a35b-instruct">Qwen3 Coder 480B (NVIDIA)</option>
+                      </optgroup>
+                      <optgroup label="Cohere">
+                        <option value="cohere/command-a-plus-05-2026">Command A+ 05-2026 (Cohere)</option>
+                        <option value="cohere/command-a-03-2025">Command A 03-2025 (Cohere)</option>
+                        <option value="cohere/command-r7b-12-2024">Command R7B 12-2024 (Cohere)</option>
+                        <option value="cohere/command-r-plus-08-2024">Command R+ 08-2024 (Cohere)</option>
+                        <option value="cohere/command-r-08-2024">Command R 08-2024 (Cohere)</option>
+                      </optgroup>
+                      <optgroup label="Hugging Face">
+                        <option value="huggingface/openai/gpt-oss-120b">GPT OSS 120B (Hugging Face)</option>
+                        <option value="huggingface/Qwen/Qwen3-Coder-480B-A35B-Instruct">Qwen3 Coder 480B (Hugging Face)</option>
+                        <option value="huggingface/Qwen/Qwen2.5-Coder-32B-Instruct">Qwen2.5 Coder 32B (Hugging Face)</option>
+                        <option value="huggingface/zai-org/GLM-4.5">GLM 4.5 (Hugging Face)</option>
+                      </optgroup>
+                      <optgroup label="Google Gemini / Gemma">
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
+                        <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                        <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                        <option value="@cf/google/gemma-4-26b-a4b-it">Gemma 4 26B</option>
+                      </optgroup>
+                      <optgroup label="Mistral / Mixtral">
+                        <option value="@cf/mistralai/mistral-small-3.1-24b-instruct">Mistral Small 3.1 24B</option>
+                        <option value="@cf/mistral/mistral-7b-instruct-v0.2-lora">Mistral 7B Instruct</option>
+                      </optgroup>
+                      <optgroup label="Specialized">
+                        <option value="@cf/openai/gpt-oss-20b">GPT OSS 20B (Reasoning)</option>
+                        <option value="@cf/openai/gpt-oss-120b">GPT OSS 120B (Reasoning)</option>
+                        <option value="openrouter/router:free">OpenRouter Free Router</option>
+                        <option value="openrouter/openai/gpt-oss-20b:free">OpenRouter GPT OSS 20B :free</option>
+                        <option value="@cf/qwen/qwen3-30b-a3b-fp8">Qwen3 30B A3B</option>
+                        <option value="@cf/qwen/qwen2.5-coder-32b-instruct">Qwen2.5 Coder 32B</option>
+                        <option value="@cf/deepseek-ai/deepseek-r1-distill-qwen-32b">DeepSeek R1 Distill Qwen 32B</option>
+                      </optgroup>
+                    </select>
+                  </div>
+                </div>
+              </details>
+
+              <!-- Settings Section -->
+              <details class="section-panel" id="settingsSection">
+                <summary class="section-summary">
+                  <span class="section-icon">⚙️</span>
+                  <span class="section-title">Settings</span>
+                  <span class="section-value" id="settingsSectionValue">Balanced • Medium • Auto</span>
+                  <span class="section-chevron">▼</span>
+                </summary>
+                <div class="section-content">
+                  <div class="control-grid">
+                    <div class="control-field">
+                      <label for="presetSelect">Preset</label>
+                      <select id="presetSelect">
+                        <option value="default">Balanced Assistant</option>
+                        <option value="coder">Code Helper</option>
+                        <option value="teacher">Explainer</option>
+                        <option value="brainstorm">Brainstormer</option>
+                        <option value="concise">Concise Mode</option>
+                      </select>
+                    </div>
+                    <div class="control-field">
+                      <label for="replyLengthSelect">Reply Length</label>
+                      <select id="replyLengthSelect">
+                        <option value="medium">Medium</option>
+                        <option value="short">Short</option>
+                        <option value="long">Long</option>
+                      </select>
+                    </div>
+                    <div class="control-field">
+                      <label for="webSearchSelect">Web Search</label>
+                      <select id="webSearchSelect">
+                        <option value="auto">Auto Frequent</option>
+                        <option value="on">Always Search</option>
+                        <option value="off">Off</option>
+                      </select>
+                    </div>
+                    <div class="control-field">
+                      <label for="memoryNoteInput">Remember</label>
+                      <input id="memoryNoteInput" type="text" placeholder="Call me Jacob, I use JS..." />
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <!-- Quick Prompts Section -->
+              <details class="section-panel" id="promptsSection">
+                <summary class="section-summary">
+                  <span class="section-icon">💡</span>
+                  <span class="section-title">Quick Prompts</span>
+                  <span class="section-chevron">▼</span>
+                </summary>
+                <div class="section-content">
+                  <div class="quick-prompts" id="quickPrompts">
+                    <button class="prompt-chip" type="button" data-prompt="Summarize the last part of our chat and give me the next best action.">Next Step</button>
+                    <button class="prompt-chip" type="button" data-prompt="Review my idea, point out risks, then improve it.">Critique It</button>
+                    <button class="prompt-chip" type="button" data-prompt="Explain this simply, then give one practical example.">Explain Simply</button>
+                    <button class="prompt-chip" type="button" data-prompt="Turn this into a clean checklist I can follow.">Make Checklist</button>
+                  </div>
+                </div>
+              </details>
+
+              <!-- Tiny Note -->
+              <div class="tiny-note">
+                Auto web search uses Tavily for most knowledge/current questions, and the chat shows when it is searching. Images and files use Cloudflare Llama 4 Scout, raw videos use the first working NVIDIA vision model, and audio is transcribed before analysis. Uploads are limited to 1 per day.
+              </div>
+
+              <!-- Cloud Chats Panel -->
+              <div class="cloud-panel" id="cloudChatsPanel">
+                <div class="cloud-panel-head">
+                  <div>
+                    <div class="cloud-panel-title">Account Chats</div>
+                    <div class="cloud-status" id="cloudChatsStatus">Make an account or sign in to save chats here.</div>
+                  </div>
+                  <button class="cloud-chip" type="button" id="syncCloudChatBtn">Sync current chat</button>
+                </div>
+                <div class="cloud-chat-list" id="cloudChatsList"></div>
+              </div>
             </div>
           </div>
         </header>
@@ -201,7 +240,7 @@
     © 2026 JacobCreation • Built by Jacob 💙
   </footer>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=20260628"></script>
 
   <script>
     (function () {

@@ -732,6 +732,7 @@
     });
 
     clearBtn.addEventListener("click", async () => {
+        closeDropdown();
         if (!confirm("Clear chat history?")) return;
         try {
             await fetch(ENDPOINT, {
@@ -748,10 +749,11 @@
         }
     });
 
-    imgBtn.addEventListener("click", () => { imgFile.click(); });
-    fileBtn.addEventListener("click", () => { docFile.click(); });
-    newChatBtn.addEventListener("click", () => { startNewChat(); });
+    imgBtn.addEventListener("click", () => { closeDropdown(); imgFile.click(); });
+    fileBtn.addEventListener("click", () => { closeDropdown(); docFile.click(); });
+    newChatBtn.addEventListener("click", () => { closeDropdown(); startNewChat(); });
     cloudChatsBtn.addEventListener("click", () => {
+      closeDropdown();
       cloudChatsPanel.classList.toggle("active");
       if (cloudChatsPanel.classList.contains("active")) {
         loadCloudChats();
@@ -762,10 +764,66 @@
     });
     removeAttachmentBtn.addEventListener("click", clearComposerAttachment);
     modelSearch.addEventListener("input", updateModelFilter);
-    modelSelect.addEventListener("change", saveSettings);
-    presetSelect.addEventListener("change", saveSettings);
-    replyLengthSelect.addEventListener("change", saveSettings);
-    webSearchSelect.addEventListener("change", saveSettings);
+    modelSelect.addEventListener("change", () => { saveSettings(); updateSectionSummaries(); });
+    presetSelect.addEventListener("change", () => { saveSettings(); updateSectionSummaries(); });
+    replyLengthSelect.addEventListener("change", () => { saveSettings(); updateSectionSummaries(); });
+    webSearchSelect.addEventListener("change", () => { saveSettings(); updateSectionSummaries(); });
+
+    /* ─── Action Dropdown ─── */
+    const moreActionsBtn = document.getElementById("moreActionsBtn");
+    const actionDropdown = document.getElementById("actionDropdown");
+
+    function closeDropdown() {
+      actionDropdown.classList.remove("open");
+      moreActionsBtn.setAttribute("aria-expanded", "false");
+    }
+
+    moreActionsBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = actionDropdown.classList.toggle("open");
+      moreActionsBtn.setAttribute("aria-expanded", String(isOpen));
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!actionDropdown.contains(e.target) && e.target !== moreActionsBtn) {
+        closeDropdown();
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeDropdown();
+    });
+
+    /* ─── Section Summary Labels ─── */
+    const modelSectionValue = document.getElementById("modelSectionValue");
+    const settingsSectionValue = document.getElementById("settingsSectionValue");
+
+    const presetLabels = {
+      default: "Balanced",
+      coder: "Coder",
+      teacher: "Explainer",
+      brainstorm: "Brainstormer",
+      concise: "Concise"
+    };
+
+    function getModelShortLabel(selectEl) {
+      const opt = selectEl.selectedOptions[0];
+      if (!opt) return "None";
+      const txt = opt.textContent.trim();
+      return txt.length > 28 ? txt.slice(0, 26) + "…" : txt;
+    }
+
+    function updateSectionSummaries() {
+      if (modelSectionValue) modelSectionValue.textContent = getModelShortLabel(modelSelect);
+      if (settingsSectionValue) {
+        const preset = presetLabels[presetSelect.value] || presetSelect.value;
+        const len = replyLengthSelect.value.charAt(0).toUpperCase() + replyLengthSelect.value.slice(1);
+        const web = webSearchSelect.value === "auto" ? "Auto" : webSearchSelect.value === "on" ? "On" : "Off";
+        settingsSectionValue.textContent = `${preset} · ${len} · ${web}`;
+      }
+    }
+
+    updateSectionSummaries();
 
     quickPrompts.addEventListener("click", (event) => {
       const chip = event.target.closest(".prompt-chip");
