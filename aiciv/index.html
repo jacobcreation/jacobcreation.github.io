@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>AI Earth Civilisation</title>
+	<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23162026'/%3E%3Ccircle cx='32' cy='32' r='23' fill='%23447b91'/%3E%3Cpath d='M18 18c8-5 19-3 24 4-8 1-11 5-10 12-8 0-12-5-14-16Zm18 24c6-5 12-5 16-1-4 8-13 13-23 11 3-3 5-6 7-10Z' fill='%2379a85f'/%3E%3Cpath d='M24 14l9 15 8-13' stroke='%23f4efe4' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<main class="shell">
+		<section class="map-stage" aria-label="Earth-like AI world map">
+			<canvas id="world" width="1440" height="900"></canvas>
+			<div class="topbar">
+				<div>
+					<p class="eyebrow">Autonomous LLM Earth</p>
+					<h1 id="eraName">Ancient World</h1>
+				</div>
+				<div class="stats" aria-label="World stats">
+					<div><span id="year">Year 1</span><small>Time</small></div>
+					<div><span id="food">8</span><small>Countries</small></div>
+					<div><span id="metal">184M</span><small>Population</small></div>
+					<div><span id="culture">0</span><small>Wars</small></div>
+					<div><span id="science">Stone</span><small>Top Tech</small></div>
+				</div>
+			</div>
+			<div class="selected-panel" id="selectedPanel">
+				<strong id="selectedName">Click a country or tile</strong>
+				<span id="selectedDetail">Land, seas, mountains, countries, technology, and decisions simulate themselves.</span>
+			</div>
+		</section>
+
+		<aside class="command">
+			<div class="status-line">
+				<span id="workerStatus" class="online">Worker ready</span>
+				<span id="turnState">World running</span>
+			</div>
+
+			<div class="action-grid observer-grid">
+				<button id="askCouncil" type="button" title="Cycle observer map mode">Mode</button>
+				<button id="endSeason" type="button" title="Advance ten years">+10 Years</button>
+				<button id="buildFarm" type="button" title="Pause or resume simulation">Pause</button>
+				<button id="buildForge" type="button" title="Slow simulation">Slow</button>
+				<button id="buildLibrary" type="button" title="Normal simulation speed">Normal</button>
+				<button id="sendScout" type="button" title="Fast simulation">Fast</button>
+			</div>
+
+			<div class="tabs" role="tablist" aria-label="World tabs">
+				<button class="active" data-tab="council" type="button">Rankings</button>
+				<button data-tab="citizens" type="button">Countries</button>
+				<button data-tab="projects" type="button">Tech</button>
+				<button data-tab="factions" type="button">Decisions</button>
+				<button data-tab="chronicle" type="button">History</button>
+			</div>
+
+			<section class="tab-panel active" id="tab-council">
+				<div id="worldPulse" class="world-pulse">Countries are forming the first world order.</div>
+				<div id="rankingList" class="ranking-list"></div>
+			</section>
+
+			<section class="tab-panel" id="tab-citizens">
+				<div id="citizenList" class="citizen-list"></div>
+			</section>
+
+			<section class="tab-panel" id="tab-projects">
+				<div id="projectList" class="project-list"></div>
+			</section>
+
+			<section class="tab-panel" id="tab-factions">
+				<article class="decree">
+					<h2 id="decreeTitle">The world has not chosen a crisis yet.</h2>
+					<p id="decreeText">Every country makes its own decisions. You observe; you do not command.</p>
+					<div class="chips">
+						<span id="focusChip">Focus: none</span>
+						<span id="policyChip">Policy: none</span>
+					</div>
+				</article>
+				<div id="factionList" class="faction-list"></div>
+			</section>
+
+			<section class="tab-panel" id="tab-chronicle">
+				<ol id="log" class="log"></ol>
+			</section>
+		</aside>
+	</main>
+
+	<textarea id="directive" hidden>Run this country as an autonomous Earth nation. Choose policy from geography, rivals, economy, technology, population, ports, mountains, seas, and history.</textarea>
+	<script src="game.js" type="module"></script>
+</body>
+</html>
