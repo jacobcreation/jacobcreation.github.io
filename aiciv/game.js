@@ -1,5 +1,12 @@
 const WORKER_URL = 'https://ai-civilisation.b4rjxr9lk.workers.dev';
 const USE_WORKER_AI = new URLSearchParams(window.location.search).get('ai') === 'worker';
+const GGUF_MODEL_URL = 'https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-Q3_K_M.gguf';
+const GGUF_MODEL_KEY = 'gemma-4-E2B-it-Q3_K_M';
+const MODEL_DB_NAME = 'aiciv-model-cache-v1';
+const MODEL_DB_VERSION = 1;
+const MODEL_CHUNK_SIZE = 8 * 1024 * 1024;
+const MODEL_PARALLEL_DOWNLOADS = 6;
+const WLLAMA_BASE_URL = 'https://cdn.jsdelivr.net/npm/@wllama/wllama@latest/esm';
 const canvas = document.getElementById('world');
 const ctx = canvas.getContext('2d');
 
@@ -26,6 +33,11 @@ const ui = {
 	decisionList: document.getElementById('factionList'),
 	worldPulse: document.getElementById('worldPulse'),
 	log: document.getElementById('log'),
+	modelLoader: document.getElementById('modelLoader'),
+	modelLoaderTitle: document.getElementById('modelLoaderTitle'),
+	modelLoaderDetail: document.getElementById('modelLoaderDetail'),
+	modelLoaderBar: document.getElementById('modelLoaderBar'),
+	modelLoaderMeta: document.getElementById('modelLoaderMeta'),
 };
 
 const terrainColors = {
@@ -99,6 +111,8 @@ const state = {
 	climateStress: 0,
 	aiBusy: false,
 	aiQueue: [],
+	localAi: null,
+	localAiReady: false,
 	lastTick: 0,
 };
 
@@ -869,6 +883,23 @@ async function requestCountryDecision(countryId) {
 	state.aiBusy = true;
 	ui.turnState.textContent = `${country.name} deciding`;
 	render();
+	if (state.localAiReady) {
+		try {
+			const decision = await requestLocalGgufDecision(country);
+			applyDecision(country, decision);
+			ui.workerStatus.textContent = 'GGUF local AI';
+			ui.workerStatus.className = 'online';
+		} catch (error) {
+			console.warn('Local GGUF decision failed; using deterministic fallback.', error);
+			applyDecision(country, localDecision(country));
+			ui.workerStatus.textContent = 'GGUF fallback';
+			ui.workerStatus.className = 'error';
+		}
+		state.aiBusy = false;
+		ui.turnState.textContent = 'World running';
+		render();
+		return;
+	}
 	if (!USE_WORKER_AI) {
 		applyDecision(country, localDecision(country));
 		ui.workerStatus.textContent = 'Local simulation';
@@ -945,6 +976,63 @@ function publicCountry(country) {
 		focus: country.focus,
 		policy: country.policy,
 		memory: country.memory.slice(-5),
+	};
+}
+
+async function requestLocalGgufDecision(country) {
+	const prompt = buildGgufDecisionPrompt(country);
+	const response = await state.localAi.createChatCompletion({
+		messages: [
+			{
+				role: 'system',
+				content: 'You run one autonomous country in a compact strategy simulation. Return only valid minified JSON. No markdown.',
+			},
+			{ role: 'user', content: prompt },
+		],
+		temperature: 0.55,
+		top_p: 0.88,
+		max_tokens: 220,
+	});
+	const text = response?.choices?.[0]?.message?.content || response?.choices?.[0]?.text || '';
+	const parsed = parseDecisionJson(text);
+	return normalizeAiDecision(parsed, country, 'local gguf');
+}
+
+function buildGgufDecisionPrompt(country) {
+	const snapshot = worldSnapshot(country);
+	return [
+		ui.directive.value,
+		'Choose the next national policy from the current world state.',
+		'Return JSON with these string keys only: decree, reason, focus, policy, speech, build, target.',
+		'Keep decree and speech short. Use build to name one practical action such as army, navy, farms, industry, research, treaty, roads, or ports.',
+		JSON.stringify(snapshot),
+	].join('\n');
+}
+
+function parseDecisionJson(text) {
+	const trimmed = String(text || '').trim();
+	try {
+		return JSON.parse(trimmed);
+	} catch (error) {
+		const match = trimmed.match(/\{[\s\S]*\}/);
+		if (!match) throw error;
+		return JSON.parse(match[0]);
+	}
+}
+
+function normalizeAiDecision(value, country, note) {
+	if (!value || typeof value !== 'object') throw new Error('AI returned no decision object.');
+	const fallback = localDecision(country);
+	return {
+		ai: true,
+		decree: clean(value.decree, fallback.decree),
+		reason: clean(value.reason, fallback.reason),
+		focus: clean(value.focus, fallback.focus),
+		policy: clean(value.policy, fallback.policy),
+		speech: clean(value.speech, fallback.speech),
+		build: clean(value.build, fallback.build),
+		target: clean(value.target, fallback.target),
+		note,
 	};
 }
 
@@ -1253,6 +1341,310 @@ function loop(timestamp) {
 	requestAnimationFrame(loop);
 }
 
+async function initModelCache() {
+	if (!ui.modelLoader) return;
+	try {
+		showModelLoader('Loadig...', 'Checking browser cache', 0, '0%');
+		const db = await openModelDb();
+		const cached = await readModelMeta(db, GGUF_MODEL_KEY);
+		if (cached?.complete && cached.url === GGUF_MODEL_URL && cached.size > 0 && await hasAllModelChunks(db, cached)) {
+			showModelLoader('Loadig...', 'Using cached GGUF model', 1, 'Cached');
+			window.aicivModel = {
+				key: GGUF_MODEL_KEY,
+				url: GGUF_MODEL_URL,
+				size: cached.size,
+				cached: true,
+				openBlob: () => modelBlobFromCache(db, GGUF_MODEL_KEY),
+			};
+			await initLocalGgufRuntime(db);
+			hideModelLoader();
+			return;
+		}
+		if (cached) showModelLoader('Loadig...', 'Refreshing incomplete GGUF cache', 0, 'Repairing cache');
+		await clearModelCache(db, GGUF_MODEL_KEY);
+		await downloadModelToIndexedDb(db);
+		const meta = await readModelMeta(db, GGUF_MODEL_KEY);
+		window.aicivModel = {
+			key: GGUF_MODEL_KEY,
+			url: GGUF_MODEL_URL,
+			size: meta?.size || 0,
+			cached: true,
+			openBlob: () => modelBlobFromCache(db, GGUF_MODEL_KEY),
+		};
+		showModelLoader('Loadig...', 'GGUF cached in browser', 1, 'Cached');
+		await initLocalGgufRuntime(db);
+		hideModelLoader();
+	} catch (error) {
+		console.warn('Model cache failed; continuing with simulation.', error);
+		showModelLoader('Loadig...', 'Model cache failed; starting simulation', 1, 'Offline fallback');
+		await delay(900);
+		hideModelLoader();
+	}
+}
+
+async function initLocalGgufRuntime(db) {
+	try {
+		showModelLoader('Loadig...', 'Loading local GGUF AI', 1, 'Preparing runtime');
+		const [{ Wllama, LoggerWithoutDebug }, { default: WasmFromCDN }] = await Promise.all([
+			import(`${WLLAMA_BASE_URL}/index.js`),
+			import(`${WLLAMA_BASE_URL}/wasm-from-cdn.js`),
+		]);
+		const modelBlob = await modelBlobFromCache(db, GGUF_MODEL_KEY);
+		const wllama = new Wllama({
+			default: `${WLLAMA_BASE_URL}/`,
+			...WasmFromCDN,
+		}, {
+			logger: LoggerWithoutDebug,
+			suppressNativeLog: true,
+			parallelDownloads: MODEL_PARALLEL_DOWNLOADS,
+			allowOffline: true,
+		});
+		await wllama.loadModel([modelBlob], {
+			n_ctx: 2048,
+			n_threads: Math.max(1, Math.min(4, navigator.hardwareConcurrency || 2)),
+			n_batch: 256,
+			warmup: true,
+		});
+		state.localAi = wllama;
+		state.localAiReady = true;
+		ui.workerStatus.textContent = 'GGUF ready';
+		ui.workerStatus.className = 'online';
+		showModelLoader('Loadig...', 'Local GGUF AI ready', 1, 'Ready');
+		await delay(220);
+	} catch (error) {
+		state.localAi = null;
+		state.localAiReady = false;
+		console.warn('Local GGUF runtime failed; AI turns will use fallback routing.', error);
+		showModelLoader('Loadig...', 'Local GGUF failed; starting fallback simulation', 1, 'Fallback');
+		await delay(900);
+	}
+}
+
+async function downloadModelToIndexedDb(db) {
+	const info = await getRemoteModelInfo();
+	await writeModelMeta(db, {
+		key: GGUF_MODEL_KEY,
+		url: GGUF_MODEL_URL,
+		size: info.size,
+		chunkSize: MODEL_CHUNK_SIZE,
+		chunks: Math.ceil(info.size / MODEL_CHUNK_SIZE),
+		complete: false,
+		updatedAt: Date.now(),
+	});
+	if (info.size && info.acceptsRanges) {
+		try {
+			await downloadModelInRanges(db, info.size);
+		} catch (error) {
+			console.warn('Segmented model download failed; retrying as a streamed download.', error);
+			await clearModelCache(db, GGUF_MODEL_KEY);
+			await writeModelMeta(db, {
+				key: GGUF_MODEL_KEY,
+				url: GGUF_MODEL_URL,
+				size: info.size,
+				chunkSize: MODEL_CHUNK_SIZE,
+				chunks: Math.ceil(info.size / MODEL_CHUNK_SIZE),
+				complete: false,
+				updatedAt: Date.now(),
+			});
+			await downloadModelStream(db, info.size);
+		}
+	} else {
+		await downloadModelStream(db, info.size);
+	}
+	const meta = await readModelMeta(db, GGUF_MODEL_KEY);
+	await writeModelMeta(db, { ...meta, complete: true, updatedAt: Date.now() });
+}
+
+async function getRemoteModelInfo() {
+	try {
+		const response = await fetch(GGUF_MODEL_URL, { method: 'HEAD', cache: 'no-store' });
+		if (!response.ok) throw new Error(`HEAD ${response.status}`);
+		const size = Number(response.headers.get('content-length')) || 0;
+		const acceptsRanges = response.headers.get('accept-ranges') === 'bytes';
+		return { size, acceptsRanges };
+	} catch (error) {
+		console.warn('Model HEAD failed; falling back to streamed download.', error);
+		return { size: 0, acceptsRanges: false };
+	}
+}
+
+async function downloadModelInRanges(db, size) {
+	const ranges = [];
+	for (let start = 0, index = 0; start < size; start += MODEL_CHUNK_SIZE, index += 1) {
+		ranges.push({ index, start, end: Math.min(size - 1, start + MODEL_CHUNK_SIZE - 1) });
+	}
+	let downloaded = 0;
+	let next = 0;
+	showModelLoader('Loadig...', 'Downloading GGUF model', 0, `0% of ${formatBytes(size)}`);
+	async function worker() {
+		while (next < ranges.length) {
+			const range = ranges[next];
+			next += 1;
+			const buffer = await fetchModelRange(range.start, range.end);
+			await writeModelChunk(db, GGUF_MODEL_KEY, range.index, buffer);
+			downloaded += buffer.byteLength;
+			updateModelProgress(downloaded, size, `${formatBytes(downloaded)} / ${formatBytes(size)}`);
+		}
+	}
+	await Promise.all(Array.from({ length: Math.min(MODEL_PARALLEL_DOWNLOADS, ranges.length) }, worker));
+}
+
+async function fetchModelRange(start, end) {
+	const response = await fetch(GGUF_MODEL_URL, {
+		headers: { range: `bytes=${start}-${end}` },
+		cache: 'no-store',
+	});
+	if (response.status !== 206) throw new Error(`Range request failed with ${response.status}`);
+	return response.arrayBuffer();
+}
+
+async function downloadModelStream(db, knownSize) {
+	const response = await fetch(GGUF_MODEL_URL, { cache: 'no-store' });
+	if (!response.ok) throw new Error(`Download ${response.status}`);
+	const total = knownSize || Number(response.headers.get('content-length')) || 0;
+	const reader = response.body?.getReader();
+	if (!reader) throw new Error('Readable downloads are not supported in this browser.');
+	let downloaded = 0;
+	let chunkIndex = 0;
+	let pending = new Uint8Array(0);
+	showModelLoader('Loadig...', 'Downloading GGUF model', 0, total ? `0% of ${formatBytes(total)}` : 'Starting');
+	while (true) {
+		const { done, value } = await reader.read();
+		if (done) break;
+		pending = joinBytes(pending, value);
+		while (pending.byteLength >= MODEL_CHUNK_SIZE) {
+			await writeModelChunk(db, GGUF_MODEL_KEY, chunkIndex, pending.slice(0, MODEL_CHUNK_SIZE).buffer);
+			pending = pending.slice(MODEL_CHUNK_SIZE);
+			chunkIndex += 1;
+		}
+		downloaded += value.byteLength;
+		updateModelProgress(downloaded, total, total ? `${formatBytes(downloaded)} / ${formatBytes(total)}` : formatBytes(downloaded));
+	}
+	if (pending.byteLength) await writeModelChunk(db, GGUF_MODEL_KEY, chunkIndex, pending.buffer);
+	const meta = await readModelMeta(db, GGUF_MODEL_KEY);
+	await writeModelMeta(db, {
+		...meta,
+		size: total || downloaded,
+		chunks: chunkIndex + (pending.byteLength ? 1 : 0),
+	});
+}
+
+function openModelDb() {
+	return new Promise((resolve, reject) => {
+		const request = indexedDB.open(MODEL_DB_NAME, MODEL_DB_VERSION);
+		request.onupgradeneeded = () => {
+			const db = request.result;
+			if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', { keyPath: 'key' });
+			if (!db.objectStoreNames.contains('chunks')) db.createObjectStore('chunks', { keyPath: 'id' });
+		};
+		request.onsuccess = () => resolve(request.result);
+		request.onerror = () => reject(request.error);
+	});
+}
+
+function readModelMeta(db, key) {
+	return idbRequest(db.transaction('meta', 'readonly').objectStore('meta').get(key));
+}
+
+function writeModelMeta(db, meta) {
+	return idbRequest(db.transaction('meta', 'readwrite').objectStore('meta').put(meta));
+}
+
+function writeModelChunk(db, key, index, buffer) {
+	return idbRequest(db.transaction('chunks', 'readwrite').objectStore('chunks').put({
+		id: `${key}:${index}`,
+		key,
+		index,
+		buffer,
+	}));
+}
+
+async function clearModelCache(db, key) {
+	const meta = await readModelMeta(db, key);
+	if (meta?.chunks) {
+		await Promise.all(Array.from({ length: meta.chunks }, (_, index) => (
+			idbRequest(db.transaction('chunks', 'readwrite').objectStore('chunks').delete(`${key}:${index}`))
+		)));
+	}
+	await idbRequest(db.transaction('meta', 'readwrite').objectStore('meta').delete(key));
+}
+
+async function modelBlobFromCache(db, key) {
+	const meta = await readModelMeta(db, key);
+	if (!meta?.complete) throw new Error('Cached model is incomplete.');
+	const parts = [];
+	for (let index = 0; index < meta.chunks; index += 1) {
+		const chunk = await idbRequest(db.transaction('chunks', 'readonly').objectStore('chunks').get(`${key}:${index}`));
+		if (!chunk) throw new Error(`Missing cached model chunk ${index}.`);
+		parts.push(chunk.buffer);
+	}
+	return new Blob(parts, { type: 'application/octet-stream' });
+}
+
+async function hasAllModelChunks(db, meta) {
+	if (!meta?.chunks) return false;
+	for (let index = 0; index < meta.chunks; index += 1) {
+		const chunk = await idbRequest(db.transaction('chunks', 'readonly').objectStore('chunks').get(`${meta.key}:${index}`));
+		if (!chunk?.buffer) return false;
+	}
+	return true;
+}
+
+function idbRequest(request) {
+	return new Promise((resolve, reject) => {
+		request.onsuccess = () => resolve(request.result);
+		request.onerror = () => reject(request.error);
+	});
+}
+
+function showModelLoader(title, detail, progress, meta) {
+	ui.modelLoader.classList.remove('hidden');
+	ui.modelLoaderTitle.textContent = title;
+	ui.modelLoaderDetail.textContent = detail;
+	updateModelProgressBar(progress, meta);
+}
+
+function hideModelLoader() {
+	ui.modelLoader.classList.add('hidden');
+}
+
+function updateModelProgress(downloaded, total, meta) {
+	updateModelProgressBar(total ? downloaded / total : 0, meta);
+}
+
+function updateModelProgressBar(progress, meta) {
+	const pct = clamp(progress || 0, 0, 1);
+	ui.modelLoaderBar.style.width = `${Math.round(pct * 100)}%`;
+	ui.modelLoaderMeta.textContent = meta || `${Math.round(pct * 100)}%`;
+}
+
+function joinBytes(a, b) {
+	const out = new Uint8Array(a.byteLength + b.byteLength);
+	out.set(a, 0);
+	out.set(b, a.byteLength);
+	return out;
+}
+
+function formatBytes(bytes) {
+	if (!bytes) return '0 B';
+	const units = ['B', 'KB', 'MB', 'GB'];
+	const index = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
+	return `${(bytes / 1024 ** index).toFixed(index ? 1 : 0)} ${units[index]}`;
+}
+
+function delay(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function init() {
+	await initModelCache();
+	generateWorld();
+	bindDrag();
+	resizeCanvas();
+	render();
+	requestAnimationFrame(loop);
+}
+
 document.querySelectorAll('.tabs button').forEach((button) => button.addEventListener('click', () => setTab(button.dataset.tab)));
 ui.askCouncil.addEventListener('click', () => {
 	const index = mapModes.indexOf(state.mapMode);
@@ -1276,8 +1668,4 @@ window.addEventListener('resize', () => {
 	render();
 });
 
-generateWorld();
-bindDrag();
-resizeCanvas();
-render();
-requestAnimationFrame(loop);
+init();

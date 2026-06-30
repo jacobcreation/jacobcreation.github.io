@@ -8,6 +8,16 @@
 	<link rel="stylesheet" href="style.css">
 </head>
 <body>
+	<div id="modelLoader" class="model-loader" role="status" aria-live="polite">
+		<div class="model-loader-panel">
+			<strong id="modelLoaderTitle">Loadig...</strong>
+			<span id="modelLoaderDetail">Preparing local model cache</span>
+			<div class="model-loader-bar" aria-label="Model download progress">
+				<i id="modelLoaderBar"></i>
+			</div>
+			<small id="modelLoaderMeta">0%</small>
+		</div>
+	</div>
 	<main class="shell">
 		<section class="map-stage" aria-label="Earth-like AI world map">
 			<canvas id="world" width="1440" height="900"></canvas>

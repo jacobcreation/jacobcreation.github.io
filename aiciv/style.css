@@ -32,6 +32,62 @@ body {
 		#20272a;
 }
 
+.model-loader {
+	position: fixed;
+	inset: 0;
+	z-index: 20;
+	display: grid;
+	place-items: center;
+	padding: 22px;
+	background:
+		linear-gradient(135deg, rgba(18, 23, 26, 0.94), rgba(38, 51, 47, 0.96)),
+		#12171a;
+}
+
+.model-loader.hidden {
+	display: none;
+}
+
+.model-loader-panel {
+	display: grid;
+	gap: 12px;
+	width: min(460px, 100%);
+	padding: 18px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: var(--panel-strong);
+	box-shadow: var(--shadow);
+}
+
+.model-loader-panel strong {
+	font-size: 1.15rem;
+	letter-spacing: 0;
+}
+
+.model-loader-panel span,
+.model-loader-panel small {
+	color: var(--muted);
+	font-size: 0.9rem;
+	line-height: 1.35;
+}
+
+.model-loader-bar {
+	height: 12px;
+	border: 1px solid rgba(244, 239, 228, 0.2);
+	border-radius: 999px;
+	background: rgba(0, 0, 0, 0.28);
+	overflow: hidden;
+}
+
+.model-loader-bar i {
+	display: block;
+	width: 0%;
+	height: 100%;
+	border-radius: inherit;
+	background: linear-gradient(90deg, var(--water), var(--gold));
+	transition: width 160ms ease;
+}
+
 button,
 textarea {
 	font: inherit;
