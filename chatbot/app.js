@@ -45,7 +45,12 @@
       "@cf/mistral/mistral-small-3.1-24b-instruct": "@cf/mistralai/mistral-small-3.1-24b-instruct",
       "@cf/mistralai/mistral-7b-instruct-v0.2-lora": "@cf/mistral/mistral-7b-instruct-v0.2-lora",
       "@cf/qwen/qwen2.5-72b-instruct": "@cf/qwen/qwen3-30b-a3b-fp8",
-      "@cf/deepseek-ai/deepseek-r1-distill-llama-70b": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+      "@cf/deepseek-ai/deepseek-r1-distill-llama-70b": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
+      "gemini-2.5-flash": "@cf/meta/llama-3.2-3b-instruct",
+      "gemini-2.5-flash-lite": "@cf/meta/llama-3.2-3b-instruct",
+      "gemini-2.5-pro": "@cf/meta/llama-3.2-3b-instruct",
+      "gemini-2.0-flash": "@cf/meta/llama-3.2-3b-instruct",
+      "gemini-1.5-flash": "@cf/meta/llama-3.2-3b-instruct"
     };
     let currentAttachment = null;
     const allModelOptions = Array.from(modelSelect.querySelectorAll("option")).map((option) => ({
