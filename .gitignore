@@ -17,10 +17,15 @@ output.txt
 Untitled-1.txt
 .antigravitycli/
 
-# JavaScript dependencies and caches
-node_modules/
-.vite/
-quiz/worker/
+# Python virtual environments
+venv/
+.venv/
+env/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
 
 # Cloudflare Workers
 **/cloudflare_worker/
@@ -36,6 +41,39 @@ quiz/worker/
 !/cloudflare_worker/accounts-system/package-lock.json
 !/cloudflare_worker/accounts-system/vitest.config.js
 !/cloudflare_worker/accounts-system/wrangler.jsonc
+
 # Who made these? (what are these?)
 AGENTS.md
 GEMINI.md
+
+# Sensitive files  
+*.keystore
+build.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Test coverage
+coverage/
+
+# ALWAYS
+node_modules/
+
