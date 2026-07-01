@@ -35,33 +35,37 @@ jobs:
       - name: Remove large puzzle data
         run: rm -rf chesspuzzle/puzzlelist
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: 'pnpm'
           cache-dependency-path: |
-            sss/package-lock.json
-            shootthemonster/package-lock.json
-            Wordscapes/package-lock.json
+            pnpm-lock.yaml
+            sss/pnpm-lock.yaml
+            shootthemonster/pnpm-lock.yaml
+            Wordscapes/pnpm-lock.yaml
 
       - name: Build sss (Vite project)
         run: |
           cd sss
-          npm ci
-          npm run build
+          pnpm install --frozen-lockfile
+          pnpm run build
 
       - name: Build shootthemonster (Vite project)
         run: |
           cd shootthemonster
-          npm ci
-          npm run build
+          pnpm install --frozen-lockfile
+          pnpm run build
 
       - name: Build Wordscapes (Vite project)
         run: |
           cd Wordscapes
-          npm ci
-          npm run build
+          pnpm install --frozen-lockfile
+          pnpm run build
 
       - name: Prepare Pages artifact
         run: |
