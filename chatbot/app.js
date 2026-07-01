@@ -122,8 +122,9 @@
       localStorage.setItem(UPLOAD_LIMIT_KEY, getUtcDayStamp());
     }
 
-    function getAttachmentModelSelection() {
-      return "@cf/meta/llama-4-scout-17b-16e-instruct";
+    function getAttachmentModelSelection(attachment) {
+      if (attachment?.kind === "file") return "nvidia/minimaxai/minimax-m3";
+      return "nvidia/meta/llama-4-maverick-17b-128e-instruct";
     }
 
     function isImageFile(file) {
@@ -639,7 +640,7 @@
             sessionId: getSessionId(),
             clientId: getClientId(),
             message: msg,
-            model: attachedItem ? getAttachmentModelSelection() : (modelSelect ? modelSelect.value : "@cf/meta/llama-3.2-3b-instruct"),
+            model: attachedItem ? getAttachmentModelSelection(attachedItem) : (modelSelect ? modelSelect.value : "@cf/meta/llama-3.2-3b-instruct"),
             preset: presetSelect.value,
             replyLength: replyLengthSelect.value,
             webSearchMode: webSearchSelect.value,
