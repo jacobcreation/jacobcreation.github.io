@@ -28,19 +28,7 @@ env/
 .Python
 
 # Cloudflare Workers
-**/cloudflare_worker/
-!/cloudflare_worker/
-/cloudflare_worker/*
-!/cloudflare_worker/accounts-system/
-/cloudflare_worker/accounts-system/*
-!/cloudflare_worker/accounts-system/src/
-!/cloudflare_worker/accounts-system/src/**
-!/cloudflare_worker/accounts-system/test/
-!/cloudflare_worker/accounts-system/test/**
-!/cloudflare_worker/accounts-system/package.json
-!/cloudflare_worker/accounts-system/package-lock.json
-!/cloudflare_worker/accounts-system/vitest.config.js
-!/cloudflare_worker/accounts-system/wrangler.jsonc
+cloudflare_worker/
 
 # Who made these? (what are these?)
 AGENTS.md

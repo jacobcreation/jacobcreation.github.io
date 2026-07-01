@@ -1,21 +1,22 @@
 {
-	"name": "jacobcreation.github.io",
-	"version": "1.0.0",
-	"description": "A collection of games, tools, and AI projects built by Jacob.",
-	"private": true,
-	"scripts": {
-		"test": "node test-server.js",
-		"dev": "node test-server.js"
-	},
-	"devDependencies": {
-		"eslint-plugin-html": "^8.1.4",
-		"express": "^5.2.1",
-		"puppeteer": "^24.40.0"
-	},
-	"dependencies": {
-		"jsdom": "^29.1.1"
-	},
-	"engines": {
-		"node": ">=22.0.0"
-	}
+  "name": "jacobcreation.github.io",
+  "version": "1.0.0",
+  "description": "A collection of games, tools, and AI projects built by Jacob.",
+  "private": true,
+  "scripts": {
+    "test": "node test-server.js",
+    "dev": "node test-server.js"
+  },
+  "devDependencies": {
+    "eslint-plugin-html": "^8.1.4",
+    "express": "^5.2.1",
+    "puppeteer": "^24.40.0"
+  },
+  "dependencies": {
+    "jsdom": "^29.1.1"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "pnpm@11.5.2"
 }

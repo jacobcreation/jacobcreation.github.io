@@ -1,18 +1,19 @@
 {
-	"name": "tanks-game",
-	"version": "1.0.0",
-	"description": "Neon Tanks 3D multiplayer game",
-	"main": "game.js",
-	"scripts": {
-		"dev": "vite",
-		"build": "vite build",
-		"preview": "vite preview"
-	},
-	"dependencies": {
-		"three": "^0.160.0",
-		"partysocket": "^1.0.0"
-	},
-	"devDependencies": {
-		"vite": "^5.0.0"
-	}
+  "name": "tanks-game",
+  "version": "1.0.0",
+  "description": "Neon Tanks 3D multiplayer game",
+  "main": "game.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.160.0",
+    "partysocket": "^1.0.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "packageManager": "pnpm@11.5.2"
 }
