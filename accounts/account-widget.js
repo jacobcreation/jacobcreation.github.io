@@ -156,6 +156,75 @@
 			if (!app || !chat) throw new Error('A valid app id and chat id are required.');
 			return request(`/api/chats/${encodeURIComponent(app)}/${encodeURIComponent(chat)}`, { method: 'DELETE', auth: true });
 		},
+		async listData(appId) {
+			if (!state.user) await accountsApi.requireSignIn();
+			const app = cleanGameId(appId);
+			if (!app) throw new Error('A valid app id is required.');
+			const data = await request(`/api/data/${encodeURIComponent(app)}`, { method: 'GET', auth: true });
+			return data.records || [];
+		},
+		async getData(appId, key) {
+			if (!state.user) await accountsApi.requireSignIn();
+			const app = cleanGameId(appId);
+			const dataKey = cleanDataKey(key);
+			if (!app || !dataKey) throw new Error('A valid app id and data key are required.');
+			const data = await request(`/api/data/${encodeURIComponent(app)}/${encodeURIComponent(dataKey)}`, { method: 'GET', auth: true });
+			return data.record || null;
+		},
+		async setData(appId, key, value, details = {}) {
+			if (!state.user) await accountsApi.requireSignIn();
+			const app = cleanGameId(appId);
+			const dataKey = cleanDataKey(key);
+			if (!app || !dataKey) throw new Error('A valid app id and data key are required.');
+			const body = { value };
+			if (details.label) body.label = details.label;
+			if (details.meta) body.meta = details.meta;
+			const data = await request(`/api/data/${encodeURIComponent(app)}/${encodeURIComponent(dataKey)}`, {
+				method: 'PUT',
+				auth: true,
+				body,
+			});
+			return data.record || null;
+		},
+		async deleteData(appId, key) {
+			if (!state.user) await accountsApi.requireSignIn();
+			const app = cleanGameId(appId);
+			const dataKey = cleanDataKey(key);
+			if (!app || !dataKey) throw new Error('A valid app id and data key are required.');
+			return request(`/api/data/${encodeURIComponent(app)}/${encodeURIComponent(dataKey)}`, { method: 'DELETE', auth: true });
+		},
+		async syncLocalStorage(appId, key, localStorageKey, options = {}) {
+			const app = cleanGameId(appId || currentGameId());
+			const dataKey = cleanDataKey(key || localStorageKey);
+			if (!app || !dataKey || !localStorageKey) throw new Error('A valid app id, data key, and localStorage key are required.');
+			let localValue = null;
+			try {
+				localValue = JSON.parse(localStorage.getItem(localStorageKey) || 'null');
+			} catch (error) {
+				localValue = localStorage.getItem(localStorageKey);
+			}
+
+			let remote = null;
+			try {
+				remote = await accountsApi.getData(app, dataKey);
+			} catch (error) {
+				if (!/not found/i.test(error.message || '')) throw error;
+			}
+
+			if (remote && shouldPreferRemote(remote, localValue, options)) {
+				localStorage.setItem(localStorageKey, JSON.stringify(remote.value));
+				window.dispatchEvent(new CustomEvent('jacob-account-storage-sync', { detail: { app, key: dataKey, value: remote.value } }));
+				return remote.value;
+			}
+
+			if (localValue !== null && localValue !== undefined) {
+				await accountsApi.setData(app, dataKey, localValue, {
+					label: options.label || dataKey,
+					meta: { source: 'localStorage', localStorageKey, ...(options.meta || {}) },
+				});
+			}
+			return localValue;
+		},
 		requireSignIn() {
 			if (state.user) return Promise.resolve(state.user);
 			state.open = true;
@@ -757,6 +826,26 @@
 			.replace(/[^a-z0-9_-]+/g, '-')
 			.replace(/^-+|-+$/g, '')
 			.slice(0, 80);
+	}
+
+	function cleanDataKey(value) {
+		return String(value || '')
+			.trim()
+			.toLowerCase()
+			.replace(/[^a-z0-9_-]+/g, '-')
+			.replace(/^-+|-+$/g, '')
+			.slice(0, 80);
+	}
+
+	function shouldPreferRemote(remote, localValue, options = {}) {
+		if (options.prefer === 'remote') return true;
+		if (options.prefer === 'local') return false;
+		const remoteUpdated = Date.parse(remote.updatedAt || '');
+		const localUpdated = Number(localValue && typeof localValue === 'object' ? localValue.updatedAt || localValue.lastUpdate || 0 : 0);
+		if (Number.isFinite(remoteUpdated) && Number.isFinite(localUpdated) && localUpdated > 0) {
+			return remoteUpdated > localUpdated;
+		}
+		return localValue === null || localValue === undefined;
 	}
 
 	function formatScore(score) {

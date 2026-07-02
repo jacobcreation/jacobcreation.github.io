@@ -97,6 +97,7 @@ let lastFrameTime = 0;
 let animationFrameId = 0;
 let isPaused = false;
 let isGameOver = false;
+let bestScore = Number(localStorage.getItem("tetris_best_score") || 0);
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => Array(COLS).fill(null));
@@ -356,6 +357,7 @@ function setPaused(nextPaused) {
 
 function setGameOver() {
   isGameOver = true;
+  saveRunResult();
   showOverlay("Game Over", "Press New Game to start another run.");
 }
 
@@ -379,6 +381,36 @@ function resetGame() {
   drawBoard();
   drawPreview();
   lastFrameTime = performance.now();
+}
+
+function saveRunResult() {
+  if (score <= 0) {
+    return;
+  }
+
+  if (score > bestScore) {
+    bestScore = score;
+    localStorage.setItem("tetris_best_score", String(bestScore));
+  }
+
+  const accounts = window.JacobAccounts;
+  if (!accounts || !accounts.isSignedIn || !accounts.isSignedIn()) {
+    return;
+  }
+
+  accounts.saveHighScore("tetris", score, {
+    gameName: "Tetris",
+    label: `Level ${level}`,
+    mode: "classic",
+    meta: { lines, level },
+  }).catch(() => {});
+
+  accounts.setProgress("tetris", {
+    bestScore,
+    lastScore: score,
+    lines,
+    level,
+  }).catch(() => {});
 }
 
 function update(frameTime = 0) {

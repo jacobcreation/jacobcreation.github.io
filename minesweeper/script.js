@@ -91,6 +91,8 @@ class Minesweeper {
 
 		this.renderHighScores();
 		this.startNewGame();
+		window.addEventListener("jacob-account-change", () => this.loadCloudBestTimes());
+		setTimeout(() => this.loadCloudBestTimes(), 700);
 	}
 
 	toggleFlagMode(force = null) {
@@ -462,6 +464,56 @@ class Minesweeper {
 			scores[difficulty] = this.seconds;
 			localStorage.setItem("minesweeper_scores", JSON.stringify(scores));
 			this.renderHighScores();
+		}
+		this.saveCloudBestTimes(difficulty, this.seconds);
+	}
+
+	async loadCloudBestTimes() {
+		const accounts = window.JacobAccounts;
+		if (!accounts || !accounts.isSignedIn || !accounts.isSignedIn()) return;
+
+		try {
+			const record = await accounts.getData("minesweeper", "best-times");
+			const remoteScores = record && record.value && typeof record.value === "object" ? record.value : {};
+			const localScores = JSON.parse(localStorage.getItem("minesweeper_scores") || "{}");
+			let changed = false;
+
+			Object.keys(this.difficulties).forEach((difficulty) => {
+				const remote = Number(remoteScores[difficulty]);
+				const local = Number(localScores[difficulty]);
+				if (Number.isFinite(remote) && remote > 0 && (!Number.isFinite(local) || local <= 0 || remote < local)) {
+					localScores[difficulty] = remote;
+					changed = true;
+				}
+			});
+
+			if (changed) {
+				localStorage.setItem("minesweeper_scores", JSON.stringify(localScores));
+				this.renderHighScores();
+			}
+		} catch (error) {
+			if (!/not found/i.test(error.message || "")) console.warn("Could not load cloud Minesweeper scores", error);
+		}
+	}
+
+	async saveCloudBestTimes(difficulty, seconds) {
+		const accounts = window.JacobAccounts;
+		if (!accounts || !accounts.isSignedIn || !accounts.isSignedIn()) return;
+
+		try {
+			const scores = JSON.parse(localStorage.getItem("minesweeper_scores") || "{}");
+			await accounts.setData("minesweeper", "best-times", scores, {
+				label: "Best times",
+				meta: { mode: "classic" },
+			});
+			await accounts.saveHighScore("minesweeper", Math.max(0, 1000000 - seconds), {
+				gameName: "Minesweeper",
+				label: `${difficulty} ${seconds}s`,
+				mode: difficulty,
+				meta: { seconds, lowerIsBetter: true },
+			});
+		} catch (error) {
+			console.warn("Could not save cloud Minesweeper score", error);
 		}
 	}
 

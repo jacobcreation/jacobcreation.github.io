@@ -5,6 +5,7 @@ let state = {
     perSecond: 0,
     lastUpdate: Date.now()
 };
+let lastCloudSave = 0;
 
 // Upgrade Definitions
 const UPGRADES = [
@@ -57,6 +58,8 @@ function init() {
     loadGame();
     renderUpgrades();
     setupEventListeners();
+    window.addEventListener('jacob-account-change', loadCloudSave);
+    setTimeout(loadCloudSave, 700);
     gameLoop();
 }
 
@@ -150,30 +153,77 @@ function gameLoop() {
 
 // Persistence
 function saveGame() {
-    const saveData = {
-        state: state,
-        upgrades: UPGRADES.map(u => ({ id: u.id, owned: u.owned }))
-    };
-    localStorage.setItem('neonOrbitSave', JSON.stringify(saveData));
+    localStorage.setItem('neonOrbitSave', JSON.stringify(createSaveData()));
+    saveCloudGame();
 }
 
 function loadGame() {
     const saved = localStorage.getItem('neonOrbitSave');
     if (saved) {
         const data = JSON.parse(saved);
-        state = { ...state, ...data.state };
-        state.lastUpdate = Date.now(); // Reset last update to now to prevent massive jump
-        
-        data.upgrades.forEach(savedUpgrade => {
-            const upgrade = UPGRADES.find(u => u.id === savedUpgrade.id);
-            if (upgrade) {
-                upgrade.owned = savedUpgrade.owned;
-            }
-        });
+        applySaveData(data);
     }
 }
 
+function createSaveData() {
+    return {
+        state: { ...state, lastUpdate: Date.now() },
+        upgrades: UPGRADES.map(u => ({ id: u.id, owned: u.owned })),
+        updatedAt: Date.now()
+    };
+}
+
+function applySaveData(data) {
+    if (!data || typeof data !== 'object') return;
+    state = { ...state, ...(data.state || {}) };
+    state.lastUpdate = Date.now();
+
+    if (Array.isArray(data.upgrades)) {
+        data.upgrades.forEach(savedUpgrade => {
+            const upgrade = UPGRADES.find(u => u.id === savedUpgrade.id);
+            if (upgrade) {
+                upgrade.owned = Number(savedUpgrade.owned) || 0;
+            }
+        });
+    }
+    renderUpgrades();
+    updateUI();
+}
+
+async function loadCloudSave() {
+    const accounts = window.JacobAccounts;
+    if (!accounts || !accounts.isSignedIn || !accounts.isSignedIn()) return;
+
+    try {
+        const record = await accounts.getData('clicker', 'save');
+        const remote = record && record.value;
+        const local = JSON.parse(localStorage.getItem('neonOrbitSave') || 'null');
+        if (remote && (!local || Number(remote.updatedAt || 0) > Number(local.updatedAt || 0))) {
+            applySaveData(remote);
+            localStorage.setItem('neonOrbitSave', JSON.stringify(remote));
+        }
+    } catch (error) {
+        if (!/not found/i.test(error.message || '')) console.warn('Could not load cloud clicker save', error);
+    }
+}
+
+function saveCloudGame(force = false) {
+    const accounts = window.JacobAccounts;
+    if (!accounts || !accounts.isSignedIn || !accounts.isSignedIn()) return;
+    const now = Date.now();
+    if (!force && now - lastCloudSave < 15000) return;
+    lastCloudSave = now;
+
+    accounts.setData('clicker', 'save', createSaveData(), {
+        label: 'Neon Orbit save',
+        meta: { energy: Math.floor(state.energy), perSecond: state.perSecond }
+    }).catch(() => {});
+}
+
 // Auto-save every 30 seconds
-setInterval(saveGame, 30000);
+setInterval(() => {
+    saveGame();
+    saveCloudGame(true);
+}, 30000);
 
 init();
