@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Storyforge AI</title>
+		<link rel="icon" href="favicon.svg" type="image/svg+xml" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Literata:opsz,wght@7..72,600;7..72,700&display=swap" rel="stylesheet" />
+		<link rel="stylesheet" href="styles.css" />
+	</head>
+	<body>
+		<div class="backdrop" aria-hidden="true"></div>
+		<main class="game-shell">
+			<section class="story-stage" aria-labelledby="game-title">
+				<div class="brand-row">
+					<div>
+						<p class="eyebrow">Cloudflare Workers AI adventure</p>
+						<h1 id="game-title">Storyforge AI</h1>
+					</div>
+					<div class="status-pill" id="connectionStatus">Ready</div>
+				</div>
+
+				<form class="setup-panel" id="setupForm">
+					<label>
+						Hero
+						<input id="heroInput" name="hero" maxlength="80" autocomplete="off" value="Mara the mapmaker" />
+					</label>
+					<label>
+						World
+						<input id="settingInput" name="setting" maxlength="120" autocomplete="off" value="a library that unfolds into a moonlit kingdom" />
+					</label>
+					<div class="control-grid">
+						<label>
+							Genre
+							<select id="genreInput" name="genre">
+								<option>fantasy</option>
+								<option>mystery</option>
+								<option>space opera</option>
+								<option>cozy adventure</option>
+								<option>mythic sci-fi</option>
+							</select>
+						</label>
+						<label>
+							Tone
+							<select id="toneInput" name="tone">
+								<option>mysterious</option>
+								<option>wondrous</option>
+								<option>playful</option>
+								<option>tense</option>
+								<option>cinematic</option>
+							</select>
+						</label>
+					</div>
+					<label class="endpoint-field">
+						Worker endpoint
+						<input id="endpointInput" name="endpoint" autocomplete="off" />
+					</label>
+					<div class="setup-actions">
+						<button class="primary-button" type="submit" id="startButton">Begin</button>
+						<button class="ghost-button" type="button" id="resetButton">New story</button>
+					</div>
+				</form>
+
+				<article class="scene-panel" aria-live="polite">
+					<div class="scene-heading">
+						<p class="chapter-label" id="chapterLabel">Chapter 0</p>
+						<h2 id="sceneTitle">The book is waiting.</h2>
+					</div>
+					<p id="sceneText">
+						Name your hero, choose the kind of tale you want, and begin. Each choice asks the Cloudflare Worker to continue the story with Workers AI.
+					</p>
+					<div class="choice-list" id="choiceList"></div>
+					<div class="loading-line" id="loadingLine" hidden>
+						<span></span>
+						Writing the next page...
+					</div>
+				</article>
+			</section>
+
+			<aside class="side-panel" aria-label="Story state">
+				<section class="meters">
+					<h2>Story Meters</h2>
+					<div class="meter" data-meter="wonder">
+						<div class="meter-label"><span>Wonder</span><strong id="wonderValue">5</strong></div>
+						<div class="meter-track"><span id="wonderBar"></span></div>
+					</div>
+					<div class="meter" data-meter="danger">
+						<div class="meter-label"><span>Danger</span><strong id="dangerValue">2</strong></div>
+						<div class="meter-track"><span id="dangerBar"></span></div>
+					</div>
+					<div class="meter" data-meter="resolve">
+						<div class="meter-label"><span>Resolve</span><strong id="resolveValue">4</strong></div>
+						<div class="meter-track"><span id="resolveBar"></span></div>
+					</div>
+				</section>
+
+				<section class="journal">
+					<div class="journal-head">
+						<h2>Journal</h2>
+						<button class="icon-button" type="button" id="copyButton" aria-label="Copy journal" title="Copy journal">Copy</button>
+					</div>
+					<ol id="journalList">
+						<li>Your choices will appear here.</li>
+					</ol>
+				</section>
+			</aside>
+		</main>
+
+		<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+		<script src="app.js" defer></script>
+	</body>
+</html>
