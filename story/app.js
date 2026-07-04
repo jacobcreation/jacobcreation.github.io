@@ -1,4 +1,7 @@
 const STORAGE_KEY = 'storyforge_ai_state_v1';
+const SAVED_STORIES_KEY = 'storyforge_saved_stories_v1';
+const ACCOUNT_APP_ID = 'storyforge';
+const ACCOUNT_SAVED_STORIES_KEY = 'saved-stories';
 const WORKER_URL = 'https://story-ai.b4rjxr9lk.workers.dev/api/story';
 
 const elements = {
@@ -8,6 +11,7 @@ const elements = {
 	genre: document.querySelector('#genreInput'),
 	tone: document.querySelector('#toneInput'),
 	start: document.querySelector('#startButton'),
+	saveStory: document.querySelector('#saveStoryButton'),
 	reset: document.querySelector('#resetButton'),
 	status: document.querySelector('#connectionStatus'),
 	chapter: document.querySelector('#chapterLabel'),
@@ -16,6 +20,7 @@ const elements = {
 	choices: document.querySelector('#choiceList'),
 	loading: document.querySelector('#loadingLine'),
 	journal: document.querySelector('#journalList'),
+	savedStories: document.querySelector('#savedStoryList'),
 	copy: document.querySelector('#copyButton'),
 	toast: document.querySelector('#toast'),
 	meters: {
@@ -50,10 +55,13 @@ const defaultState = {
 	history: [],
 	current: null,
 	pages: [],
+	savedStoryId: '',
 };
 
 let state = loadState();
+let savedStories = loadSavedStories();
 let busy = false;
+let accountStoriesLoaded = false;
 
 function loadState() {
 	try {
@@ -65,6 +73,9 @@ function loadState() {
 
 function saveState() {
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+	if (state.savedStoryId) {
+		upsertSavedStory(createStorySnapshot(state.savedStoryId), { silent: true });
+	}
 }
 
 function setBusy(nextBusy) {
@@ -78,6 +89,7 @@ function setBusy(nextBusy) {
 	for (const button of elements.choices.querySelectorAll('button')) {
 		button.disabled = nextBusy;
 	}
+	if (elements.saveStory) elements.saveStory.disabled = nextBusy || !state.current;
 }
 
 function showToast(message) {
@@ -158,6 +170,41 @@ function renderJournal() {
 	}
 }
 
+function renderSavedStories() {
+	elements.savedStories.replaceChildren();
+
+	if (!savedStories.length) {
+		const empty = document.createElement('p');
+		empty.className = 'empty-note';
+		empty.textContent = 'Saved stories will appear here.';
+		elements.savedStories.append(empty);
+		return;
+	}
+
+	for (const story of savedStories) {
+		const card = document.createElement('article');
+		card.className = 'saved-story-card';
+
+		const body = document.createElement('button');
+		body.className = 'saved-story-main';
+		body.type = 'button';
+		body.innerHTML = '<strong></strong><span></span>';
+		body.querySelector('strong').textContent = story.title || 'Untitled story';
+		body.querySelector('span').textContent = `${story.profile?.hero || 'Hero'} · Chapter ${story.chapter || 0}`;
+		body.addEventListener('click', () => loadSavedStory(story.id));
+
+		const remove = document.createElement('button');
+		remove.className = 'saved-story-delete';
+		remove.type = 'button';
+		remove.setAttribute('aria-label', `Delete ${story.title || 'story'}`);
+		remove.textContent = 'Delete';
+		remove.addEventListener('click', () => deleteSavedStory(story.id));
+
+		card.append(body, remove);
+		elements.savedStories.append(card);
+	}
+}
+
 function render() {
 	elements.chapter.textContent = `Chapter ${state.chapter}`;
 
@@ -173,6 +220,8 @@ function render() {
 	renderMeters();
 	renderChoices();
 	renderJournal();
+	renderSavedStories();
+	if (elements.saveStory) elements.saveStory.disabled = busy || !state.current;
 }
 
 function focusStoryOnSmallScreens() {
@@ -235,6 +284,7 @@ async function begin(event) {
 	state.chapter = 1;
 	state.current = story;
 	state.pages = upcomingPages;
+	state.savedStoryId = '';
 	applyStats(story.stats);
 	state.history = [{ title: story.title, scene: story.scene, picked: '' }];
 	saveState();
@@ -289,6 +339,136 @@ function resetStory() {
 	showToast('New story sheet ready.');
 }
 
+function loadSavedStories() {
+	try {
+		const parsed = JSON.parse(localStorage.getItem(SAVED_STORIES_KEY) || '[]');
+		return Array.isArray(parsed) ? parsed : [];
+	} catch (_error) {
+		return [];
+	}
+}
+
+function writeSavedStories() {
+	localStorage.setItem(SAVED_STORIES_KEY, JSON.stringify(savedStories.slice(0, 24)));
+	saveSavedStoriesToAccount();
+}
+
+function createStorySnapshot(id = '') {
+	const storyId = id || `story-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+	const title = state.current?.title || `${state.profile.hero}'s story`;
+	return {
+		id: storyId,
+		title,
+		updatedAt: Date.now(),
+		chapter: state.chapter,
+		profile: structuredClone(state.profile),
+		stats: structuredClone(state.stats),
+		history: structuredClone(state.history),
+		current: structuredClone(state.current),
+		pages: structuredClone(state.pages),
+	};
+}
+
+function upsertSavedStory(story, options = {}) {
+	if (!story || !story.current) return null;
+	savedStories = [story, ...savedStories.filter((item) => item.id !== story.id)].slice(0, 24);
+	writeSavedStories();
+	if (!options.silent) {
+		showToast('Story saved.');
+	}
+	renderSavedStories();
+	return story;
+}
+
+function saveCurrentStory() {
+	if (!state.current) {
+		showToast('Begin a story first.');
+		return;
+	}
+	const story = upsertSavedStory(createStorySnapshot(state.savedStoryId));
+	if (story) {
+		state.savedStoryId = story.id;
+		saveState();
+		render();
+	}
+}
+
+function loadSavedStory(id) {
+	const story = savedStories.find((item) => item.id === id);
+	if (!story) return;
+	state = {
+		...structuredClone(defaultState),
+		chapter: Number(story.chapter) || 0,
+		profile: structuredClone(story.profile || defaultState.profile),
+		stats: structuredClone(story.stats || defaultState.stats),
+		history: Array.isArray(story.history) ? structuredClone(story.history) : [],
+		current: story.current ? structuredClone(story.current) : null,
+		pages: Array.isArray(story.pages) ? structuredClone(story.pages) : [],
+		savedStoryId: story.id,
+	};
+	saveState();
+	syncForm();
+	render();
+	focusStoryOnSmallScreens();
+	showToast('Story loaded.');
+}
+
+function deleteSavedStory(id) {
+	savedStories = savedStories.filter((story) => story.id !== id);
+	if (state.savedStoryId === id) {
+		state.savedStoryId = '';
+		saveState();
+	}
+	writeSavedStories();
+	render();
+	showToast('Story deleted.');
+}
+
+async function loadSavedStoriesFromAccount() {
+	const accounts = window.JacobAccounts;
+	if (accountStoriesLoaded || !accounts || !accounts.isSignedIn || !accounts.isSignedIn()) return;
+	accountStoriesLoaded = true;
+	try {
+		const record = await accounts.getData(ACCOUNT_APP_ID, ACCOUNT_SAVED_STORIES_KEY);
+		const remoteStories = Array.isArray(record?.value) ? record.value : [];
+		if (remoteStories.length) {
+			const localById = new Map(savedStories.map((story) => [story.id, story]));
+			for (const remote of remoteStories) {
+				const local = localById.get(remote.id);
+				if (!local || Number(remote.updatedAt || 0) > Number(local.updatedAt || 0)) {
+					localById.set(remote.id, remote);
+				}
+			}
+			savedStories = Array.from(localById.values())
+				.sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0))
+				.slice(0, 24);
+			localStorage.setItem(SAVED_STORIES_KEY, JSON.stringify(savedStories));
+			renderSavedStories();
+		} else if (savedStories.length) {
+			await saveSavedStoriesToAccount();
+		}
+	} catch (error) {
+		if (/not found/i.test(error.message || '')) {
+			if (savedStories.length) await saveSavedStoriesToAccount();
+		} else {
+			console.warn('Could not load saved stories from account', error);
+		}
+	}
+}
+
+async function saveSavedStoriesToAccount() {
+	const accounts = window.JacobAccounts;
+	if (!accounts || !accounts.isSignedIn || !accounts.isSignedIn()) return;
+	try {
+		await accounts.setData(ACCOUNT_APP_ID, ACCOUNT_SAVED_STORIES_KEY, savedStories.slice(0, 24), {
+			label: 'Saved stories',
+			meta: { count: savedStories.length },
+		});
+	} catch (error) {
+		console.warn('Could not save stories to account', error);
+	}
+}
+
 async function copyJournal() {
 	const lines = state.history.map((entry, index) => {
 		const choice = entry.picked ? ` Choice: ${entry.picked}` : '';
@@ -306,6 +486,12 @@ async function copyJournal() {
 
 elements.form.addEventListener('submit', begin);
 elements.reset.addEventListener('click', resetStory);
+elements.saveStory.addEventListener('click', saveCurrentStory);
 elements.copy.addEventListener('click', copyJournal);
+window.addEventListener('jacob-account-change', () => {
+	accountStoriesLoaded = false;
+	loadSavedStoriesFromAccount();
+});
+setTimeout(loadSavedStoriesFromAccount, 700);
 syncForm();
 render();

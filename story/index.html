@@ -55,6 +55,7 @@
 					</div>
 					<div class="setup-actions">
 						<button class="primary-button" type="submit" id="startButton">Begin</button>
+						<button class="ghost-button" type="button" id="saveStoryButton">Save story</button>
 						<button class="ghost-button" type="button" id="resetButton">New story</button>
 					</div>
 				</form>
@@ -101,10 +102,20 @@
 						<li>Your choices will appear here.</li>
 					</ol>
 				</section>
+
+				<section class="saved-stories">
+					<div class="journal-head">
+						<h2>Saved Stories</h2>
+					</div>
+					<div class="saved-story-list" id="savedStoryList">
+						<p class="empty-note">Saved stories will appear here.</p>
+					</div>
+				</section>
 			</aside>
 		</main>
 
 		<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 		<script src="app.js" defer></script>
+		<script src="/accounts/account-widget.js" defer data-account-api="https://accounts-system.b4rjxr9lk.workers.dev" data-account-sync="storyforge_ai_state_v1:story-state:Story state:remote"></script>
 	</body>
 </html>

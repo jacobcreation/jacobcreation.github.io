@@ -28,6 +28,9 @@
 	let changeWaiters = [];
 	let scoreBridgeInstalled = false;
 	let originalSetItem = null;
+	let localDataSyncInstalled = false;
+	let localDataSyncRecords = [];
+	const localDataSyncTimers = new Map();
 	const lastAutoScores = new Map();
 
 	const accountsApi = {
@@ -212,7 +215,7 @@
 			}
 
 			if (remote && shouldPreferRemote(remote, localValue, options)) {
-				localStorage.setItem(localStorageKey, JSON.stringify(remote.value));
+				writeLocalStorageValue(localStorageKey, remote.value);
 				window.dispatchEvent(new CustomEvent('jacob-account-storage-sync', { detail: { app, key: dataKey, value: remote.value } }));
 				return remote.value;
 			}
@@ -253,6 +256,7 @@
 		app = document.createElement('div');
 		root.append(styleElement(), app);
 		installLocalScoreBridge();
+		installLocalDataSync();
 		render();
 		refreshSession();
 	}
@@ -272,6 +276,7 @@
 			state.message = '';
 			notifyChange();
 			flushPendingScores();
+			syncConfiguredLocalData();
 			return state.user;
 		} catch (error) {
 			state.token = '';
@@ -381,6 +386,7 @@
 		localStorage.setItem(tokenKey, state.token);
 		notifyChange();
 		flushPendingScores();
+		syncConfiguredLocalData();
 	}
 
 	async function updateProfile(values) {
@@ -835,6 +841,107 @@
 			.replace(/[^a-z0-9_-]+/g, '-')
 			.replace(/^-+|-+$/g, '')
 			.slice(0, 80);
+	}
+
+	function installLocalDataSync() {
+		localDataSyncRecords = parseLocalDataSyncRecords();
+		if (!localDataSyncRecords.length || localDataSyncInstalled || !window.localStorage) return;
+		localDataSyncInstalled = true;
+
+		window.addEventListener('storage', (event) => {
+			if (event.storageArea !== localStorage || !event.key) return;
+			queueLocalDataSync(event.key);
+		});
+
+		try {
+			const storagePrototype = Object.getPrototypeOf(localStorage);
+			const nativeSetItem = storagePrototype && storagePrototype.setItem ? storagePrototype.setItem : localStorage.setItem;
+			if (!originalSetItem) originalSetItem = nativeSetItem.bind(localStorage);
+			storagePrototype.setItem = function patchedDataSetItem(key, value) {
+				nativeSetItem.call(this, key, value);
+				if (this === localStorage) {
+					queueLocalDataSync(key);
+				}
+			};
+		} catch (error) {
+			// The storage event still covers cross-tab updates when prototype patching is unavailable.
+		}
+	}
+
+	function parseLocalDataSyncRecords() {
+		const raw = script && script.dataset ? script.dataset.accountSync : '';
+		if (!raw) return [];
+		return raw
+			.split('|')
+			.map((entry) => {
+				const [localKey, dataKey, label, prefer] = entry.split(':').map((part) => String(part || '').trim());
+				const cleanKey = cleanDataKey(dataKey || localKey);
+				if (!localKey || !cleanKey) return null;
+				return {
+					localKey,
+					dataKey: cleanKey,
+					label: label || cleanKey,
+					prefer: prefer === 'local' ? 'local' : 'remote',
+				};
+			})
+			.filter(Boolean)
+			.slice(0, 20);
+	}
+
+	async function syncConfiguredLocalData() {
+		if (!state.user || !state.token || !localDataSyncRecords.length) return;
+		for (const record of localDataSyncRecords) {
+			try {
+				await accountsApi.syncLocalStorage(currentGameId(), record.dataKey, record.localKey, {
+					label: record.label,
+					prefer: record.prefer,
+					meta: { auto: true },
+				});
+			} catch (error) {
+				console.warn('Could not sync account data', record.localKey, error);
+			}
+		}
+	}
+
+	function queueLocalDataSync(localKey) {
+		if (!state.user || !state.token || !localDataSyncRecords.length) return;
+		const record = localDataSyncRecords.find((item) => item.localKey === localKey);
+		if (!record) return;
+		clearTimeout(localDataSyncTimers.get(localKey));
+		localDataSyncTimers.set(
+			localKey,
+			setTimeout(async () => {
+				try {
+					const value = readLocalStorageValue(localKey);
+					if (value === null || value === undefined) return;
+					await accountsApi.setData(currentGameId(), record.dataKey, value, {
+						label: record.label,
+						meta: { source: 'localStorage', localStorageKey: localKey, auto: true },
+					});
+				} catch (error) {
+					console.warn('Could not save account data', localKey, error);
+				}
+			}, 1000),
+		);
+	}
+
+	function readLocalStorageValue(localKey) {
+		const raw = localStorage.getItem(localKey);
+		if (raw === null) return null;
+		try {
+			return JSON.parse(raw);
+		} catch (error) {
+			return raw;
+		}
+	}
+
+	function writeLocalStorageValue(localKey, value) {
+		const writer = originalSetItem || localStorage.setItem.bind(localStorage);
+		if (typeof value === 'string') {
+			writer(localKey, value);
+		} else {
+			writer(localKey, JSON.stringify(value));
+		}
 	}
 
 	function shouldPreferRemote(remote, localValue, options = {}) {

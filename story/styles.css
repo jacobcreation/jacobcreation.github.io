@@ -301,12 +301,14 @@ button:disabled {
 }
 
 .meters,
-.journal {
+.journal,
+.saved-stories {
 	border-radius: 8px;
 }
 
 .meters h2,
-.journal h2 {
+.journal h2,
+.saved-stories h2 {
 	margin-bottom: 14px;
 	font-size: 1rem;
 }
@@ -390,6 +392,60 @@ button:disabled {
 #journalList li::marker {
 	color: var(--gold);
 	font-weight: 800;
+}
+
+.saved-story-list {
+	display: grid;
+	gap: 10px;
+	max-height: 260px;
+	overflow: auto;
+}
+
+.empty-note {
+	margin: 0;
+	color: var(--muted);
+	font-size: 0.9rem;
+	line-height: 1.45;
+}
+
+.saved-story-card {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 8px;
+	align-items: stretch;
+}
+
+.saved-story-main {
+	display: grid;
+	gap: 4px;
+	min-height: 54px;
+	padding: 10px 12px;
+	border: 1px solid rgba(246, 199, 102, 0.2);
+	background: rgba(246, 199, 102, 0.08);
+	color: var(--ink);
+	text-align: left;
+}
+
+.saved-story-main strong,
+.saved-story-main span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.saved-story-main span {
+	color: var(--muted);
+	font-size: 0.82rem;
+	font-weight: 700;
+}
+
+.saved-story-delete {
+	min-height: 54px;
+	padding: 0 10px;
+	border: 1px solid rgba(255, 138, 138, 0.28);
+	background: rgba(255, 138, 138, 0.1);
+	color: #ffd0d0;
+	font-size: 0.78rem;
 }
 
 .toast {

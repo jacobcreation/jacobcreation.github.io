@@ -29,6 +29,9 @@ const boostButton = document.querySelector("#boost-button");
 const handbrakeButton = document.querySelector("#handbrake-button");
 const pauseButton = document.querySelector("#pause-button");
 const resetButton = document.querySelector("#reset-button");
+const LOCAL_WORLD_SAVE_KEY = "dustline-world-save-v1";
+const CLOUD_WORLD_APP = "dustline-driver";
+const CLOUD_WORLD_KEY = "current-world";
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -248,6 +251,10 @@ const state = {
 	deathMessage: "",
 };
 
+let lastWorldSaveAt = 0;
+let cloudWorldLoaded = false;
+let cloudWorldSaveInFlight = false;
+
 bestEl.textContent = Math.round(state.bestScore);
 
 function hash2d(x, z) {
@@ -337,6 +344,7 @@ function setPaused(paused) {
 	if (state.gameOver) return;
 	state.paused = paused;
 	if (paused) {
+		saveDustlineWorld({ force: true });
 		Object.keys(keys).forEach((key) => {
 			keys[key] = false;
 		});
@@ -1705,7 +1713,7 @@ function resetTraffic() {
 	pickups.forEach((pickup, index) => spawnPickup(pickup, index));
 }
 
-function resetGame() {
+function resetGame({ persist = true } = {}) {
 	setOverlay(false, "", "", "");
 	car.position.set(0, 0, 0);
 	state.velocity.set(0, 0, 0);
@@ -1736,11 +1744,189 @@ function resetGame() {
 	updateChunks(0, 0);
 	clearNavigation("City drive reset");
 	statusPill.textContent = "City drive reset";
+	if (persist) saveDustlineWorld({ force: true });
 }
 
 respawnButton.addEventListener("click", () => {
 	resetGame();
 });
+
+function createDustlineWorldSave() {
+	return {
+		version: 1,
+		app: CLOUD_WORLD_APP,
+		updatedAt: Date.now(),
+		position: {
+			x: Number(car.position.x.toFixed(3)),
+			z: Number(car.position.z.toFixed(3)),
+		},
+		heading: Number(state.heading.toFixed(5)),
+		velocity: {
+			x: Number(state.velocity.x.toFixed(4)),
+			z: Number(state.velocity.z.toFixed(4)),
+		},
+		score: Math.round(state.score),
+		bestScore: Math.round(state.bestScore),
+		health: Math.round(state.health * 10) / 10,
+		fuel: Math.round(state.fuel * 10) / 10,
+		distance: Math.round(state.distance),
+		wanted: Math.round(state.wanted * 100) / 100,
+		crimeTimer: Math.round(state.crimeTimer * 100) / 100,
+		comboMultiplier: Math.round(state.comboMultiplier * 100) / 100,
+		comboTime: Math.round(state.comboTime * 100) / 100,
+		navigation: state.navigation
+			? {
+					x: Number(state.navigation.x.toFixed(3)),
+					z: Number(state.navigation.z.toFixed(3)),
+					type: state.navigation.type || "",
+					label: state.navigation.label || "",
+					query: state.navigation.query || "",
+					arrived: Boolean(state.navigation.arrived),
+				}
+			: null,
+	};
+}
+
+function applyDustlineWorldSave(save, source = "save") {
+	if (!save || typeof save !== "object" || !save.position) return false;
+	const x = Number(save.position.x);
+	const z = Number(save.position.z);
+	if (!Number.isFinite(x) || !Number.isFinite(z)) return false;
+
+	setOverlay(false, "", "", "");
+	car.position.set(x, 0, z);
+	state.velocity.set(Number(save.velocity?.x) || 0, 0, Number(save.velocity?.z) || 0);
+	state.heading = Number(save.heading) || 0;
+	state.steer = 0;
+	state.bodyPitch = 0;
+	state.bodyRoll = 0;
+	state.score = Math.max(0, Number(save.score) || 0);
+	state.bestScore = Math.max(state.bestScore, Number(save.bestScore) || 0);
+	state.health = THREE.MathUtils.clamp(Number(save.health) || 100, 0, 100);
+	state.fuel = THREE.MathUtils.clamp(Number(save.fuel) || 100, 0, 100);
+	state.distance = Math.max(0, Number(save.distance) || 0);
+	state.wanted = THREE.MathUtils.clamp(Number(save.wanted) || 0, 0, 5);
+	state.crimeTimer = Math.max(0, Number(save.crimeTimer) || 0);
+	state.pursuitCapture = 0;
+	state.comboMultiplier = THREE.MathUtils.clamp(Number(save.comboMultiplier) || 1, 1, 5);
+	state.comboTime = Math.max(0, Number(save.comboTime) || 0);
+	state.handbrakeTime = 0;
+	state.refuelTime = 0;
+	state.staticDamageCooldown = 0;
+	state.staticCollisionActive = false;
+	state.gameOver = false;
+	state.paused = false;
+	state.deathMessage = "";
+	state.navigation = save.navigation && Number.isFinite(Number(save.navigation.x)) && Number.isFinite(Number(save.navigation.z))
+		? {
+				x: Number(save.navigation.x),
+				z: Number(save.navigation.z),
+				type: save.navigation.type || "destination",
+				label: save.navigation.label || "Saved destination",
+				query: save.navigation.query || save.navigation.label || "",
+				arrived: Boolean(save.navigation.arrived),
+			}
+		: null;
+	previousCarPosition.copy(car.position);
+	respawnButton.classList.remove("is-visible");
+	resetTraffic();
+	updateChunks(car.position.x, car.position.z);
+	if (state.navigation) {
+		navSearchEl.value = state.navigation.query || state.navigation.label;
+		navigationBeacon.visible = true;
+		navigationBeacon.position.set(state.navigation.x, 0, state.navigation.z);
+	} else {
+		clearNavigation("");
+	}
+	bestEl.textContent = Math.round(state.bestScore).toString();
+	statusPill.textContent = source === "cloud" ? "Account world loaded" : "Saved world loaded";
+	updateHud();
+	return true;
+}
+
+function readLocalDustlineWorld() {
+	try {
+		return JSON.parse(localStorage.getItem(LOCAL_WORLD_SAVE_KEY) || "null");
+	} catch (error) {
+		return null;
+	}
+}
+
+function writeLocalDustlineWorld(save) {
+	try {
+		localStorage.setItem(LOCAL_WORLD_SAVE_KEY, JSON.stringify(save));
+		localStorage.setItem("dustline-best-score", String(Math.round(save.bestScore || state.bestScore)));
+	} catch (error) {
+		console.warn("Could not save Dustline world locally", error);
+	}
+}
+
+function saveDustlineWorld({ force = false } = {}) {
+	const now = Date.now();
+	if (!force && now - lastWorldSaveAt < 12000) return;
+	lastWorldSaveAt = now;
+	const save = createDustlineWorldSave();
+	writeLocalDustlineWorld(save);
+
+	const accounts = window.JacobAccounts;
+	if (!accounts || !accounts.isSignedIn || !accounts.isSignedIn() || cloudWorldSaveInFlight) return;
+	cloudWorldSaveInFlight = true;
+	accounts
+		.setData(CLOUD_WORLD_APP, CLOUD_WORLD_KEY, save, {
+			label: "Current Dustline world",
+			meta: {
+				score: save.score,
+				bestScore: save.bestScore,
+				distance: save.distance,
+			},
+		})
+		.then(() =>
+			accounts.saveHighScore(CLOUD_WORLD_APP, save.bestScore, {
+				gameName: "Dustline Driver",
+				label: "Best drive",
+				mode: "endless-city",
+				meta: { distance: save.distance },
+			}),
+		)
+		.catch((error) => console.warn("Could not save Dustline world to account", error))
+		.finally(() => {
+			cloudWorldSaveInFlight = false;
+		});
+}
+
+async function loadDustlineWorldFromAccount() {
+	const accounts = window.JacobAccounts;
+	if (cloudWorldLoaded || !accounts || !accounts.isSignedIn || !accounts.isSignedIn()) return;
+	cloudWorldLoaded = true;
+
+	try {
+		const record = await accounts.getData(CLOUD_WORLD_APP, CLOUD_WORLD_KEY);
+		const remote = record && record.value;
+		const local = readLocalDustlineWorld();
+		if (remote && (!local || Number(remote.updatedAt || 0) > Number(local.updatedAt || 0))) {
+			if (applyDustlineWorldSave(remote, "cloud")) {
+				writeLocalDustlineWorld(remote);
+			}
+			return;
+		}
+		if (local) {
+			await accounts.setData(CLOUD_WORLD_APP, CLOUD_WORLD_KEY, local, {
+				label: "Current Dustline world",
+				meta: { source: "localStorage" },
+			});
+		}
+	} catch (error) {
+		if (!/not found/i.test(error.message || "")) {
+			console.warn("Could not load Dustline world from account", error);
+		}
+	}
+}
+
+function loadDustlineWorld() {
+	const local = readLocalDustlineWorld();
+	if (local) applyDustlineWorldSave(local, "local");
+	loadDustlineWorldFromAccount();
+}
 
 setupMobileDrivingControls();
 
@@ -2164,6 +2350,7 @@ function updateHud() {
 			String(Math.round(state.bestScore)),
 		);
 		bestEl.textContent = Math.round(state.bestScore).toString();
+		saveDustlineWorld({ force: true });
 	}
 
 	if (state.gameOver) {
@@ -2418,6 +2605,9 @@ function animate() {
 
 	state.distance += previousCarPosition.distanceTo(car.position);
 	previousCarPosition.copy(car.position);
+	if (!disabled && state.distance > 1) {
+		saveDustlineWorld();
+	}
 
 	syncCarBody(forwardSpeed, delta, throttleInput);
 	car.rotation.set(state.bodyPitch, state.heading, state.bodyRoll);
@@ -2445,7 +2635,13 @@ function animate() {
 }
 
 const clock = new THREE.Clock();
-resetGame();
+window.addEventListener("jacob-account-change", () => {
+	cloudWorldLoaded = false;
+	loadDustlineWorldFromAccount();
+});
+window.addEventListener("beforeunload", () => saveDustlineWorld({ force: true }));
+resetGame({ persist: false });
+loadDustlineWorld();
 animate();
 
 window.addEventListener("resize", () => {
