@@ -1,6 +1,5 @@
 const STORAGE_KEY = 'storyforge_ai_state_v1';
-const ENDPOINT_KEY = 'storyforge_ai_endpoint_v1';
-const DEPLOYED_ENDPOINT = 'https://story-ai.b4rjxr9lk.workers.dev/api/story';
+const WORKER_URL = 'https://story-ai.b4rjxr9lk.workers.dev/api/story';
 
 const elements = {
 	form: document.querySelector('#setupForm'),
@@ -8,7 +7,6 @@ const elements = {
 	setting: document.querySelector('#settingInput'),
 	genre: document.querySelector('#genreInput'),
 	tone: document.querySelector('#toneInput'),
-	endpoint: document.querySelector('#endpointInput'),
 	start: document.querySelector('#startButton'),
 	reset: document.querySelector('#resetButton'),
 	status: document.querySelector('#connectionStatus'),
@@ -57,14 +55,6 @@ const defaultState = {
 let state = loadState();
 let busy = false;
 
-function defaultEndpoint() {
-	if (location.port === '8787') {
-		return `${location.origin}/api/story`;
-	}
-
-	return localStorage.getItem(ENDPOINT_KEY) || DEPLOYED_ENDPOINT;
-}
-
 function loadState() {
 	try {
 		return { ...structuredClone(defaultState), ...JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') };
@@ -81,6 +71,7 @@ function setBusy(nextBusy) {
 	busy = nextBusy;
 	elements.start.disabled = nextBusy;
 	elements.reset.disabled = nextBusy;
+	elements.start.textContent = nextBusy ? 'Writing...' : 'Begin';
 	elements.loading.hidden = !nextBusy;
 	elements.status.textContent = nextBusy ? 'Writing' : 'Ready';
 
@@ -122,7 +113,6 @@ function syncForm() {
 	elements.setting.value = state.profile.setting;
 	elements.genre.value = state.profile.genre;
 	elements.tone.value = state.profile.tone;
-	elements.endpoint.value = defaultEndpoint();
 }
 
 function renderMeters() {
@@ -177,7 +167,7 @@ function render() {
 	} else {
 		elements.title.textContent = 'The book is waiting.';
 		elements.scene.textContent =
-			'Name your hero, choose the kind of tale you want, and begin. The Worker writes the whole run up front with Cerebras AI.';
+			'Choose a hero, set the world, and begin. Your next page will appear here with three paths forward.';
 	}
 
 	renderMeters();
@@ -185,18 +175,17 @@ function render() {
 	renderJournal();
 }
 
-async function requestStoryBatch(action = '') {
-	const endpoint = elements.endpoint.value.trim();
-	if (!endpoint) {
-		showToast('Add your Worker endpoint first.');
-		return null;
+function focusStoryOnSmallScreens() {
+	if (window.matchMedia('(max-width: 760px)').matches) {
+		document.querySelector('.scene-panel').scrollIntoView({ block: 'start', behavior: 'smooth' });
 	}
+}
 
-	localStorage.setItem(ENDPOINT_KEY, endpoint);
+async function requestStoryBatch(action = '') {
 	setBusy(true);
 
 	try {
-		const response = await fetch(endpoint, {
+		const response = await fetch(WORKER_URL, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
@@ -221,7 +210,7 @@ async function requestStoryBatch(action = '') {
 		return pages;
 	} catch (error) {
 		elements.status.textContent = 'Needs attention';
-		showToast(error.message || 'The story request failed.');
+		showToast(error.message || 'The story request failed. Check your connection and try again.');
 		return null;
 	} finally {
 		setBusy(false);
@@ -250,6 +239,7 @@ async function begin(event) {
 	state.history = [{ title: story.title, scene: story.scene, picked: '' }];
 	saveState();
 	render();
+	focusStoryOnSmallScreens();
 }
 
 async function advance(choice) {
@@ -284,6 +274,7 @@ async function advance(choice) {
 	state.history.push({ title: story.title, scene: story.scene, picked: '' });
 	saveState();
 	render();
+	focusStoryOnSmallScreens();
 }
 
 function resetStory() {
