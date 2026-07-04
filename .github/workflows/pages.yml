@@ -35,10 +35,15 @@ jobs:
       - name: Remove large puzzle data
         run: rm -rf chesspuzzle/puzzlelist
 
+      - name: Setup Node.js (temporary setup to get Node 22 for pnpm v11 compatibility)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js cache
         uses: actions/setup-node@v4
         with:
           node-version: 22
