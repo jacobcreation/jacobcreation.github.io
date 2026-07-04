@@ -51,6 +51,7 @@ const defaultState = {
 	},
 	history: [],
 	current: null,
+	pages: [],
 };
 
 let state = loadState();
@@ -176,7 +177,7 @@ function render() {
 	} else {
 		elements.title.textContent = 'The book is waiting.';
 		elements.scene.textContent =
-			'Name your hero, choose the kind of tale you want, and begin. Each choice asks the Cloudflare Worker to continue the story with Workers AI.';
+			'Name your hero, choose the kind of tale you want, and begin. The Worker writes the whole run up front with Cerebras AI.';
 	}
 
 	renderMeters();
@@ -184,7 +185,7 @@ function render() {
 	renderJournal();
 }
 
-async function requestStory(action = '') {
+async function requestStoryBatch(action = '') {
 	const endpoint = elements.endpoint.value.trim();
 	if (!endpoint) {
 		showToast('Add your Worker endpoint first.');
@@ -202,6 +203,7 @@ async function requestStory(action = '') {
 				...state.profile,
 				action,
 				history: state.history.slice(-8),
+				pageCount: 8,
 			}),
 		});
 		const data = await response.json().catch(() => ({}));
@@ -210,13 +212,14 @@ async function requestStory(action = '') {
 			throw new Error(data.error || `Story request failed with ${response.status}.`);
 		}
 
-		if (!data.story || !Array.isArray(data.story.choices)) {
+		const pages = Array.isArray(data.pages) ? data.pages : data.story ? [data.story] : [];
+		if (!pages.length || pages.some((page) => !Array.isArray(page.choices))) {
 			throw new Error('The Worker returned an unexpected story shape.');
 		}
 
 		elements.status.textContent = data.model ? 'AI ready' : 'Ready';
-		return data.story;
-	} catch (_error) {
+		return pages;
+	} catch (error) {
 		elements.status.textContent = 'Needs attention';
 		showToast(error.message || 'The story request failed.');
 		return null;
@@ -233,14 +236,16 @@ async function begin(event) {
 
 	state = structuredClone(defaultState);
 	state.profile = profileFromForm();
-	const story = await requestStory();
+	const pages = await requestStoryBatch();
 
-	if (!story) {
+	if (!pages) {
 		return;
 	}
 
+	const [story, ...upcomingPages] = pages;
 	state.chapter = 1;
 	state.current = story;
+	state.pages = upcomingPages;
 	applyStats(story.stats);
 	state.history = [{ title: story.title, scene: story.scene, picked: '' }];
 	saveState();
@@ -257,7 +262,17 @@ async function advance(choice) {
 		picked: choice,
 	};
 
-	const story = await requestStory(choice);
+	let story = state.pages.shift();
+	if (!story) {
+		const pages = await requestStoryBatch(choice);
+		if (!pages) {
+			renderJournal();
+			return;
+		}
+		[story] = pages;
+		state.pages = pages.slice(1);
+	}
+
 	if (!story) {
 		renderJournal();
 		return;
