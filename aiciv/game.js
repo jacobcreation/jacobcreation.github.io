@@ -559,7 +559,8 @@ function bindCountryButton(button) {
 			state.selectedCountry.y,
 		);
 		centerCameraOn(state.selectedTile);
-		render();
+		renderSelected();
+		draw();
 	});
 }
 
@@ -673,10 +674,12 @@ function draw() {
 	const tileW = 18;
 	const tileH = 16;
 	state.tiles.forEach((tile) => {
+		if (tile.terrain === "ocean") return;
 		const x = tile.x * tileW + tileW / 2;
 		const y = tile.y * tileH + tileH / 2;
-		if (tile.terrain === "ocean") {
-			drawMapEmoji(tile, x, y);
+		if (tile.terrain === "sea") {
+			ctx.fillStyle = tileColor(tile);
+			drawLandBlob(tile, x, y, tileW, tileH);
 			return;
 		}
 		ctx.fillStyle = tileColor(tile);
@@ -817,18 +820,26 @@ function drawBorders(tileW, tileH) {
 	ctx.strokeStyle = "rgba(12, 16, 18, 0.58)";
 	ctx.lineWidth = 1.4;
 	state.tiles.forEach((tile) => {
-		if (!tile.owner) return;
+		if (!tile.owner || tile.terrain === "ocean" || tile.terrain === "sea")
+			return;
 		const x = tile.x * tileW + tileW / 2;
 		const y = tile.y * tileH + tileH / 2;
-		neighbors(tile).forEach((near) => {
-			if (near.owner === tile.owner) return;
-			const nx = near.x * tileW + tileW / 2;
-			const ny = near.y * tileH + tileH / 2;
-			ctx.beginPath();
-			ctx.moveTo((x + nx) / 2 - 4, (y + ny) / 2 - 4);
-			ctx.lineTo((x + nx) / 2 + 4, (y + ny) / 2 + 4);
-			ctx.stroke();
-		});
+		for (let d = 0; d < 4; d += 1) {
+			const dx = d === 0 ? 1 : d === 1 ? 0 : d === 2 ? 1 : 1;
+			const dy = d === 0 ? 0 : d === 1 ? 1 : d === 2 ? 1 : -1;
+			const nx = tile.x + dx;
+			const ny = tile.y + dy;
+			if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) continue;
+			const near = tileAt(nx, ny);
+			if (near.owner && near.owner !== tile.owner) {
+				const nxp = nx * tileW + tileW / 2;
+				const nyp = ny * tileH + tileH / 2;
+				ctx.beginPath();
+				ctx.moveTo((x + nxp) / 2 - 4, (y + nyp) / 2 - 4);
+				ctx.lineTo((x + nxp) / 2 + 4, (y + nyp) / 2 + 4);
+				ctx.stroke();
+			}
+		}
 	});
 }
 
@@ -1762,7 +1773,8 @@ function worldClick(event) {
 	const tile = tileAt(x, y);
 	state.selectedTile = tile;
 	state.selectedCountry = tile.owner ? countryById(tile.owner) : null;
-	render();
+	renderSelected();
+	draw();
 }
 
 function bindDrag() {
@@ -1828,7 +1840,6 @@ function loop(timestamp) {
 		simulateYear();
 		render();
 	}
-	draw();
 	requestAnimationFrame(loop);
 }
 
