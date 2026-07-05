@@ -1,15 +1,6 @@
         // Fixed Cloudflare Worker URL for image editing
         const WORKER_URL = 'https://ai-image-edit.b4rjxr9lk.workers.dev';
 
-        // Advanced panel toggle
-        const advancedBtn = document.getElementById('advanced-btn');
-        const advancedPanel = document.getElementById('advanced-panel');
-        const advancedArrow = document.getElementById('advanced-arrow');
-        advancedBtn.addEventListener('click', () => {
-            const isShown = advancedPanel.classList.toggle('show');
-            advancedArrow.textContent = isShown ? '▲' : '▼';
-        });
-
         // Upload zone events
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('file-input');
@@ -83,7 +74,6 @@
         const outputPreview = document.getElementById('output-preview');
         const outputPlaceholder = document.getElementById('output-placeholder');
         const downloadBtn = document.getElementById('download-btn');
-        const modelSelect = document.getElementById('model-select');
         let outputImageB64 = null;
 
         generateBtn.addEventListener('click', async () => {
@@ -95,19 +85,16 @@
             generateBtn.innerHTML = '<div class="spinner"></div> <span>Processing...</span>';
             outputPreview.style.display = 'none';
             outputPlaceholder.style.display = 'flex';
-            const providerName = modelSelect.value === 'zsky' ? 'ZSky AI' : 'Cloudflare Workers AI';
-            outputPlaceholder.innerHTML = `<div class="spinner" style="width: 32px; height: 32px; border-width: 3px; border-top-color: var(--primary);"></div><span style="margin-top: 15px; color: var(--text-muted);">Editing with ${providerName}...</span>`;
+            outputPlaceholder.innerHTML = '<div class="spinner" style="width: 32px; height: 32px; border-width: 3px; border-top-color: var(--primary);"></div><span style="margin-top: 15px; color: var(--text-muted);">Editing with Gemini...</span>';
             downloadBtn.style.display = 'none';
             clearError();
 
             const workerUrl = WORKER_URL;
             const prompt = promptInput.value.trim();
-            const model = modelSelect.value;
 
             const formData = new FormData();
             formData.append('image', selectedFile);
             formData.append('prompt', prompt);
-            formData.append('model', model);
 
             try {
                 const response = await fetch(workerUrl, {

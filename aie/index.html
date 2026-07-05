@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Antigravity Image Editor - Cloudflare Workers AI</title>
+    <title>Antigravity Image Editor - Gemini</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="/fonts/fonts.css" rel="stylesheet">
@@ -39,19 +39,6 @@
             <div class="form-group">
                 <label for="prompt-input">Editing prompt</label>
                 <textarea id="prompt-input" placeholder="Example: 'Change the background to a neon cyber-punk city street' or 'Add a cute puppy next to the cat'"></textarea>
-            </div>
-
-            <div class="advanced-toggle" id="advanced-btn">
-                <span>Advanced Settings</span>
-                <span id="advanced-arrow">▼</span>
-            </div>
-
-            <div class="advanced-options" id="advanced-panel">
-                <label for="model-select">Model ID</label>
-                <select id="model-select" class="select-input">
-                    <option value="workers-ai">Stable Diffusion Img2Img (Cloudflare Workers AI)</option>
-                    <option value="zsky">ZSky AI Image Generation</option>
-                </select>
             </div>
 
             <button class="btn" id="generate-btn" disabled>
