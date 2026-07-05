@@ -9,7 +9,7 @@
     
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Meme Generator</title>
+    <title>AI Image Generator</title>
     <link href="/fonts/fonts.css" rel="stylesheet">
 
     <link rel="stylesheet" href="styles.css">
@@ -24,10 +24,10 @@
         <header>
             <div class="logo-badge">
                 <span class="logo-dot"></span>
-                AI Meme Generator
+                AI Image Generator
             </div>
-            <h1>AI <span>Meme</span> Generator</h1>
-            <p class="subtitle">Type an idea. Get a meme. Go viral (maybe).</p>
+            <h1>AI <span>Image</span> Generator</h1>
+            <p class="subtitle">Type an idea and generate a polished image.</p>
         </header>
 
         <div class="input-card">
@@ -49,9 +49,9 @@
                 </select>
             </div>
 
-            <label class="input-label" for="prompt">Your meme idea</label>
+            <label class="input-label" for="prompt">Your image idea</label>
             <div class="input-row" style="flex-wrap: wrap;">
-                <input id="prompt" type="text" placeholder='e.g. "cat avoiding mondays"' maxlength="200" />
+                <input id="prompt" type="text" placeholder='e.g. "cat sitting by a sunny window"' maxlength="200" />
                 <button id="genBtn" onclick="generate()">Generate ✦</button>
             </div>
         </div>
@@ -60,15 +60,15 @@
 
         <div class="meme-area" id="memeArea">
             <div class="placeholder" id="placeholder">
-                <span class="placeholder-emoji">😂</span>
-                <p class="placeholder-text">Your meme will appear here</p>
+                <span class="placeholder-emoji">🖼️</span>
+                <p class="placeholder-text">Your image will appear here</p>
             </div>
             <div class="spinner-wrap" id="spinnerWrap">
                 <div class="spinner"></div>
-                <span class="spinner-label" id="spinnerLabel">Cooking something cursed...</span>
+                <span class="spinner-label" id="spinnerLabel">Generating your image...</span>
             </div>
-            <img id="memeImg" alt="Generated meme" style="display:none" />
-            <div id="memeBg" role="img" aria-label="Generated meme"></div>
+            <img id="memeImg" alt="Generated image" style="display:none" />
+            <div id="memeBg" role="img" aria-label="Generated image"></div>
         </div>
 
         <div class="enhanced-pill" id="enhancedPill">
@@ -83,7 +83,7 @@
 
         <div class="history-section" id="histSection">
             <div class="history-header">
-                <span class="history-title">Recent memes (session only)</span>
+                <span class="history-title">Recent images (session only)</span>
                 <button class="clear-btn" onclick="clearHistory()">clear all</button>
             </div>
             <div class="hist-grid" id="histGrid"></div>
@@ -99,7 +99,7 @@
 
     <script src="app.js"></script>
 <script>(function(){const v=Date.now();document.write('<script src="/global-header.js?v='+v+'"><\/script>');})();</script>
-    <script src="/accounts/account-widget.js" defer data-account-api="https://accounts-system.b4rjxr9lk.workers.dev" data-account-sync="meme_history:history:Meme history:remote|unlimited_mode:unlimited-mode:Unlimited mode:remote"></script>
+    <script src="/accounts/account-widget.js" defer data-account-api="https://accounts-system.b4rjxr9lk.workers.dev" data-account-sync="meme_history:history:Image history:remote|unlimited_mode:unlimited-mode:Unlimited mode:remote"></script>
 </body>
 
 </html>

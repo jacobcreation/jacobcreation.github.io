@@ -216,7 +216,7 @@
             transform: none;
         }
 
-        /* Meme display */
+        /* Generated image display */
         .meme-area {
             background: var(--surface);
             border: 0.5px solid var(--border2);

@@ -9,7 +9,7 @@
     
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Video Meme Generator</title>
+    <title>AI Video Generator</title>
     <link href="/fonts/fonts.css" rel="stylesheet">
 
     <link rel="stylesheet" href="styles.css">
@@ -24,10 +24,10 @@
         <header>
             <div class="logo-badge">
                 <span class="logo-dot"></span>
-                AI Video Meme Generator
+                AI Video Generator
             </div>
-            <h1>AI <span>Video</span> Meme</h1>
-            <p class="subtitle">Animate your ideas. Get a video meme. Go viral.</p>
+            <h1>AI <span>Video</span> Generator</h1>
+            <p class="subtitle">Animate your ideas into a short generated video.</p>
         </header>
 
         <div class="input-card">
@@ -39,13 +39,13 @@
                 </div>
             </div>
 
-            <label class="input-label" for="prompt">Your video meme idea</label>
+            <label class="input-label" for="prompt">Your video idea</label>
             <div class="input-row" style="flex-wrap: wrap;">
-                <input id="prompt" type="text" placeholder='e.g. "dog dancing to disco music"' maxlength="200" />
+                <input id="prompt" type="text" placeholder='e.g. "a dog walking through a sunny park"' maxlength="200" />
                 <button id="genBtn" onclick="generate()">Animate ✦</button>
             </div>
             <div style="font-size: 11px; color: var(--muted); margin-top: 8px; text-align: right;">
-                💡 Uses free community GPUs. Generation may take <strong>2–5 minutes</strong>.
+                Uses free community GPUs. Generation may take <strong>2–5 minutes</strong>.
             </div>
         </div>
 
@@ -54,7 +54,7 @@
         <div class="meme-area" id="memeArea">
             <div class="placeholder" id="placeholder">
                 <span class="placeholder-emoji">🎬</span>
-                <p class="placeholder-text">Your video meme will appear here</p>
+                <p class="placeholder-text">Your video will appear here</p>
             </div>
             <div class="spinner-wrap" id="spinnerWrap">
                 <div class="spinner"></div>

@@ -5,31 +5,31 @@
         let currentModel = '';
 
         const spinnerMessages = [
-            'Rendering the chaos... (may take 2-5 min 🐢)',
-            'Waiting in the free GPU queue... hang tight!',
-            'Asking the AI to move pixels... ⏳',
-            'Generating frames of gold... please hold',
-            'Training a tiny film crew... this takes a bit',
-            'Interpolating the funny... 🎬',
+            'Rendering your video... (may take 2-5 min)',
+            'Waiting in the free GPU queue...',
+            'Generating video frames...',
+            'Refining motion and timing...',
+            'Preparing the final clip...',
+            'Almost ready...',
         ];
 
         function enhancePrompt(raw) {
             const styles = [
-                'meme format video', 'viral video meme', 'absurdist humor clip',
-                'reaction video', 'relatable gif style', 'chaotic energy video'
+                'short cinematic video', 'clean visual composition', 'smooth camera motion',
+                'natural subject movement', 'well lit scene', 'polished generated video'
             ];
             const vibes = [
-                'extremely relatable animation', 'high energy motion', 'deadpan movement',
-                'ironic twist animation', 'wholesome chaotic motion'
+                'clear focal point', 'natural pacing', 'balanced mood',
+                'expressive motion', 'visually coherent style'
             ];
             const moods = [
-                'funny exaggerated motion', 'hilarious timing',
-                'comedic animation', 'unexpected movement'
+                'cinematic lighting', 'steady animation',
+                'realistic motion', 'crisp details'
             ];
             const s = styles[Math.floor(Math.random() * styles.length)];
             const v = vibes[Math.floor(Math.random() * vibes.length)];
             const m = moods[Math.floor(Math.random() * moods.length)];
-            return `${raw}, ${s}, ${v}, ${m}, high quality video, smooth motion, internet culture aesthetic`;
+            return `${raw}, ${s}, ${v}, ${m}, high quality video, smooth motion, refined visual style`;
         }
 
         async function generate() {
@@ -137,7 +137,7 @@
             if (!currentUrl) return;
             const a = document.createElement('a');
             a.href = currentUrl;
-            a.download = 'video-meme-' + Date.now() + '.mp4';
+            a.download = 'video-' + Date.now() + '.mp4';
             a.target = '_blank';
             document.body.appendChild(a);
             a.click();
@@ -145,7 +145,7 @@
         }
 
         function sharePrompt() {
-            const shareText = `Check out this AI video meme: "${currentPrompt}" — generated at ${window.location.href}`;
+            const shareText = `AI video prompt: "${currentPrompt}" — generated at ${window.location.href}`;
             navigator.clipboard.writeText(shareText).then(() => {
                 const btn = document.getElementById('shareBtn');
                 const original = btn.textContent;

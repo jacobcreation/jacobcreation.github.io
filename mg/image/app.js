@@ -15,30 +15,30 @@
         }
 
         const spinnerMessages = [
-            'Cooking something cursed...',
-            'Asking the AI to be funny...',
-            'Training on dank memes...',
-            'Generating internet gold...',
-            'Almost going viral...',
+            'Generating your image...',
+            'Refining the composition...',
+            'Adding detail and lighting...',
+            'Preparing the final result...',
+            'Almost ready...',
         ];
 
         function enhancePrompt(raw) {
             const styles = [
-                'meme format', 'viral internet meme', 'bold impact font text overlay',
-                'absurdist humor meme', 'reaction meme', 'relatable meme format'
+                'professional digital illustration', 'clean visual composition', 'high quality image',
+                'well balanced lighting', 'detailed subject rendering', 'polished concept art'
             ];
             const vibes = [
-                'extremely relatable', 'chaotic energy', 'deadpan humor',
-                'ironic twist', 'wholesome chaos', 'over-the-top expression'
+                'natural atmosphere', 'clear focal point', 'thoughtful color palette',
+                'balanced mood', 'expressive details', 'visually coherent style'
             ];
             const moods = [
-                'funny exaggerated facial expression', 'hilarious composition',
-                'comedic timing', 'unexpected juxtaposition'
+                'cinematic lighting', 'strong composition',
+                'crisp details', 'realistic depth'
             ];
             const s = styles[Math.floor(Math.random() * styles.length)];
             const v = vibes[Math.floor(Math.random() * vibes.length)];
             const m = moods[Math.floor(Math.random() * moods.length)];
-            return `${raw}, ${s}, ${v}, ${m}, high quality meme image, shareable, internet culture aesthetic, white bold text overlay`;
+            return `${raw}, ${s}, ${v}, ${m}, high quality image, clear subject, refined visual style`;
         }
 
         async function generate() {
@@ -144,7 +144,7 @@
             if (!currentUrl) return;
             const a = document.createElement('a');
             a.href = currentUrl;
-            a.download = 'meme-' + Date.now() + '.jpg';
+            a.download = 'image-' + Date.now() + '.jpg';
             a.target = '_blank';
             document.body.appendChild(a);
             a.click();
@@ -152,7 +152,7 @@
         }
 
         function sharePrompt() {
-            const shareText = `Check out this AI meme: "${currentPrompt}" — generated at ${window.location.href}`;
+            const shareText = `AI image prompt: "${currentPrompt}" — generated at ${window.location.href}`;
             navigator.clipboard.writeText(shareText).then(() => {
                 const btn = document.getElementById('shareBtn');
                 const original = btn.textContent;
