@@ -1945,6 +1945,9 @@ async function initLocalGgufRuntime(db) {
 			"Local GGUF runtime failed; AI turns will use fallback routing.",
 			error,
 		);
+		try {
+			await clearModelCache(db, GGUF_MODEL_KEY);
+		} catch (_) {}
 		showModelLoader(
 			"Loading...",
 			"Local GGUF failed; simulation keeps running",
@@ -2189,7 +2192,27 @@ async function modelBlobFromCache(db, key) {
 		if (!chunk) throw new Error(`Missing cached model chunk ${index}.`);
 		parts.push(chunk.buffer);
 	}
-	return new Blob(parts, { type: "application/octet-stream" });
+	const blob = new Blob(parts, { type: "application/octet-stream" });
+	if (!(await isValidGgufBlob(blob))) {
+		await clearModelCache(db, key);
+		throw new Error("Cached GGUF model is corrupted (invalid magic number).");
+	}
+	return blob;
+}
+
+async function isValidGgufBlob(blob) {
+	try {
+		const header = await blob.slice(0, 4).arrayBuffer();
+		const magic = new Uint8Array(header);
+		return (
+			magic[0] === 0x47 &&
+			magic[1] === 0x47 &&
+			magic[2] === 0x55 &&
+			magic[3] === 0x46
+		);
+	} catch {
+		return false;
+	}
 }
 
 async function hasAllModelChunks(db, meta) {
