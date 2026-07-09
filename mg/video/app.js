@@ -5,8 +5,8 @@
         let currentModel = '';
 
         const spinnerMessages = [
-            'Rendering your video... (may take 2-5 min)',
-            'Waiting in the free GPU queue...',
+            'Rendering your video with NVIDIA NIM...',
+            'Starting the Cosmos generation job...',
             'Generating video frames...',
             'Refining motion and timing...',
             'Preparing the final clip...',
@@ -127,7 +127,7 @@
                 console.error(err);
                 spinnerWrap.style.display = 'none';
                 placeholder.style.display = 'block';
-                errorMsg.textContent = `⚠ Error: ${err.message}`;
+                errorMsg.textContent = `Error: ${err.message}`;
                 errorMsg.style.display = 'block';
                 btn.disabled = false;
             }

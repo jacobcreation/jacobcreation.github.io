@@ -35,7 +35,7 @@
                 <label class="input-label">Model</label>
                 <div style="background:var(--surface2);border:0.5px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px;">
                     <span style="color:var(--accent);">&#10022;</span>
-                    Wan2.1 T2V — Free via HuggingFace Spaces
+                    Cosmos3 Nano — NVIDIA NIM
                 </div>
             </div>
 
@@ -45,7 +45,7 @@
                 <button id="genBtn" onclick="generate()">Animate ✦</button>
             </div>
             <div style="font-size: 11px; color: var(--muted); margin-top: 8px; text-align: right;">
-                Uses free community GPUs. Generation may take <strong>2–5 minutes</strong>.
+                Uses NVIDIA NIM. Generation may take <strong>1–3 minutes</strong>.
             </div>
         </div>
 
@@ -58,7 +58,7 @@
             </div>
             <div class="spinner-wrap" id="spinnerWrap">
                 <div class="spinner"></div>
-                <span class="spinner-label" id="spinnerLabel">Entering the free GPU queue... (Expect 2-5 min)</span>
+                <span class="spinner-label" id="spinnerLabel">Starting the NVIDIA generation job...</span>
             </div>
             <video id="memeVideo" controls loop playsinline></video>
         </div>
@@ -82,7 +82,7 @@
         </div>
 
         <footer>
-            Powered by <a href="https://huggingface.co" target="_blank">HuggingFace</a> — Private & Secure
+            Powered by <a href="https://build.nvidia.com" target="_blank">NVIDIA NIM</a> — Private & Secure
         </footer>
 
     </div>
