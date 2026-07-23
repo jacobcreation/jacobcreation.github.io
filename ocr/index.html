@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>PaddleOCR — AI-Powered Text Extraction</title>
-<meta name="description" content="Extract text from any image instantly using Baidu PaddleOCR." />
+<title>Moondream OCR — AI-Powered Text Extraction</title>
+<meta name="description" content="Extract text from any image instantly using Moondream on Cloudflare Workers AI." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="/fonts/fonts.css" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
@@ -15,9 +15,9 @@
 <div class="wrap">
 
   <header>
-    <div class="badge">NVIDIA NIM</div>
-    <h1>PaddleOCR</h1>
-    <p class="subtitle">AI-powered text extraction from any image — powered by Baidu PaddleOCR through NVIDIA NIM.</p>
+    <div class="badge">Workers AI</div>
+    <h1>Moondream OCR</h1>
+    <p class="subtitle">AI-powered text extraction from any image — powered by Moondream on Cloudflare Workers AI.</p>
   </header>
 
 
@@ -26,7 +26,7 @@
   <div class="card">
     <div class="card-title">📎 Upload Image</div>
     <div id="dropZone" role="button" tabindex="0" aria-label="Upload image">
-      <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+      <svg aria-hidden="true" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4-4 4 4 4-8 4 8" />
         <rect x="3" y="3" width="18" height="18" rx="3" stroke-width="1.2" />
       </svg>
@@ -35,7 +35,7 @@
       <img id="previewImg" alt="Preview" />
     </div>
     <div class="preview-actions" id="previewActions">
-      <button class="btn btn-ghost" id="clearBtn">✕ Clear image</button>
+      <button class="btn btn-ghost" id="clearBtn" type="button">✕ Clear image</button>
     </div>
     <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" />
 
@@ -45,8 +45,8 @@
     </div>
 
     <div class="run-row">
-      <button class="btn btn-primary" id="runBtn" disabled>
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <button class="btn btn-primary" id="runBtn" type="button" disabled>
+        <svg aria-hidden="true" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/>
         </svg>
         Run OCR
@@ -61,8 +61,8 @@
       <div class="card-title" style="margin-bottom:0">📄 Extracted Text</div>
       <div style="display:flex;gap:10px;align-items:center">
         <span id="charCount"></span>
-        <button class="btn btn-ghost" id="copyBtn">Copy</button>
-        <button class="btn btn-ghost" id="downloadBtn">Download .txt</button>
+        <button class="btn btn-ghost" id="copyBtn" type="button">Copy</button>
+        <button class="btn btn-ghost" id="downloadBtn" type="button">Download .txt</button>
       </div>
     </div>
     <pre id="resultText"></pre>
