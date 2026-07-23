@@ -1,11 +1,11 @@
         const WORKER_URL = 'https://meme-generator-video.b4rjxr9lk.workers.dev';
-        const VIDEO_MODEL = 'alibaba/hh1.1-t2v';
+        const VIDEO_MODEL = 'd09cd49d-d7f2-4361-928f-ea22af707249';
         let currentUrl = '';
         let currentPrompt = '';
 
         const spinnerMessages = [
-            'Starting HappyHorse video generation...',
-            'Rendering with Cloudflare Workers AI...',
+            'Rendering your video with NVIDIA NIM...',
+            'Starting the Cosmos3 Nano generation job...',
             'Generating video frames...',
             'Refining motion and timing...',
             'Preparing the final clip...',
