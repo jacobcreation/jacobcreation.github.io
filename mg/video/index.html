@@ -35,17 +35,17 @@
                 <label class="input-label">Model</label>
                 <div style="background:var(--surface2);border:0.5px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px;">
                     <span style="color:var(--accent);">&#10022;</span>
-                    Cosmos3 Nano — NVIDIA NIM
+                    MiniMax Hailuo 2.3 Fast — Cloudflare Workers AI
                 </div>
             </div>
 
             <label class="input-label" for="prompt">Your video idea</label>
             <div class="input-row" style="flex-wrap: wrap;">
                 <input id="prompt" type="text" placeholder='e.g. "a dog walking through a sunny park"' maxlength="200" />
-                <button id="genBtn" onclick="generate()">Animate ✦</button>
+                <button id="genBtn" type="button" onclick="generate()">Animate ✦</button>
             </div>
             <div style="font-size: 11px; color: var(--muted); margin-top: 8px; text-align: right;">
-                Uses NVIDIA NIM. Generation may take <strong>1–3 minutes</strong>.
+                Uses Cloudflare Workers AI. Generation may take <strong>1–3 minutes</strong>.
             </div>
         </div>
 
@@ -58,9 +58,11 @@
             </div>
             <div class="spinner-wrap" id="spinnerWrap">
                 <div class="spinner"></div>
-                <span class="spinner-label" id="spinnerLabel">Starting the NVIDIA generation job...</span>
+                <span class="spinner-label" id="spinnerLabel">Starting the Hailuo generation job...</span>
             </div>
-            <video id="memeVideo" controls loop playsinline></video>
+            <video id="memeVideo" controls loop playsinline>
+                <track kind="captions">
+            </video>
         </div>
 
         <div class="enhanced-pill" id="enhancedPill">
@@ -68,21 +70,21 @@
         </div>
 
         <div class="actions">
-            <button class="btn accent" id="dlBtn" onclick="downloadMeme()" disabled>↓ Download Video</button>
-            <button class="btn" onclick="regenerate()" id="regenBtn" disabled>↺ Regenerate</button>
-            <button class="btn" onclick="sharePrompt()" id="shareBtn" disabled>⎘ Copy link</button>
+            <button class="btn accent" id="dlBtn" type="button" onclick="downloadMeme()" disabled>↓ Download Video</button>
+            <button class="btn" type="button" onclick="regenerate()" id="regenBtn" disabled>↺ Regenerate</button>
+            <button class="btn" type="button" onclick="sharePrompt()" id="shareBtn" disabled>⎘ Copy link</button>
         </div>
 
         <div class="history-section" id="histSection">
             <div class="history-header">
                 <span class="history-title">Recent videos (session only)</span>
-                <button class="clear-btn" onclick="clearHistory()">clear all</button>
+                <button class="clear-btn" type="button" onclick="clearHistory()">clear all</button>
             </div>
             <div class="hist-grid" id="histGrid"></div>
         </div>
 
         <footer>
-            Powered by <a href="https://build.nvidia.com" target="_blank">NVIDIA NIM</a> — Private & Secure
+            Powered by <a href="https://developers.cloudflare.com/ai/models/minimax/hailuo-2.3-fast/" target="_blank">Cloudflare Workers AI</a> — Private & Secure
         </footer>
 
     </div>

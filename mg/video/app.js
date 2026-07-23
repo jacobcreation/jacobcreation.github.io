@@ -1,12 +1,11 @@
         const WORKER_URL = 'https://meme-generator-video.b4rjxr9lk.workers.dev';
+        const VIDEO_MODEL = 'minimax/hailuo-2.3-fast';
         let currentUrl = '';
         let currentPrompt = '';
-        let currentEnhanced = '';
-        let currentModel = '';
 
         const spinnerMessages = [
-            'Rendering your video with NVIDIA NIM...',
-            'Starting the Cosmos generation job...',
+            'Rendering your video with Cloudflare Workers AI...',
+            'Starting the Hailuo generation job...',
             'Generating video frames...',
             'Refining motion and timing...',
             'Preparing the final clip...',
@@ -85,7 +84,6 @@
 
             currentPrompt = rawPrompt;
             const enhanced = enhancePrompt(rawPrompt);
-            currentEnhanced = enhanced;
             const seed = Math.floor(Math.random() * 2147483647);
 
             try {
@@ -95,7 +93,7 @@
                     body: JSON.stringify({ 
                         prompt: enhanced,
                         seed: seed,
-                        model: currentModel,
+                        model: VIDEO_MODEL,
                     }),
                 });
 
