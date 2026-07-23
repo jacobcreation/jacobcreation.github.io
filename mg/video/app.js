@@ -1,11 +1,11 @@
         const WORKER_URL = 'https://meme-generator-video.b4rjxr9lk.workers.dev';
-        const VIDEO_MODEL = 'minimax/hailuo-2.3';
+        const VIDEO_MODEL = 'minimax/hailuo-2.3-fast';
         let currentUrl = '';
         let currentPrompt = '';
 
         const spinnerMessages = [
-            'Rendering your video with Cloudflare Workers AI...',
-            'Starting the Hailuo generation job...',
+            'Rendering the first frame with NVIDIA NIM...',
+            'Animating with Hailuo 2.3 Fast...',
             'Generating video frames...',
             'Refining motion and timing...',
             'Preparing the final clip...',

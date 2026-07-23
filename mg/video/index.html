@@ -35,7 +35,7 @@
                 <label class="input-label">Model</label>
                 <div style="background:var(--surface2);border:0.5px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px;">
                     <span style="color:var(--accent);">&#10022;</span>
-                    MiniMax Hailuo 2.3 — Cloudflare Workers AI
+                    FLUX.1 → Hailuo 2.3 Fast
                 </div>
             </div>
 
@@ -45,7 +45,7 @@
                 <button id="genBtn" type="button" onclick="generate()">Animate ✦</button>
             </div>
             <div style="font-size: 11px; color: var(--muted); margin-top: 8px; text-align: right;">
-                Uses Cloudflare Workers AI. Generation may take <strong>1–3 minutes</strong>.
+                Uses NVIDIA NIM and Cloudflare Workers AI. Generation may take <strong>1–3 minutes</strong>.
             </div>
         </div>
 
@@ -58,7 +58,7 @@
             </div>
             <div class="spinner-wrap" id="spinnerWrap">
                 <div class="spinner"></div>
-                <span class="spinner-label" id="spinnerLabel">Starting the Hailuo generation job...</span>
+                <span class="spinner-label" id="spinnerLabel">Creating the first frame...</span>
             </div>
             <video id="memeVideo" controls loop playsinline>
                 <track kind="captions">
@@ -84,7 +84,7 @@
         </div>
 
         <footer>
-            Powered by <a href="https://developers.cloudflare.com/ai/models/minimax/hailuo-2.3/" target="_blank">Cloudflare Workers AI</a> — Private & Secure
+            Powered by <a href="https://build.nvidia.com/black-forest-labs/flux_1-dev" target="_blank">NVIDIA NIM</a> and <a href="https://developers.cloudflare.com/ai/models/minimax/hailuo-2.3-fast/" target="_blank">Cloudflare Workers AI</a> — Private & Secure
         </footer>
 
     </div>
