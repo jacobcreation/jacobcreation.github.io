@@ -139,7 +139,7 @@
         }
 
         h2 svg {
-            color: var(--accent) !important;
+            color: var(--accent);
         }
 
         .upload-zone {
@@ -307,6 +307,14 @@
             opacity: 0.4;
             cursor: not-allowed;
             transform: none;
+        }
+
+        .limit-note {
+            display: none;
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.4;
         }
 
         .workspace {
