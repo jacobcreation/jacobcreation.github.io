@@ -1,11 +1,11 @@
         const WORKER_URL = 'https://meme-generator-video.b4rjxr9lk.workers.dev';
-        const VIDEO_MODEL = 'minimax/hailuo-2.3-fast';
+        const VIDEO_MODEL = 'alibaba/hh1.1-t2v';
         let currentUrl = '';
         let currentPrompt = '';
 
         const spinnerMessages = [
-            'Rendering the first frame with FLUX Schnell...',
-            'Animating with Hailuo 2.3 Fast...',
+            'Starting HappyHorse video generation...',
+            'Rendering with Cloudflare Workers AI...',
             'Generating video frames...',
             'Refining motion and timing...',
             'Preparing the final clip...',
