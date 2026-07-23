@@ -1,5 +1,5 @@
         const WORKER_URL = 'https://meme-generator-video.b4rjxr9lk.workers.dev';
-        const VIDEO_MODEL = 'minimax/hailuo-2.3-fast';
+        const VIDEO_MODEL = 'minimax/hailuo-2.3';
         let currentUrl = '';
         let currentPrompt = '';
 
