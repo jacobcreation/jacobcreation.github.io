@@ -4,7 +4,7 @@
         let currentPrompt = '';
 
         const spinnerMessages = [
-            'Rendering the first frame with NVIDIA NIM...',
+            'Rendering the first frame with FLUX Schnell...',
             'Animating with Hailuo 2.3 Fast...',
             'Generating video frames...',
             'Refining motion and timing...',
