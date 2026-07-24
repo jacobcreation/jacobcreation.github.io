@@ -1,0 +1,57 @@
+- main [ref=f1e2]:
+  - generic [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - generic [ref=f1e5]: MiniMax Music Free
+      - heading "Song Maker" [level=1] [ref=f1e7]
+      - paragraph [ref=f1e8]: Write lyrics, tune the style, and generate a finished track.
+    - generic [ref=f1e9]: Checking worker
+  - region "Song generation workspace" [ref=f1e12]:
+    - generic [ref=f1e13]:
+      - generic [ref=f1e14]:
+        - generic [ref=f1e15]:
+          - generic [ref=f1e16]: Theme
+          - textbox "Theme" [ref=f1e17]:
+            - /placeholder: midnight drive, breakup arcade, island summer
+        - generic [ref=f1e18]:
+          - generic [ref=f1e19]: Tone
+          - combobox "Tone" [ref=f1e20] [cursor=pointer]:
+            - option "catchy and bright" [selected]
+            - option "sad and intimate"
+            - option "angry and cinematic"
+            - option "funny and playful"
+            - option "dark and dramatic"
+            - option "hopeful anthem"
+      - generic [ref=f1e21]:
+        - generic [ref=f1e22]:
+          - generic [ref=f1e23]: Rhymes
+          - combobox "Rhymes" [ref=f1e24] [cursor=pointer]:
+            - option "natural end rhymes" [selected]
+            - option "tight AABB rhymes"
+            - option "internal rhymes"
+            - option "simple pop rhymes"
+            - option "rap multisyllable rhymes"
+        - generic [ref=f1e25]:
+          - generic [ref=f1e26]: Music Style
+          - textbox "Music Style" [ref=f1e27]: Pop, polished, radio-ready, warm vocals, strong chorus
+      - generic [ref=f1e28]:
+        - generic [ref=f1e29]: Direction
+        - textbox "Direction" [ref=f1e30]:
+          - /placeholder: make the chorus bigger, rewrite softer, add sharper rhymes
+      - generic [ref=f1e31]:
+        - generic [ref=f1e32]: Lyrics
+        - textbox "Lyrics" [ref=f1e33]:
+          - /placeholder: "[Verse]\\nType your lyrics here, or generate a full set.\\n\\n[Chorus]\\nMake the hook unforgettable."
+      - generic [ref=f1e34]:
+        - generic [ref=f1e35]:
+          - checkbox "AI lyrics when empty" [ref=f1e36]
+          - generic [ref=f1e37]: AI lyrics when empty
+        - generic [ref=f1e38]:
+          - checkbox "Instrumental" [ref=f1e39]
+          - generic [ref=f1e40]: Instrumental
+      - generic [ref=f1e41]:
+        - button "Generate Lyrics" [ref=f1e42] [cursor=pointer]
+        - button "Rewrite Lyrics" [ref=f1e43] [cursor=pointer]
+        - button "Make Song" [ref=f1e44] [cursor=pointer]
+    - complementary [ref=f1e45]:
+      - generic [ref=f1e58]: Ready.
+      - generic [ref=f1e59]: "Model: music-2.6-free"
