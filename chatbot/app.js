@@ -123,8 +123,8 @@
     }
 
     function getAttachmentModelSelection(attachment) {
-      if (attachment?.kind === "file") return "nvidia/minimaxai/minimax-m3";
-      return "nvidia/meta/llama-4-maverick-17b-128e-instruct";
+      if (attachment) return "nvidia/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning";
+      return modelSelect ? modelSelect.value : "@cf/meta/llama-3.2-3b-instruct";
     }
 
     function isImageFile(file) {
