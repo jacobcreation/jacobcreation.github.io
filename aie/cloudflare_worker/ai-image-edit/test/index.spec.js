@@ -6,7 +6,7 @@ describe("ai image edit worker", () => {
 		vi.unstubAllGlobals();
 	});
 
-	it("always sends image edits to the fixed Flux 2 Workers AI model", async () => {
+	it("always sends image edits to the fixed Flux 2 Klein 4B Workers AI model", async () => {
 		const aiRun = vi.fn(async () => ({ image: "ZWRpdGVkLWltYWdl" }));
 
 		const formData = new FormData();
@@ -26,7 +26,7 @@ describe("ai image edit worker", () => {
 		expect(aiRun).toHaveBeenCalledOnce();
 
 		const [model, input] = aiRun.mock.calls[0];
-		expect(model).toBe("@cf/black-forest-labs/flux-2-dev");
+		expect(model).toBe("@cf/black-forest-labs/flux-2-klein-4b");
 		expect(input.multipart.contentType).toContain("multipart/form-data");
 
 		const multipartRequest = new Request("https://multipart.example", {
@@ -46,7 +46,7 @@ describe("ai image edit worker", () => {
 			data: [
 				{
 					b64_json: "ZWRpdGVkLWltYWdl",
-					model: "@cf/black-forest-labs/flux-2-dev",
+					model: "@cf/black-forest-labs/flux-2-klein-4b",
 					provider: "cloudflare-workers-ai",
 				},
 			],

@@ -1,145 +1,198 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>Song Maker</title>
-		<link rel="icon" href="favicon.svg" type="image/svg+xml" />
-		<link href="/fonts/fonts.css" rel="stylesheet" />
-		<link rel="stylesheet" href="styles.css" />
-		<script src="app.js" defer></script>
-	</head>
-	<body>
-		<main class="shell">
-			<header class="topbar">
-				<div>
-					<div class="logo-badge">
-						<span class="logo-dot"></span>
-						MiniMax Music Free
-					</div>
-					<h1>Song <span>Maker</span></h1>
-					<p class="subtitle">Write lyrics, tune the style, and generate a finished track.</p>
-				</div>
-				<div class="meter" aria-live="polite">
-					<span class="meter-dot" id="healthDot"></span>
-					<span id="healthText">Checking worker</span>
-				</div>
-			</header>
 
-			<section class="studio" aria-label="Song generation workspace">
-				<form class="editor panel" id="songForm">
-					<div class="field-row">
-						<label class="field">
-							<span>Theme</span>
-							<input
-								id="theme"
-								name="theme"
-								autocomplete="off"
-								placeholder="midnight drive, breakup arcade, island summer"
-							/>
-						</label>
-						<label class="field">
-							<span>Tone</span>
-							<select id="tone" name="tone">
-								<option>catchy and bright</option>
-								<option>sad and intimate</option>
-								<option>angry and cinematic</option>
-								<option>funny and playful</option>
-								<option>dark and dramatic</option>
-								<option>hopeful anthem</option>
-							</select>
-						</label>
-					</div>
+<head>
+    <base href="../">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Generate songs and instrumental music with AI" />
 
-					<div class="field-row">
-						<label class="field">
-							<span>Rhymes</span>
-							<select id="rhymeStyle" name="rhymeStyle">
-								<option>natural end rhymes</option>
-								<option>tight AABB rhymes</option>
-								<option>internal rhymes</option>
-								<option>simple pop rhymes</option>
-								<option>rap multisyllable rhymes</option>
-							</select>
-						</label>
-						<label class="field">
-							<span>Music Style</span>
-							<input
-								id="style"
-								name="style"
-								value="Pop, polished, radio-ready, warm vocals, strong chorus"
-							/>
-						</label>
-					</div>
+    <title>Music Generation - JacobCreation</title>
 
-					<label class="field">
-						<span>Direction</span>
-						<input
-							id="instructions"
-							name="instructions"
-							autocomplete="off"
-							placeholder="make the chorus bigger, rewrite softer, add sharper rhymes"
-						/>
-					</label>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
 
-					<label class="field lyric-field">
-						<span>Lyrics</span>
-						<textarea
-							id="lyrics"
-							name="lyrics"
-							spellcheck="true"
-							placeholder="[Verse]\nType your lyrics here, or generate a full set.\n\n[Chorus]\nMake the hook unforgettable."
-						></textarea>
-					</label>
+    <link rel="icon" href="/favicon.png" type="image/png" />
 
-					<div class="options">
-						<label class="check">
-							<input id="generateLyrics" type="checkbox" />
-							<span>AI lyrics when empty</span>
-						</label>
-						<label class="check">
-							<input id="instrumental" type="checkbox" />
-							<span>Instrumental</span>
-						</label>
-					</div>
+    <link href="/fonts/fonts.css" rel="stylesheet">
 
-					<div class="actions">
-						<button class="secondary" type="button" id="generateLyricsBtn">
-							Generate Lyrics
-						</button>
-						<button type="button" id="rewriteLyricsBtn">Rewrite Lyrics</button>
-						<button class="primary" type="submit" id="makeSongBtn">
-							Make Song
-						</button>
-					</div>
-				</form>
+    <style>
+        :root {
+            --bg1: #0b1020;
+            --bg2: #0a1633;
+            --card: rgba(255, 255, 255, 0.08);
+            --card2: rgba(255, 255, 255, 0.12);
+            --border: rgba(255, 255, 255, 0.14);
+            --text: #eaf2ff;
+            --muted: rgba(234, 242, 255, 0.75);
+            --blue: #4ea1ff;
+            --blue2: #2d6bff;
+            --shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+            --shadow2: 0 10px 22px rgba(0, 0, 0, 0.28);
+            --radius: 18px;
+        }
 
-				<aside class="panel player-panel">
-					<div class="art" aria-hidden="true">
-						<div class="disc">
-							<span></span>
-						</div>
-						<div class="bars">
-							<i></i>
-							<i></i>
-							<i></i>
-							<i></i>
-							<i></i>
-							<i></i>
-							<i></i>
-							<i></i>
-						</div>
-					</div>
-					<div class="status" id="status" aria-live="polite">Ready.</div>
-					<audio id="player" controls hidden>
-						<track kind="captions" src="captions.vtt" srclang="en" label="Captions" />
-					</audio>
-					<a class="download" id="download" hidden download="minimax-song.mp3">
-						Download MP3
-					</a>
-					<div class="info" id="info">Model: music-2.6-free</div>
-				</aside>
-			</section>
-		</main>
-	</body>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            background:
+                radial-gradient(1200px 600px at 20% 10%, rgba(78, 161, 255, 0.30), transparent 55%),
+                radial-gradient(900px 600px at 90% 15%, rgba(45, 107, 255, 0.22), transparent 55%),
+                linear-gradient(135deg, var(--bg1), var(--bg2));
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        main {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 28px 18px 60px;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-card {
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.05));
+            box-shadow: var(--shadow);
+            padding: 36px 28px;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            text-align: center;
+        }
+
+        .hero-card::after {
+            content: "";
+            position: absolute;
+            inset: -40px -40px auto auto;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(78, 161, 255, 0.35), transparent 60%);
+            transform: rotate(18deg);
+            pointer-events: none;
+        }
+
+        .hero-card h1 {
+            margin: 0;
+            font-size: 2rem;
+            line-height: 1.2;
+            letter-spacing: 0.2px;
+        }
+
+        .hero-card p {
+            margin: 12px 0 0;
+            color: var(--muted);
+            line-height: 1.55;
+            font-size: 1.02rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 14px;
+            margin-top: 28px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            border: none;
+            border-radius: 999px;
+            padding: 14px 24px;
+            min-height: 52px;
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: transform 0.18s ease, opacity 0.18s ease;
+            user-select: none;
+            min-width: 200px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            color: #071122;
+            background: linear-gradient(135deg, rgba(78, 161, 255, 1), rgba(45, 107, 255, 1));
+            box-shadow: 0 10px 26px rgba(45, 107, 255, 0.30);
+        }
+
+        .btn-ghost {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+        }
+
+        footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(10, 16, 32, 0.55);
+            backdrop-filter: blur(10px);
+            padding: 14px 18px;
+            text-align: center;
+            color: rgba(234, 242, 255, 0.70);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 600px) {
+            .hero-card {
+                padding: 24px 18px;
+            }
+
+            .hero-card h1 {
+                font-size: 1.5rem;
+            }
+
+            .btn-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                width: 100%;
+                min-width: 0;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="/mobile-friendly.css">
+</head>
+
+<body>
+    <main>
+        <div class="hero-card">
+            <h1>What do you want to generate?</h1>
+            <p>Choose a mode to get started</p>
+
+            <div class="btn-group">
+                <a class="btn btn-primary" href="full-songs/">Song Generation</a>
+                <a class="btn btn-ghost" href="ins/">Instrumental Music Generation</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        © 2026 JacobCreation • Built by Jacob 💙
+    </footer>
+
+    <script>(function(){const v=Date.now();document.write('<script src="/global-header.js?v='+v+'"><\/script>');})();</script>
+    <script src="/accounts/account-widget.js" defer data-account-api="https://accounts-system.b4rjxr9lk.workers.dev"></script>
+</body>
+
 </html>

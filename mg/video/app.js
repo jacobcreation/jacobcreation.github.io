@@ -108,7 +108,10 @@
                 }
                 if (!response.ok) {
                     const data = await response.json();
-                    throw new Error(data.error || `Status ${response.status}`);
+                    const message = data.error || `Status ${response.status}`;
+                    const error = new Error(message);
+                    error.code = data.code || '';
+                    throw error;
                 }
 
                 const blob = await response.blob();
@@ -125,7 +128,9 @@
                 console.error(err);
                 spinnerWrap.style.display = 'none';
                 placeholder.style.display = 'block';
-                errorMsg.textContent = `Error: ${err.message}`;
+                errorMsg.textContent = err.code === 'nvidia_cosmos_preview_access_denied'
+                    ? err.message
+                    : `Error: ${err.message}`;
                 errorMsg.style.display = 'block';
                 btn.disabled = false;
             }

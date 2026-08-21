@@ -95,7 +95,7 @@
             generateBtn.innerHTML = '<div class="spinner"></div> <span>Processing...</span>';
             outputPreview.style.display = 'none';
             outputPlaceholder.style.display = 'flex';
-            outputPlaceholder.innerHTML = '<div class="spinner" style="width: 32px; height: 32px; border-width: 3px; border-top-color: var(--primary);"></div><span style="margin-top: 15px; color: var(--text-muted);">Editing with Gemini...</span>';
+            outputPlaceholder.innerHTML = '<div class="spinner" style="width: 32px; height: 32px; border-width: 3px; border-top-color: var(--primary);"></div><span style="margin-top: 15px; color: var(--text-muted);">Editing with Flux.2 Klein 4B...</span>';
             downloadBtn.style.display = 'none';
             clearError();
 

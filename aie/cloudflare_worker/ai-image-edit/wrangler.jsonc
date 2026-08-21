@@ -15,7 +15,7 @@
 		"binding": "AI"
 	},
 	"vars": {
-		"FLUX_IMAGE_EDIT_MODEL": "@cf/black-forest-labs/flux-2-dev"
+		"FLUX_IMAGE_EDIT_MODEL": "@cf/black-forest-labs/flux-2-klein-4b"
 	},
 	"kv_namespaces": [
 		{

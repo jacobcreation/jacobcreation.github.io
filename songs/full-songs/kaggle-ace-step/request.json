@@ -1,0 +1,8 @@
+{
+  "prompt": "short upbeat pop, clean vocals",
+  "lyrics": "[Verse]\nFast lights on the street\n[Chorus]\nWe rise up with the beat",
+  "instrumental": false,
+  "duration": 10,
+  "inference_steps": 4,
+  "output_format": "mp3"
+}

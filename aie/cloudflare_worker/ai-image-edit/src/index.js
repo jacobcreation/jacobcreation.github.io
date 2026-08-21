@@ -1,4 +1,4 @@
-const FLUX_IMAGE_EDIT_MODEL = "@cf/black-forest-labs/flux-2-dev";
+const FLUX_IMAGE_EDIT_MODEL = "@cf/black-forest-labs/flux-2-klein-4b";
 const ACCOUNTS_API_BASE = "https://accounts-system.b4rjxr9lk.workers.dev";
 
 const CORS_HEADERS = {

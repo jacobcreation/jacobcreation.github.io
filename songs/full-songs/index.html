@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Song Maker</title>
+		<link rel="icon" href="favicon.svg" type="image/svg+xml" />
+		<link rel="stylesheet" href="styles.css" />
+		<script src="app.js" defer></script>
+	</head>
+	<body>
+		<main class="shell">
+			<header class="topbar">
+				<div>
+					<div class="logo-badge">
+						<span class="logo-dot"></span>
+						HF Spaces ACE-Step
+					</div>
+					<h1>Song <span>Maker</span></h1>
+					<p class="subtitle">Write lyrics, tune the style, and generate a fast ACE-Step track.</p>
+				</div>
+				<div class="meter" aria-live="polite">
+					<span class="meter-dot" id="healthDot"></span>
+					<span id="healthText">Checking worker</span>
+				</div>
+			</header>
+
+			<section class="studio" aria-label="Song generation workspace">
+				<form class="editor panel" id="songForm">
+					<div class="field-row">
+						<label class="field">
+							<span>Theme</span>
+							<input
+								id="theme"
+								name="theme"
+								autocomplete="off"
+								placeholder="midnight drive, breakup arcade, island summer"
+							/>
+						</label>
+						<label class="field">
+							<span>Tone</span>
+							<select id="tone" name="tone">
+								<option>catchy and bright</option>
+								<option>sad and intimate</option>
+								<option>angry and cinematic</option>
+								<option>funny and playful</option>
+								<option>dark and dramatic</option>
+								<option>hopeful anthem</option>
+							</select>
+						</label>
+					</div>
+
+					<div class="field-row">
+						<label class="field">
+							<span>Rhymes</span>
+							<select id="rhymeStyle" name="rhymeStyle">
+								<option>natural end rhymes</option>
+								<option>tight AABB rhymes</option>
+								<option>internal rhymes</option>
+								<option>simple pop rhymes</option>
+								<option>rap multisyllable rhymes</option>
+							</select>
+						</label>
+						<label class="field">
+							<span>Music Style</span>
+							<input
+								id="style"
+								name="style"
+								value="Pop, polished, radio-ready, warm vocals, strong chorus"
+							/>
+						</label>
+					</div>
+
+					<label class="field">
+						<span>Direction</span>
+						<input
+							id="instructions"
+							name="instructions"
+							autocomplete="off"
+							placeholder="make the chorus bigger, rewrite softer, add sharper rhymes"
+						/>
+					</label>
+
+					<label class="field lyric-field">
+						<span>Lyrics</span>
+						<textarea
+							id="lyrics"
+							name="lyrics"
+							spellcheck="true"
+							placeholder="[Verse]\nType your lyrics here, or generate a full set.\n\n[Chorus]\nMake the hook unforgettable."
+						></textarea>
+					</label>
+
+					<div class="options">
+						<label class="check">
+							<input id="generateLyrics" type="checkbox" />
+							<span>AI lyrics when empty</span>
+						</label>
+						<label class="check">
+							<input id="instrumental" type="checkbox" />
+							<span>Instrumental</span>
+						</label>
+					</div>
+
+					<div class="actions">
+						<button class="secondary" type="button" id="generateLyricsBtn">
+							Generate Lyrics
+						</button>
+						<button type="button" id="rewriteLyricsBtn">Rewrite Lyrics</button>
+						<button class="primary" type="submit" id="makeSongBtn">
+							Make Song
+						</button>
+					</div>
+				</form>
+
+				<aside class="panel player-panel">
+					<div class="art" aria-hidden="true">
+						<div class="disc">
+							<span></span>
+						</div>
+						<div class="bars">
+							<i></i>
+							<i></i>
+							<i></i>
+							<i></i>
+							<i></i>
+							<i></i>
+							<i></i>
+							<i></i>
+						</div>
+					</div>
+					<div class="status" id="status" aria-live="polite">Ready.</div>
+					<audio id="player" controls hidden>
+						<track kind="captions" src="captions.vtt" srclang="en" label="Captions" />
+					</audio>
+					<a class="download" id="download" hidden download="ace-step-song.mp3">
+						Download MP3
+					</a>
+					<div class="info" id="info">Model: ACE-Step v1.5 Turbo on HF Spaces</div>
+				</aside>
+			</section>
+		</main>
+	</body>
+</html>

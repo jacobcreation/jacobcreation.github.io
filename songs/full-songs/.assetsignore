@@ -1,0 +1,6 @@
+cloudflare_worker/
+.playwright-mcp/
+.wrangler/
+node_modules/
+songs-*.png
+wrangler.jsonc
