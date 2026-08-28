@@ -1,13 +1,11 @@
 /**
- * Cloudflare Worker — Moondream OCR Proxy
+ * Cloudflare Worker — OCR.space OCR Proxy
  *
  * Exposes:  POST /ocr   { image: "data:image/...;base64,...", prompt?: "..." }
- * Returns:  { text: "..." }
+ * Requires the OCR_SPACE_API_KEY secret and returns: { text: "..." }
  */
 
-const MODEL = "@cf/moondream/moondream3.1-9B-A2B";
-const DEFAULT_OCR_PROMPT =
-	"Extract all visible text from this image in any language or script. Preserve the original language, characters, line breaks, spacing, and reading order as much as possible. Do not translate, summarize, or explain. Return only the extracted text.";
+const OCR_SPACE_URL = "https://api.ocr.space/parse/image";
 
 const CORS = {
 	"Access-Control-Allow-Origin": "*",
@@ -27,25 +25,26 @@ export default {
 		if (request.method === "POST" && url.pathname === "/ocr") {
 			try {
 				const body = await request.json();
-				const { image, prompt } = body;
+				const { image } = body;
 
 				if (!image) {
 					return json({ error: "Missing image field" }, 400);
 				}
 
-				if (!env.AI) {
-					return json({ error: "Workers AI binding is not configured" }, 500);
+				if (!env.OCR_SPACE_API_KEY) {
+					return json({ error: "OCR.space API key is not configured" }, 500);
 				}
 
-				const ocrPrompt = prompt || DEFAULT_OCR_PROMPT;
-				const result = await runMoondreamOcr(env.AI, {
+				const result = await runOcrSpace(env.OCR_SPACE_API_KEY, {
 					image,
-					prompt: ocrPrompt,
 				});
 
-				return json({ text: extractText(result) }, 200);
+				return json({ text: extractText(result), engine: "ocr.space" }, 200);
 			} catch (e) {
-				return json({ error: e.message }, 500);
+				return json(
+					{ error: e instanceof Error ? e.message : "OCR request failed" },
+					502,
+				);
 			}
 		}
 
@@ -53,37 +52,43 @@ export default {
 	},
 };
 
-async function runMoondreamOcr(ai, { image, prompt }) {
+async function runOcrSpace(apiKey, { image }) {
 	if (!/^data:image\/(?:png|jpe?g|webp);base64,/i.test(image)) {
 		throw new Error("Image must be a PNG, JPG, or WEBP data URL");
 	}
 
-	return ai.run(MODEL, {
-		messages: [
-			{
-				role: "user",
-				content: [
-					{ type: "text", text: prompt },
-					{ type: "image_url", image_url: { url: image } },
-				],
-			},
-		],
-		max_tokens: 4096,
-		temperature: 0.1,
+	const form = new FormData();
+	form.append("apikey", apiKey);
+	form.append("base64Image", image);
+	form.append("OCREngine", "2");
+	form.append("isOverlayRequired", "false");
+	form.append("detectOrientation", "true");
+	form.append("scale", "true");
+
+	const response = await fetch(OCR_SPACE_URL, {
+		method: "POST",
+		body: form,
 	});
+	const result = await response.json();
+
+	if (!response.ok) {
+		throw new Error(`OCR.space returned HTTP ${response.status}`);
+	}
+	if (result.IsErroredOnProcessing) {
+		const errors = Array.isArray(result.ErrorMessage)
+			? result.ErrorMessage.join(" ")
+			: result.ErrorMessage || "OCR.space could not process the image";
+		throw new Error(errors);
+	}
+
+	return result;
 }
 
 function extractText(result) {
-	return (
-		result?.answer ??
-		result?.result?.answer ??
-		result?.choices?.[0]?.message?.content ??
-		result?.description ??
-		result?.response ??
-		result?.text ??
-		result?.output ??
-		""
-	).trim();
+	return (result?.ParsedResults ?? [])
+		.map((parsed) => parsed?.ParsedText ?? "")
+		.join("\n")
+		.trim();
 }
 
 function json(obj, status = 200) {

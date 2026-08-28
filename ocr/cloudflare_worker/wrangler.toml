@@ -2,5 +2,4 @@ name = "nemotron-ocr-proxy"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 
-[ai]
-binding = "AI"
+# Set once with: wrangler secret put OCR_SPACE_API_KEY
