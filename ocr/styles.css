@@ -162,33 +162,6 @@
   }
   .preview-actions.visible { display: flex; }
 
-  /* Prompt row */
-  .prompt-row { margin-top: 20px; }
-  label.field-label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  textarea#promptInput {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 16px;
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    font-size: 0.9rem;
-    resize: vertical;
-    min-height: 68px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  textarea#promptInput:focus { border-color: var(--accent); }
-
   /* Buttons */
   .btn {
     display: inline-flex;

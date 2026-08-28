@@ -6,7 +6,6 @@
   const clearBtn = document.getElementById('clearBtn');
 
   const runBtn = document.getElementById('runBtn');
-  const promptInput = document.getElementById('promptInput');
   const status = document.getElementById('status');
   const resultCard = document.getElementById('resultCard');
   const resultText = document.getElementById('resultText');
@@ -84,7 +83,6 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           image: imageDataUrl,
-          prompt: promptInput.value.trim(),
         }),
       });
 

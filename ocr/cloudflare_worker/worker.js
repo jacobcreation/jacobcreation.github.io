@@ -1,7 +1,7 @@
 /**
  * Cloudflare Worker — OCR.space OCR Proxy
  *
- * Exposes:  POST /ocr   { image: "data:image/...;base64,...", prompt?: "..." }
+ * Exposes:  POST /ocr   { image: "data:image/...;base64,..." }
  * Requires the OCR_SPACE_API_KEY secret and returns: { text: "..." }
  */
 
