@@ -121,6 +121,9 @@
                 }
 
                 const blob = await response.blob();
+                if (blob.size === 0) {
+                    throw new Error('The selected model returned an empty image');
+                }
                 
                 if (currentUrl && currentUrl.startsWith('blob:')) {
                     URL.revokeObjectURL(currentUrl);
