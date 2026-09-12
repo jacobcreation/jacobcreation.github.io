@@ -1,4 +1,6 @@
 const FLUX_IMAGE_EDIT_MODEL = "@cf/black-forest-labs/flux-2-klein-4b";
+const POLLINATIONS_API_BASE = "https://gen.pollinations.ai";
+const POLLINATIONS_MODEL = "kontext";
 const ACCOUNTS_API_BASE = "https://accounts-system.b4rjxr9lk.workers.dev";
 
 const CORS_HEADERS = {
@@ -55,10 +57,25 @@ export default {
 			let result;
 
 			try {
-				result = await runFluxImageEdit(env, prompt, imageBytes, mimeType);
+				result = await runPollinationsImageEdit(
+					env,
+					prompt,
+					imageBytes,
+					mimeType,
+				);
 			} catch (err) {
-				await releaseDailyEdit(env, quota.key);
-				throw err;
+				console.warn(
+					"Pollinations image edit failed; using Cloudflare fallback.",
+					err,
+				);
+				try {
+					result = await runFluxImageEdit(env, prompt, imageBytes, mimeType);
+				} catch (fallbackErr) {
+					await releaseDailyEdit(env, quota.key);
+					throw new Error(
+						`Image edit providers failed. Pollinations: ${err.message}; Cloudflare: ${fallbackErr.message}`,
+					);
+				}
 			}
 
 			return json({
@@ -71,6 +88,75 @@ export default {
 		}
 	},
 };
+
+async function runPollinationsImageEdit(env, prompt, imageBytes, mimeType) {
+	if (!env.POLLINATIONS_API_KEY) {
+		throw new Error("Pollinations API key is not configured.");
+	}
+
+	const form = new FormData();
+	form.append(
+		"image",
+		new Blob([imageBytes], { type: mimeType }),
+		"source-image",
+	);
+	form.append("prompt", String(prompt));
+	form.append("model", env.POLLINATIONS_MODEL || POLLINATIONS_MODEL);
+
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), 30_000);
+	let response;
+	try {
+		response = await fetch(
+			`${env.POLLINATIONS_API_BASE || POLLINATIONS_API_BASE}/v1/images/edits`,
+			{
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${env.POLLINATIONS_API_KEY}`,
+				},
+				body: form,
+				signal: controller.signal,
+			},
+		);
+	} finally {
+		clearTimeout(timeout);
+	}
+
+	if (!response.ok) {
+		throw new Error(`Pollinations returned HTTP ${response.status}`);
+	}
+
+	const contentType = response.headers.get("content-type") || "";
+	if (contentType.startsWith("image/")) {
+		const outputBytes = await response.arrayBuffer();
+		if (!outputBytes.byteLength)
+			throw new Error("Pollinations returned an empty image.");
+		return {
+			b64_json: bytesToBase64(outputBytes),
+			model: env.POLLINATIONS_MODEL || POLLINATIONS_MODEL,
+			provider: "pollinations",
+		};
+	}
+
+	const data = await response.json().catch(() => null);
+	const item = data?.data?.[0];
+	if (item?.b64_json) {
+		return {
+			b64_json: item.b64_json.replace(/^data:image\/\w+;base64,/, ""),
+			model: env.POLLINATIONS_MODEL || POLLINATIONS_MODEL,
+			provider: "pollinations",
+		};
+	}
+	if (item?.url) {
+		return {
+			url: item.url,
+			model: env.POLLINATIONS_MODEL || POLLINATIONS_MODEL,
+			provider: "pollinations",
+		};
+	}
+
+	throw new Error("Pollinations returned no usable image.");
+}
 
 async function reserveDailyEdit(request, env) {
 	const resetAt = getNextUtcMidnight();
@@ -171,6 +257,12 @@ async function runFluxImageEdit(env, prompt, imageBytes, mimeType) {
 	throw new Error(
 		`Could not extract Flux image output: ${JSON.stringify(responseData).slice(0, 300)}`,
 	);
+}
+
+function bytesToBase64(bytes) {
+	let binary = "";
+	for (const byte of new Uint8Array(bytes)) binary += String.fromCharCode(byte);
+	return btoa(binary);
 }
 
 function json(data, status = 200) {

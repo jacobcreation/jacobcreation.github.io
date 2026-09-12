@@ -6,7 +6,18 @@ describe("ai image edit worker", () => {
 		vi.unstubAllGlobals();
 	});
 
-	it("always sends image edits to the fixed Flux 2 Klein 4B Workers AI model", async () => {
+	it("uses Pollinations Kontext as the primary image editor", async () => {
+		const pollinationsFetch = vi.fn(
+			async () =>
+				new Response(
+					JSON.stringify({ data: [{ b64_json: "cG9sbHluYXRpb25zLWltYWdl" }] }),
+					{
+						status: 200,
+						headers: { "Content-Type": "application/json" },
+					},
+				),
+		);
+		vi.stubGlobal("fetch", pollinationsFetch);
 		const aiRun = vi.fn(async () => ({ image: "ZWRpdGVkLWltYWdl" }));
 
 		const formData = new FormData();
@@ -19,40 +30,62 @@ describe("ai image edit worker", () => {
 
 		const response = await worker.fetch(
 			new Request("https://worker.example", { method: "POST", body: formData }),
-			{ AI: { run: aiRun } },
+			{ AI: { run: aiRun }, POLLINATIONS_API_KEY: "test-key" },
 		);
 
 		expect(response.status).toBe(200);
-		expect(aiRun).toHaveBeenCalledOnce();
-
-		const [model, input] = aiRun.mock.calls[0];
-		expect(model).toBe("@cf/black-forest-labs/flux-2-klein-4b");
-		expect(input.multipart.contentType).toContain("multipart/form-data");
-
-		const multipartRequest = new Request("https://multipart.example", {
-			method: "POST",
-			body: input.multipart.body,
-			headers: { "Content-Type": input.multipart.contentType },
-		});
-		const payload = await multipartRequest.formData();
+		expect(aiRun).not.toHaveBeenCalled();
+		expect(pollinationsFetch).toHaveBeenCalledOnce();
+		const [url, input] = pollinationsFetch.mock.calls[0];
+		expect(url).toBe("https://gen.pollinations.ai/v1/images/edits");
+		expect(input.headers.Authorization).toBe("Bearer test-key");
+		const payload = await new Request(url, input).formData();
 		expect(payload.get("prompt")).toBe("make the sky sunset orange");
-		expect(payload.get("width")).toBe("1024");
-		expect(payload.get("height")).toBe("1024");
-		expect(payload.get("steps")).toBe("25");
-		expect(await payload.get("input_image_0").text()).toBe("source-image");
+		expect(payload.get("model")).toBe("kontext");
+		expect(await payload.get("image").text()).toBe("source-image");
 
 		const data = await response.json();
 		expect(data).toMatchObject({
 			data: [
 				{
-					b64_json: "ZWRpdGVkLWltYWdl",
-					model: "@cf/black-forest-labs/flux-2-klein-4b",
-					provider: "cloudflare-workers-ai",
+					b64_json: "cG9sbHluYXRpb25zLWltYWdl",
+					model: "kontext",
+					provider: "pollinations",
 				},
 			],
 			limit: 1,
 		});
 		expect(Date.parse(data.resetAt)).not.toBeNaN();
+	});
+
+	it("falls back to Cloudflare Workers AI when Pollinations fails", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => {
+				throw new Error("upstream unavailable");
+			}),
+		);
+		const aiRun = vi.fn(async () => ({ image: "Y2xvdWRmbGFyZS1pbWFnZQ==" }));
+		const formData = new FormData();
+		formData.set(
+			"image",
+			new File(["source-image"], "source.png", { type: "image/png" }),
+		);
+		formData.set("prompt", "change only the sky");
+
+		const response = await worker.fetch(
+			new Request("https://worker.example", { method: "POST", body: formData }),
+			{ AI: { run: aiRun }, POLLINATIONS_API_KEY: "test-key" },
+		);
+
+		expect(response.status).toBe(200);
+		expect(aiRun).toHaveBeenCalledOnce();
+		const [model, input] = aiRun.mock.calls[0];
+		expect(model).toBe("@cf/black-forest-labs/flux-2-klein-4b");
+		expect(input.multipart.contentType).toContain("multipart/form-data");
+		await expect(response.json()).resolves.toMatchObject({
+			data: [{ provider: "cloudflare-workers-ai" }],
+		});
 	});
 
 	it("requires an image and prompt", async () => {
