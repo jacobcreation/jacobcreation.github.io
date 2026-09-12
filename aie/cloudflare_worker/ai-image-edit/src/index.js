@@ -1,4 +1,4 @@
-const FLUX_IMAGE_EDIT_MODEL = "@cf/black-forest-labs/flux-2-klein-4b";
+const FLUX_IMAGE_EDIT_MODEL = "@cf/black-forest-labs/flux-2-klein-9b";
 const POLLINATIONS_API_BASE = "https://gen.pollinations.ai";
 const POLLINATIONS_MODEL = "kontext";
 const ACCOUNTS_API_BASE = "https://accounts-system.b4rjxr9lk.workers.dev";

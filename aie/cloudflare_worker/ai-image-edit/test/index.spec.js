@@ -81,7 +81,7 @@ describe("ai image edit worker", () => {
 		expect(response.status).toBe(200);
 		expect(aiRun).toHaveBeenCalledOnce();
 		const [model, input] = aiRun.mock.calls[0];
-		expect(model).toBe("@cf/black-forest-labs/flux-2-klein-4b");
+		expect(model).toBe("@cf/black-forest-labs/flux-2-klein-9b");
 		expect(input.multipart.contentType).toContain("multipart/form-data");
 		await expect(response.json()).resolves.toMatchObject({
 			data: [{ provider: "cloudflare-workers-ai" }],
