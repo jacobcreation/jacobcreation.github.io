@@ -1,0 +1,104 @@
+:root {
+	color-scheme: dark;
+	font-family: system-ui, sans-serif;
+	background: #10131d;
+	color: #f6f7fb;
+}
+body {
+	min-height: 100vh;
+	margin: 0;
+	display: grid;
+	place-items: center;
+	background: radial-gradient(circle at 50% 0, #432763, #10131d 55%);
+}
+.card {
+	width: min(680px, calc(100% - 32px));
+	padding: 34px;
+	border: 1px solid #ffffff22;
+	border-radius: 24px;
+	background: #171b29dd;
+	box-shadow: 0 24px 80px #0008;
+}
+.eyebrow {
+	color: #e8a8ff;
+	letter-spacing: 0.16em;
+	font-size: 0.72rem;
+	font-weight: 700;
+}
+h1 {
+	margin: 8px 0 4px;
+	font-size: clamp(2.4rem, 8vw, 4.5rem);
+}
+.intro {
+	color: #bbc1d4;
+	margin: 0 0 26px;
+}
+label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: 700;
+}
+textarea,
+select,
+button {
+	box-sizing: border-box;
+	border: 1px solid #ffffff20;
+	border-radius: 12px;
+	font: inherit;
+}
+textarea {
+	display: block;
+	width: 100%;
+	min-height: 110px;
+	padding: 14px;
+	resize: vertical;
+	background: #0d1018;
+	color: inherit;
+}
+.controls {
+	display: flex;
+	gap: 10px;
+	margin-top: 12px;
+}
+select {
+	flex: 1;
+	padding: 12px;
+	background: #252a3b;
+	color: inherit;
+}
+button {
+	padding: 12px 18px;
+	background: #e5a2ff;
+	color: #24132d;
+	cursor: pointer;
+	font-weight: 800;
+}
+button:disabled {
+	opacity: 0.6;
+	cursor: wait;
+}
+#status {
+	min-height: 1.4em;
+	color: #bbc1d4;
+}
+#result {
+	width: 100%;
+	margin-top: 8px;
+	border-radius: 16px;
+}
+.credit {
+	margin: 22px 0 0;
+	color: #8f96ab;
+	font-size: 0.85rem;
+}
+a {
+	color: #e8a8ff;
+}
+@media (max-width: 560px) {
+	.card {
+		padding: 24px;
+	}
+	.controls {
+		flex-direction: column;
+	}
+}

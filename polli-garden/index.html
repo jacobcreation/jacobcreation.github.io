@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Polli Garden</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="card">
+    <p class="eyebrow">POLLINATIONS · CREATIVE TOOL</p>
+    <h1>Polli Garden</h1>
+    <p class="intro">Plant an idea and grow it into an image.</p>
+    <form id="form">
+      <label for="prompt">Your idea</label>
+      <textarea id="prompt" maxlength="300" required placeholder="A tiny greenhouse on the moon at sunrise"></textarea>
+      <div class="controls">
+        <select id="model" aria-label="Image model">
+          <option value="flux">Flux · fast</option>
+          <option value="zimage">Z-Image · detailed</option>
+          <option value="kontext">Kontext · edit/reference capable</option>
+        </select>
+        <button type="submit">Grow image ✦</button>
+      </div>
+    </form>
+    <p id="status" role="status"></p>
+    <img id="result" alt="Generated result" hidden>
+    <p class="credit">Powered by <a href="https://pollinations.ai/" target="_blank" rel="noreferrer">Pollinations</a></p>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
