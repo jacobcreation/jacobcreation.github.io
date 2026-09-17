@@ -20,7 +20,7 @@ input[type="submit"] {
 /* Fluid typography and spacing */
 html {
     font-size: 16px;
-    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 /* 📱 Mobile Specific Tweaks (max-width: 768px) */

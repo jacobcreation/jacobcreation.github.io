@@ -12,7 +12,7 @@ const CORS_HEADERS = {
 
 const PIXAZO_GENERATE_URL = 'https://gateway.pixazo.ai/ltx-video/v1/text-to-video';
 const PIXAZO_STATUS_URL = 'https://gateway.pixazo.ai/v2/requests/status';
-const POLL_INTERVAL_MS = 5000;
+const POLL_INTERVAL_MS = 2000;
 const MAX_POLL_ATTEMPTS = 36;
 
 function getDailyKey(ip, dateStr) { return `daily_video:${ip}:${dateStr}`; }
