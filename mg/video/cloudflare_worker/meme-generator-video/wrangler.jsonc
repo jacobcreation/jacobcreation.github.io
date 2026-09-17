@@ -1,0 +1,27 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "meme-generator-video",
+	"main": "src/index.js",
+	"compatibility_date": "2026-03-10",
+	"observability": {
+		"enabled": true
+	},
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"kv_namespaces": [
+		{
+			"binding": "RATE_LIMIT",
+			"id": "e62292cc7e6b4bd5aa5966c8a9603306",
+			"preview_id": "cb129657cb3b414eb655e1451e4d5a08"
+		}
+	],
+	"vars": {
+		"DAILY_LIMIT": "15",
+		"PIXAZO_MODEL": "ltx-video"
+	}
+}

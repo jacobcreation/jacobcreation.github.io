@@ -1,11 +1,11 @@
         const WORKER_URL = 'https://meme-generator-video.b4rjxr9lk.workers.dev';
-        const VIDEO_MODEL = 'd09cd49d-d7f2-4361-928f-ea22af707249';
+        const VIDEO_MODEL = 'ltx-video';
         let currentUrl = '';
         let currentPrompt = '';
 
         const spinnerMessages = [
-            'Rendering your video with NVIDIA NIM...',
-            'Starting the Cosmos3 Nano generation job...',
+            'Rendering your video with Pixazo LTX...',
+            'Starting the LTX generation job...',
             'Generating video frames...',
             'Refining motion and timing...',
             'Preparing the final clip...',
@@ -128,9 +128,7 @@
                 console.error(err);
                 spinnerWrap.style.display = 'none';
                 placeholder.style.display = 'block';
-                errorMsg.textContent = err.code === 'nvidia_cosmos_preview_access_denied'
-                    ? err.message
-                    : `Error: ${err.message}`;
+                errorMsg.textContent = `Error: ${err.message}`;
                 errorMsg.style.display = 'block';
                 btn.disabled = false;
             }
