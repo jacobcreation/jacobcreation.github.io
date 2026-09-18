@@ -33,4 +33,38 @@ describe('video generator worker', () => {
     expect(fetchMock.mock.calls[0][0]).toBe('https://gateway.pixazo.ai/ltx-video/v1/text-to-video');
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ prompt: 'a calm test video' });
   }, 15000);
+
+  it('uses Pollinations Wan Fast while Pollen is above 2.25', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ balance: 3.1 })))
+      .mockResolvedValueOnce(new Response('pollinations mp4', { headers: { 'Content-Type': 'video/mp4' } }));
+    vi.stubGlobal('fetch', fetchMock);
+    const ctx = createExecutionContext();
+    const response = await worker.fetch(new Request('http://example.com', {
+      method: 'POST', body: JSON.stringify({ prompt: 'a calm test video' }),
+    }), { ...env, POLLINATIONS_API_KEY: 'test-pollinations-key', PIXAZO_API_KEY: 'unused' }, ctx);
+    await waitOnExecutionContext(ctx);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('X-Video-Pipeline')).toBe('pollinations-wan-fast');
+    expect(await response.text()).toBe('pollinations mp4');
+    expect(fetchMock.mock.calls[0][0]).toBe('https://gen.pollinations.ai/account/balance');
+    expect(fetchMock.mock.calls[1][0].toString()).toContain('/video/a%20calm%20test%20video?model=wan-fast');
+  });
+
+  it('uses Pixazo when Pollen is at the 2.25 reserve', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ balance: 2.25 })))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ request_id: 'ltx-video_test', status: 'COMPLETED', output: { media_url: ['https://cdn.example/video.mp4'] } }), { status: 202 }))
+      .mockResolvedValueOnce(new Response('fallback mp4', { headers: { 'Content-Type': 'video/mp4' } }));
+    vi.stubGlobal('fetch', fetchMock);
+    const ctx = createExecutionContext();
+    const response = await worker.fetch(new Request('http://example.com', {
+      method: 'POST', body: JSON.stringify({ prompt: 'a reserve test video' }),
+    }), { ...env, POLLINATIONS_API_KEY: 'test-pollinations-key', PIXAZO_API_KEY: 'test-key' }, ctx);
+    await waitOnExecutionContext(ctx);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('X-Video-Pipeline')).toBe('pixazo-ltx-video');
+    expect(await response.text()).toBe('fallback mp4');
+    expect(fetchMock.mock.calls[1][0]).toBe('https://gateway.pixazo.ai/ltx-video/v1/text-to-video');
+  });
 });

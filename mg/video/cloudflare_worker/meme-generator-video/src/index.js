@@ -1,19 +1,22 @@
 /**
  * AI Video Generator - Cloudflare Worker
- * Uses Pixazo's free LTX Video text-to-video API.
+ * Uses Pollinations Wan Fast while the account has more than the configured
+ * Pollen reserve, then falls back to Pixazo's free LTX Video API.
  */
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
-  'X-Video-Pipeline': 'pixazo-ltx-video',
 };
 
+const POLLINATIONS_BASE_URL = 'https://gen.pollinations.ai';
+const POLLINATIONS_BALANCE_URL = `${POLLINATIONS_BASE_URL}/account/balance`;
 const PIXAZO_GENERATE_URL = 'https://gateway.pixazo.ai/ltx-video/v1/text-to-video';
 const PIXAZO_STATUS_URL = 'https://gateway.pixazo.ai/v2/requests/status';
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLL_ATTEMPTS = 36;
+const POLLEN_FALLBACK_THRESHOLD = 2.25;
 
 function getDailyKey(ip, dateStr) { return `daily_video:${ip}:${dateStr}`; }
 function todayStr() {
@@ -79,6 +82,31 @@ async function generatePixazoVideo(prompt, apiKey) {
   return videoResponse;
 }
 
+async function getPollinationsBalance(apiKey) {
+  if (!apiKey) return null;
+  const response = await fetch(POLLINATIONS_BALANCE_URL, {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  if (!response.ok) return null;
+  const data = await response.json().catch(() => ({}));
+  const balance = Number(data.balance);
+  return Number.isFinite(balance) ? balance : null;
+}
+
+async function generatePollinationsVideo(prompt, apiKey, model = 'wan-fast') {
+  if (!apiKey) throw new Error('Pollinations API key is missing from the Worker secrets.');
+  const url = new URL(`${POLLINATIONS_BASE_URL}/video/${encodeURIComponent(prompt)}`);
+  url.searchParams.set('model', model);
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Pollinations ${model} video failed: ${parseErrorMessage(details)}`);
+  }
+  return response;
+}
+
 export default {
   async fetch(request, env, ctx) {
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS_HEADERS });
@@ -105,10 +133,29 @@ export default {
         });
       }
 
-      const videoResponse = await generatePixazoVideo(prompt.trim().substring(0, 500), env.PIXAZO_API_KEY);
+      const videoPrompt = prompt.trim().substring(0, 500);
+      let videoResponse;
+      let pipeline;
+      const pollinationsBalance = await getPollinationsBalance(env.POLLINATIONS_API_KEY);
+      if (pollinationsBalance !== null && pollinationsBalance > POLLEN_FALLBACK_THRESHOLD) {
+        try {
+          videoResponse = await generatePollinationsVideo(
+            videoPrompt,
+            env.POLLINATIONS_API_KEY,
+            env.POLLINATIONS_VIDEO_MODEL || 'wan-fast',
+          );
+          pipeline = 'pollinations-wan-fast';
+        } catch (err) {
+          console.warn('Pollinations failed; falling back to Pixazo:', err.message);
+        }
+      }
+      if (!videoResponse) {
+        videoResponse = await generatePixazoVideo(videoPrompt, env.PIXAZO_API_KEY);
+        pipeline = 'pixazo-ltx-video';
+      }
       if (env.RATE_LIMIT) ctx.waitUntil(env.RATE_LIMIT.put(key, String(usage + 1), { expirationTtl: secondsUntilMidnightUTC() }));
       return new Response(videoResponse.body, {
-        headers: { 'Content-Type': videoResponse.headers.get('Content-Type') || 'video/mp4', ...CORS_HEADERS },
+        headers: { 'Content-Type': videoResponse.headers.get('Content-Type') || 'video/mp4', 'X-Video-Pipeline': pipeline, ...CORS_HEADERS },
       });
     } catch (err) {
       console.error('Unhandled error:', err.message);
