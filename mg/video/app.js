@@ -1,14 +1,14 @@
         const WORKER_URL = 'https://meme-generator-video.b4rjxr9lk.workers.dev';
-        const VIDEO_MODEL = 'wan-fast';
+        const VIDEO_MODEL = 'ltx-video';
         let currentUrl = '';
         let currentPrompt = '';
 
         const spinnerMessages = [
-            'Rendering your video with Pollinations Wan Fast...',
-            'Checking Pollinations Pollen...',
+            'Rendering your video with Pixazo LTX...',
+            'Submitting the video job...',
             'Generating video frames...',
             'Refining motion and timing...',
-            'Preparing the final clip (Pixazo fallback if needed)...',
+            'Preparing the final clip...',
             'Almost ready...',
         ];
 

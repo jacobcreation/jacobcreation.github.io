@@ -22,7 +22,6 @@
 	],
 	"vars": {
 		"DAILY_LIMIT": "15",
-		"PIXAZO_MODEL": "ltx-video",
-		"POLLINATIONS_VIDEO_MODEL": "wan-fast"
+		"PIXAZO_MODEL": "ltx-video"
 	}
 }
