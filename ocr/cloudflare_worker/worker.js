@@ -2,6 +2,7 @@
  * Cloudflare Worker — OCR.space OCR Proxy
  *
  * Exposes:  POST /ocr   { image: "data:image/...;base64,..." }
+ * PDF files are also accepted as data:application/pdf;base64,... values.
  * Requires the OCR_SPACE_API_KEY secret and returns: { text: "..." }
  */
 
@@ -53,8 +54,8 @@ export default {
 };
 
 async function runOcrSpace(apiKey, { image }) {
-	if (!/^data:image\/(?:png|jpe?g|webp);base64,/i.test(image)) {
-		throw new Error("Image must be a PNG, JPG, or WEBP data URL");
+	if (!/^data:(?:image\/(?:png|jpe?g|webp)|application\/pdf);base64,/i.test(image)) {
+		throw new Error("File must be a PNG, JPG, WEBP, or PDF data URL");
 	}
 
 	const form = new FormData();

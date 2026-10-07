@@ -4,6 +4,7 @@
   const previewImg = document.getElementById('previewImg');
   const previewActions = document.getElementById('previewActions');
   const clearBtn = document.getElementById('clearBtn');
+  const filePreview = document.getElementById('filePreview');
 
   const runBtn = document.getElementById('runBtn');
   const status = document.getElementById('status');
@@ -14,12 +15,12 @@
   const downloadBtn = document.getElementById('downloadBtn');
   const toast = document.getElementById('toast');
 
-  let imageDataUrl = null;
+  let fileDataUrl = null;
   const WORKER_URL = 'https://nemotron-ocr-proxy.b4rjxr9lk.workers.dev';
 
   // Drag & drop
-  dropZone.addEventListener('click', () => !imageDataUrl && fileInput.click());
-  dropZone.addEventListener('keydown', e => e.key === 'Enter' && !imageDataUrl && fileInput.click());
+  dropZone.addEventListener('click', () => !fileDataUrl && fileInput.click());
+  dropZone.addEventListener('keydown', e => e.key === 'Enter' && !fileDataUrl && fileInput.click());
   dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
   dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
   dropZone.addEventListener('drop', e => {
@@ -34,9 +35,11 @@
   });
 
   clearBtn.addEventListener('click', () => {
-    imageDataUrl = null;
+    fileDataUrl = null;
     previewImg.src = '';
     previewImg.classList.remove('visible');
+    filePreview.textContent = '';
+    filePreview.classList.remove('visible');
     previewActions.classList.remove('visible');
     dropZone.classList.remove('has-image');
     fileInput.value = '';
@@ -46,16 +49,19 @@
   });
 
   function loadFile(file) {
-    const allowed = ['image/png', 'image/jpeg', 'image/webp'];
+    const allowed = ['image/png', 'image/jpeg', 'image/webp', 'application/pdf'];
     if (!allowed.includes(file.type)) {
-      setStatus('Unsupported file type. Use PNG, JPG, or WEBP.', 'error');
+      setStatus('Unsupported file type. Use PNG, JPG, WEBP, or PDF.', 'error');
       return;
     }
     const reader = new FileReader();
     reader.onload = e => {
-      imageDataUrl = e.target.result;
-      previewImg.src = imageDataUrl;
-      previewImg.classList.add('visible');
+      fileDataUrl = e.target.result;
+      const isPdf = file.type === 'application/pdf';
+      previewImg.src = isPdf ? '' : fileDataUrl;
+      previewImg.classList.toggle('visible', !isPdf);
+      filePreview.textContent = isPdf ? `📄 ${file.name} · PDF ready for OCR` : '';
+      filePreview.classList.toggle('visible', isPdf);
       previewActions.classList.add('visible');
       dropZone.classList.add('has-image');
       runBtn.disabled = false;
@@ -68,8 +74,8 @@
   runBtn.addEventListener('click', async () => {
     const workerUrl = WORKER_URL.replace(/\/$/, '');
 
-    if (!imageDataUrl) {
-      setStatus('Please upload an image.', 'error');
+    if (!fileDataUrl) {
+      setStatus('Please upload an image or PDF.', 'error');
       return;
     }
 
@@ -82,7 +88,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          image: imageDataUrl,
+          image: fileDataUrl,
         }),
       });
 

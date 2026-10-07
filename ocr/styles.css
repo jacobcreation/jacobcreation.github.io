@@ -155,6 +155,18 @@
     display: none;
   }
   #previewImg.visible { display: block; }
+  #filePreview {
+    display: none;
+    padding: 18px 24px;
+    border-radius: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 0.9rem;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  #filePreview.visible { display: block; }
   .preview-actions {
     display: none;
     gap: 10px;
