@@ -15,6 +15,21 @@
             <h1>Piano</h1>
             <div class="header-controls">
                 <span id="status">Loading Sounds...</span>
+                <div class="transport" aria-label="Recorder controls">
+                    <button id="recordButton" type="button" title="Record">●</button>
+                    <button id="playButton" type="button" title="Play recording">▶</button>
+                    <button id="clearButton" type="button" title="Clear recording">×</button>
+                </div>
+                <label class="control" title="Volume">
+                    <span>Vol</span>
+                    <input id="volume" type="range" min="-30" max="0" value="-6" step="1" aria-label="Volume">
+                </label>
+                <button id="sustainButton" class="control-button" type="button" aria-pressed="false">Sustain</button>
+                <div class="octave-control" aria-label="Computer keyboard octave">
+                    <button id="octaveDown" type="button" title="Lower computer keyboard octave">−</button>
+                    <span id="octaveLabel">C4</span>
+                    <button id="octaveUp" type="button" title="Raise computer keyboard octave">+</button>
+                </div>
                 <label class="toggle">
                     <input type="checkbox" id="toggleLabels">
                     <span>Labels</span>
@@ -24,7 +39,7 @@
         <div class="keyboard-wrapper" id="wrapper">
             <div class="keyboard" id="keyboard"></div>
         </div>
-        <footer></footer>
+        <footer>Computer keyboard: A–K white notes · W/E/T/Y/U black notes</footer>
     </div>
     <script src="app.js"></script>
     <script>(function(){const v=Date.now();document.write('<script src="/global-header.js?v='+v+'"><\/script>');})();</script>
