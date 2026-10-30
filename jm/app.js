@@ -2,7 +2,8 @@
     // CONFIG
     // ============================
     const WORKER_ROUTE_URL = "https://protect.b4rjxr9lk.workers.dev/route";
-    const OPENCAGE_API_KEY = "3ff7094f176242cf915d8decfdda6766";
+    // Geocoding uses the public Nominatim endpoint below. Keep provider keys
+    // out of frontend code because anything here is visible to every visitor.
     const STORAGE_KEY = "jm_v2_state";
     const AUTO_ROUTE_MS = 25000;
     const QUICK_DESTINATIONS = [
@@ -275,31 +276,31 @@
     // SEARCH + GEOCODE
     // ============================
     async function geocodeAddress(address) {
-      if (!OPENCAGE_API_KEY) return null;
-
-      const url = new URL("https://api.opencagedata.com/geocode/v1/json");
+      const url = new URL("https://nominatim.openstreetmap.org/search");
       url.searchParams.set("q", address);
-      url.searchParams.set("key", OPENCAGE_API_KEY);
       url.searchParams.set("limit", "1");
-      url.searchParams.set("no_annotations", "1");
-      url.searchParams.set("countrycode", "ph");
+      url.searchParams.set("format", "jsonv2");
+      url.searchParams.set("countrycodes", "ph");
+      url.searchParams.set("addressdetails", "0");
 
       if (lastPosition?.coords) {
         const { latitude, longitude } = lastPosition.coords;
         url.searchParams.set("proximity", `${latitude},${longitude}`);
       }
 
-      const res = await fetch(url.toString());
+      const res = await fetch(url.toString(), {
+        headers: { "Accept-Language": "en" }
+      });
       if (!res.ok) throw new Error("Geocoding failed: " + res.status);
 
       const data = await res.json();
-      const result = data?.results?.[0];
-      if (!result?.geometry) return null;
+      const result = data?.[0];
+      if (!result?.lat || !result?.lon) return null;
 
       return {
-        lat: result.geometry.lat,
-        lng: result.geometry.lng,
-        label: safeLabel(result.formatted || address)
+        lat: Number(result.lat),
+        lng: Number(result.lon),
+        label: safeLabel(result.display_name || address)
       };
     }
 
