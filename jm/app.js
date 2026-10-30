@@ -38,6 +38,7 @@
     let map = null;
     let mapLayer = null;
     let userMarker = null;
+    let userAccuracyCircle = null;
     let lastPosition = null;
     let lastGPSUpdateAt = 0;
 
@@ -867,10 +868,30 @@
     function initMap() {
       setStatus("Loading map...");
 
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: "../vendor/leaflet/marker-icon-2x.png",
+        iconUrl: "../vendor/leaflet/marker-icon.png",
+        shadowUrl: "../vendor/leaflet/marker-shadow.png"
+      });
+
       map = L.map("map").setView([12.8797, 121.7740], 6);
       applyTileMode(tileMode);
 
-      userMarker = L.marker([12.8797, 121.7740]).bindPopup("You are here");
+      userAccuracyCircle = L.circle([12.8797, 121.7740], {
+        radius: 0,
+        color: "#168cff",
+        weight: 1,
+        fillColor: "#168cff",
+        fillOpacity: 0.12,
+        interactive: false
+      });
+      userMarker = L.circleMarker([12.8797, 121.7740], {
+        radius: 9,
+        color: "#ffffff",
+        weight: 3,
+        fillColor: "#168cff",
+        fillOpacity: 1
+      }).bindPopup("You are here");
 
       if (destination) {
         setDestination(destination.lat, destination.lng, destination._label || "Saved destination");
@@ -1007,11 +1028,15 @@
           const { latitude, longitude, accuracy, speed } = pos.coords;
 
           if (!userMarker._map) {
+            userAccuracyCircle.addTo(map);
             userMarker.addTo(map);
             map.setView([latitude, longitude], 15);
           }
 
+          userAccuracyCircle.setLatLng([latitude, longitude]);
+          userAccuracyCircle.setRadius(Number.isFinite(accuracy) ? accuracy : 0);
           userMarker.setLatLng([latitude, longitude]);
+          userMarker.bringToFront();
 
           if (followOn) {
             map.setView([latitude, longitude], Math.max(map.getZoom(), 16), { animate: true });
