@@ -885,12 +885,16 @@
         fillOpacity: 0.12,
         interactive: false
       });
-      userMarker = L.circleMarker([12.8797, 121.7740], {
-        radius: 9,
-        color: "#ffffff",
-        weight: 3,
-        fillColor: "#168cff",
-        fillOpacity: 1
+      const userCarIcon = L.divIcon({
+        className: "current-location-car-marker",
+        html: '<span role="img" aria-label="Your current location">🚕</span>',
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
+        popupAnchor: [0, -20]
+      });
+      userMarker = L.marker([12.8797, 121.7740], {
+        icon: userCarIcon,
+        zIndexOffset: 1000
       }).bindPopup("You are here");
 
       if (destination) {
@@ -1036,7 +1040,7 @@
           userAccuracyCircle.setLatLng([latitude, longitude]);
           userAccuracyCircle.setRadius(Number.isFinite(accuracy) ? accuracy : 0);
           userMarker.setLatLng([latitude, longitude]);
-          userMarker.bringToFront();
+          userMarker.setZIndexOffset(1000);
 
           if (followOn) {
             map.setView([latitude, longitude], Math.max(map.getZoom(), 16), { animate: true });
