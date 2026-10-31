@@ -28,7 +28,9 @@
       },
       sat: {
         url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        options: { maxZoom: 19, attribution: "Tiles &copy; Esri" }
+        // Esri returns a "Map data not available yet" placeholder beyond
+        // this imagery level. Scale the last real imagery instead.
+        options: { maxNativeZoom: 18, maxZoom: 18, attribution: "Tiles &copy; Esri" }
       }
     };
 
