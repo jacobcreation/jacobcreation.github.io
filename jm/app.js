@@ -19,12 +19,12 @@
         options: { maxZoom: 19, attribution: "&copy; OpenStreetMap contributors" }
       },
       voyager: {
-        url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-        options: { maxZoom: 20, attribution: "&copy; OpenStreetMap contributors &copy; CARTO" }
+        url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+        options: { maxZoom: 19, attribution: "Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ" }
       },
       dark: {
-        url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-        options: { maxZoom: 20, attribution: "&copy; OpenStreetMap contributors &copy; CARTO" }
+        url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+        options: { maxZoom: 19, attribution: "Tiles &copy; Esri" }
       },
       sat: {
         url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -470,7 +470,15 @@
       destTextEl.innerHTML = `Destination: <b>${escapeHTML(displayName)}</b>`;
 
       if (!destinationMarker) {
-        destinationMarker = L.marker(destination).addTo(map);
+        destinationMarker = L.marker(destination, {
+          icon: L.divIcon({
+            className: "destination-marker",
+            html: '<span aria-hidden="true">➤</span>',
+            iconSize: [42, 42],
+            iconAnchor: [21, 38],
+            popupAnchor: [0, -34]
+          })
+        }).addTo(map);
       } else {
         destinationMarker.setLatLng(destination);
       }
@@ -858,6 +866,18 @@
       if (mapLayer) map.removeLayer(mapLayer);
       const cfg = TILE_CONFIGS[mode];
       mapLayer = L.tileLayer(cfg.url, cfg.options).addTo(map);
+      let fallbackUsed = false;
+      mapLayer.on("tileerror", () => {
+        if (mode === "osm" || fallbackUsed) return;
+        fallbackUsed = true;
+        if (mapLayer) map.removeLayer(mapLayer);
+        const fallback = TILE_CONFIGS.osm;
+        mapLayer = L.tileLayer(fallback.url, fallback.options).addTo(map);
+        tileMode = "osm";
+        tileSelect.value = "osm";
+        setStatus(`${mode === "sat" ? "Satellite" : "Map layer"} unavailable. Using OSM.`);
+        saveState();
+      });
 
       saveState();
     }
