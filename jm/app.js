@@ -48,6 +48,10 @@
     let destinationMarker = null;
 
     let routeLine = null;
+    let activeRoutePath = null;
+    let activeRouteCoords = [];
+    let activeRouteCumulative = [];
+    let routeRequestInFlight = false;
     let routeMode = "normal";
     let autoRouteOn = false;
     let followOn = false;
@@ -72,6 +76,15 @@
     const routeTextEl = document.getElementById("routeText");
     const distanceTextEl = document.getElementById("distanceText");
     const clockTextEl = document.getElementById("clockText");
+    const navCardEl = document.getElementById("navCard");
+    const navModeEl = document.getElementById("navMode");
+    const navGpsEl = document.getElementById("navGps");
+    const maneuverIconEl = document.getElementById("maneuverIcon");
+    const instructionTextEl = document.getElementById("instructionText");
+    const etaTextEl = document.getElementById("etaText");
+    const remainingTextEl = document.getElementById("remainingText");
+    const arrivalTextEl = document.getElementById("arrivalText");
+    const startNavBtn = document.getElementById("startNavBtn");
 
     const panelEl = document.getElementById("panel");
     const panelToggle = document.getElementById("panelToggle");
@@ -152,6 +165,33 @@
       if (!Number.isFinite(meters)) return "-";
       if (meters < 1000) return `${Math.round(meters)} m`;
       return `${(meters / 1000).toFixed(1)} km`;
+    }
+
+    function formatDuration(ms) {
+      if (!Number.isFinite(ms) || ms < 0) return "--";
+      const minutes = Math.round(ms / 60000);
+      if (minutes < 1) return "<1 min";
+      if (minutes < 60) return `${minutes} min`;
+      const hours = Math.floor(minutes / 60);
+      return `${hours}h ${minutes % 60}m`;
+    }
+
+    function formatInstructionIcon(sign) {
+      const icons = {
+        "-7": "↩",
+        "-3": "↙",
+        "-2": "←",
+        "-1": "↖",
+        "0": "↑",
+        "1": "↗",
+        "2": "→",
+        "3": "↘",
+        "4": "✓",
+        "5": "↻",
+        "6": "↻",
+        "7": "↩"
+      };
+      return icons[String(sign)] || "↑";
     }
 
     function straightLineMeters(a, b) {
@@ -495,6 +535,10 @@
         map.removeLayer(routeLine);
         routeLine = null;
       }
+      activeRoutePath = null;
+      activeRouteCoords = [];
+      activeRouteCumulative = [];
+      navCardEl.classList.add("hidden");
       routeTextEl.classList.add("hidden");
       setStatus("Route cleared.");
     }
@@ -661,13 +705,25 @@
       return coordinates;
     }
 
-    function drawRoute(coords) {
+    function drawRoute(coords, path = null) {
       if (routeLine) {
         map.removeLayer(routeLine);
         routeLine = null;
       }
 
       routeLine = L.polyline(coords, { weight: 7, opacity: 0.9, color: "#3ee2ff" }).addTo(map);
+      activeRoutePath = path;
+      activeRouteCoords = coords;
+      activeRouteCumulative = [0];
+      for (let i = 1; i < coords.length; i += 1) {
+        activeRouteCumulative.push(
+          activeRouteCumulative[i - 1] + map.distance(coords[i - 1], coords[i])
+        );
+      }
+      navCardEl.classList.remove("hidden");
+      navModeEl.textContent = `${routeMode === "forced" ? "FORCED" : routeMode.toUpperCase()} DIRECTIONS`;
+      startNavBtn.textContent = followOn ? "Navigation active" : "Start navigation";
+      updateLiveNavigation();
       map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
     }
 
@@ -679,6 +735,55 @@
       setStatus(label);
       routeTextEl.classList.remove("hidden");
       routeTextEl.textContent = `Distance: ${km} km | ETA: ${mins} min | Avg speed: ${avgKmh} km/h`;
+      updateLiveNavigation();
+    }
+
+    function updateLiveNavigation() {
+      if (!activeRoutePath || !activeRouteCoords.length || !lastPosition) return;
+
+      const position = [lastPosition.coords.latitude, lastPosition.coords.longitude];
+      let nearestIndex = 0;
+      let nearestDistance = Infinity;
+      activeRouteCoords.forEach((coord, index) => {
+        const distance = map.distance(position, coord);
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestIndex = index;
+        }
+      });
+
+      const totalRouteDistance = activeRouteCumulative.at(-1) || activeRoutePath.distance || 0;
+      const progress = totalRouteDistance > 0
+        ? Math.min(1, activeRouteCumulative[nearestIndex] / totalRouteDistance)
+        : 0;
+      const remainingDistance = Math.max(0, activeRoutePath.distance * (1 - progress));
+      const remainingTime = Math.max(0, activeRoutePath.time * (1 - progress));
+      const instructions = Array.isArray(activeRoutePath.instructions) ? activeRoutePath.instructions : [];
+      const instruction = instructions.find((item) => {
+        const endIndex = Array.isArray(item.interval) ? item.interval[1] : 0;
+        return endIndex > nearestIndex;
+      }) || instructions.at(-1);
+
+      if (nearestDistance > 180) {
+        maneuverIconEl.textContent = "!";
+        instructionTextEl.textContent = "Off route — updating your position...";
+        navGpsEl.textContent = `GPS ${formatDistanceMeters(nearestDistance)} away`;
+      } else if (instruction) {
+        maneuverIconEl.textContent = formatInstructionIcon(instruction.sign);
+        instructionTextEl.textContent = instruction.text || "Continue on route";
+        const endIndex = Array.isArray(instruction.interval) ? instruction.interval[1] : nearestIndex;
+        const nextPoint = activeRouteCoords[Math.min(endIndex, activeRouteCoords.length - 1)];
+        const nextDistance = nextPoint ? map.distance(position, nextPoint) : 0;
+        navGpsEl.textContent = nextDistance > 0 ? `${formatDistanceMeters(nextDistance)} to turn` : "GPS live";
+      } else {
+        maneuverIconEl.textContent = "↑";
+        instructionTextEl.textContent = "Follow the highlighted route";
+        navGpsEl.textContent = "GPS live";
+      }
+
+      etaTextEl.textContent = formatDuration(remainingTime);
+      remainingTextEl.textContent = formatDistanceMeters(remainingDistance);
+      arrivalTextEl.textContent = formatClock(new Date(Date.now() + remainingTime));
     }
 
     // ============================
@@ -736,6 +841,7 @@
 
       setStatus("Routing...");
       routeTextEl.classList.add("hidden");
+      routeRequestInFlight = true;
 
       try {
         const result = await getRouteFromWorkerByP1P2(start, dest, mode);
@@ -750,11 +856,13 @@
         const chosen = paths[chosenIndex] || paths[0];
         const coords = decodePolyline(chosen.points, 5);
 
-        drawRoute(coords);
+        drawRoute(coords, chosen);
         showRouteStats(chosen, mode === "highway" ? "Highway preferred route ready." : "Normal route ready.");
       } catch (err) {
         console.error(err);
         setStatus("Routing failed.");
+      } finally {
+        routeRequestInFlight = false;
       }
     }
 
@@ -773,6 +881,7 @@
 
       setStatus("Forcing highway route...");
       routeTextEl.classList.add("hidden");
+      routeRequestInFlight = true;
 
       const start = `${lastPosition.coords.latitude},${lastPosition.coords.longitude}`;
       const dest = `${destination.lat},${destination.lng}`;
@@ -789,13 +898,15 @@
             return;
           }
 
-          drawRoute(decodePolyline(path.points, 5));
+          drawRoute(decodePolyline(path.points, 5), path);
           showRouteStats(path, "Forced route with checkpoints ready.");
           return;
         } catch (err) {
           console.error(err);
           setStatus("Forced route failed.");
           return;
+        } finally {
+          routeRequestInFlight = false;
         }
       }
 
@@ -811,11 +922,13 @@
           return;
         }
 
-        drawRoute(decodePolyline(path.points, 5));
+        drawRoute(decodePolyline(path.points, 5), path);
         showRouteStats(path, "Forced highway route ready.");
       } catch (err) {
         console.error(err);
         setStatus("Forced route failed.");
+      } finally {
+        routeRequestInFlight = false;
       }
     }
 
@@ -832,6 +945,7 @@
 
       followBtn.textContent = `Follow: ${followOn ? "On" : "Off"}`;
       followBtn.classList.toggle("isActive", followOn);
+      startNavBtn.textContent = followOn ? "Navigation active" : "Start navigation";
 
       autoRouteBtn.textContent = `Auto Route: ${autoRouteOn ? "On" : "Off"}`;
       autoRouteBtn.classList.toggle("isActive", autoRouteOn);
@@ -967,6 +1081,19 @@
         setStatus(`Follow mode ${followOn ? "enabled" : "disabled"}.`);
       });
 
+      startNavBtn.addEventListener("click", () => {
+        followOn = true;
+        autoRouteOn = true;
+        setActiveRouteModeButtons();
+        startAutoRouteTimer();
+        if (activeRoutePath) {
+          updateLiveNavigation();
+          setStatus("Live navigation active.");
+        } else {
+          runCurrentModeRoute();
+        }
+      });
+
       autoRouteBtn.addEventListener("click", () => {
         autoRouteOn = !autoRouteOn;
         setActiveRouteModeButtons();
@@ -1081,6 +1208,10 @@
           gpsBadgeEl.textContent = "GPS: live";
           setStatus("GPS live.");
           updateDistanceToDestination();
+          updateLiveNavigation();
+          if (destination && !activeRoutePath && !routeRequestInFlight) {
+            runCurrentModeRoute();
+          }
         },
         (err) => {
           const messages = {

@@ -122,17 +122,124 @@
       position: absolute;
       z-index: 1000;
       top: 0.85rem;
-      right: 0.85rem;
-      width: min(470px, calc(100vw - 1.5rem));
+      left: 0.85rem;
+      width: min(390px, calc(100vw - 1.5rem));
       max-height: calc(100% - 1.7rem);
       overflow: auto;
-      border-radius: 18px;
+      border-radius: 14px;
       border: 1px solid var(--panel-border);
       background: var(--panel-bg);
       box-shadow: var(--shadow);
       backdrop-filter: blur(9px);
-      padding: 0.9rem;
+      padding: 0.6rem;
       animation: panelIn 250ms ease;
+    }
+
+    .navCard {
+      border: 1px solid rgba(81, 208, 255, 0.42);
+      border-radius: 12px;
+      padding: 0.65rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(145deg, rgba(8, 32, 57, 0.96), rgba(7, 18, 34, 0.96));
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+    }
+
+    .navTopline,
+    .navStats {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .navMode,
+    .nextLabel {
+      color: var(--accent);
+      font-size: 0.64rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .navGps {
+      color: var(--muted);
+      font-size: 0.68rem;
+      white-space: nowrap;
+    }
+
+    .navInstruction {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      min-height: 3.2rem;
+      padding: 0.4rem 0;
+    }
+
+    .maneuverIcon {
+      display: grid;
+      flex: 0 0 2.25rem;
+      place-items: center;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 10px;
+      color: #06111f;
+      background: var(--accent-2);
+      font: 700 1.5rem/1 Arial, sans-serif;
+    }
+
+    .instructionText {
+      margin-top: 0.15rem;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-weight: 650;
+      line-height: 1.15;
+    }
+
+    .navStats {
+      border-top: 1px solid rgba(151, 180, 219, 0.2);
+      padding-top: 0.5rem;
+      color: var(--muted);
+      font-size: 0.68rem;
+    }
+
+    .navStats strong {
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    .navStartBtn {
+      width: 100%;
+      margin-top: 0.55rem;
+      border-color: rgba(110, 242, 194, 0.48);
+      background: linear-gradient(180deg, rgba(22, 69, 66, 0.95), rgba(10, 38, 43, 0.95));
+    }
+
+    .compactStatus {
+      padding: 0.45rem 0.6rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .compactStatus .mini {
+      margin-top: 0.15rem;
+    }
+
+    .toolDetails {
+      margin-top: 0.45rem;
+      border-top: 1px solid rgba(130, 161, 198, 0.25);
+      padding-top: 0.35rem;
+    }
+
+    .toolDetails summary {
+      padding: 0.3rem 0.1rem;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .toolDetails .section {
+      padding: 0.55rem;
+      margin-top: 0.35rem;
     }
 
     @keyframes panelIn {
@@ -328,7 +435,7 @@
     @media (max-width: 900px) {
       .panel {
         left: 0.75rem;
-        right: 0.75rem;
+        right: auto;
         width: auto;
         top: auto;
         bottom: 0.75rem;

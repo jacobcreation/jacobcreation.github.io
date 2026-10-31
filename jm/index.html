@@ -16,7 +16,7 @@
   <link href="../fonts/fonts.css" rel="stylesheet">
   <link rel="stylesheet" href="../vendor/leaflet.css" />
 
-  <link rel="stylesheet" href="styles.css?v=20261031-2">
+  <link rel="stylesheet" href="styles.css?v=20261101-1">
     <!-- Mobile Friendly -->
     <link rel="stylesheet" href="../mobile-friendly.css">
 </head>
@@ -38,7 +38,27 @@
       <div id="map"></div>
 
       <div class="panel" id="panel">
-        <div class="section">
+        <div class="navCard hidden" id="navCard" aria-live="polite">
+          <div class="navTopline">
+            <span class="navMode" id="navMode">LIVE DIRECTIONS</span>
+            <span class="navGps" id="navGps">GPS waiting</span>
+          </div>
+          <div class="navInstruction">
+            <span class="maneuverIcon" id="maneuverIcon" aria-hidden="true">↑</span>
+            <div>
+              <div class="nextLabel">Next instruction</div>
+              <div class="instructionText" id="instructionText">Set a destination to begin.</div>
+            </div>
+          </div>
+          <div class="navStats">
+            <div><strong id="etaText">--</strong><span> ETA</span></div>
+            <div><strong id="remainingText">--</strong><span> remaining</span></div>
+            <div><strong id="arrivalText">--:--</strong><span> arrival</span></div>
+          </div>
+          <button class="btn navStartBtn" id="startNavBtn" type="button">Start navigation</button>
+        </div>
+
+        <div class="section compactStatus">
           <div class="statusRow">
             <div><strong>Status:</strong> <span id="statusText">Initializing...</span></div>
             <div id="gpsBadge" class="mini">GPS: waiting</div>
@@ -50,7 +70,7 @@
           <div id="distanceText" class="mini hidden"></div>
         </div>
 
-        <div class="section">
+        <div class="section searchSection">
           <div class="sectionTitle">Search Destination</div>
           <div class="searchRow">
             <input id="searchInput" list="recentSearchesList" placeholder="Search destination in PH (e.g. Ayala Cebu)" />
@@ -65,51 +85,54 @@
           </div>
         </div>
 
-        <div class="section">
-          <div class="sectionTitle">Routing Modes</div>
-          <div class="rowWrap">
-            <button class="btn" id="normalBtn">Normal</button>
-            <button class="btn" id="highwayBtn">Highway Pref</button>
-            <button class="btn" id="forceBtn">Force Highway</button>
+        <details class="toolDetails">
+          <summary>Route and map options</summary>
+          <div class="section">
+            <div class="sectionTitle">Routing Modes</div>
+            <div class="rowWrap">
+              <button class="btn" id="normalBtn" type="button">Normal</button>
+              <button class="btn" id="highwayBtn" type="button">Highway Pref</button>
+              <button class="btn" id="forceBtn" type="button">Force Highway</button>
+            </div>
+            <div class="rowWrap">
+              <button class="btn" id="recenterBtn" type="button">Recenter</button>
+              <button class="btn" id="fitRouteBtn" type="button">Fit Route</button>
+              <button class="btn btnDanger" id="clearBtn" type="button">Clear Route</button>
+            </div>
+            <div class="rowWrap">
+              <button class="btn" id="followBtn" type="button">Follow: Off</button>
+              <button class="btn" id="autoRouteBtn" type="button">Auto Route: Off</button>
+              <select id="tileSelect" style="max-width:180px;">
+                <option value="osm">Map: OSM</option>
+                <option value="voyager">Map: Streets</option>
+                <option value="dark">Map: Topographic</option>
+                <option value="sat">Map: Satellite</option>
+              </select>
+            </div>
           </div>
-          <div class="rowWrap">
-            <button class="btn" id="recenterBtn">Recenter</button>
-            <button class="btn" id="fitRouteBtn">Fit Route</button>
-            <button class="btn btnDanger" id="clearBtn">Clear Route</button>
-          </div>
-          <div class="rowWrap">
-            <button class="btn" id="followBtn">Follow: Off</button>
-            <button class="btn" id="autoRouteBtn">Auto Route: Off</button>
-            <select id="tileSelect" style="max-width:180px;">
-              <option value="osm">Map: OSM</option>
-              <option value="voyager">Map: Streets</option>
-              <option value="dark">Map: Topographic</option>
-              <option value="sat">Map: Satellite</option>
-            </select>
-          </div>
-        </div>
 
-        <div class="section">
-          <div class="sectionTitle">Checkpoints</div>
-          <div class="rowWrap">
-            <button class="btn" id="addCheckpointBtn">Add Checkpoint</button>
-            <button class="btn" id="undoCheckpointBtn">Undo Last</button>
-            <button class="btn btnDanger" id="clearCheckpointBtn">Clear All</button>
+          <div class="section">
+            <div class="sectionTitle">Checkpoints</div>
+            <div class="rowWrap">
+              <button class="btn" id="addCheckpointBtn" type="button">Add Checkpoint</button>
+              <button class="btn" id="undoCheckpointBtn" type="button">Undo Last</button>
+              <button class="btn btnDanger" id="clearCheckpointBtn" type="button">Clear All</button>
+            </div>
+            <div class="rowWrap">
+              <button class="btn" id="exportCheckpointBtn" type="button">Export</button>
+              <button class="btn" id="importCheckpointBtn" type="button">Import</button>
+              <input id="checkpointImportInput" type="file" accept="application/json" class="hidden" />
+            </div>
+            <div class="checkpointGrid" id="checkpointList"></div>
           </div>
-          <div class="rowWrap">
-            <button class="btn" id="exportCheckpointBtn">Export</button>
-            <button class="btn" id="importCheckpointBtn">Import</button>
-            <input id="checkpointImportInput" type="file" accept="application/json" class="hidden" />
-          </div>
-          <div class="checkpointGrid" id="checkpointList"></div>
-        </div>
 
-        <div class="section">
-          <div class="sectionTitle">Favorites</div>
-          <div class="favGrid" id="favoriteList"></div>
-          <div class="sectionTitle" style="margin-top:0.6rem;">Recent Searches</div>
-          <div class="recentGrid" id="recentList"></div>
-        </div>
+          <div class="section">
+            <div class="sectionTitle">Favorites</div>
+            <div class="favGrid" id="favoriteList"></div>
+            <div class="sectionTitle" style="margin-top:0.6rem;">Recent Searches</div>
+            <div class="recentGrid" id="recentList"></div>
+          </div>
+        </details>
 
         <div class="tips">
           Shortcuts: <b>N</b> Normal, <b>H</b> Highway, <b>F</b> Force, <b>R</b> Recenter, <b>C</b> Add checkpoint mode.<br>
@@ -121,7 +144,7 @@
 
   <script src="../vendor/leaflet.js"></script>
 
-  <script src="app.js?v=20261031-2"></script>
+  <script src="app.js?v=20261101-1"></script>
 
   <script>(function(){const v=Date.now();document.write('<script src="../global-header.js?v='+v+'"><\/script>');})();</script>
     <script src="../accounts/account-widget.js" defer data-account-api="https://accounts-system.b4rjxr9lk.workers.dev" data-account-sync="jm_v2_state:workspace-state:Workspace state:remote"></script>
