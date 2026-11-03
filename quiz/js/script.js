@@ -5,6 +5,121 @@ const WORKER_URL = "https://quiz-worker.b4rjxr9lk.workers.dev";
 const TOTAL_QUESTIONS = 10;
 const TIMER_SECONDS = 30;
 
+// The API is preferred, but the game should remain playable when the remote
+// Worker is unavailable (for example while offline or during a deployment).
+const OFFLINE_QUESTIONS = [
+	{
+		topic: "General Science",
+		question: "What force keeps planets in orbit around the Sun?",
+		options: ["Magnetism", "Gravity", "Friction", "Buoyancy"],
+		answer: "Gravity",
+		explanation:
+			"Gravity attracts planets toward the Sun and supplies the force that bends their paths into orbits.",
+	},
+	{
+		topic: "Physics",
+		question: "What is the SI unit of electrical resistance?",
+		options: ["Volt", "Ampere", "Ohm", "Watt"],
+		answer: "Ohm",
+		explanation:
+			"Electrical resistance is measured in ohms, represented by the symbol Ω.",
+	},
+	{
+		topic: "Chemistry",
+		question: "What is the chemical symbol for gold?",
+		options: ["Ag", "Gd", "Go", "Au"],
+		answer: "Au",
+		explanation: "Au comes from the Latin word aurum, meaning gold.",
+	},
+	{
+		topic: "Biology",
+		question: "Which organelle is commonly called the powerhouse of the cell?",
+		options: ["Nucleus", "Ribosome", "Mitochondrion", "Cell wall"],
+		answer: "Mitochondrion",
+		explanation:
+			"Mitochondria produce most of a cell's usable energy in the form of ATP.",
+	},
+	{
+		topic: "Earth Science",
+		question: "What is the hard outer layer of Earth called?",
+		options: ["Mantle", "Crust", "Outer core", "Lithosphere"],
+		answer: "Crust",
+		explanation: "The crust is Earth's thin, solid outermost rock layer.",
+	},
+	{
+		topic: "Computers & Tech",
+		question: "What does CPU stand for?",
+		options: [
+			"Central Processing Unit",
+			"Computer Power Utility",
+			"Core Program User",
+			"Central Program Upload",
+		],
+		answer: "Central Processing Unit",
+		explanation:
+			"The CPU executes instructions and performs the core calculations of a computer.",
+	},
+	{
+		topic: "Astronomy",
+		question: "Which planet is known for its prominent ring system?",
+		options: ["Mars", "Venus", "Saturn", "Mercury"],
+		answer: "Saturn",
+		explanation:
+			"Saturn's bright, extensive rings are made mostly of ice and rocky particles.",
+	},
+	{
+		topic: "History",
+		question: "Which ancient civilization built Machu Picchu?",
+		options: ["Maya", "Roman", "Inca", "Persian"],
+		answer: "Inca",
+		explanation:
+			"Machu Picchu was built by the Inca in the Andes of present-day Peru.",
+	},
+	{
+		topic: "Geography",
+		question: "What is the largest ocean on Earth?",
+		options: [
+			"Atlantic Ocean",
+			"Indian Ocean",
+			"Arctic Ocean",
+			"Pacific Ocean",
+		],
+		answer: "Pacific Ocean",
+		explanation: "The Pacific Ocean covers more area than any other ocean.",
+	},
+	{
+		topic: "Mathematics",
+		question: "What is the value of π rounded to two decimal places?",
+		options: ["3.12", "3.14", "3.16", "3.41"],
+		answer: "3.14",
+		explanation: "Pi is approximately 3.14159, which rounds to 3.14.",
+	},
+	{
+		topic: "Music",
+		question: "How many lines are on a standard musical staff?",
+		options: ["Four", "Five", "Six", "Seven"],
+		answer: "Five",
+		explanation:
+			"Standard musical notation uses five horizontal lines and the spaces between them.",
+	},
+	{
+		topic: "Sports",
+		question: "How many players from one team are on the court in basketball?",
+		options: ["Four", "Five", "Six", "Seven"],
+		answer: "Five",
+		explanation:
+			"Each basketball team has five players on the court during play.",
+	},
+	{
+		topic: "Pop Culture",
+		question: "Which fictional detective lives at 221B Baker Street?",
+		options: ["Hercule Poirot", "Sherlock Holmes", "Nancy Drew", "Miss Marple"],
+		answer: "Sherlock Holmes",
+		explanation:
+			"221B Baker Street is the famous London address of Sherlock Holmes.",
+	},
+];
+
 const SUBJECTS = [
 	{
 		emoji: "🔬",
@@ -238,9 +353,23 @@ async function fetchAllQuestions() {
 		// Start the first question
 		await loadNextQuestionFromBuffer();
 	} catch (err) {
-		alert("Error loading questions: " + err.message + "\n\nReturning to home.");
-		showScreen("home-screen");
+		console.warn("Question API unavailable; using offline question bank.", err);
+		questionsBuffer = getOfflineQuestions(TOTAL_QUESTIONS);
+		setLoadingState("Using offline question bank...", false);
+		await loadNextQuestionFromBuffer();
 	}
+}
+
+function getOfflineQuestions(count) {
+	const available = OFFLINE_QUESTIONS.filter(
+		(q) => !selectedSubjects.length || selectedSubjects.includes(q.topic),
+	);
+	const pool = (available.length ? available : OFFLINE_QUESTIONS).sort(
+		() => Math.random() - 0.5,
+	);
+	return Array.from({ length: count }, (_, index) => ({
+		...pool[index % pool.length],
+	}));
 }
 
 async function loadNextQuestionFromBuffer() {
@@ -288,12 +417,14 @@ async function loadNextQuestionFromBuffer() {
 			addToHistory(newQ.question);
 			renderQuestion(newQ);
 		} catch (err) {
-			alert(
-				"Error loading next question: " +
-					err.message +
-					"\n\nShowing results so far.",
+			console.warn(
+				"Next question API unavailable; using offline question.",
+				err,
 			);
-			showResult();
+			const newQ = getOfflineQuestions(1)[0];
+			questionsBuffer[questionNumber] = newQ;
+			addToHistory(newQ.question);
+			renderQuestion(newQ);
 		}
 	} else {
 		showResult();
