@@ -204,6 +204,7 @@ let timerInterval = null;
 let timeLeft = TIMER_SECONDS;
 let streak = 0;
 let questionsBuffer = [];
+let activeQuestionTotal = TOTAL_QUESTIONS;
 
 // ============================================================
 //  SCREEN ROUTER
@@ -231,7 +232,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	document
 		.getElementById("select-subject-btn")
-		.addEventListener("click", () => showScreen("subject-screen"));
+		.addEventListener("click", () => {
+			// Start a fresh subject selection instead of keeping a previous
+			// Play Now/all-subjects selection hidden in the game state.
+			selectedSubjects = [];
+			renderSubjects();
+			showScreen("subject-screen");
+		});
 	document
 		.getElementById("leaderboard-btn")
 		.addEventListener("click", () => showScreen("leaderboard-screen"));
@@ -289,6 +296,7 @@ function renderSubjects() {
 		div.addEventListener("click", () => toggleSubject(div, subj.name));
 		list.appendChild(div);
 	});
+	document.getElementById("start-game-btn").disabled = selectedSubjects.length === 0;
 }
 
 function toggleSubject(el, name) {
@@ -315,7 +323,18 @@ function resetGame() {
 	difficulty = 1;
 	streak = 0;
 	questionsBuffer = [];
+	activeQuestionTotal = TOTAL_QUESTIONS;
 	stopTimer();
+}
+
+function uniqueQuestions(questions) {
+	const seen = new Set();
+	return questions.filter((question) => {
+		const key = typeof question?.question === "string" ? question.question.trim() : "";
+		if (!key || seen.has(key)) return false;
+		seen.add(key);
+		return true;
+	});
 }
 
 async function fetchAllQuestions() {
@@ -340,21 +359,23 @@ async function fetchAllQuestions() {
 		if (!res.ok || data.error) throw new Error(data.error || "Server error");
 
 		if (data.questions && Array.isArray(data.questions)) {
-			questionsBuffer = data.questions;
+			questionsBuffer = uniqueQuestions(data.questions);
 		} else if (data.question) {
 			// Fallback for single question response
-			questionsBuffer = [data];
+			questionsBuffer = uniqueQuestions([data]);
 		} else {
 			throw new Error("Invalid data from AI");
 		}
 
 		if (questionsBuffer.length === 0) throw new Error("No questions received");
+		activeQuestionTotal = Math.min(TOTAL_QUESTIONS, questionsBuffer.length);
 
 		// Start the first question
 		await loadNextQuestionFromBuffer();
 	} catch (err) {
 		console.warn("Question API unavailable; using offline question bank.", err);
 		questionsBuffer = getOfflineQuestions(TOTAL_QUESTIONS);
+		activeQuestionTotal = Math.min(TOTAL_QUESTIONS, questionsBuffer.length);
 		setLoadingState("Using offline question bank...", false);
 		await loadNextQuestionFromBuffer();
 	}
@@ -367,8 +388,8 @@ function getOfflineQuestions(count) {
 	const pool = (available.length ? available : OFFLINE_QUESTIONS).sort(
 		() => Math.random() - 0.5,
 	);
-	return Array.from({ length: count }, (_, index) => ({
-		...pool[index % pool.length],
+	return pool.slice(0, Math.min(count, pool.length)).map((question) => ({
+		...question,
 	}));
 }
 
@@ -380,7 +401,7 @@ async function loadNextQuestionFromBuffer() {
 		renderQuestion(nextQ);
 	}
 	// If buffer exhausted but we still need more questions to reach TOTAL_QUESTIONS
-	else if (questionNumber < TOTAL_QUESTIONS) {
+	else if (questionNumber < activeQuestionTotal) {
 		showScreen("loading-screen");
 		setLoadingState("Fetching next question...", false);
 
@@ -413,7 +434,11 @@ async function loadNextQuestionFromBuffer() {
 				throw new Error("Invalid data from AI");
 			}
 
+			if (questionsBuffer.some((question) => question.question === newQ.question)) {
+				throw new Error("Duplicate question received");
+			}
 			questionsBuffer[questionNumber] = newQ;
+			activeQuestionTotal = Math.min(TOTAL_QUESTIONS, questionsBuffer.length);
 			addToHistory(newQ.question);
 			renderQuestion(newQ);
 		} catch (err) {
@@ -422,7 +447,12 @@ async function loadNextQuestionFromBuffer() {
 				err,
 			);
 			const newQ = getOfflineQuestions(1)[0];
+			if (!newQ) {
+				showResult();
+				return;
+			}
 			questionsBuffer[questionNumber] = newQ;
+			activeQuestionTotal = Math.min(TOTAL_QUESTIONS, questionsBuffer.length);
 			addToHistory(newQ.question);
 			renderQuestion(newQ);
 		}
@@ -449,7 +479,7 @@ function renderQuestion(data) {
 	updateProgress();
 
 	document.getElementById("q-counter").textContent =
-		`Question ${questionNumber}/${TOTAL_QUESTIONS}`;
+		`Question ${questionNumber}/${activeQuestionTotal}`;
 	document.getElementById("quiz-subject-tag").textContent =
 		selectedSubjects.length === 1 ? selectedSubjects[0] : "Mixed Subjects";
 	document.getElementById("quiz-question").textContent = data.question;
@@ -474,7 +504,7 @@ function renderQuestion(data) {
 }
 
 function updateProgress() {
-	const pct = ((questionNumber - 1) / TOTAL_QUESTIONS) * 100;
+	const pct = ((questionNumber - 1) / activeQuestionTotal) * 100;
 	document.getElementById("progress-fill").style.width = pct + "%";
 }
 
@@ -594,7 +624,7 @@ function showFeedback(isCorrect, correctAnswer, explanation) {
 //  NEXT QUESTION / END GAME
 // ============================================================
 async function nextQuestion() {
-	if (questionNumber >= TOTAL_QUESTIONS) {
+	if (questionNumber >= activeQuestionTotal) {
 		showResult();
 	} else {
 		// No loading screen needed if in buffer!
@@ -606,7 +636,7 @@ async function nextQuestion() {
 //  RESULT
 // ============================================================
 function showResult() {
-	const accuracy = Math.round((correctCount / TOTAL_QUESTIONS) * 100);
+	const accuracy = Math.round((correctCount / activeQuestionTotal) * 100);
 	const rank =
 		correctCount >= 9 ? "gold" : correctCount >= 6 ? "silver" : "bronze";
 	const badges = { gold: "🥇", silver: "🥈", bronze: "🥉" };
@@ -616,16 +646,18 @@ function showResult() {
 	document.getElementById("result-rank").textContent = labels[rank];
 	document.getElementById("result-rank").className = "result-rank " + rank;
 	document.getElementById("result-score").textContent =
-		`${correctCount}/${TOTAL_QUESTIONS}`;
+		`${correctCount}/${activeQuestionTotal}`;
 	document.getElementById("stat-accuracy").textContent = accuracy + "%";
 	document.getElementById("stat-correct").textContent = correctCount;
 	document.getElementById("stat-wrong").textContent =
-		TOTAL_QUESTIONS - correctCount;
+		activeQuestionTotal - correctCount;
 	document.getElementById("result-name-row").style.display = "flex";
 	document.getElementById("player-name-input").value = "";
 
 	if (rank === "gold") unlockAchievement("ach_gold");
-	if (correctCount === TOTAL_QUESTIONS) unlockAchievement("ach_perfect");
+	if (activeQuestionTotal === TOTAL_QUESTIONS && correctCount === activeQuestionTotal) {
+		unlockAchievement("ach_perfect");
+	}
 	trackGames();
 
 	showScreen("result-screen");
